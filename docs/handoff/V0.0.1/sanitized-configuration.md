@@ -1,12 +1,19 @@
 # V0.0.1 Sanitized Configuration
 
-- Config version: Pending lifecycle implementation
-- Server ID: operator-defined, non-secret
-- MariaDB URL/username/password: environment-variable references only
-- Redis URI/credentials: environment-variable references only
-- Migration locations: Core-only, pending final record
-- Waymark provider: supported Vault/provider boundary, pending capability/thread verification
-- Executor/audit/health/shutdown settings: pending validated sample
+- Config version: `1`; missing or unsupported versions fail closed.
+- Server ID: operator-defined, non-secret, 1–64 characters from `[A-Za-z0-9._-]`.
+- MariaDB: `enabled`, environment references `WAYFARER_DB_URL`,
+  `WAYFARER_DB_USERNAME`, `WAYFARER_DB_PASSWORD`, pool sizes, and timeout.
+- Redis: `enabled`, environment reference `WAYFARER_REDIS_URI`, and connect timeout.
+- Migration: `enabled` plus Core-only `db/migration/core`; execution is not implemented in
+  alpha.1 and enabling migration requires MariaDB to be enabled.
+- Waymark: `enabled`, expected provider `RedisEconomy`, and operation timeout. Provider
+  capability/thread verification remains a later gate.
+- Executor: 1–64 threads and a thread prefix containing `Wayfarer`.
+- Audit: typed enable flag; persistence begins in alpha.2.
+- Health: player detail output defaults to `false`.
+- Shutdown timeout: 1–300 seconds.
 
 Never place secret values in this document, YAML samples, logs, audits, exceptions, or release
-manifests. Record required environment variable names and validation behavior only.
+manifests. Disabled integrations retain only reference names. Enabled integrations resolve every
+required reference from the environment and fail closed if a value is absent or blank.

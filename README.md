@@ -28,6 +28,21 @@ pwsh ./tools/bootstrap-gradle-wrapper.ps1
 
 Wrapper生成後、`gradlew`、`gradlew.bat`、`gradle/wrapper/`をCommitしてください。
 
+## V0.0.1-alpha.1 Lifecycle Foundation
+
+`Wayfarer_Core`はconfig version 1のtyped validation、環境変数secret reference、
+fail-closed lifecycle、Bukkit ServicesManager公開、managed executor、sanitized health、
+`/wayfarer admin health`を実装します。
+
+```text
+Command:    /wayfarer admin health
+Permission: wayfarer.admin.health
+```
+
+MariaDB、Flyway、Redis、Waymark、transaction、identity、audit persistenceは後続Sliceです。
+未実装dependencyはhealthで`UNKNOWN`と表示されます。現在のrelease gate/readinessは
+`BLOCKED`で、Runtime testとPre-releaseは未実施です。
+
 ## Important boundaries
 
 - Plugin SourceはこのRepositoryで管理します。
