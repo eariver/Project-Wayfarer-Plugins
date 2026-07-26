@@ -1,0 +1,55 @@
+themes:
+  worlds-beyond:
+    enabled: true
+    worlds:
+      allowlist: [frontier_iris]
+    portals:
+      nether: DENY
+      end: DENY
+      cross-theme-fallback: DENY
+
+    loadout:
+      initial-launchpad-amount: 2
+      initial-grant-once: true
+      reissue-launchpad-on-loss: false
+
+    leafgrapple:
+      expected-version: 1.0.2
+
+    shop:
+      launchpad: { price-wm: 30, amount: 1 }
+      firework-rocket: { price-wm: 200, amount: 1, flight-duration: 3 }
+      waystone-placement-tool: { price-wm: 600, amount: 1 }
+
+    launchpad:
+      material: LIGHT_WEIGHTED_PRESSURE_PLATE
+      disable-while-sneaking: true
+      max-successful-uses: 3
+      horizontal-velocity: 2.5
+      vertical-velocity: 1.2
+      auto-deploy-elytra: true
+      use-cooldown-seconds: 2
+      expire-after-days: 30
+      extend-expiration-on-use: true
+      allow-player-break: true
+      drop-on-player-break: false
+      max-active-per-player: 0
+
+    waystone:
+      minimum-horizontal-distance: 1000
+      discovery-search-radius: 3000
+      lifecycle:
+        protected-days: 14
+        contestable-days: 14
+        dormant-before-ruin-days: 180
+      costs:
+        maintain-wm: 200
+        contest-wm: 300
+        reactivate-wm: 150
+      teleport:
+        cost-wm: 0
+        cooldown-seconds: 30
+        warmup-seconds: 3
+        cancel-on-move: true
+        cancel-on-damage: true
+        allow-cross-dimension: false

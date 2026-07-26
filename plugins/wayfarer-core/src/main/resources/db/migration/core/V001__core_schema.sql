@@ -1,0 +1,41 @@
+CREATE TABLE wf_core_transaction (
+    transaction_id CHAR(36) CHARACTER SET ascii NOT NULL,
+    idempotency_key VARCHAR(191) CHARACTER SET ascii NOT NULL,
+    transaction_type VARCHAR(64) CHARACTER SET ascii NOT NULL,
+    actor_uuid CHAR(36) CHARACTER SET ascii NULL,
+    subject_type VARCHAR(64) CHARACTER SET ascii NOT NULL,
+    subject_id VARCHAR(191) NOT NULL,
+    amount_wm BIGINT NOT NULL DEFAULT 0,
+    state VARCHAR(40) CHARACTER SET ascii NOT NULL,
+    provider_reference VARCHAR(191) NULL,
+    payload_json LONGTEXT NULL,
+    failure_code VARCHAR(96) CHARACTER SET ascii NULL,
+    created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    completed_at TIMESTAMP(3) NULL,
+    lock_version BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (transaction_id),
+    UNIQUE KEY uq_wf_core_transaction_idempotency (idempotency_key),
+    KEY ix_wf_core_transaction_state_updated (state, updated_at),
+    CONSTRAINT ck_wf_core_transaction_amount CHECK (amount_wm >= 0),
+    CONSTRAINT ck_wf_core_transaction_payload CHECK (payload_json IS NULL OR JSON_VALID(payload_json))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE wf_core_audit (
+    audit_id BIGINT NOT NULL AUTO_INCREMENT,
+    event_id CHAR(36) CHARACTER SET ascii NOT NULL,
+    correlation_id CHAR(36) CHARACTER SET ascii NULL,
+    event_type VARCHAR(96) CHARACTER SET ascii NOT NULL,
+    actor_uuid CHAR(36) CHARACTER SET ascii NULL,
+    subject_type VARCHAR(64) CHARACTER SET ascii NOT NULL,
+    subject_id VARCHAR(191) NOT NULL,
+    server_id VARCHAR(64) CHARACTER SET ascii NOT NULL,
+    details_json LONGTEXT NULL,
+    occurred_at TIMESTAMP(3) NOT NULL,
+    PRIMARY KEY (audit_id),
+    UNIQUE KEY uq_wf_core_audit_event (event_id),
+    KEY ix_wf_core_audit_subject (subject_type, subject_id, occurred_at),
+    KEY ix_wf_core_audit_actor (actor_uuid, occurred_at),
+    KEY ix_wf_core_audit_type (event_type, occurred_at),
+    CONSTRAINT ck_wf_core_audit_details CHECK (details_json IS NULL OR JSON_VALID(details_json))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

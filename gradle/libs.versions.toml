@@ -1,0 +1,27 @@
+[versions]
+paper = "1.21.11-R0.1-SNAPSHOT"
+shadow = "9.6.1"
+hikari = "7.0.2"
+flyway = "12.6.2"
+mariadb = "3.5.8"
+lettuce = "7.2.1.RELEASE"
+junit = "5.14.3"
+mockito = "5.23.0"
+testcontainers = "2.0.5"
+
+[libraries]
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
+mariadb-client = { module = "org.mariadb.jdbc:mariadb-java-client", version.ref = "mariadb" }
+lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+testcontainers-junit = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
+testcontainers-mariadb = { module = "org.testcontainers:testcontainers-mariadb", version.ref = "testcontainers" }
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

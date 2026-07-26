@@ -1,0 +1,22 @@
+server-id: CHANGE_ME
+
+database:
+  jdbc-url-env: WAYFARER_DB_URL
+  username-env: WAYFARER_DB_USERNAME
+  password-env: WAYFARER_DB_PASSWORD
+  maximum-pool-size: 8
+  minimum-idle: 1
+  connection-timeout-ms: 5000
+
+redis:
+  enabled: true
+  uri-env: WAYFARER_REDIS_URI
+  connect-timeout-ms: 3000
+
+economy:
+  expected-provider: RedisEconomy
+  currency-name: Waymark
+  operation-timeout-ms: 5000
+
+shutdown:
+  flush-timeout-seconds: 15

@@ -1,0 +1,7 @@
+name: Wayfarer_Core
+version: '${version}'
+main: io.github.eariver.wayfarer.core.WayfarerCorePlugin
+api-version: '1.21.11'
+description: Project Wayfarer shared plugin infrastructure
+author: eariver
+softdepend: [Vault, RedisEconomy, LuckPerms]

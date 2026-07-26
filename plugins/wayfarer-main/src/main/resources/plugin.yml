@@ -1,0 +1,7 @@
+name: Wayfarer_Main
+version: '${version}'
+main: io.github.eariver.wayfarer.main.WayfarerMainPlugin
+api-version: '1.21.11'
+description: Project Wayfarer Main gameplay
+author: eariver
+depend: [Wayfarer_Core]

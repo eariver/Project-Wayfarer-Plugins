@@ -1,0 +1,8 @@
+name: Wayfarer_Frontier
+version: '${version}'
+main: io.github.eariver.wayfarer.frontier.WayfarerFrontierPlugin
+api-version: '1.21.11'
+description: Project Wayfarer Frontier gameplay
+author: eariver
+depend: [Wayfarer_Core]
+softdepend: [Multiverse-Inventories, LeafGrapple, WorldGuard, WorldEdit]

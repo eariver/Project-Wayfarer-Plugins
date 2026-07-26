@@ -1,0 +1,53 @@
+worlds:
+  progress-allowlist: [resource, resource_nether, resource_end]
+
+progress:
+  scale: 1000
+  fallback-weight: 1.0
+  weights:
+    COBBLESTONE: 0.25
+    COBBLED_DEEPSLATE: 0.35
+    STONE: 1.0
+    DEEPSLATE: 1.25
+    END_STONE: 1.25
+    OBSIDIAN: 2.0
+  ore-multipliers:
+    COAL: 1.50
+    COPPER: 1.60
+    REDSTONE: 1.75
+    IRON: 2.00
+    LAPIS: 2.10
+    NETHER_GOLD: 2.00
+    GOLD: 2.50
+    DIAMOND: 3.50
+    EMERALD: 4.00
+    ANCIENT_DEBRIS: 4.00
+
+evolution:
+  material-thresholds:
+    stone: 100
+    iron: 400
+    diamond: 1200
+  enchant-progression:
+    base: 800
+    linear: 200
+    quadratic: 40
+  caps:
+    efficiency: 10
+    unbreaking: 10
+    fortune: 5
+    silk-touch: 1
+
+repair:
+  base-cost-wm: 100
+  evolution-multiplier-per-step: 0.08
+  minimum-charge-ratio: 0.25
+  broken:
+    flat-surcharge-wm: 100
+    surcharge-per-evolution: 5
+
+checkpoint:
+  interval-seconds: 300
+
+debug-commands:
+  enabled: false
