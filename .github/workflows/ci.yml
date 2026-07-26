@@ -16,11 +16,11 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '25'
+          java-version: "25"
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.6.1'
+          gradle-version: "9.6.1"
       - name: Check
-        run: gradle --no-daemon check
+        run: ./gradlew --no-daemon check
       - name: Assemble
-        run: gradle --no-daemon assemble
+        run: ./gradlew --no-daemon assemble

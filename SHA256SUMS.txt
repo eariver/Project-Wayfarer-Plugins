@@ -1,3 +1,0 @@
-48a7899f07a524a75776ec858f8c3d1249fdcaf6adb642529c6be1e2b9118afa  PATCH_README.md
-ff8a77bbc77fb8798c09334806ef4e107ad7612dd50de7a942e7fa301621c22f  tools/bootstrap-gradle-wrapper.ps1
-a3bcc31af84e73683da56880b614b6786687b2dad54523f01bc2c872a162c9ba  tools/repair-stale-gradle-cache.ps1
