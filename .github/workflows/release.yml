@@ -1,0 +1,227 @@
+name: Create Main-Server Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Stable SemVer without leading v (example: 0.1.0)"
+        required: true
+        type: string
+      approved_prerelease_tag:
+        description: "Approved test-server pre-release tag (example: v0.1.0-alpha.3)"
+        required: true
+        type: string
+      main_server_instruction:
+        description: "Markdown path or URL containing the main-server handoff requirements"
+        required: true
+        type: string
+      requirements_cleared:
+        description: "Confirm that test-server verification is complete and all main-server requirements are cleared"
+        required: true
+        type: boolean
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish main-server handoff release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out selected main commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release request
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          APPROVED_PRERELEASE_TAG: ${{ inputs.approved_prerelease_tag }}
+          MAIN_SERVER_INSTRUCTION: ${{ inputs.main_server_instruction }}
+          REQUIREMENTS_CLEARED: ${{ inputs.requirements_cleared }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::Run this workflow from the main branch."
+            exit 1
+          fi
+
+          if [[ "$REQUIREMENTS_CLEARED" != "true" ]]; then
+            echo "::error::Main-server requirements must be explicitly confirmed as cleared."
+            exit 1
+          fi
+
+          if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Stable release version must resemble 0.1.0 and must not include a leading v or pre-release suffix."
+            exit 1
+          fi
+
+          if [[ ! "$APPROVED_PRERELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
+            echo "::error::Approved pre-release tag must resemble v0.1.0-alpha.1."
+            exit 1
+          fi
+
+          VERSION="$INPUT_VERSION"
+          TAG="v$VERSION"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists."
+            exit 1
+          fi
+
+          mapfile -t RELEASE_DATA < <(
+            gh release view "$APPROVED_PRERELEASE_TAG" \
+              --json tagName,isPrerelease \
+              --jq '[.tagName, (.isPrerelease | tostring)] | .[]'
+          )
+
+          if [[ "${RELEASE_DATA[0]:-}" != "$APPROVED_PRERELEASE_TAG" || "${RELEASE_DATA[1]:-}" != "true" ]]; then
+            echo "::error::$APPROVED_PRERELEASE_TAG is not an existing GitHub pre-release."
+            exit 1
+          fi
+
+          git fetch --tags --force
+          PRERELEASE_SHA="$(git rev-list -n 1 "$APPROVED_PRERELEASE_TAG")"
+
+          if [[ "$PRERELEASE_SHA" != "$GITHUB_SHA" ]]; then
+            echo "::error::Approved pre-release $APPROVED_PRERELEASE_TAG points to $PRERELEASE_SHA, but this workflow selected $GITHUB_SHA. Run the workflow from the exact approved source commit on main."
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_ENV"
+          echo "APPROVED_PRERELEASE_TAG=$APPROVED_PRERELEASE_TAG" >> "$GITHUB_ENV"
+          echo "MAIN_SERVER_INSTRUCTION=$MAIN_SERVER_INSTRUCTION" >> "$GITHUB_ENV"
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify and build release artifacts
+        run: |
+          ./gradlew --no-daemon clean check assemble \
+            -PwayfarerVersion="$VERSION"
+
+      - name: Collect release assets
+        run: |
+          set -euo pipefail
+          mkdir -p release
+
+          copy_plugin_jar() {
+            local module_path="$1"
+            local artifact_name="$2"
+            mapfile -t jars < <(
+              find "$module_path/build/libs" -maxdepth 1 -type f \
+                -name "*.jar" \
+                ! -name "*-sources.jar" \
+                ! -name "*-javadoc.jar" \
+                | sort
+            )
+
+            if [[ "${#jars[@]}" -ne 1 ]]; then
+              echo "::error::Expected exactly one runtime JAR in $module_path/build/libs, found ${#jars[@]}."
+              printf '%s\n' "${jars[@]}"
+              exit 1
+            fi
+
+            cp "${jars[0]}" "release/${artifact_name}-${VERSION}.jar"
+          }
+
+          copy_plugin_jar "plugins/wayfarer-core" "Wayfarer_Core"
+          copy_plugin_jar "plugins/wayfarer-main" "Wayfarer_Main"
+          copy_plugin_jar "plugins/wayfarer-frontier" "Wayfarer_Frontier"
+
+          cp gradle/libs.versions.toml release/DEPENDENCY_VERSIONS.toml
+
+          (
+            cd release
+            sha256sum Wayfarer_*.jar > SHA256SUMS.txt
+          )
+
+          cat > release/RELEASE_MANIFEST.md <<EOF
+          # Project Wayfarer Plugins Release Manifest
+
+          - Release type: Stable / main-server handoff candidate
+          - Version: ${VERSION}
+          - Tag: ${TAG}
+          - Source commit: ${SOURCE_SHA}
+          - Source branch: main
+          - Approved pre-release: ${APPROVED_PRERELEASE_TAG}
+          - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
+          - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          - Test-server verification: Confirmed complete by workflow operator
+          - Main-server requirements: Confirmed cleared by workflow operator
+          - Runtime status: Ready for handoff; not automatically installed
+
+          This release is the source-side handoff package for Project Wayfarer main-server
+          integration. Publishing it does not install plugins, run migrations, modify runtime
+          configuration, restart servers, or constitute runtime acceptance.
+          EOF
+
+          cat > release-notes.md <<EOF
+          ## Status
+
+          This release is ready for handoff to the Project Wayfarer main-server integration process.
+
+          - Test-server verification: completed
+          - Approved pre-release: `${APPROVED_PRERELEASE_TAG}`
+          - Source commit: `${SOURCE_SHA}`
+          - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
+
+          Runtime deployment, migration execution, configuration application, backups,
+          restart operations, acceptance evidence, and rollback decisions remain owned by
+          the main-server integration process.
+          EOF
+
+      - name: Generate build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: "release/Wayfarer_*.jar"
+
+      - name: Create or verify annotated tag
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAG_SHA="$(git rev-list -n 1 "$TAG")"
+            if [[ "$TAG_SHA" != "$SOURCE_SHA" ]]; then
+              echo "::error::Existing tag $TAG points to $TAG_SHA, expected $SOURCE_SHA."
+              exit 1
+            fi
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" "$SOURCE_SHA" -m "Project Wayfarer Plugins $TAG main-server handoff"
+            git push origin "$TAG"
+          fi
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" \
+            release/Wayfarer_*.jar \
+            release/SHA256SUMS.txt \
+            release/RELEASE_MANIFEST.md \
+            release/DEPENDENCY_VERSIONS.toml \
+            --verify-tag \
+            --latest \
+            --title "Project Wayfarer Plugins $TAG" \
+            --notes-file release-notes.md
