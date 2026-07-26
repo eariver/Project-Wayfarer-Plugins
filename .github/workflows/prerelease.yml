@@ -1,0 +1,266 @@
+name: Create Test-Server Pre-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer pre-release without leading v (example: 0.1.0-alpha.1)"
+        required: true
+        type: string
+      test_instructions:
+        description: "Optional Markdown path or commit-pinned URL for test-server verification"
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: prerelease-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build test-server candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+      source_sha: ${{ steps.metadata.outputs.source_sha }}
+      artifact_name: ${{ steps.metadata.outputs.artifact_name }}
+
+    steps:
+      - name: Check out selected main commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release request
+        id: metadata
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::Run this workflow from the main branch."
+            exit 1
+          fi
+
+          if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
+            echo "::error::Pre-release version must resemble 0.1.0-alpha.1 and must not include a leading v."
+            exit 1
+          fi
+
+          VERSION="$INPUT_VERSION"
+          TAG="v$VERSION"
+          ARTIFACT_NAME="prerelease-$VERSION"
+
+          git fetch --tags --force
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAG_SHA="$(git rev-list -n 1 "$TAG")"
+            if [[ "$TAG_SHA" != "$GITHUB_SHA" ]]; then
+              echo "::error::Existing tag $TAG points to $TAG_SHA, expected $GITHUB_SHA."
+              exit 1
+            fi
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists."
+            exit 1
+          fi
+
+          {
+            echo "version=$VERSION"
+            echo "tag=$TAG"
+            echo "source_sha=$GITHUB_SHA"
+            echo "artifact_name=$ARTIFACT_NAME"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify and build release artifacts
+        env:
+          VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          ./gradlew --no-daemon clean check assemble \
+            -PwayfarerVersion="$VERSION"
+
+      - name: Collect release assets
+        env:
+          VERSION: ${{ steps.metadata.outputs.version }}
+          TAG: ${{ steps.metadata.outputs.tag }}
+          SOURCE_SHA: ${{ steps.metadata.outputs.source_sha }}
+          TEST_INSTRUCTIONS: ${{ inputs.test_instructions }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+
+          copy_plugin_jar() {
+            local module_path="$1"
+            local artifact_name="$2"
+
+            mapfile -t jars < <(
+              find "$module_path/build/libs" -maxdepth 1 -type f \
+                -name "*.jar" \
+                ! -name "*-sources.jar" \
+                ! -name "*-javadoc.jar" \
+                | sort
+            )
+
+            if [[ "${#jars[@]}" -ne 1 ]]; then
+              echo "::error::Expected exactly one runtime JAR in $module_path/build/libs, found ${#jars[@]}."
+              printf '%s\n' "${jars[@]}"
+              exit 1
+            fi
+
+            cp "${jars[0]}" "release/${artifact_name}-${VERSION}.jar"
+          }
+
+          copy_plugin_jar "plugins/wayfarer-core" "Wayfarer_Core"
+          copy_plugin_jar "plugins/wayfarer-main" "Wayfarer_Main"
+          copy_plugin_jar "plugins/wayfarer-frontier" "Wayfarer_Frontier"
+
+          cp gradle/libs.versions.toml release/DEPENDENCY_VERSIONS.toml
+
+          (
+            cd release
+            sha256sum Wayfarer_*.jar DEPENDENCY_VERSIONS.toml > SHA256SUMS.txt
+          )
+
+          cat > release/RELEASE_MANIFEST.md <<EOF
+          # Project Wayfarer Plugins Release Manifest
+
+          - Release type: Pre-release / test-server candidate
+          - Version: ${VERSION}
+          - Tag: ${TAG}
+          - Source commit: ${SOURCE_SHA}
+          - Source branch: main
+          - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          - Test instructions: ${TEST_INSTRUCTIONS:-Not specified}
+          - Runtime status: Not approved for the main server
+
+          This release is intended only for step-by-step verification on the test server.
+          Publishing this release does not install plugins, run migrations, change runtime
+          configuration, restart a server, or approve handoff to the main server.
+          EOF
+
+          cat > release/RELEASE_NOTES.md <<EOF
+          ## Status
+
+          This is a **test-server candidate**. It is not approved for the main server.
+
+          Perform test-server verification step by step. Runtime installation, migrations,
+          configuration changes, restart operations, acceptance decisions, and rollback
+          decisions remain outside this workflow.
+
+          - Source commit: \`${SOURCE_SHA}\`
+          - Test instructions: ${TEST_INSTRUCTIONS:-Not specified}
+          EOF
+
+      - name: Generate build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: "release/Wayfarer_*.jar"
+
+      - name: Store release package for approval
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.metadata.outputs.artifact_name }}
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish test-server candidate
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    environment:
+      name: test-server-release
+
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Check out approved source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.source_sha }}
+          fetch-depth: 0
+
+      - name: Download approved release package
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: release/
+
+      - name: Verify release package
+        run: |
+          set -euo pipefail
+          (
+            cd release
+            sha256sum --check SHA256SUMS.txt
+          )
+
+      - name: Create annotated pre-release tag
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+          SOURCE_SHA: ${{ needs.build.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAG_SHA="$(git rev-list -n 1 "$TAG")"
+            if [[ "$TAG_SHA" != "$SOURCE_SHA" ]]; then
+              echo "::error::Existing tag $TAG points to $TAG_SHA, expected $SOURCE_SHA."
+              exit 1
+            fi
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" "$SOURCE_SHA" -m "Project Wayfarer Plugins $TAG test-server candidate"
+            git push origin "$TAG"
+          fi
+
+      - name: Publish GitHub pre-release
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists."
+            exit 1
+          fi
+
+          gh release create "$TAG" \
+            release/Wayfarer_*.jar \
+            release/SHA256SUMS.txt \
+            release/RELEASE_MANIFEST.md \
+            release/DEPENDENCY_VERSIONS.toml \
+            --verify-tag \
+            --prerelease \
+            --latest=false \
+            --title "Project Wayfarer Plugins $TAG (Test-Server Candidate)" \
+            --notes-file release/RELEASE_NOTES.md
