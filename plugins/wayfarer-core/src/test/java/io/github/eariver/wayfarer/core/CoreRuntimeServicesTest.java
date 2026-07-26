@@ -118,7 +118,7 @@ class CoreRuntimeServicesTest {
                 IllegalStateException.class,
                 () -> runtime.services().database()
             );
-            assertTrue(failure.getMessage().contains("not implemented"));
+            assertEquals("MariaDB is unavailable", failure.getMessage());
         } finally {
             runtime.disable();
         }

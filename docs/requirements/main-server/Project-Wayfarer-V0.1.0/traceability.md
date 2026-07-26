@@ -47,9 +47,9 @@ In the table below, `alpha.1 runtime evidence` refers to
 | FND-022 | Secrets/runtime/world/DB/log/cache not tracked | 7, 14 | `.gitignore`; policy | Git inspection | All | N/A | Implemented | Recheck each release |
 | LIF-001 | Typed config validation | 8.1 | `CoreConfig`; `CoreConfigLoader` | `CoreConfigLoaderTest` | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Valid and unsupported config runtime paths observed |
 | LIF-002 | Environment secret resolution | 8.1 | `EnvironmentSecretResolver`; `SecretValue` | Common/config secret tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Missing and resolved secret validation paths observed without disclosure |
-| LIF-003 | MariaDB pool lifecycle | 8.1 | Persistence slice | Integration test | alpha.2 | Pending | Not started | Implementation pending |
-| LIF-004 | Flyway validate | 8.1 | Persistence slice | Migration test | alpha.2 | Pending | Not started | Implementation pending |
-| LIF-005 | Flyway migrate | 8.1 | Persistence slice | Migration test | alpha.2 | Pending | Not started | Implementation pending |
+| LIF-003 | MariaDB pool lifecycle | 8.1 | `MariaDbPool`; `CoreRuntime` reverse lifecycle | Pool unit and MariaDB integration tests | alpha.2 | Pending | Automated test passed | Hikari mapping, connectivity, double-disable, outage, and cleanup passed; Paper runtime pending |
+| LIF-004 | Flyway validate | 8.1 | `MigrationLifecycle` pre/post validation | Empty/repeated MariaDB migration tests | alpha.2 | Pending | Automated test passed | Pending migrations are allowed only for pre-validation; post-validation passed |
+| LIF-005 | Flyway migrate | 8.1 | `MigrationLifecycle` | Empty/repeated MariaDB migration tests | alpha.2 | Pending | Automated test passed | Core V001 applied once on isolated MariaDB 11.8 |
 | LIF-006 | Redis foundation | 8.1 | Redis slice | Integration test | alpha.3 | Pending | Not started | Implementation pending |
 | LIF-007 | Redis health | 8.1 | Redis slice | Outage/reconnect test | alpha.3 | Pending | Not started | Implementation pending |
 | LIF-008 | Waymark capability probe | 8.1 | Transaction slice | Provider fixture | alpha.4 | Pending | Not started | Provider contract gate |
@@ -62,7 +62,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | LIF-015 | Partial initialization cleanup | 8.1 | Reverse-order lifecycle resources | Failure injection tests | alpha.1 | Pending | Automated test passed | Runtime failure injection pending |
 | LIF-016 | Fail-closed lifecycle | 8.1 | Explicit lifecycle state machine | Invalid/double/failure tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Placeholder, unsupported config, and missing secret failed closed |
 | LIF-017 | Reject callbacks after disable | 8.1 | Double-guarded task bridge | Late callback test | alpha.1/3 | Pending | Automated test passed | Paper callback runtime pending |
-| LIF-018 | Do not continue after migration failure | 8.1 | Persistence slice | Migration failure test | alpha.2 | Pending | Not started | Implementation pending |
+| LIF-018 | Do not continue after migration failure | 8.1 | Fail-closed Core persistence lifecycle | Broken-migration failure injection | alpha.2 | Pending | Automated test passed | Services remained unpublished and Hikari closed; runtime evidence pending |
 | API-001 | `WayfarerServices` contract | 8.2 | Typed metadata/services contract | Service/API identity tests | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Runtime service lookup passed; full beta contract remains pending |
 | API-002 | `WayfarerDatabase` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
 | API-003 | `WayfarerAudit` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
@@ -82,9 +82,9 @@ In the table below, `alpha.1 runtime evidence` refers to
 | API-017 | Server gameplay domain not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
 | CFG-001 | Config version | 8.3 | `config-version: 1`; loader | Missing/unsupported tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Version 1 accepted; version 2 failed closed |
 | CFG-002 | Server ID | 8.3 | Typed validated ID with reserved-placeholder rejection | Missing/blank/format/placeholder/explicit tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Default placeholder rejected; explicit `wayfarer-test` accepted |
-| CFG-003 | MariaDB connection settings | 8.3 | Typed inactive alpha.1 settings | Validation/secret tests | alpha.2 | alpha.1 runtime evidence | In progress | Disabled config accepted; connection implementation deferred to alpha.2 |
+| CFG-003 | MariaDB connection settings | 8.3 | Typed Hikari mapping and secret resolution | Config/pool/integration tests | alpha.2 | alpha.1 runtime evidence | Automated test passed | Active mapping tested; Project Runtime configuration remains unchanged |
 | CFG-004 | Redis connection settings | 8.3 | Typed inactive alpha.1 settings | Validation/missing-secret test | alpha.3 | alpha.1 runtime evidence | In progress | Disabled config accepted and missing reference failed closed; connection deferred to alpha.3 |
-| CFG-005 | Migration settings | 8.3 | Typed location/dependency settings | Dependency/list validation | alpha.2 | alpha.1 runtime evidence | In progress | Empty locations rejected; migration execution deferred to alpha.2 |
+| CFG-005 | Migration settings | 8.3 | Typed canonical classpath locations and dependency guard | Config/location/migration tests | alpha.2 | alpha.1 runtime evidence | Automated test passed | Empty, traversal, and non-classpath locations fail closed |
 | CFG-006 | Waymark provider settings | 8.3 | Typed inactive provider settings | Config validation suite | alpha.4 | alpha.1 runtime evidence | In progress | Disabled config accepted; capability probe deferred to alpha.4 |
 | CFG-007 | Executor settings | 8.3 | Typed thread count/name | Range/name tests | V0.0.1-alpha.1 / alpha.3 | alpha.1 runtime evidence | In progress | Thread and timeout behavior observed; queue settings deferred to alpha.3 |
 | CFG-008 | Audit settings | 8.3 | Typed enable flag | Valid config test | alpha.2 | alpha.1 runtime evidence | In progress | Flag accepted; persistence deferred to alpha.2 |
@@ -95,25 +95,25 @@ In the table below, `alpha.1 runtime evidence` refers to
 | CFG-013 | No secret in logs | 8.3 | Sanitized plugin diagnostics | Command/health redaction tests | beta.1 | alpha.1 runtime evidence | In progress | Runtime secret hit count was zero; full beta review pending |
 | CFG-014 | No secret in audit | 8.3 | Sanitized operational event codes | Denial/failure event tests | beta.1 | Pending | Automated test passed | Durable audit deferred |
 | CFG-015 | No secret in exceptions | 8.3 | Safe config/lifecycle exceptions | Failure/redaction tests | beta.1 | alpha.1 runtime evidence | In progress | Surfaced runtime validation diagnostic was sanitized; full beta review pending |
-| DB-001 | Core owns only `wf_core_*` | 8.4 | Core migration | Schema inspection | alpha.2 | Pending | Not started | Implementation pending |
+| DB-001 | Core owns only `wf_core_*` | 8.4 | Existing immutable Core V001 | Isolated schema inspection | alpha.2 | Pending | Automated test passed | Only Flyway history, `wf_core_transaction`, and `wf_core_audit` created |
 | DB-002 | Transaction domain | 8.4 | Core migration/repository | Integration test | alpha.2/4 | Pending | Not started | Implementation pending |
 | DB-003 | Transaction event/history domain | 8.4 | Core migration/repository | Integration test | alpha.2/4 | Pending | Not started | Implementation pending |
 | DB-004 | Audit domain | 8.4 | Core migration/repository | Integration test | alpha.2 | Pending | Not started | Implementation pending |
 | DB-005 | Player identity domain | 8.4 | Core migration/repository | Integration test | alpha.2 | Pending | Not started | Implementation pending |
 | DB-006 | Item identity domain | 8.4 | Core migration/repository | Integration test | alpha.2 | Pending | Not started | Implementation pending |
 | DB-007 | Reconcile state domain | 8.4 | Core migration/repository | Recovery test | alpha.2/4 | Pending | Not started | Implementation pending |
-| DB-008 | Empty DB migration | 8.4 | Flyway slice | Testcontainers | alpha.2 | Pending | Not started | Implementation pending |
-| DB-009 | Additive migration | 8.4 | Flyway policy | Migration test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-010 | Applied migration immutable | 8.4 | Policy | Checksum test | alpha.2+ | N/A | In progress | Existing migration unchanged |
+| DB-008 | Empty DB migration | 8.4 | `MigrationLifecycle`; MariaDB testkit fixture | `mariaDbIntegrationTest` | alpha.2 | Pending | Automated test passed | Empty isolated MariaDB 11.8 migrated successfully |
+| DB-009 | Additive migration | 8.4 | Flyway additive policy; no new production migration | Repeated validate/migrate test | alpha.2 | Pending | In progress | Repeated V001 startup passed; a future V002 additive migration is not exercised |
+| DB-010 | Applied migration immutable | 8.4 | V001 unchanged | Released/current/classpath SHA-256 checks | alpha.2+ | N/A | Automated test passed | All checked bytes match `59035d3b...4840`; no new production migration |
 | DB-011 | UUID authority | 8.4 | Persistence slice | Repository test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-012 | UTC timestamps | 8.4 | Migration/repository | DB test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-013 | Unique constraints | 8.4 | Migration | DB test | alpha.2 | Pending | Not started | Implementation pending |
+| DB-012 | UTC timestamps | 8.4 | V001 `TIMESTAMP(3)` plus Hikari UTC session | Schema/session inspection | alpha.2 | Pending | Automated test passed | Four current timestamp columns and `+00:00` session verified; repository mapping pending |
+| DB-013 | Unique constraints | 8.4 | Existing Core V001 | Duplicate idempotency/event tests | alpha.2 | Pending | Automated test passed | Current transaction and audit unique constraints enforced |
 | DB-014 | Optimistic locking | 8.4 | Repository | Concurrency test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-015 | Required indexes | 8.4 | Migration | Schema test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-016 | JSON validation | 8.4 | Migration/repository | DB test | alpha.2 | Pending | Not started | Implementation pending |
+| DB-015 | Required indexes | 8.4 | Existing Core V001 | Information-schema index inspection | alpha.2 | Pending | Automated test passed | All six named current secondary/unique indexes verified |
+| DB-016 | JSON validation | 8.4 | Existing Core V001 | Transaction/audit invalid-JSON tests | alpha.2 | Pending | Automated test passed | Both current JSON check constraints enforced |
 | DB-017 | Restart recovery | 8.4 | Persistence slice | Restart test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-018 | Core does not create `wf_main_*` | 8.4 | Migration boundary | Schema test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-019 | Core does not create `wf_frontier_*` | 8.4 | Migration boundary | Schema test | alpha.2 | Pending | Not started | Implementation pending |
+| DB-018 | Core does not create `wf_main_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_main_*` table created |
+| DB-019 | Core does not create `wf_frontier_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_frontier_*` table created |
 | TX-001 | Persist/recover PREPARED and DEBIT_PENDING | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
 | TX-002 | Persist/recover DEBITED | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
 | TX-003 | Persist/recover DOMAIN_COMMIT_PENDING and COMMITTED | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
@@ -179,10 +179,10 @@ In the table below, `alpha.1 runtime evidence` refers to
 | TASK-008 | Bounded executor queue | 8.9 | Task slice | Queue test | alpha.3 | Pending | Not started | Implementation pending |
 | TASK-009 | Backpressure | 8.9 | Task slice | Pressure test | alpha.3 | Pending | Not started | Implementation pending |
 | TASK-010 | Graceful shutdown | 8.9 | Task slice | Shutdown test | alpha.3 | Pending | Not started | Implementation pending |
-| TASK-011 | No main-thread DB I/O | 6.4, 8.9 | Task/persistence slice | Detection test | alpha.2/3 | Pending | Not started | Implementation pending |
+| TASK-011 | No main-thread DB I/O | 6.4, 8.9 | Internal database executor and `ThreadContext` guard | Pre-acquisition main-thread guard test | alpha.2/3 | Pending | Automated test passed | Connection acquisition was zero on guarded path; Paper runtime pending |
 | TASK-012 | No main-thread Redis I/O | 6.4, 8.9 | Task/Redis slice | Detection test | alpha.3 | Pending | Not started | Implementation pending |
 | TASK-013 | Reject callback after disable | 8.9 | Task slice | Race test | alpha.3 | Pending | Not started | Implementation pending |
-| ADM-001 | Health: Config/MariaDB/Migration | 8.10 | Config status; inactive dependencies `UNKNOWN` | Health aggregation/failure tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 runtime evidence | In progress | Config `UP`; inactive MariaDB/Migration `UNKNOWN`; connectivity deferred |
+| ADM-001 | Health: Config/MariaDB/Migration | 8.10 | Active persistence lifecycle health | Success/failure/disable integration tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 runtime evidence | In progress | Automated `UNKNOWN`/`UP`/`DOWN`/`DISABLED` paths passed; alpha.2 runtime pending |
 | ADM-002 | Health: Redis/Waymark | 8.10 | Health slice | Health test | alpha.3/4 | Pending | Not started | Implementation pending |
 | ADM-003 | Health: Audit/Transaction | 8.10 | Health slice | Health test | alpha.2/4 | Pending | Not started | Implementation pending |
 | ADM-004 | Health: Executor/Services | 8.10 | Dynamic executor/services components | Health/runtime tests | V0.0.1-alpha.1 / alpha.3 | alpha.1 runtime evidence | In progress | Executor and Services `UP`; later executor slice remains pending |
@@ -192,10 +192,10 @@ In the table below, `alpha.1 runtime evidence` refers to
 | ADM-008 | Admin permission rules | 8.10 | `wayfarer.admin.health` | Authorization/denial tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Non-OP denial and OP authorization observed; later admin grants pending |
 | ADM-009 | Console eligibility | 8.10 | Bukkit audience adapter | Console command tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Console health observed; later admin command slices pending |
 | ADM-010 | Admin redaction/audit/confirmation | 8.10 | Admin slice | Security test | alpha.4 | Pending | Not started | Implementation pending |
-| TST-001 | Unit tests | 10.1 | Common/Core test sources | 75 tests passed | V0.0.1-alpha.1+ | N/A | In progress | 0 failed, 0 skipped; corrected-head CI passed; later-slice suites pending |
-| TST-002 | MariaDB integration | 10.1 | alpha.2 plan | Testcontainers | alpha.2 | Pending | Not started | Implementation pending |
+| TST-001 | Unit tests | 10.1 | Common/Core test sources | 87 unit tests passed | V0.0.1-alpha.1+ | N/A | In progress | 0 failed, 0 skipped locally; alpha.2 CI pending |
+| TST-002 | MariaDB integration | 10.1 | Testkit fixture; mandatory Core integration task | 5 Testcontainers tests | alpha.2 | Pending | Automated test passed | MariaDB 11.8; 0 failed, 0 skipped locally; CI pending |
 | TST-003 | Redis integration | 10.1 | alpha.3 plan | Testcontainers | alpha.3 | Pending | Not started | Implementation pending |
-| TST-004 | Migration tests | 10.1 | alpha.2 plan | Testcontainers | alpha.2 | Pending | Not started | Implementation pending |
+| TST-004 | Migration tests | 10.1 | Alpha.2 persistence integration suite | Empty/repeated/failure/checksum tests | alpha.2 | Pending | Automated test passed | V001 apply/validate and failure cleanup passed |
 | TST-005 | Concurrency tests | 10.1 | phase plans | Automated suite | alpha.2+ | Pending | Not started | Implementation pending |
 | TST-006 | Idempotency tests | 10.1 | alpha.4 plan | Automated suite | alpha.4 | Pending | Not started | Implementation pending |
 | TST-007 | Failure/timeout tests | 10.1 | Lifecycle/executor failure suites | Gradle test | V0.0.1-alpha.1+ | alpha.1 runtime evidence | In progress | Alpha.1 fail-closed and timeout paths observed; later slices remain |
@@ -204,7 +204,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | TST-010 | Secret redaction tests | 10.1 | Common/config/health/command tests | Gradle test | beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 runtime secret hit count zero; full beta coverage pending |
 | TST-011 | Packaging/API compatibility tests | 10.1 | beta plan | Automated inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 packaging and class isolation passed; full beta suite pending |
 | TST-012 | Isolated test server | 10.2 | Result and evidence index | Runtime procedure | V0.0.1-alpha.1–rc.1 | alpha.1 runtime evidence | In progress | Alpha.1 runtime gate passed; later candidates and Project acceptance pending |
-| TST-013 | Main-thread I/O and callback tests | 10.2 | phase plans | Automated/runtime | alpha.2/3 | Pending | Not started | Implementation pending |
+| TST-013 | Main-thread I/O and callback tests | 10.2 | Persistence `ThreadContext` foundation; task callback guards | Automated/runtime | alpha.2/3 | Pending | In progress | Main-thread JDBC pre-acquisition guard passed; Paper and Redis paths pending |
 | TST-014 | Tick/performance verification | 10.2, 11 | RC plan | Runtime measurement | rc.1 | Pending | Not started | Implementation pending |
 | TST-015 | Permission denial verification | 10.2 | Command permission suite | Gradle test | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Alpha.1 denial and operational event observed; later admin slices pending |
 | TST-016 | JAR dependency/class identity inspection | 10.2 | beta plan | Packaging test | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 Core JAR and Probe isolation passed; full beta inspection pending |

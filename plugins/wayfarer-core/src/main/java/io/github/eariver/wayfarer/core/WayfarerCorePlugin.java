@@ -30,7 +30,8 @@ public final class WayfarerCorePlugin extends JavaPlugin {
                 new BukkitServicePublisher(getServer().getServicesManager(), this),
                 operation -> getServer().getScheduler().runTask(this, operation),
                 Clock.systemUTC(),
-                getLogger()::warning
+                getLogger()::warning,
+                getServer()::isPrimaryThread
             );
             runtime.enable();
 

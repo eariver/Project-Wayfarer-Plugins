@@ -13,8 +13,16 @@
   Phase J marker mismatch, Player Checkpoint stdin loss with Project Owner-approved forced
   recovery, and Final Smoke newline-regex mismatch. Corrected reruns or canonical evidence passed,
   so these incidents do not invalidate the product runtime result.
-- MariaDB/Hikari/Flyway, Redis, Waymark, transaction, identity, and audit persistence are not
-  implemented in alpha.1. Health reports these dependencies as `UNKNOWN`, never falsely `UP`.
+- The alpha.2 PR A source implements the internal MariaDB/Hikari/Flyway lifecycle and isolated
+  `mariadb:11.8` migration tests. Merge and isolated Paper runtime evidence remain pending.
+  MariaDB and Migration health are `UP` only after pool connectivity and Flyway validation/
+  migration succeed; failures are `DOWN` and stop service publication.
+- Durable audit persistence and player/item identity remain pending alpha.2 PR B. The transaction
+  repository, reconcile repository, optimistic locking behavior, and repository restart recovery
+  are also not implemented by PR A.
+- The public `WayfarerDatabase` stub remains unavailable. PR A adds only an internal JDBC boundary;
+  downstream plugins receive no JDBC `Connection`, Hikari, or Flyway implementation.
+- Redis remains pending alpha.3 and Waymark remains pending alpha.4.
 - The alpha.1 executor uses a fixed pool. Bounded queue/backpressure is deferred to alpha.3.
 - Incomplete and interrupted shutdown remain `DOWN` in Executor health even after lifecycle
   state becomes `DISABLED`.
