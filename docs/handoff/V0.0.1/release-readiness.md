@@ -1,18 +1,22 @@
 # V0.0.1 Release Readiness
 
 - Release readiness: BLOCKED
-- Release URL/tag/version: Pending
-- Final source commit: Pending
-- Approved RC/source: Pending
-- Requirement traceability: In progress
-- Automated tests: alpha.1 correction local suite and all build gates passed
-  (75 tests, 0 failed, 0 skipped); corrected-head CI is required before merge
-- Isolated test server: Not run
-- User observations: Pending
+- Latest approved pre-release:
+  [`V0.0.1-alpha.1`](https://github.com/eariver/Project-Wayfarer-Plugins/releases/tag/V0.0.1-alpha.1)
+- Alpha.1 source commit: `192cda35dce0dba855c2da4eb1ed71a0425f549a`
+- Stable final source commit: Pending
+- Requirement traceability: In progress; global gate remains `BLOCKED`
+- Automated tests: Passed, 75 tests / 0 failed / 0 skipped; corrected-head CI passed
+- Build gates: `check`, `assemble`, configuration-cache variants, compiler warnings,
+  packaging, and reproducibility passed
+- Isolated test server: Alpha.1 `PASSED`;
+  `docs/testing/evidence/V0.0.1-alpha.1-runtime-evidence.md`
+- User observations: Non-OP denial passed; OP health passed; internal-detail suppression passed
 - Known limitations/open decisions: See linked handoff records
-- `requirements_cleared`: Must be supplied explicitly by the Project Owner
+- `requirements_cleared`: Project Owner input remains required
 - Project Runtime placement/acceptance: Pending / pending
 
-Stable release is blocked until every applicable gate in the release plan is evidenced. This
-marker changes to `READY` only when implementation, automated verification, isolated runtime
-evidence, packaging, traceability, and handoff content are complete and commit-pinned.
+Stable release remains blocked until later alpha slices, every applicable traceability and handoff
+gate, a stable final source commit, Project Runtime placement/acceptance, and explicit
+Project Owner requirements clearance are complete. The alpha.1 source commit is not the stable
+final source, and release readiness must remain `BLOCKED` after alpha.1 evidence alone.
