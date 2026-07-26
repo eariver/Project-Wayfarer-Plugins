@@ -35,25 +35,27 @@ are complete and the remaining work is step-by-step verification on the test ser
 
 ### Inputs
 
-- `version`: pre-release SemVer without a leading `v`, for example `0.1.0-alpha.1`;
-- `test_instructions`: optional Markdown path or URL describing the current test-server procedure.
+- `version`: human-facing pre-release with uppercase `V`, for example `V0.0.1-alpha.1`;
+- `release_scope`: artifact set; the V0.0.1 line permits only `core`;
+- `test_instructions`: optional Markdown path or commit-pinned URL describing the current
+  test-server procedure.
 
 The workflow must be run from `main`. It:
 
 1. validates the pre-release version and selected source ref;
-2. runs `clean check assemble` with the requested release version;
-3. collects exactly one runtime JAR from each Plugin module;
-4. produces SHA-256 checksums, a release manifest, and dependency version evidence;
-5. produces GitHub artifact attestations;
-6. creates an annotated tag on the selected source commit;
-7. publishes a GitHub pre-release marked as a test-server candidate.
+2. strips the leading `V` only when passing the version to Gradle and `plugin.yml`;
+3. runs `clean check assemble` with that internal version;
+4. collects exactly one Core runtime JAR and rejects every non-Core scope;
+5. produces SHA-256 checksums, a release manifest, and dependency version evidence;
+6. records release scope, source commit, configuration version, migration version, and hashes;
+7. produces GitHub artifact attestations;
+8. creates the uppercase-`V` annotated tag on the selected source commit;
+9. publishes a GitHub pre-release marked as a test-server candidate.
 
 Expected assets:
 
 ```text
-Wayfarer_Core-<version>.jar
-Wayfarer_Main-<version>.jar
-Wayfarer_Frontier-<version>.jar
+Wayfarer_Core-<V-version>.jar
 SHA256SUMS.txt
 RELEASE_MANIFEST.md
 DEPENDENCY_VERSIONS.toml
@@ -78,9 +80,13 @@ not included in the stable package unless they receive their own pre-release and
 
 ### Inputs
 
-- `version`: stable SemVer without a leading `v`, for example `0.1.0`;
-- `approved_prerelease_tag`: the verified candidate, for example `v0.1.0-alpha.3`;
-- `main_server_instruction`: required Markdown path or URL containing the main-server requirements;
+- `version`: stable human-facing version with uppercase `V`, for example `V0.0.1`;
+- `release_scope`: artifact set; the V0.0.1 line permits only `core`;
+- `approved_prerelease_tag`: the verified candidate, for example `V0.0.1-alpha.4`;
+- `main_server_instruction`: committed Markdown snapshot under
+  `docs/requirements/main-server/`;
+- `requirement_traceability`: committed Markdown under `docs/requirements/main-server/`;
+- `release_readiness`: committed Markdown under `docs/handoff/`;
 - `requirements_cleared`: explicit operator confirmation that test-server verification and all
   main-server requirements are complete.
 
@@ -89,14 +95,27 @@ The workflow rejects the request when:
 - the stable version is malformed;
 - the approved tag is not an existing GitHub pre-release;
 - the approved pre-release does not belong to the requested stable version line;
+- the approved pre-release manifest scope differs from the stable release scope;
+- traceability does not contain exactly `- Release gate: CLEARED`;
+- release readiness does not contain exactly `- Release readiness: READY`;
+- traceability contains an incomplete or failed applicable status;
+- a `Not applicable` traceability row lacks a reason;
 - the workflow is not run from `main`;
 - the approved pre-release source commit is not contained in the current `main` history;
 - the operator does not explicitly confirm requirement clearance;
 - the target stable release already exists.
 
-After verification it checks out the approved pre-release source commit, rebuilds the three JARs
-with the stable version, records the approved pre-release and main-server instruction in
+After verification it checks out the approved pre-release source commit, rebuilds only the Core
+JAR with the internal stable version, records the approved pre-release and main-server instruction in
 `RELEASE_MANIFEST.md`, creates build provenance, and publishes a stable GitHub release.
+The stable package also includes commit-pinned `TEST_SERVER_EVIDENCE.md` and
+`MAIN_SERVER_INSTRUCTION.md` snapshots, plus fixed `REQUIREMENT_TRACEABILITY.md` and
+`RELEASE_READINESS.md` assets with original paths, source commit, SHA-256, and gate values in the
+manifest.
+
+Stable publication has four independent gates: traceability `CLEARED`, readiness `READY`,
+operator-supplied `requirements_cleared=true`, and `main-server-release` Environment approval.
+The boolean input alone is insufficient.
 
 A stable release means **ready for source-side handoff**. It does not itself authorize or execute
 runtime deployment.
@@ -118,20 +137,50 @@ The Project Wayfarer main-server integration process owns:
 
 ## 6. Version progression
 
-Recommended progression:
+Project Wayfarer remains on V0.1.0 while Plugin releases are technically restricted to
+`V0.0.<positive integer>` and matching pre-releases. The initial progression is:
 
 ```text
-0.1.0-alpha.1
-0.1.0-alpha.2
-0.1.0-beta.1
-0.1.0-rc.1
-0.1.0
+V0.0.1-alpha.1
+V0.0.1-alpha.2
+V0.0.1-alpha.3
+V0.0.1-alpha.4
+V0.0.1-beta.1
+V0.0.1-rc.1
+V0.0.1
 ```
 
 A new test-server candidate always receives a new pre-release version. Do not replace an existing
-release asset or move an existing release tag.
+release asset or move an existing release tag. Human-facing versions, tags, release names,
+documentation directories, and JAR filenames use uppercase `V`; Gradle and `plugin.yml` omit it.
 
-## 7. Source repository rules
+## 7. V0.0.1 artifact scope
+
+The initial release series requires `release_scope=core` and includes only `Wayfarer_Core`.
+Main and Frontier may remain buildable
+skeletons but their JARs are not release assets. The conditional EliteMobs–MVI adapter is neither
+authorized nor included. `core-main`, `core-frontier`, and `all` are reserved inputs and fail
+closed throughout V0.0.1.
+
+Stable publication downloads the approved pre-release `RELEASE_MANIFEST.md` and verifies its
+scope before building. The manifest records the source commit, scope, config version, migration
+version, and SHA-256 values. A missing Core config or migration version blocks publication.
+
+## 8. Approval records
+
+Before a pre-release run, display the repository, workflow, selected ref, source commit, release
+version, scope, test instruction, expected assets, and Environment, then obtain explicit user
+approval. Before stable release, also display the approved pre-release and source, committed test
+evidence, immutable mainline requirement reference, traceability result, known limitations, open
+decisions, and the user-supplied `requirements_cleared` value.
+
+Codex does not infer `requirements_cleared=true`.
+
+The Project mainline requirement snapshot and Codex work order are separate authorities. The
+snapshot is stored under `docs/requirements/main-server/`; the derived execution instruction is
+stored under `docs/work-orders/` and does not replace the snapshot.
+
+## 9. Source repository rules
 
 - Do not commit release JARs to this repository.
 - Do not rewrite an existing release tag.
