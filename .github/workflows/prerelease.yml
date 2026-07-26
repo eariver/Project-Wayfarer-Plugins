@@ -4,9 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "SemVer pre-release without leading v (example: 0.1.0-alpha.1)"
+        description: "Release version with uppercase V (example: V0.0.1-alpha.1)"
         required: true
         type: string
+      release_scope:
+        description: "Artifact set included in this release"
+        required: true
+        type: choice
+        options:
+          - core
+          - core-main
+          - core-frontier
+          - all
+        default: core
       test_instructions:
         description: "Optional Markdown path or commit-pinned URL for test-server verification"
         required: false
@@ -15,7 +25,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: prerelease-${{ inputs.version }}
+  group: prerelease-${{ inputs.version }}-${{ inputs.release_scope }}
   cancel-in-progress: false
 
 jobs:
@@ -31,8 +41,10 @@ jobs:
       artifact-metadata: write
 
     outputs:
-      version: ${{ steps.metadata.outputs.version }}
+      release_version: ${{ steps.metadata.outputs.release_version }}
+      gradle_version: ${{ steps.metadata.outputs.gradle_version }}
       tag: ${{ steps.metadata.outputs.tag }}
+      release_scope: ${{ steps.metadata.outputs.release_scope }}
       source_sha: ${{ steps.metadata.outputs.source_sha }}
       artifact_name: ${{ steps.metadata.outputs.artifact_name }}
 
@@ -46,6 +58,7 @@ jobs:
         id: metadata
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          RELEASE_SCOPE: ${{ inputs.release_scope }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -55,14 +68,20 @@ jobs:
             exit 1
           fi
 
-          if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
-            echo "::error::Pre-release version must resemble 0.1.0-alpha.1 and must not include a leading v."
+          if [[ ! "$INPUT_VERSION" =~ ^V[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
+            echo "::error::Pre-release version must resemble V0.0.1-alpha.1."
             exit 1
           fi
 
-          VERSION="$INPUT_VERSION"
-          TAG="v$VERSION"
-          ARTIFACT_NAME="prerelease-$VERSION"
+          if [[ "$RELEASE_SCOPE" != "core" ]]; then
+            echo "::error::The V0.0.1 release line permits only release_scope=core."
+            exit 1
+          fi
+
+          RELEASE_VERSION="$INPUT_VERSION"
+          GRADLE_VERSION="${INPUT_VERSION#V}"
+          TAG="$INPUT_VERSION"
+          ARTIFACT_NAME="prerelease-$RELEASE_VERSION-$RELEASE_SCOPE"
 
           git fetch --tags --force
 
@@ -80,8 +99,10 @@ jobs:
           fi
 
           {
-            echo "version=$VERSION"
+            echo "release_version=$RELEASE_VERSION"
+            echo "gradle_version=$GRADLE_VERSION"
             echo "tag=$TAG"
+            echo "release_scope=$RELEASE_SCOPE"
             echo "source_sha=$GITHUB_SHA"
             echo "artifact_name=$ARTIFACT_NAME"
           } >> "$GITHUB_OUTPUT"
@@ -97,15 +118,16 @@ jobs:
 
       - name: Verify and build release artifacts
         env:
-          VERSION: ${{ steps.metadata.outputs.version }}
+          VERSION: ${{ steps.metadata.outputs.gradle_version }}
         run: |
           ./gradlew --no-daemon clean check assemble \
             -PwayfarerVersion="$VERSION"
 
       - name: Collect release assets
         env:
-          VERSION: ${{ steps.metadata.outputs.version }}
+          RELEASE_VERSION: ${{ steps.metadata.outputs.release_version }}
           TAG: ${{ steps.metadata.outputs.tag }}
+          RELEASE_SCOPE: ${{ steps.metadata.outputs.release_scope }}
           SOURCE_SHA: ${{ steps.metadata.outputs.source_sha }}
           TEST_INSTRUCTIONS: ${{ inputs.test_instructions }}
         run: |
@@ -130,27 +152,50 @@ jobs:
               exit 1
             fi
 
-            cp "${jars[0]}" "release/${artifact_name}-${VERSION}.jar"
+            cp "${jars[0]}" "release/${artifact_name}-${RELEASE_VERSION}.jar"
           }
 
           copy_plugin_jar "plugins/wayfarer-core" "Wayfarer_Core"
-          copy_plugin_jar "plugins/wayfarer-main" "Wayfarer_Main"
-          copy_plugin_jar "plugins/wayfarer-frontier" "Wayfarer_Frontier"
+
+          CONFIG_VERSION="$(
+            awk '$1 == "config-version:" { print $2; exit }' \
+              plugins/wayfarer-core/src/main/resources/config.yml
+          )"
+          if [[ -z "$CONFIG_VERSION" ]]; then
+            echo "::error::Core config.yml must declare config-version before release."
+            exit 1
+          fi
+
+          MIGRATION_VERSION="$(
+            find plugins/wayfarer-core/src/main/resources/db/migration/core \
+              -maxdepth 1 -type f -name 'V*__*.sql' -printf '%f\n' \
+              | sed 's/__.*//' | sort -V | tail -n 1
+          )"
+          if [[ -z "$MIGRATION_VERSION" ]]; then
+            echo "::error::No Core Flyway migration version was found."
+            exit 1
+          fi
 
           cp gradle/libs.versions.toml release/DEPENDENCY_VERSIONS.toml
 
           (
             cd release
-            sha256sum Wayfarer_*.jar DEPENDENCY_VERSIONS.toml > SHA256SUMS.txt
+            sha256sum \
+              "Wayfarer_Core-${RELEASE_VERSION}.jar" \
+              DEPENDENCY_VERSIONS.toml \
+              > SHA256SUMS.txt
           )
 
           cat > release/RELEASE_MANIFEST.md <<EOF
           # Project Wayfarer Plugins Release Manifest
 
           - Release type: Pre-release / test-server candidate
-          - Version: ${VERSION}
+          - Version: ${RELEASE_VERSION}
           - Tag: ${TAG}
+          - Release scope: ${RELEASE_SCOPE}
           - Source commit: ${SOURCE_SHA}
+          - Config version: ${CONFIG_VERSION}
+          - Migration version: ${MIGRATION_VERSION}
           - Source branch: main
           - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           - Test instructions: ${TEST_INSTRUCTIONS:-Not specified}
@@ -159,6 +204,18 @@ jobs:
           This release is intended only for step-by-step verification on the test server.
           Publishing this release does not install plugins, run migrations, change runtime
           configuration, restart a server, or approve handoff to the main server.
+
+          ## Asset SHA-256
+
+          EOF
+
+          while read -r hash file; do
+            printf -- '- `%s`: `%s`\n' "$file" "$hash" >> release/RELEASE_MANIFEST.md
+          done < release/SHA256SUMS.txt
+
+          cat >> release/RELEASE_MANIFEST.md <<EOF
+
+          The manifest scope is authoritative for stable-release scope matching.
           EOF
 
           cat > release/RELEASE_NOTES.md <<EOF
@@ -171,13 +228,14 @@ jobs:
           decisions remain outside this workflow.
 
           - Source commit: \`${SOURCE_SHA}\`
+          - Release scope: \`${RELEASE_SCOPE}\`
           - Test instructions: ${TEST_INSTRUCTIONS:-Not specified}
           EOF
 
       - name: Generate build provenance
         uses: actions/attest@v4
         with:
-          subject-path: "release/Wayfarer_*.jar"
+          subject-path: "release/Wayfarer_Core-${{ steps.metadata.outputs.release_version }}.jar"
 
       - name: Store release package for approval
         uses: actions/upload-artifact@v4
@@ -255,7 +313,7 @@ jobs:
           fi
 
           gh release create "$TAG" \
-            release/Wayfarer_*.jar \
+            "release/Wayfarer_Core-${TAG}.jar" \
             release/SHA256SUMS.txt \
             release/RELEASE_MANIFEST.md \
             release/DEPENDENCY_VERSIONS.toml \

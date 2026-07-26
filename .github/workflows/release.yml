@@ -4,11 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Stable SemVer without leading v (example: 0.1.0)"
+        description: "Stable release version with uppercase V (example: V0.0.1)"
         required: true
         type: string
+      release_scope:
+        description: "Artifact set included in this release"
+        required: true
+        type: choice
+        options:
+          - core
+          - core-main
+          - core-frontier
+          - all
+        default: core
       approved_prerelease_tag:
-        description: "Approved test-server pre-release tag (example: v0.1.0-alpha.3)"
+        description: "Approved test-server pre-release tag (example: V0.0.1-alpha.4)"
         required: true
         type: string
       test_evidence:
@@ -16,7 +26,7 @@ on:
         required: true
         type: string
       main_server_instruction:
-        description: "Commit-pinned Markdown URL or immutable instruction reference"
+        description: "Committed Markdown path under docs/requirements/main-server/"
         required: true
         type: string
       requirements_cleared:
@@ -27,7 +37,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: release-${{ inputs.version }}
+  group: release-${{ inputs.version }}-${{ inputs.release_scope }}
   cancel-in-progress: false
 
 jobs:
@@ -43,13 +53,17 @@ jobs:
       artifact-metadata: write
 
     outputs:
-      version: ${{ steps.metadata.outputs.version }}
+      release_version: ${{ steps.metadata.outputs.release_version }}
+      gradle_version: ${{ steps.metadata.outputs.gradle_version }}
       tag: ${{ steps.metadata.outputs.tag }}
+      release_scope: ${{ steps.metadata.outputs.release_scope }}
       source_sha: ${{ steps.metadata.outputs.source_sha }}
       artifact_name: ${{ steps.metadata.outputs.artifact_name }}
       approved_prerelease_tag: ${{ steps.metadata.outputs.approved_prerelease_tag }}
       evidence_commit: ${{ steps.metadata.outputs.evidence_commit }}
       evidence_sha256: ${{ steps.metadata.outputs.evidence_sha256 }}
+      instruction_commit: ${{ steps.metadata.outputs.instruction_commit }}
+      instruction_sha256: ${{ steps.metadata.outputs.instruction_sha256 }}
 
     steps:
       - name: Check out release automation and evidence
@@ -61,6 +75,7 @@ jobs:
         id: metadata
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          RELEASE_SCOPE: ${{ inputs.release_scope }}
           APPROVED_PRERELEASE_TAG: ${{ inputs.approved_prerelease_tag }}
           TEST_EVIDENCE: ${{ inputs.test_evidence }}
           MAIN_SERVER_INSTRUCTION: ${{ inputs.main_server_instruction }}
@@ -79,19 +94,25 @@ jobs:
             exit 1
           fi
 
-          if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Stable release version must resemble 0.1.0 and must not include a leading v or pre-release suffix."
+          if [[ ! "$INPUT_VERSION" =~ ^V[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Stable release version must resemble V0.0.1."
             exit 1
           fi
 
-          if [[ ! "$APPROVED_PRERELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
-            echo "::error::Approved pre-release tag must resemble v0.1.0-alpha.1."
+          if [[ "$RELEASE_SCOPE" != "core" ]]; then
+            echo "::error::The V0.0.1 release line permits only release_scope=core."
             exit 1
           fi
 
-          VERSION="$INPUT_VERSION"
-          TAG="v$VERSION"
-          ARTIFACT_NAME="release-$VERSION"
+          if [[ ! "$APPROVED_PRERELEASE_TAG" =~ ^V[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
+            echo "::error::Approved pre-release tag must resemble V0.0.1-alpha.1."
+            exit 1
+          fi
+
+          RELEASE_VERSION="$INPUT_VERSION"
+          GRADLE_VERSION="${INPUT_VERSION#V}"
+          TAG="$INPUT_VERSION"
+          ARTIFACT_NAME="release-$RELEASE_VERSION-$RELEASE_SCOPE"
 
           if [[ "$APPROVED_PRERELEASE_TAG" != "${TAG}-"* ]]; then
             echo "::error::Approved pre-release $APPROVED_PRERELEASE_TAG does not belong to stable version $TAG."
@@ -103,8 +124,8 @@ jobs:
             exit 1
           fi
 
-          if [[ -z "$MAIN_SERVER_INSTRUCTION" ]]; then
-            echo "::error::Main-server instruction reference is required."
+          if [[ "$MAIN_SERVER_INSTRUCTION" == *".."* || ! "$MAIN_SERVER_INSTRUCTION" =~ ^docs/requirements/main-server/[A-Za-z0-9._/-]+\.md$ ]]; then
+            echo "::error::Main-server instruction must be a committed Markdown file under docs/requirements/main-server/."
             exit 1
           fi
 
@@ -123,6 +144,17 @@ jobs:
 
           if [[ "${RELEASE_DATA[0]:-}" != "$APPROVED_PRERELEASE_TAG" || "${RELEASE_DATA[1]:-}" != "true" ]]; then
             echo "::error::$APPROVED_PRERELEASE_TAG is not an existing GitHub pre-release."
+            exit 1
+          fi
+
+          PRERELEASE_MANIFEST_DIR="$RUNNER_TEMP/approved-prerelease"
+          mkdir -p "$PRERELEASE_MANIFEST_DIR"
+          gh release download "$APPROVED_PRERELEASE_TAG" \
+            --pattern RELEASE_MANIFEST.md \
+            --dir "$PRERELEASE_MANIFEST_DIR"
+          if ! grep -Fq -- "- Release scope: ${RELEASE_SCOPE}" \
+            "$PRERELEASE_MANIFEST_DIR/RELEASE_MANIFEST.md"; then
+            echo "::error::Approved pre-release manifest scope does not match ${RELEASE_SCOPE}."
             exit 1
           fi
 
@@ -146,6 +178,11 @@ jobs:
             exit 1
           fi
 
+          if ! git ls-files --error-unmatch "$MAIN_SERVER_INSTRUCTION" >/dev/null 2>&1; then
+            echo "::error::Main-server instruction $MAIN_SERVER_INSTRUCTION is not committed on the selected main revision."
+            exit 1
+          fi
+
           if ! grep -Fq -- "$APPROVED_PRERELEASE_TAG" "$TEST_EVIDENCE"; then
             echo "::error::Test evidence does not identify approved pre-release $APPROVED_PRERELEASE_TAG."
             exit 1
@@ -157,18 +194,25 @@ jobs:
           fi
 
           cp "$TEST_EVIDENCE" "$RUNNER_TEMP/TEST_SERVER_EVIDENCE.md"
+          cp "$MAIN_SERVER_INSTRUCTION" "$RUNNER_TEMP/MAIN_SERVER_INSTRUCTION.md"
 
           EVIDENCE_COMMIT="$(git rev-parse HEAD)"
           EVIDENCE_SHA256="$(sha256sum "$RUNNER_TEMP/TEST_SERVER_EVIDENCE.md" | cut -d ' ' -f 1)"
+          INSTRUCTION_COMMIT="$EVIDENCE_COMMIT"
+          INSTRUCTION_SHA256="$(sha256sum "$RUNNER_TEMP/MAIN_SERVER_INSTRUCTION.md" | cut -d ' ' -f 1)"
 
           {
-            echo "version=$VERSION"
+            echo "release_version=$RELEASE_VERSION"
+            echo "gradle_version=$GRADLE_VERSION"
             echo "tag=$TAG"
+            echo "release_scope=$RELEASE_SCOPE"
             echo "source_sha=$PRERELEASE_SHA"
             echo "artifact_name=$ARTIFACT_NAME"
             echo "approved_prerelease_tag=$APPROVED_PRERELEASE_TAG"
             echo "evidence_commit=$EVIDENCE_COMMIT"
             echo "evidence_sha256=$EVIDENCE_SHA256"
+            echo "instruction_commit=$INSTRUCTION_COMMIT"
+            echo "instruction_sha256=$INSTRUCTION_SHA256"
           } >> "$GITHUB_OUTPUT"
 
       - name: Check out approved pre-release source
@@ -189,19 +233,22 @@ jobs:
 
       - name: Verify and build release artifacts
         env:
-          VERSION: ${{ steps.metadata.outputs.version }}
+          VERSION: ${{ steps.metadata.outputs.gradle_version }}
         run: |
           ./gradlew --no-daemon clean check assemble \
             -PwayfarerVersion="$VERSION"
 
       - name: Collect release assets
         env:
-          VERSION: ${{ steps.metadata.outputs.version }}
+          RELEASE_VERSION: ${{ steps.metadata.outputs.release_version }}
           TAG: ${{ steps.metadata.outputs.tag }}
+          RELEASE_SCOPE: ${{ steps.metadata.outputs.release_scope }}
           SOURCE_SHA: ${{ steps.metadata.outputs.source_sha }}
           APPROVED_PRERELEASE_TAG: ${{ steps.metadata.outputs.approved_prerelease_tag }}
           EVIDENCE_COMMIT: ${{ steps.metadata.outputs.evidence_commit }}
           EVIDENCE_SHA256: ${{ steps.metadata.outputs.evidence_sha256 }}
+          INSTRUCTION_COMMIT: ${{ steps.metadata.outputs.instruction_commit }}
+          INSTRUCTION_SHA256: ${{ steps.metadata.outputs.instruction_sha256 }}
           TEST_EVIDENCE: ${{ inputs.test_evidence }}
           MAIN_SERVER_INSTRUCTION: ${{ inputs.main_server_instruction }}
         run: |
@@ -226,22 +273,41 @@ jobs:
               exit 1
             fi
 
-            cp "${jars[0]}" "release/${artifact_name}-${VERSION}.jar"
+            cp "${jars[0]}" "release/${artifact_name}-${RELEASE_VERSION}.jar"
           }
 
           copy_plugin_jar "plugins/wayfarer-core" "Wayfarer_Core"
-          copy_plugin_jar "plugins/wayfarer-main" "Wayfarer_Main"
-          copy_plugin_jar "plugins/wayfarer-frontier" "Wayfarer_Frontier"
+
+          CONFIG_VERSION="$(
+            awk '$1 == "config-version:" { print $2; exit }' \
+              plugins/wayfarer-core/src/main/resources/config.yml
+          )"
+          if [[ -z "$CONFIG_VERSION" ]]; then
+            echo "::error::Core config.yml must declare config-version before release."
+            exit 1
+          fi
+
+          MIGRATION_VERSION="$(
+            find plugins/wayfarer-core/src/main/resources/db/migration/core \
+              -maxdepth 1 -type f -name 'V*__*.sql' -printf '%f\n' \
+              | sed 's/__.*//' | sort -V | tail -n 1
+          )"
+          if [[ -z "$MIGRATION_VERSION" ]]; then
+            echo "::error::No Core Flyway migration version was found."
+            exit 1
+          fi
 
           cp gradle/libs.versions.toml release/DEPENDENCY_VERSIONS.toml
           cp "$RUNNER_TEMP/TEST_SERVER_EVIDENCE.md" release/TEST_SERVER_EVIDENCE.md
+          cp "$RUNNER_TEMP/MAIN_SERVER_INSTRUCTION.md" release/MAIN_SERVER_INSTRUCTION.md
 
           (
             cd release
             sha256sum \
-              Wayfarer_*.jar \
+              "Wayfarer_Core-${RELEASE_VERSION}.jar" \
               DEPENDENCY_VERSIONS.toml \
               TEST_SERVER_EVIDENCE.md \
+              MAIN_SERVER_INSTRUCTION.md \
               > SHA256SUMS.txt
           )
 
@@ -249,15 +315,20 @@ jobs:
           # Project Wayfarer Plugins Release Manifest
 
           - Release type: Stable / main-server handoff candidate
-          - Version: ${VERSION}
+          - Version: ${RELEASE_VERSION}
           - Tag: ${TAG}
+          - Release scope: ${RELEASE_SCOPE}
           - Source commit: ${SOURCE_SHA}
+          - Config version: ${CONFIG_VERSION}
+          - Migration version: ${MIGRATION_VERSION}
           - Source lineage: contained in main
           - Approved pre-release: ${APPROVED_PRERELEASE_TAG}
           - Test evidence source path: ${TEST_EVIDENCE}
           - Test evidence source commit: ${EVIDENCE_COMMIT}
           - Test evidence SHA-256: ${EVIDENCE_SHA256}
           - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
+          - Main-server instruction source commit: ${INSTRUCTION_COMMIT}
+          - Main-server instruction SHA-256: ${INSTRUCTION_SHA256}
           - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           - Test-server verification: Confirmed complete by workflow operator
           - Main-server requirements: Confirmed cleared by workflow operator
@@ -266,6 +337,18 @@ jobs:
           This release is the source-side handoff package for Project Wayfarer main-server
           integration. Publishing it does not install plugins, run migrations, modify runtime
           configuration, restart servers, or constitute runtime acceptance.
+
+          ## Asset SHA-256
+
+          EOF
+
+          while read -r hash file; do
+            printf -- '- `%s`: `%s`\n' "$file" "$hash" >> release/RELEASE_MANIFEST.md
+          done < release/SHA256SUMS.txt
+
+          cat >> release/RELEASE_MANIFEST.md <<EOF
+
+          This stable package matches the approved pre-release scope.
           EOF
 
           cat > release/RELEASE_NOTES.md <<EOF
@@ -276,6 +359,7 @@ jobs:
           - Test-server verification: completed
           - Approved pre-release: \`${APPROVED_PRERELEASE_TAG}\`
           - Source commit: \`${SOURCE_SHA}\`
+          - Release scope: \`${RELEASE_SCOPE}\`
           - Test evidence: \`${TEST_EVIDENCE}\` at \`${EVIDENCE_COMMIT}\`
           - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
 
@@ -287,7 +371,7 @@ jobs:
       - name: Generate build provenance
         uses: actions/attest@v4
         with:
-          subject-path: "release/Wayfarer_*.jar"
+          subject-path: "release/Wayfarer_Core-${{ steps.metadata.outputs.release_version }}.jar"
 
       - name: Store release package for approval
         uses: actions/upload-artifact@v4
@@ -365,11 +449,12 @@ jobs:
           fi
 
           gh release create "$TAG" \
-            release/Wayfarer_*.jar \
+            "release/Wayfarer_Core-${TAG}.jar" \
             release/SHA256SUMS.txt \
             release/RELEASE_MANIFEST.md \
             release/DEPENDENCY_VERSIONS.toml \
             release/TEST_SERVER_EVIDENCE.md \
+            release/MAIN_SERVER_INSTRUCTION.md \
             --verify-tag \
             --latest \
             --title "Project Wayfarer Plugins $TAG" \

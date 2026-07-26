@@ -10,6 +10,10 @@
 8. Main and Frontier may depend on Core; Core must not depend on Main or Frontier.
 9. Normal inventories are owned by the Minecraft backend/MVI, never by this repository's MariaDB schema.
 10. Report changed files, tests, limitations and any authority conflict.
+11. Keep mainline requirements, source provenance, assessment, traceability, test evidence,
+    release-readiness records, and handoff documents under version control in this repository.
+    Handoff references must use immutable commit SHAs or release tags; conversation-only
+    decisions and mutable branch URLs are not sufficient evidence.
 
 ## GitHub Actions release operations
 
@@ -20,13 +24,19 @@
     - selected ref;
     - source commit;
     - release version;
+    - release scope;
     - test instruction reference;
+    - expected artifacts;
+    - GitHub Environment;
       and wait for explicit user approval.
 - Before triggering `release.yml`, Codex must additionally display:
     - approved pre-release tag;
     - approved source commit;
     - test-server evidence reference;
     - main-server instruction reference;
+    - requirement traceability result;
+    - known limitations;
+    - open decisions;
     - requirements-clearance value;
       and wait for explicit user approval.
 - Codex must never set `requirements_cleared=true` solely from its own inference.
