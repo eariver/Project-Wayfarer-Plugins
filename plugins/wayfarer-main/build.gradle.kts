@@ -9,12 +9,19 @@ dependencies {
     implementation(project(":libraries:wayfarer-common"))
 }
 
+
 tasks.processResources {
-    inputs.property("version", project.version)
+    val expansionProperties = mapOf(
+        "version" to project.version.toString(),
+    )
+
+    inputs.properties(expansionProperties)
+
     filesMatching("plugin.yml") {
-        expand("version" to project.version)
+        expand(expansionProperties)
     }
 }
+
 
 tasks.shadowJar {
     archiveClassifier.set("")
