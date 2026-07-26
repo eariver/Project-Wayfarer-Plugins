@@ -5,3 +5,11 @@ api-version: '1.21.11'
 description: Project Wayfarer shared plugin infrastructure
 author: eariver
 softdepend: [Vault, RedisEconomy, LuckPerms]
+commands:
+  wayfarer:
+    description: Project Wayfarer administration command
+    usage: /wayfarer admin health
+permissions:
+  wayfarer.admin.health:
+    description: View sanitized Wayfarer_Core health
+    default: op

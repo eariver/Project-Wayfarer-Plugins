@@ -10,8 +10,8 @@ requires exact `CLEARED` and `READY` markers in addition to explicit owner clear
 | Area | Evidence commit/path | Status |
 |---|---|---|
 | Governance and scope | Pending immutable commit | In progress |
-| Core implementation | Pending | Not started |
-| Automated verification | Pending | Not started |
+| Core implementation | `6a5940023c46d0440de30e46edc2833c80076ecc` | alpha.1 implemented; later slices pending |
+| Automated verification | `docs/testing/results/V0.0.1-alpha.1.md` | alpha.1 automated test passed; later slices pending |
 | Runtime verification | Pending | Not started |
 | Packaging and provenance | Pending | Not started |
 | Handoff and acceptance input | Pending | In progress |

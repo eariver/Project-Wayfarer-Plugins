@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.flyway.mysql)
     implementation(libs.mariadb.client)
     implementation(libs.lettuce)
+    testImplementation(libs.paper.api)
 }
 
 
@@ -30,7 +31,12 @@ tasks.processResources {
 
 tasks.shadowJar {
     archiveClassifier.set("")
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
+    append("META-INF/LICENSE")
+    append("META-INF/LICENSE.txt")
+    append("META-INF/NOTICE")
+    append("META-INF/io.netty.versions.properties")
 }
 
 tasks.jar {
