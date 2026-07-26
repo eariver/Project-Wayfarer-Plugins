@@ -34,7 +34,8 @@
     - approved source commit;
     - test-server evidence reference;
     - main-server instruction reference;
-    - requirement traceability result;
+    - requirement traceability path and gate result;
+    - release-readiness path and result;
     - known limitations;
     - open decisions;
     - requirements-clearance value;

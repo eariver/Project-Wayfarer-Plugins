@@ -13,7 +13,11 @@
 - Supersedes: None
 - Snapshot:
   `Project_Wayfarer_Plugin_Implementation_Test_Release_and_Mainline_Handoff_Requirements.md`
-- Snapshot SHA-256: `e08a84286dc16970401ec42d9f15e50ad813284df5841d4ed3ac447dfeae96f3`
+- Snapshot SHA-256: `c06c4e0a580675ce77866952450c5e024a795e33c228af4cef1ef58ccc63118a`
+- Work order:
+  `../../../work-orders/V0.0.1/Project_Wayfarer_Plugins_Codex_Request_V0.0.1.md`
+- Authority note: The snapshot is the Project mainline requirement. The work order is an
+  execution instruction derived from that requirement and does not replace it.
 
 ## Project authority snapshot
 

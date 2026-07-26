@@ -85,6 +85,8 @@ not included in the stable package unless they receive their own pre-release and
 - `approved_prerelease_tag`: the verified candidate, for example `V0.0.1-alpha.4`;
 - `main_server_instruction`: committed Markdown snapshot under
   `docs/requirements/main-server/`;
+- `requirement_traceability`: committed Markdown under `docs/requirements/main-server/`;
+- `release_readiness`: committed Markdown under `docs/handoff/`;
 - `requirements_cleared`: explicit operator confirmation that test-server verification and all
   main-server requirements are complete.
 
@@ -94,6 +96,10 @@ The workflow rejects the request when:
 - the approved tag is not an existing GitHub pre-release;
 - the approved pre-release does not belong to the requested stable version line;
 - the approved pre-release manifest scope differs from the stable release scope;
+- traceability does not contain exactly `- Release gate: CLEARED`;
+- release readiness does not contain exactly `- Release readiness: READY`;
+- traceability contains an incomplete or failed applicable status;
+- a `Not applicable` traceability row lacks a reason;
 - the workflow is not run from `main`;
 - the approved pre-release source commit is not contained in the current `main` history;
 - the operator does not explicitly confirm requirement clearance;
@@ -103,7 +109,13 @@ After verification it checks out the approved pre-release source commit, rebuild
 JAR with the internal stable version, records the approved pre-release and main-server instruction in
 `RELEASE_MANIFEST.md`, creates build provenance, and publishes a stable GitHub release.
 The stable package also includes commit-pinned `TEST_SERVER_EVIDENCE.md` and
-`MAIN_SERVER_INSTRUCTION.md` snapshots.
+`MAIN_SERVER_INSTRUCTION.md` snapshots, plus fixed `REQUIREMENT_TRACEABILITY.md` and
+`RELEASE_READINESS.md` assets with original paths, source commit, SHA-256, and gate values in the
+manifest.
+
+Stable publication has four independent gates: traceability `CLEARED`, readiness `READY`,
+operator-supplied `requirements_cleared=true`, and `main-server-release` Environment approval.
+The boolean input alone is insufficient.
 
 A stable release means **ready for source-side handoff**. It does not itself authorize or execute
 runtime deployment.
@@ -125,8 +137,8 @@ The Project Wayfarer main-server integration process owns:
 
 ## 6. Version progression
 
-Project Wayfarer remains on V0.1.0 while Plugin releases remain on the V0.0.x line. The initial
-progression is:
+Project Wayfarer remains on V0.1.0 while Plugin releases are technically restricted to
+`V0.0.<positive integer>` and matching pre-releases. The initial progression is:
 
 ```text
 V0.0.1-alpha.1
@@ -144,7 +156,8 @@ documentation directories, and JAR filenames use uppercase `V`; Gradle and `plug
 
 ## 7. V0.0.1 artifact scope
 
-`release_scope=core` includes only `Wayfarer_Core`. Main and Frontier may remain buildable
+The initial release series requires `release_scope=core` and includes only `Wayfarer_Core`.
+Main and Frontier may remain buildable
 skeletons but their JARs are not release assets. The conditional EliteMobs–MVI adapter is neither
 authorized nor included. `core-main`, `core-frontier`, and `all` are reserved inputs and fail
 closed throughout V0.0.1.
@@ -162,6 +175,10 @@ evidence, immutable mainline requirement reference, traceability result, known l
 decisions, and the user-supplied `requirements_cleared` value.
 
 Codex does not infer `requirements_cleared=true`.
+
+The Project mainline requirement snapshot and Codex work order are separate authorities. The
+snapshot is stored under `docs/requirements/main-server/`; the derived execution instruction is
+stored under `docs/work-orders/` and does not replace the snapshot.
 
 ## 9. Source repository rules
 

@@ -29,6 +29,14 @@ on:
         description: "Committed Markdown path under docs/requirements/main-server/"
         required: true
         type: string
+      requirement_traceability:
+        description: "Committed requirement traceability Markdown path"
+        required: true
+        type: string
+      release_readiness:
+        description: "Committed release-readiness Markdown path"
+        required: true
+        type: string
       requirements_cleared:
         description: "Confirm test completion and clearance of all main-server requirements"
         required: true
@@ -64,6 +72,12 @@ jobs:
       evidence_sha256: ${{ steps.metadata.outputs.evidence_sha256 }}
       instruction_commit: ${{ steps.metadata.outputs.instruction_commit }}
       instruction_sha256: ${{ steps.metadata.outputs.instruction_sha256 }}
+      traceability_commit: ${{ steps.metadata.outputs.traceability_commit }}
+      traceability_sha256: ${{ steps.metadata.outputs.traceability_sha256 }}
+      traceability_gate: ${{ steps.metadata.outputs.traceability_gate }}
+      readiness_commit: ${{ steps.metadata.outputs.readiness_commit }}
+      readiness_sha256: ${{ steps.metadata.outputs.readiness_sha256 }}
+      readiness_gate: ${{ steps.metadata.outputs.readiness_gate }}
 
     steps:
       - name: Check out release automation and evidence
@@ -79,6 +93,8 @@ jobs:
           APPROVED_PRERELEASE_TAG: ${{ inputs.approved_prerelease_tag }}
           TEST_EVIDENCE: ${{ inputs.test_evidence }}
           MAIN_SERVER_INSTRUCTION: ${{ inputs.main_server_instruction }}
+          REQUIREMENT_TRACEABILITY: ${{ inputs.requirement_traceability }}
+          RELEASE_READINESS: ${{ inputs.release_readiness }}
           REQUIREMENTS_CLEARED: ${{ inputs.requirements_cleared }}
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -94,17 +110,17 @@ jobs:
             exit 1
           fi
 
-          if [[ ! "$INPUT_VERSION" =~ ^V[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ! "$INPUT_VERSION" =~ ^V0\.0\.[1-9][0-9]*$ ]]; then
             echo "::error::Stable release version must resemble V0.0.1."
             exit 1
           fi
 
           if [[ "$RELEASE_SCOPE" != "core" ]]; then
-            echo "::error::The V0.0.1 release line permits only release_scope=core."
+            echo "::error::The current V0.0.x release policy permits only release_scope=core."
             exit 1
           fi
 
-          if [[ ! "$APPROVED_PRERELEASE_TAG" =~ ^V[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
+          if [[ ! "$APPROVED_PRERELEASE_TAG" =~ ^V0\.0\.[1-9][0-9]*-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
             echo "::error::Approved pre-release tag must resemble V0.0.1-alpha.1."
             exit 1
           fi
@@ -126,6 +142,16 @@ jobs:
 
           if [[ "$MAIN_SERVER_INSTRUCTION" == *".."* || ! "$MAIN_SERVER_INSTRUCTION" =~ ^docs/requirements/main-server/[A-Za-z0-9._/-]+\.md$ ]]; then
             echo "::error::Main-server instruction must be a committed Markdown file under docs/requirements/main-server/."
+            exit 1
+          fi
+
+          if [[ "$REQUIREMENT_TRACEABILITY" == *".."* || ! "$REQUIREMENT_TRACEABILITY" =~ ^docs/requirements/main-server/[A-Za-z0-9._/-]+\.md$ ]]; then
+            echo "::error::Requirement traceability must be a committed Markdown file under docs/requirements/main-server/."
+            exit 1
+          fi
+
+          if [[ "$RELEASE_READINESS" == *".."* || ! "$RELEASE_READINESS" =~ ^docs/handoff/[A-Za-z0-9._/-]+\.md$ ]]; then
+            echo "::error::Release readiness must be a committed Markdown file under docs/handoff/."
             exit 1
           fi
 
@@ -183,6 +209,59 @@ jobs:
             exit 1
           fi
 
+          if ! git ls-files --error-unmatch "$REQUIREMENT_TRACEABILITY" >/dev/null 2>&1; then
+            echo "::error::Requirement traceability $REQUIREMENT_TRACEABILITY is not committed on the selected main revision."
+            exit 1
+          fi
+
+          if ! git ls-files --error-unmatch "$RELEASE_READINESS" >/dev/null 2>&1; then
+            echo "::error::Release readiness $RELEASE_READINESS is not committed on the selected main revision."
+            exit 1
+          fi
+
+          if ! grep -Fxq -- "- Release gate: CLEARED" "$REQUIREMENT_TRACEABILITY"; then
+            echo "::error::Requirement traceability release gate is not CLEARED."
+            exit 1
+          fi
+
+          if ! grep -Fxq -- "- Release readiness: READY" "$RELEASE_READINESS"; then
+            echo "::error::Release readiness is not READY."
+            exit 1
+          fi
+
+          if awk -F'|' '
+            BEGIN { incomplete = 0 }
+            /^\|/ {
+              status = $9
+              gsub(/^[ \t]+|[ \t]+$/, "", status)
+              if (status == "Not started" || status == "In progress" ||
+                  status == "Failed" || status == "Blocked") {
+                incomplete = 1
+              }
+            }
+            END { exit incomplete ? 0 : 1 }
+          ' "$REQUIREMENT_TRACEABILITY"; then
+            echo "::error::Requirement traceability contains an incomplete or failed status."
+            exit 1
+          fi
+
+          if awk -F'|' '
+            BEGIN { missing_reason = 0 }
+            /^\|/ {
+              status = $9
+              notes = $10
+              gsub(/^[ \t]+|[ \t]+$/, "", status)
+              gsub(/^[ \t]+|[ \t]+$/, "", notes)
+              if (status == "Not applicable" && notes == "") {
+                missing_reason = 1
+              }
+            }
+            END { exit missing_reason ? 0 : 1 }
+          ' "$REQUIREMENT_TRACEABILITY"; then
+            echo "::error::Every Not applicable traceability row must include a reason in Notes."
+            exit 1
+          fi
+
           if ! grep -Fq -- "$APPROVED_PRERELEASE_TAG" "$TEST_EVIDENCE"; then
             echo "::error::Test evidence does not identify approved pre-release $APPROVED_PRERELEASE_TAG."
             exit 1
@@ -195,11 +274,19 @@ jobs:
 
           cp "$TEST_EVIDENCE" "$RUNNER_TEMP/TEST_SERVER_EVIDENCE.md"
           cp "$MAIN_SERVER_INSTRUCTION" "$RUNNER_TEMP/MAIN_SERVER_INSTRUCTION.md"
+          cp "$REQUIREMENT_TRACEABILITY" "$RUNNER_TEMP/REQUIREMENT_TRACEABILITY.md"
+          cp "$RELEASE_READINESS" "$RUNNER_TEMP/RELEASE_READINESS.md"
 
           EVIDENCE_COMMIT="$(git rev-parse HEAD)"
           EVIDENCE_SHA256="$(sha256sum "$RUNNER_TEMP/TEST_SERVER_EVIDENCE.md" | cut -d ' ' -f 1)"
           INSTRUCTION_COMMIT="$EVIDENCE_COMMIT"
           INSTRUCTION_SHA256="$(sha256sum "$RUNNER_TEMP/MAIN_SERVER_INSTRUCTION.md" | cut -d ' ' -f 1)"
+          TRACEABILITY_COMMIT="$EVIDENCE_COMMIT"
+          TRACEABILITY_SHA256="$(sha256sum "$RUNNER_TEMP/REQUIREMENT_TRACEABILITY.md" | cut -d ' ' -f 1)"
+          TRACEABILITY_GATE="CLEARED"
+          READINESS_COMMIT="$EVIDENCE_COMMIT"
+          READINESS_SHA256="$(sha256sum "$RUNNER_TEMP/RELEASE_READINESS.md" | cut -d ' ' -f 1)"
+          READINESS_GATE="READY"
 
           {
             echo "release_version=$RELEASE_VERSION"
@@ -213,6 +300,12 @@ jobs:
             echo "evidence_sha256=$EVIDENCE_SHA256"
             echo "instruction_commit=$INSTRUCTION_COMMIT"
             echo "instruction_sha256=$INSTRUCTION_SHA256"
+            echo "traceability_commit=$TRACEABILITY_COMMIT"
+            echo "traceability_sha256=$TRACEABILITY_SHA256"
+            echo "traceability_gate=$TRACEABILITY_GATE"
+            echo "readiness_commit=$READINESS_COMMIT"
+            echo "readiness_sha256=$READINESS_SHA256"
+            echo "readiness_gate=$READINESS_GATE"
           } >> "$GITHUB_OUTPUT"
 
       - name: Check out approved pre-release source
@@ -249,8 +342,16 @@ jobs:
           EVIDENCE_SHA256: ${{ steps.metadata.outputs.evidence_sha256 }}
           INSTRUCTION_COMMIT: ${{ steps.metadata.outputs.instruction_commit }}
           INSTRUCTION_SHA256: ${{ steps.metadata.outputs.instruction_sha256 }}
+          TRACEABILITY_COMMIT: ${{ steps.metadata.outputs.traceability_commit }}
+          TRACEABILITY_SHA256: ${{ steps.metadata.outputs.traceability_sha256 }}
+          TRACEABILITY_GATE: ${{ steps.metadata.outputs.traceability_gate }}
+          READINESS_COMMIT: ${{ steps.metadata.outputs.readiness_commit }}
+          READINESS_SHA256: ${{ steps.metadata.outputs.readiness_sha256 }}
+          READINESS_GATE: ${{ steps.metadata.outputs.readiness_gate }}
           TEST_EVIDENCE: ${{ inputs.test_evidence }}
           MAIN_SERVER_INSTRUCTION: ${{ inputs.main_server_instruction }}
+          REQUIREMENT_TRACEABILITY: ${{ inputs.requirement_traceability }}
+          RELEASE_READINESS: ${{ inputs.release_readiness }}
         run: |
           set -euo pipefail
           mkdir -p release
@@ -300,6 +401,8 @@ jobs:
           cp gradle/libs.versions.toml release/DEPENDENCY_VERSIONS.toml
           cp "$RUNNER_TEMP/TEST_SERVER_EVIDENCE.md" release/TEST_SERVER_EVIDENCE.md
           cp "$RUNNER_TEMP/MAIN_SERVER_INSTRUCTION.md" release/MAIN_SERVER_INSTRUCTION.md
+          cp "$RUNNER_TEMP/REQUIREMENT_TRACEABILITY.md" release/REQUIREMENT_TRACEABILITY.md
+          cp "$RUNNER_TEMP/RELEASE_READINESS.md" release/RELEASE_READINESS.md
 
           (
             cd release
@@ -308,6 +411,8 @@ jobs:
               DEPENDENCY_VERSIONS.toml \
               TEST_SERVER_EVIDENCE.md \
               MAIN_SERVER_INSTRUCTION.md \
+              REQUIREMENT_TRACEABILITY.md \
+              RELEASE_READINESS.md \
               > SHA256SUMS.txt
           )
 
@@ -329,6 +434,14 @@ jobs:
           - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
           - Main-server instruction source commit: ${INSTRUCTION_COMMIT}
           - Main-server instruction SHA-256: ${INSTRUCTION_SHA256}
+          - Requirement traceability path: ${REQUIREMENT_TRACEABILITY}
+          - Requirement traceability source commit: ${TRACEABILITY_COMMIT}
+          - Requirement traceability SHA-256: ${TRACEABILITY_SHA256}
+          - Release gate: ${TRACEABILITY_GATE}
+          - Release readiness path: ${RELEASE_READINESS}
+          - Release readiness source commit: ${READINESS_COMMIT}
+          - Release readiness SHA-256: ${READINESS_SHA256}
+          - Release readiness: ${READINESS_GATE}
           - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           - Test-server verification: Confirmed complete by workflow operator
           - Main-server requirements: Confirmed cleared by workflow operator
@@ -362,6 +475,8 @@ jobs:
           - Release scope: \`${RELEASE_SCOPE}\`
           - Test evidence: \`${TEST_EVIDENCE}\` at \`${EVIDENCE_COMMIT}\`
           - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
+          - Requirement traceability: \`${REQUIREMENT_TRACEABILITY}\` (${TRACEABILITY_GATE})
+          - Release readiness: \`${RELEASE_READINESS}\` (${READINESS_GATE})
 
           Runtime deployment, migration execution, configuration application, backups,
           restart operations, acceptance evidence, and rollback decisions remain owned by
@@ -455,6 +570,8 @@ jobs:
             release/DEPENDENCY_VERSIONS.toml \
             release/TEST_SERVER_EVIDENCE.md \
             release/MAIN_SERVER_INSTRUCTION.md \
+            release/REQUIREMENT_TRACEABILITY.md \
+            release/RELEASE_READINESS.md \
             --verify-tag \
             --latest \
             --title "Project Wayfarer Plugins $TAG" \

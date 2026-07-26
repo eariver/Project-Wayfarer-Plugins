@@ -1,35 +1,144 @@
-# Project Wayfarer Plugins — Codex実装・試験・Release依頼書
+# Project Wayfarer Plugin担当向け
+# Roadmap準拠 Plugin実装・試験・Release・本流Handoff要求書
 
-## 0. 実行設定
+## 1. 推奨Sol
 
 ```text
-IDE:
-  IntelliJ IDEA
-
-Agent:
-  Codex（JetBrains AI Assistant統合）
-
-Model:
-  GPT-5.6 Sol
-
-Reasoning:
-  High
-
-Mode:
-  通常のSource実装・Git操作:
-    Agent
-
-  Repository外の隔離Test Server構築・起動・停止:
-    Agent (full access)
+high
 ```
 
-本Taskは、Project Wayfarer V0.1.0に必要な独自Plugin群のうち、最初の正式Plugin Releaseとして`Wayfarer_Core`を実装・試験・Releaseし、Project本流へHandoff可能な状態にするものである。
+### 理由
 
-設計、Public API、Database Migration、Transaction、Idempotency、Threading、Fail-closed、Security、Test evidenceおよびRelease provenanceに関する判断が後続の`Wayfarer_Main`／`Wayfarer_Frontier`へ波及するため、初回作業はHigh reasoningで実施する。
+本Taskは、Project Wayfarer V0.1.0へ向けた独自Plugin実装をPlugin担当へ委ねつつ、Project本流が後続の統合・受入Test・Roadmap完了判定に必要とする成果物を漏れなく確保するための要求定義である。
+
+Plugin担当には、設計、Module分割、内部Architecture、実装順序、追加機能、Release単位および試験方法について広い裁量を与える。
+
+一方、次はProject Wayfarer全体へ影響するため、現行方針・正本・Decision Gateを厳守する。
+
+- Runtime Pluginの責務境界
+- Main／Frontierの依存方向
+- MariaDB／Redis／MVI／WaymarkのAuthority
+- Main Thread／Async Thread境界
+- Cross-backend Item／Player State隔離
+- Database Migration
+- Public API互換性
+- Security／Permission／Secret
+- EliteMobs–MVI Adapter Decision Gate
+- Project Runtimeへの導入権限
+- Roadmap上の完了判定
 
 ---
 
-## 1. 対象Repository
+## 2. 基本方針
+
+### 2.1 Plugin担当へ委ねるもの
+
+Project Wayfarerの現行方針、責務境界、AcceptanceおよびDecision Gateに反しない限り、次はPlugin担当の裁量とする。
+
+```text
+内部Architecture
+Class／Package構成
+Module追加／統合
+Design Pattern
+Library選択
+Build改善
+Test Framework
+Test Consumer
+CI改善
+Static Analysis
+Formatting
+Performance最適化
+Observability
+追加のAdmin／Debug補助
+Releaseの分割／統合
+実装順序
+追加Document
+追加Test
+追加Artifact
+```
+
+Plugin担当は、Project本流の要求を最低条件として扱い、より高品質な実装・試験・文書・Releaseを提供してよい。
+
+### 2.2 追加実装の許容
+
+必要条件を満たす限り、今回のReleaseへ次を含めてもよい。
+
+```text
+Wayfarer_Core
+Wayfarer_Main
+Wayfarer_Frontier
+Growth Pickaxe
+Worlds Beyond独自機能
+Launchpad
+Waystone
+Frontier WM Shop
+LeafGrapple Adapter
+将来拡張を阻害しない共通Library／Testkit
+```
+
+追加したArtifact／機能ごとに、後述のRelease成果物とPlugin側Test結果を提出すること。
+
+追加実装が存在しても、Project本流のRoadmap Orderは自動的に完了しない。
+
+```text
+Order 9:
+  Wayfarer_CoreのProject側受入後に完了判定
+
+Order 10:
+  Wayfarer_Main／Growth PickaxeのProject側受入後に完了判定
+
+Order 11:
+  Wayfarer_FrontierのProject側受入後に完了判定
+```
+
+同一ReleaseにCore／Main／Frontierが含まれても、Project本流ではArtifactごと、Orderごとに分離して受入判定する。
+
+### 2.3 条件付きArtifact
+
+次は、Project側Decisionが成立する前に正式Artifactとして実装・Releaseしてはならない。
+
+```text
+Wayfarer_Frontier_EliteMobsMVI
+wayfarer-elitemobs-mvi-contract
+```
+
+必要条件：
+
+```text
+Order 13 Decision Result:
+  ADAPTER_REQUIRED
+```
+
+順序：
+
+```text
+固定Worldの静的MVI登録
+→ 承認済みBlueprintに限定した厳密Regex
+→ 前二者で安全に成立しない場合だけAdapter
+```
+
+実験用Branch、調査用Prototypeまたは捨てる前提のSpikeを作る場合も、正式Release Artifact、Runtime配置候補または既定Architectureとして扱わない。
+
+---
+
+## 3. 本流が要求する最低成果
+
+Plugin担当の実装範囲にかかわらず、今回最低限必要な成果は次である。
+
+```text
+Plugin Repository Foundation
+Wayfarer_Coreの実装
+Wayfarer_CoreのPlugin側Test
+Wayfarer_Coreの単体Test Server試験
+Wayfarer_Coreの非SNAPSHOT Release／Pre-release
+Project本流向けHandoff
+```
+
+追加でWayfarer_Main／Wayfarer_Frontier等を実装した場合は、それらについても同等のRelease成果とTest evidenceを要求する。
+
+---
+
+## 4. 対象Repository
 
 ### Plugin Repository
 
@@ -37,42 +146,35 @@ Mode:
 eariver/Project-Wayfarer-Plugins
 ```
 
+基準Commit：
+
+```text
+74d7d6e70ebd0d9da9882d912d846c875d2558ac
+Fix processResources configuration cache compatibility
+```
+
+開始時HEADが進んでいる場合は、最新のOwner／Plugin担当変更を保持し、差分を監査する。
+
 ### Project Repository
 
 ```text
 eariver/Project_Wayfarer
 ```
 
-Project Repositoryは参照専用とする。
+参照基準Commit：
 
-禁止：
-
-- Project RepositoryへのCommit
-- Project RuntimeへのJAR配置
-- Project実DatabaseへのMigration
-- Project Runtime Config変更
-- Project Secret設定
-- Project Permission変更
-- Project Server起動
-- Project World／Player Data変更
-- `versions.yml`／`plugin-manifest.yml`更新
-- Roadmap完了判定
-
-開始時に次を実行し、結果を作業報告へ記録する。
-
-```powershell
-git status --short
-git branch --show-current
-git rev-parse HEAD
-git log -1 --oneline
-git remote -v
+```text
+344eedc738d75954daa43facfeef302944f2963a
+docs: Frontier Lock文書整合Commitを記録
 ```
 
-Owner変更および既存Release Automationを保持すること。Force Push、History Rewrite、既存Tagの移動、既存Release Assetの上書きを禁止する。
+Project Repositoryは参照専用である。
+
+Plugin担当はProject Repository、Project Runtime、Project DatabaseまたはProject Permissionを変更しない。
 
 ---
 
-## 2. Authority
+## 5. Authority
 
 矛盾時の優先順：
 
@@ -80,28 +182,26 @@ Owner変更および既存Release Automationを保持すること。Force Push�
 2. Project Wayfarer現行`docs/`およびRuntime Lock
 3. 現行Server／Theme Concept
 4. 現行Plugin Concept
-5. 本流から受領した実装・試験・Release・Handoff要求書
-6. Plugin Repositoryの作業指示書兼設計仕様書
-7. Plugin担当による詳細設計
-8. 実装上の便宜
+5. Plugin Repositoryの作業指示書兼設計仕様書
+6. Plugin担当の詳細設計
+7. 実装上の便宜
 
-必ず確認するPlugin Repository文書：
+必ず参照する。
+
+### Plugin Repository
 
 ```text
-AGENTS.md
-README.md
 docs/specifications/Project_Wayfarer_Plugin_Work_Order_and_Design_Specification_v0.0.1.md
-docs/operations/release-process.md
+README.md
 settings.gradle.kts
 build.gradle.kts
-gradle.properties
 gradle/libs.versions.toml
 .github/workflows/ci.yml
-.github/workflows/prerelease.yml
-.github/workflows/release.yml
 ```
 
-必ず確認するProject Repository文書：
+既存のSource、Migration、Config、Contract、ADR、TestおよびModuleもすべて確認する。
+
+### Project Repository
 
 ```text
 concepts/plugins/Project_Wayfarer_Plugin_Concept_v0.0.3.md
@@ -119,249 +219,20 @@ versions.yml
 plugin-manifest.yml
 ```
 
-参照したProject Commit、文書Version、Blob SHAまたはCommit SHAをTest Reportへ記録する。
+参照したVersion、Blob SHAまたはCommit SHAをTest Reportに記録する。
 
 ---
 
-## 3. 受領要求書のRepository管理
+## 6. Project Wayfarerの固定境界
 
-本流から受領した次の要求書を正本SnapshotとしてPlugin Repositoryへ保存する。
+Plugin担当の裁量は、次の境界内で行使する。
 
-```text
-Project_Wayfarer_Plugin_Implementation_Test_Release_and_Mainline_Handoff_Requirements.md
-```
-
-配置：
-
-```text
-docs/requirements/main-server/Project-Wayfarer-V0.1.0/
-├─ Project_Wayfarer_Plugin_Implementation_Test_Release_and_Mainline_Handoff_Requirements.md
-├─ source.md
-├─ assessment.md
-└─ traceability.md
-```
-
-### `source.md`
-
-最低限、次を記録する。
-
-```markdown
-# Requirement Source
-
-- Requirement set: Project Wayfarer V0.1.0
-- Source project: Project Wayfarer
-- Source repository: eariver/Project_Wayfarer
-- Project reference commit: 344eedc738d75954daa43facfeef302944f2963a
-- Plugin repository baseline stated by source:
-  74d7d6e70ebd0d9da9882d912d846c875d2558ac
-- Plugin repository actual pre-execution HEAD: <actual SHA>
-- Received date: <YYYY-MM-DD>
-- Authority: Project mainline requirement
-- Supersedes: None
-```
-
-### `assessment.md`
-
-次を記録する。
-
-- 要求の実装可能性
-- 現在Repositoryとの差分
-- 既存Release Automationへの必要変更
-- Authority conflictの有無
-- 未確定事項
-- 停止／Escalation条件
-- 初回Release Scope
-- Test Server前提
-- Project Runtime未変更境界
-
-### `traceability.md`
-
-要求を一意なIDへ分解し、最低でも次の列を持つ。
-
-```markdown
-| Requirement ID | Requirement | Implementation | Automated test | Pre-release | Runtime evidence | Status |
-|---|---|---|---|---|---|---|
-```
-
-状態：
-
-```text
-Not started
-In progress
-Implemented
-Automated test passed
-Runtime test passed
-Passed with limitation
-Failed
-Blocked
-Not applicable
-```
-
-Codexは、実装・Test・Runtime evidenceのCommit参照がない要求を`Passed`にしない。
-
----
-
-## 4. Version方針
-
-Project Wayfarer自体が`V0.1.0`へ到達するまで、Plugin Releaseは`V0.0.x`系列を使用する。
-
-初回安定版：
-
-```text
-V0.0.1
-```
-
-初回検証系列：
-
-```text
-V0.0.1-alpha.1
-V0.0.1-alpha.2
-V0.0.1-alpha.3
-V0.0.1-alpha.4
-V0.0.1-beta.1
-V0.0.1-rc.1
-V0.0.1
-```
-
-必要に応じてalpha／beta／rc番号を追加してよい。同一TagやRelease Assetを上書きしてはならない。
-
-人間向けVersion、Git Tag、GitHub Release、文書名、Directory名およびJAR Filenameには大文字`V`を付ける。
-
-```text
-V0.0.1-alpha.1
-V0.0.1
-Wayfarer_Core-V0.0.1-alpha.1.jar
-Wayfarer_Core-V0.0.1.jar
-```
-
-Gradleおよび`plugin.yml`内部Versionは先頭の`V`を外す。
-
-```text
-0.0.1-alpha.1
-0.0.1
-```
-
-将来の安定版例：
-
-```text
-V0.0.2
-V0.0.3
-...
-V0.0.99
-V0.0.100
-```
-
-Project Wayfarer V0.1.0に必要な機能がすべて実装・試験・Handoffされ、本流側のVersion整合判断が成立した後に限り、Plugin側も`V0.1.0`系列へ移行する。
-
----
-
-## 5. 初回Release Scope
-
-初回安定版`V0.0.1`の正式Runtime Artifactは次だけとする。
-
-```text
-Wayfarer_Core
-```
-
-関連して実装してよいModule：
-
-```text
-libraries/wayfarer-api
-libraries/wayfarer-common
-libraries/wayfarer-testkit
-plugins/wayfarer-core
-```
-
-Build成立に必要な最小Bootstrap／Stub／Dependency調整だけ許可するModule：
-
-```text
-plugins/wayfarer-main
-plugins/wayfarer-frontier
-integrations/wayfarer-leafgrapple-adapter
-```
-
-初回Releaseへ含めない：
-
-```text
-Wayfarer_Main
-Wayfarer_Frontier
-Wayfarer_Frontier_EliteMobsMVI
-wayfarer-elitemobs-mvi-contract
-```
-
-条件付きAdapterは、Project側Decision Resultが`ADAPTER_REQUIRED`になるまで正式実装・Releaseしてはならない。
-
-Artifact Matrixでは次の状態を明記する。
-
-```markdown
-| Artifact | Plugin-side implementation | Plugin-side test | Release | Project placement | Project acceptance | Roadmap Order |
-|---|---|---|---|---|---|---|
-| Wayfarer_Core | complete | passed | V0.0.1 | Main + Frontier | pending | 9 |
-| Wayfarer_Main | not included | N/A | N/A | Main only | pending | 10 |
-| Wayfarer_Frontier | not included | N/A | N/A | Frontier only | pending | 11 |
-| Wayfarer_Frontier_EliteMobsMVI | not authorized / not included | N/A | N/A | Frontier only | pending | Decision Gate |
-```
-
-同一RepositoryにMain／Frontier Skeletonが存在しても、`V0.0.1` Release AssetへJARを含めない。
-
----
-
-## 6. Release Workflow修正
-
-実装開始前に、現在のRelease Workflowを初回Release方針へ適合させる。
-
-対象：
-
-```text
-.github/workflows/prerelease.yml
-.github/workflows/release.yml
-docs/operations/release-process.md
-```
-
-必須変更：
-
-1. 入力Versionを大文字`V`付きで受け付ける。
-2. Git Tagは入力値そのものを使用する。
-3. Gradle Versionは先頭`V`を外して渡す。
-4. `release_scope`入力を追加する。
-5. 初回系列では`release_scope=core`だけを許可する。
-6. `core` ScopeではWayfarer_Core JARだけを収集・Releaseする。
-7. Pre-releaseとStable ReleaseのScope一致をManifestで検証する。
-8. Main／Frontier JARを初回Releaseへ含めない。
-9. GitHub Environment承認を維持する。
-10. Test evidenceおよび本流要求書の不変参照を維持する。
-11. Source Commit、Artifact Hash、Config Version、Migration VersionをManifestへ記録する。
-12. Release Assetを通常Git履歴へCommitしない。
-
-推奨入力：
-
-```yaml
-release_scope:
-  description: "Artifact set included in this release"
-  required: true
-  type: choice
-  options:
-    - core
-    - core-main
-    - core-frontier
-    - all
-  default: core
-```
-
-初回Release系列では、`core-main`、`core-frontier`、`all`を選んだ場合は明示的に失敗させてもよい。
-
-Workflow修正だけを先行PRに分けてもよい。実装PRへ混在させる場合は、差分と検証結果を明確に分離して報告する。
-
----
-
-## 7. 固定Architecture境界
-
-### Runtime Plugin責務
+### 6.1 Runtime Plugin
 
 ```text
 Wayfarer_Core:
-  Main／Frontier共通Infrastructure
-  Service Contract
+  Main／Frontier
+  共通Infrastructure／Service Contract
 
 Wayfarer_Main:
   Main only
@@ -369,30 +240,38 @@ Wayfarer_Main:
 
 Wayfarer_Frontier:
   Frontier only
-  Worlds Beyond／Frontier固有機能
+  Worlds Beyond MVPとFrontier固有機能
 ```
 
-### 依存方向
+Lobby Pluginは、V0.1.0必須責務が確定するまで作成しない。
+
+### 6.2 依存方向
 
 ```text
-Wayfarer_Main     → Wayfarer_Core API
-Wayfarer_Frontier → Wayfarer_Core API
+Wayfarer_Main
+  → Wayfarer_Core API
 
-禁止:
-Wayfarer_Core     → Wayfarer_Main
-Wayfarer_Core     → Wayfarer_Frontier
-Wayfarer_Main     ↔ Wayfarer_Frontier
-循環依存
+Wayfarer_Frontier
+  → Wayfarer_Core API
+
+Wayfarer_Core
+  -/→ Wayfarer_Main
+  -/→ Wayfarer_Frontier
+
+Wayfarer_Main
+  -/→ Wayfarer_Frontier
 ```
 
-### Data Authority
+循環依存を作らない。
+
+### 6.3 Data Authority
 
 ```text
 MariaDB:
   Wayfarer独自Pluginの永続Gameplay Data
 
 Redis:
-  Cache／Lock／PubSub／Message／Idempotency補助
+  Cache／Lock／PubSub／Message補助
   唯一の永続Authorityではない
 
 MVI:
@@ -408,15 +287,14 @@ Minecraft／Paper:
 禁止：
 
 - RedisEconomy内部Keyの直接操作
-- MVI DBの直接更新
-- mcMMO DBの直接更新
-- EliteMobs DBの直接更新
+- MVI Databaseの直接更新
+- mcMMO Databaseの直接更新
+- EliteMobs Databaseの直接更新
 - 通常InventoryのMariaDB保存
 - MainとFrontier間のItem移送
-- MVIによるMain／Frontier間Profile管理
-- 外部Plugin内部APIの推測利用
+- MVIによるMain／Frontier Backend間Profile管理
 
-### Threading
+### 6.4 Threading
 
 ```text
 Main Thread:
@@ -430,24 +308,68 @@ Async:
   Checkpoint
 ```
 
-Main Thread同期DB／Redis I/Oを禁止する。
+Main Thread同期DB／Redis I/Oを行わない。
 
-基本フロー：
+外部APIのThread Contractを推測しない。
+
+### 6.5 Project Runtime
+
+Plugin担当は次を実行しない。
 
 ```text
-Main Thread snapshot
-→ immutable request
-→ async operation
-→ immutable result
-→ Main Thread再検証
-→ Bukkit mutation
+Project Wayfarer ServerへのJAR配置
+Project実DBへのMigration適用
+Project Runtime Config反映
+Project Secret設定
+Project Permission変更
+Project Server起動
+Project World変更
+Project Player Data変更
+versions.yml更新
+plugin-manifest.yml更新
+Roadmap完了化
 ```
 
-Bukkit可変ObjectをAsync処理へ保持しない。
+Config例、Migration、導入手順、Permission NodeおよびRollback手順をReleaseへ含めることは許可する。
+
+---
+
+## 7. Plugin Repository Foundation最低要求
+
+Plugin担当は、採用するArchitectureにかかわらず次を満たす。
+
+```text
+Java 25
+Gradle 9.6.1
+Kotlin DSL
+Paper API 1.21.11-R0.1-SNAPSHOT
+Group／Package io.github.eariver.wayfarer
+```
+
+必須：
+
+- Gradle Wrapperを追跡する。
+- Wrapper Version／Checksumを確認する。
+- Clean環境で`check`／`assemble`が成功する。
+- CIでJava 25のBuild／Testを行う。
+- Configuration Cacheとの互換性を維持する。
+- Versionを一元管理する。
+- Compiler Warningを無断許容しない。
+- Release Artifactを再現可能にする。
+- Source CommitとArtifact Hashを対応付ける。
+- API Class Identityを破壊しない。
+- Runtime JARへ不要なTest／Secret／Runtime Dataを含めない。
+- Generated JARを通常Source TreeへCommitしない。
+- License／Third-party noticeを提供する。
+- Secret／World／DB Data／Player Data／Logを追跡しない。
+
+内部Moduleを追加・統合してよいが、責務境界と依存方向を維持する。
 
 ---
 
 ## 8. Wayfarer_Core最低機能
+
+Plugin担当は実装方法を決めてよいが、Project本流は最低限次を必要とする。
 
 ### 8.1 Lifecycle／Failure
 
@@ -465,9 +387,8 @@ Bukkit可変ObjectをAsync処理へ保持しない。
 - Fail-closed
 - Disable後Callback拒否
 - Migration失敗時の継続禁止
-- Shutdown timeoutのAudit
 
-Hot reload／PlugMan系Reloadは正式対応しなくてよい。
+Hot reload／PlugMan系Reloadを正式対応に含める必要はない。
 
 ### 8.2 Public API
 
@@ -486,7 +407,7 @@ WayfarerHealth
 
 同等以上のContractへ再編してよい。
 
-Public APIは次を推測せず利用できること。
+ただし、後続Main／Frontierが以下を推測せず利用できること。
 
 - Service lookup
 - Thread Contract
@@ -501,17 +422,7 @@ Public APIは次を推測せず利用できること。
 - Audit
 - Task bridge
 
-Public APIへ次を漏らさない。
-
-- Hikari実装
-- Flyway実装
-- Lettuce実装
-- JDBC Connection
-- Plugin実装Class
-- Paper Event
-- Player
-- ItemStack
-- Server固有Gameplay Domain
+公開APIへHikari、Flyway、Lettuce、JDBC Connection、Plugin実装Class、Paper Event、Player、ItemStackまたはServer固有Gameplay Domainを漏らさない。
 
 ### 8.3 Config／Secret
 
@@ -529,7 +440,7 @@ Public APIへ次を漏らさない。
 - Shutdown Timeout
 - Sanitized Sample
 
-Secret値をGit、YAML Sample、Log、Audit、Exceptionへ出さない。
+Secret値そのものをGit、YAML Sample、Log、Audit、Exceptionへ出さない。
 
 ### 8.4 MariaDB／Migration
 
@@ -546,7 +457,7 @@ wf_core_
 - Audit
 - Player Identity
 - 共通Item Identity Foundation
-- Reconcile state
+- 必要なReconcile state
 
 要求：
 
@@ -580,6 +491,8 @@ RECONCILED_REFUNDED
 FAILED
 ```
 
+同等以上のState Machineへ改善してよい。
+
 必須：
 
 - Unique Idempotency Key
@@ -598,6 +511,8 @@ FAILED
 
 外部Providerを含むため、無条件のExactly-onceを主張しない。
 
+RedisEconomy内部Keyへ触れず、正式API／Vault境界を使用する。
+
 ### 8.6 Audit
 
 最低対象：
@@ -615,7 +530,9 @@ FAILED
 - Permission denial
 - Shutdown timeout
 
-Critical Eventを黙ってDropしない。SecretをRedactする。
+SecretをRedactする。
+
+Critical Eventを黙ってDropしない。
 
 ### 8.7 Identity
 
@@ -625,7 +542,7 @@ Player：
 - Last known nameは補助
 - Authentication／Permission／Inventoryを再実装しない
 
-Item identity最低Key：
+Item：
 
 ```text
 wayfarer:item_type
@@ -636,19 +553,15 @@ wayfarer:item_instance_id
 wayfarer:display_revision
 ```
 
+同等以上の安全なIdentityへ改善してよい。
+
 Lore／Name／Materialだけで判定しない。
 
-次をFail-closedにする。
-
-- Unknown Schema
-- Unknown Type
-- Invalid UUID
-- Owner mismatch
-- Epoch mismatch
+Unknown Schema／Type、Invalid UUID、Owner mismatch、Epoch mismatchをFail-closedする。
 
 ### 8.8 Redis
 
-用途：
+最低用途：
 
 - Cache
 - Lock foundation
@@ -656,17 +569,27 @@ Lore／Name／Materialだけで判定しない。
 - Message foundation
 - Idempotency補助
 
-MariaDB Authorityを維持し、Redis停止時の縮退／拒否範囲を文書化する。
+MariaDB Authorityを失わない。
+
+Redis停止時の縮退／拒否対象を文書化する。
 
 ### 8.9 Thread／Task
 
-- Executor Queue
-- Backpressure
-- Shutdown
-- Main Thread同期I/O検出Test
-- Disable後Callback拒否
-- Timeout
-- Immutable request／result
+最低：
+
+```text
+Main Thread snapshot
+→ immutable request
+→ async operation
+→ immutable result
+→ Main Threadで再検証
+→ Bukkit mutation
+```
+
+- Bukkit可変ObjectをAsyncへ保持しない。
+- Executor Queue／Backpressure／Shutdownを持つ。
+- Main Thread同期I/O検出Testを行う。
+- Disable後Callbackを拒否する。
 
 ### 8.10 Health／Admin
 
@@ -690,351 +613,170 @@ MariaDB Authorityを維持し、Redis停止時の縮退／拒否範囲を文書�
 /wayfarer admin transaction reconcile <id>
 ```
 
-Permission、Console可否、Redaction、Audit、Confirmationを文書化する。
+同等以上のCommand体系へ再編してよい。
+
+Permission Node、Console可否、Redaction、Audit、Confirmationを文書化する。
 
 ---
 
-## 9. Automated Test最低要求
+## 9. 追加Plugin／機能の要求
 
-実装したすべての機能について、最低でも次を実施する。
+Plugin担当がWayfarer_Main、Wayfarer_Frontierまたは他の許容されたArtifactをReleaseへ含める場合、各Artifactについて次を満たす。
+
+### 9.1 個別Artifact情報
+
+```text
+Artifact Name
+Version
+Filename
+SHA-256
+Source Commit
+Tag／Release
+Config Version
+Migration Version
+Required Dependencies
+Optional Dependencies
+Bundled／Relocated Libraries
+Commands
+Permissions
+Known Limitations
+Removal／Rollback
+```
+
+### 9.2 個別Test
 
 - Unit Test
-- MariaDB Integration Test
-- Redis Integration Test
-- Migration Test
-- Concurrency Test
-- Idempotency Test
-- Failure／Timeout Test
-- Restart Recovery Test
-- Config Validation Test
-- Secret Redaction Test
-- Packaging Test
-- Public API Compatibility Test
-- API Class Identity Test
-- Main Thread DB／Redis I/O検出Test
-- Disable後Callback拒否Test
-- Duplicate Debit／Refund Test
+- Database Integration Test
+- External Plugin Adapter Test
+- Standalone Test Server Test
+- Restart／Reconnect
+- Failure Injection
+- Main Thread I/O
+- Duplicate／Idempotency
+- Permission
+- Packaging
+- API Class Identity
+- Artifact間依存
+- Runtime配置境界
+
+### 9.3 Roadmap境界
+
+追加Artifactは次の状態で本流へ渡す。
+
+```text
+Plugin-side implementation:
+  complete／partial
+
+Plugin-side test:
+  passed／limited／failed
+
+Project runtime integration:
+  not performed
+
+Project acceptance:
+  pending
+
+Roadmap completion:
+  pending
+```
+
+---
+
+## 10. Plugin側Test最低要求
+
+Plugin担当は、実装した全Artifactについて十分なTestを設計してよい。
+
+本流が最低限必要とするのは以下である。
+
+### 10.1 Automated Test
+
+- Unit
+- MariaDB Integration
+- Redis Integration
+- Migration
+- Concurrency
+- Idempotency
+- Failure／Timeout
+- Restart Recovery
+- Config Validation
+- Secret Redaction
+- Packaging
+- API compatibility
 
 Testcontainers等の隔離環境を使用する。
 
-各PRで次を実行する。
+### 10.2 単体Test Server
 
-```powershell
-.\gradlew.bat --no-daemon check
-.\gradlew.bat --no-daemon assemble
+Project Wayfarer統合Runtimeではなく、Plugin担当管理の隔離Serverを使用する。
+
+Baseline：
+
+```text
+Paper 1.21.11
+Java 25
+isolated MariaDB
+isolated Redis
+Project同系統のWaymark Provider／Vault
 ```
 
-必要に応じてConfiguration Cache付きでも検証する。
+Wayfarer_Core最低試験：
 
-```powershell
-.\gradlew.bat --no-daemon --configuration-cache check
-.\gradlew.bat --no-daemon --configuration-cache assemble
-```
-
-Compiler Warningを無断で許容しない。Failed／Skipped Testを隠さない。
-
----
-
-## 10. プレリリース計画
-
-プレリリースはCommit単位ではなく、隔離Test Serverで意味のある検証ができるVertical Slice単位で発行する。
-
-### `V0.0.1-alpha.1` — Lifecycle Foundation
-
-対象：
-
-- Typed Config
-- Secret resolution
-- Lifecycle
-- Partial initialization cleanup
-- Services registration／unregister
-- Executor lifecycle
-- Clean disable
-- Fail-closed
-- Health foundation
-- `/wayfarer admin health`
-
-最低Runtime確認：
-
-- Clean enable
-- Clean disable
+- Clean enable／disable
 - Restart
+- Services registration／unregister
 - Invalid Config
 - Missing Secret
-- Service登録／解除
-- Permission denial
-- Secret redaction
-
-### `V0.0.1-alpha.2` — Persistence and Identity
-
-対象：
-
-- MariaDB Pool
-- Flyway validate／migrate
-- `wf_core_*`
-- Audit foundation
-- Player identity
-- Item identity
-- Restart recovery foundation
-
-最低Runtime確認：
-
-- Empty DB Migration
-- Additive Migration
 - DB outage
 - Migration failure
-- Restart
-- Invalid item identity
-- Owner／Epoch mismatch
-- Audit persistence
-
-### `V0.0.1-alpha.3` — Redis and Task Boundary
-
-対象：
-
-- Redis foundation
-- Redis health／reconnect
-- Cache／lock／message foundation
-- Task bridge
-- Queue／backpressure
-- Disable後Callback拒否
-- Shutdown timeout
-
-最低Runtime確認：
-
-- Redis outage
-- Redis reconnect
-- Degraded／rejected operation
-- Queue pressure
-- Disable during async operation
-- Main Thread I/Oなし
-- Tick stallなし
-
-### `V0.0.1-alpha.4` — Waymark Transactions
-
-対象：
-
-- Provider capability probe
-- Transaction state machine
-- Idempotency
-- Debit
-- Refund
-- UNKNOWN
-- Reconcile
-- Provider reference
-- Timeout／retry
-- Admin inspect／reconcile
-- Audit integration
-
-最低Runtime確認：
-
+- Redis outage／reconnect
+- Waymark Provider missing／disabled
 - Balance
 - Debit
 - Refund
 - Insufficient funds
-- Provider outage
-- Timeout
 - Duplicate idempotency key
-- 二重Debitなし
-- 二重Refundなし
+- Timeout
 - UNKNOWN
 - Reconcile
-- Restart recovery
+- 二重Debitなし
+- 二重Refundなし
+- Main Thread DB／Redis I/Oなし
+- 著しいTick stallなし
+- Disable後Callbackなし
+- Health
+- Admin Commands
+- Permission denial
+- Sensitive data redaction
+- API Class Identity
+- JAR dependency inspection
 
-### `V0.0.1-beta.1` — Feature Complete
-
-条件：
-
-- Core最低機能実装済み
-- Automated Test一式成功
-- Packaging／API Class Identity成功
-- Sanitized Config完成
-- Command／Permission文書完成
-- License／Third-party notice完成
-- 重大な未実装なし
-
-### `V0.0.1-rc.1` — Release Candidate
-
-要求書のStandalone Test Server項目を一通り実施し、最終Test ReportとHandoff Packageを完成させる。
-
-### `V0.0.1` — Stable
-
-次の条件をすべて満たした場合だけ公開する。
-
-- 全適用要求のtraceabilityが完了
-- Automated Test Passed
-- Standalone Test Server Passed
-- Failed／Skipped／N/Aの理由記録済み
-- Known Limitations記録済み
-- Release Test Report Commit済み
-- Handoff Package Commit済み
-- Stable Sourceが承認済みRCのSource Commitと一致
-- Project本流要求を満たした証跡が存在
-- Userが`requirements_cleared=true`を明示承認
-- `main-server-release` Environment承認
-
-Codexは独断でStable Releaseを実行しない。
+追加Artifactは、そのGameplay／Persistence／Boundaryに応じて同等以上のTestを行う。
 
 ---
 
-## 11. 隔離Test Server
+## 11. 本流が要求するTest Report
 
-### 11.1 配置
-
-Test ServerはGit管理Repository外に作成する。
-
-推奨：
-
-```text
-<Project parent>/
-├─ Project-Wayfarer-Plugins/   # Git管理
-└─ runtime/                    # Git管理しない
-   └─ test-server/
-      ├─ server.jar
-      ├─ plugins/
-      ├─ config/
-      ├─ logs/
-      ├─ world/
-      ├─ world_nether/
-      ├─ world_the_end/
-      ├─ backups/
-      └─ start-test-server.ps1
-```
-
-`runtime/test-server`に`.git`を作成しない。
-
-禁止：
-
-- Test Server Runtime DataのGit追跡
-- WorldのCommit
-- LogのCommit
-- DB／Redis DataのCommit
-- SecretのCommit
-- External proprietary Plugin JARのCommit
-- Release JARの通常Source履歴へのCommit
-
-### 11.2 Baseline
-
-```text
-Paper:
-  1.21.11
-
-Java:
-  25
-
-MariaDB:
-  isolated test instance
-
-Redis:
-  isolated test instance
-
-Economy:
-  Project同系統のWaymark Provider／Vault境界
-```
-
-Providerの正式APIまたはThread Contractを確認できない場合は推測せず停止し、Decisionを要求する。
-
-### 11.3 Codexの責務
-
-- Test Server Directory作成
-- Paper取得
-- EULA／起動設定準備
-- Test専用MariaDB／Redis準備
-- Release Asset Download
-- SHA-256検証
-- 旧Test Runtime Backup
-- Plugin JAR配置
-- Sanitized Test Config生成
-- Server起動／停止
-- Startup Log解析
-- Error／Warning抽出
-- Test evidence下書き
-- 再現手順記録
-
-### 11.4 Userの責務
-
-- MinecraftクライアントでServerへ参加
-- 指定Commandの実行
-- Gameplay／Permission／UI／挙動の確認
-- Expected／Actualの報告
-- Pass／Failの最終確認
-- Environment承認
-- `requirements_cleared`の最終判断
-
-CodexはUserが観測していないClient操作を`Passed`にしない。
-
----
-
-## 12. Git管理するTest成果物
-
-### Test Plan
-
-```text
-docs/testing/plans/V0.0.1-alpha.1.md
-docs/testing/plans/V0.0.1-alpha.2.md
-docs/testing/plans/V0.0.1-alpha.3.md
-docs/testing/plans/V0.0.1-alpha.4.md
-docs/testing/plans/V0.0.1-beta.1.md
-docs/testing/plans/V0.0.1-rc.1.md
-```
-
-### Test Result
-
-```text
-docs/testing/results/V0.0.1-alpha.1.md
-docs/testing/results/V0.0.1-alpha.2.md
-docs/testing/results/V0.0.1-alpha.3.md
-docs/testing/results/V0.0.1-alpha.4.md
-docs/testing/results/V0.0.1-beta.1.md
-docs/testing/results/V0.0.1-rc.1.md
-```
-
-各結果に最低限含める。
-
-- Release Tag
-- Release URL
-- Source Commit
-- Requirement ID
-- Artifact Filename
-- SHA-256
-- Paper／Java
-- MariaDB／Redis／Waymark構成
-- Config Version
-- Migration Version
-- Test Case
-- Expected
-- Actual
-- Evidence
-- User observation
-- Pass／Fail／Limited
-- Known issue
-- Next action
-- Project Runtime未導入確認
-
-Server Log全文やScreenshot Binaryを通常GitへCommitしない。必要な証跡は、Secretを除去した短い抜粋または再現可能な記述としてMarkdownへ記録する。
-
----
-
-## 13. Release Test Report
+Release時に、全体ReportまたはArtifact別Reportを提出する。
 
 推奨Path：
 
 ```text
-docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_<YYYY-MM-DD>.md
+docs/reports/
+  Project_Wayfarer_Plugin_Release_Test_Report_<version>_<date>.md
 ```
 
 最低内容：
 
 1. Plugin Repository HEAD
 2. Release Tag／URL
-3. 対象Artifact
-4. Artifact Version／Filename／SHA-256
+3. 対象Artifact一覧
+4. ArtifactごとのVersion／Filename／SHA-256
 5. Java／Gradle／Paper
 6. MariaDB／Redis／Waymark構成
 7. 参照Project文書とCommit／Blob SHA
 8. 実装Scope
 9. 追加実装Scope
-10. Project方針適合
+10. Project方針との適合説明
 11. Build Command／結果
 12. Unit Test Command／件数／結果
 13. MariaDB Test
@@ -1058,45 +800,30 @@ docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_<YYYY-MM-DD>.md
 31. Evidence Path
 32. Project Runtime未導入確認
 
-「すべて成功」だけで済ませず、実行内容と証跡を記録する。
+「すべて成功」とだけ記載せず、検証内容とEvidenceを示す。
 
 ---
 
-## 14. Handoff Package
+## 12. Release成果物
 
-配置：
+Plugin担当は、実装したArtifactをGitHub ReleaseまたはPre-releaseとして公開する。
 
-```text
-docs/handoff/V0.0.1/
-├─ release-readiness.md
-├─ requirement-compliance.md
-├─ artifact-matrix.md
-├─ artifact-inventory.md
-├─ sanitized-configuration.md
-├─ command-and-permission-reference.md
-├─ dependency-and-placement.md
-├─ migration-and-compatibility.md
-├─ upgrade-and-rollback.md
-├─ known-limitations.md
-└─ project-acceptance-input.md
-```
-
-本流へ渡すすべての文書成果物はGit管理する。
-
-Binary Plugin ArtifactはGitHub Release Assetとして管理する。
-
-最低Release Asset：
+最低：
 
 ```text
-Wayfarer_Core-V0.0.1.jar
-SHA256SUMS.txt
-RELEASE_MANIFEST.md
-DEPENDENCY_VERSIONS.toml
-TEST_SERVER_EVIDENCE.md
-MAIN_SERVER_INSTRUCTION.md
+Non-SNAPSHOT Version
+Git Tag
+Release URL
+Source Commit
+Runtime JAR
+SHA-256
+Release Notes
+Migration Version
+Config Version
 Sanitized Config
 Command／Permission一覧
 Dependency一覧
+Bundled／Relocated Library一覧
 License／Third-party Notice
 Plugin Test Report
 Known Limitations
@@ -1105,94 +832,111 @@ Rollback／Removal手順
 
 推奨：
 
+- Checksums file
 - SBOM
 - Source JAR
 - Javadoc JAR
+- Test Report attachment
 - Migration／Config compatibility matrix
 - Upgrade notes
 
-本流Handoffでは次を明示する。
+Plugin担当は、Release単位を自由に決めてよい。
 
-- Release URL
-- Release Tag
-- Release Version
-- Final Source Commit
-- Artifact一覧
-- JAR Filename／SHA-256
-- Config Version
-- Migration Version
-- Sanitized Config
-- Commands
-- Permissions
-- Dependencies
-- Placement
-- Test Report
-- Known Limitations
-- Open Decisions
-- Upgrade／Rollback
+例：
+
+```text
+CoreだけのRelease
+Core／Main／Frontier同時Release
+Artifactごとの個別Release
+共通VersionのMonorepo Release
+```
+
+いずれの場合もArtifact単位の識別、Hash、Test、依存およびProject受入状態を明示する。
+
+---
+
+## 13. 本流Handoff Package
+
+Plugin担当はProject Ownerへ次を渡す。
+
+### 13.1 必須一覧
+
+```text
+Release URL
+Release Tag
+Release Version
+Final Source Commit
+Artifact一覧
+各JAR Filename
+各JAR SHA-256
+各Config Version
+各Migration Version
+Sanitized Config
+Command一覧
+Permission一覧
+Dependency／Placement一覧
+Plugin Test Report
+Known Limitations
+Open Decisions
+Upgrade／Rollback手順
+```
+
+### 13.2 Artifact Matrix
+
+次の形式または同等の表を提出する。
+
+| Artifact | Plugin-side implementation | Plugin-side test | Release | Project placement | Project acceptance | Roadmap Order |
+|---|---|---|---|---|---|---|
+| Wayfarer_Core | complete／partial | passed／limited／failed | URL／version | Main＋Frontier | pending | 9 |
+| Wayfarer_Main | complete／partial／not included | passed／limited／failed／N/A | URL／version／N/A | Main only | pending | 10 |
+| Wayfarer_Frontier | complete／partial／not included | passed／limited／failed／N/A | URL／version／N/A | Frontier only | pending | 11 |
+
+条件付きAdapterは、Decision未成立なら`not authorized／not included`とする。
+
+### 13.3 Project側受入Input
+
+Project本流が受入指示書を作るため、次を明示する。
+
 - Runtime前提
 - Environment Variables
-- DB／Schema要件
+- Database／User／Schema要件
 - Redis要件
+- External Plugin要件
 - Load order
+- Placement
 - First migration behavior
 - Failure behavior
 - Health確認方法
-- Smoke Test
-- Backup／Restore対象
+- Smoke Test方法
+- Backup対象
+- Restore対象
 - Removal方法
+- Rollback方法
+- Data compatibility
 - Downgrade可否
 - Test Serverとの差分
-- Project acceptance pending
-- Roadmap Order 9 pending
-
-本流へ渡す参照は、必ず不変なGit Commit SHAまたはGitHub Release Tagを使用する。
 
 ---
 
-## 15. License／Supply Chain／Packaging
+## 14. Plugin担当が変更してはいけないもの
 
-必須：
+Plugin担当の裁量範囲外：
 
-- Gradle Wrapper Version／Checksum確認
-- Java 25
-- Gradle 9.6.1
-- Kotlin DSL
-- Paper API 1.21.11-R0.1-SNAPSHOT
-- Group／Package `io.github.eariver.wayfarer`
-- Version Catalog
-- Configuration Cache互換
-- Reproducible Artifact設定
-- Source CommitとArtifact Hash対応
-- Runtime JARへの不要Test／Secret／Runtime Data非内包
-- API Class Identity維持
-- Main／Frontier JARへのAPI二重内包防止
-- License／Third-party notice
-- Bundled／Relocated Library一覧
-- Packaging inspection
+- Project WayfarerのGameplay結果を無断変更
+- Cross-backend Item移送
+- Main／Frontierの責務混在
+- MariaDB／Redis／MVI／Waymark Authority変更
+- Project Runtimeへの実適用
+- Project Database Migration実行
+- Project Permission変更
+- Project World／Player Data変更
+- Project Roadmap完了化
+- `versions.yml`／`plugin-manifest.yml`更新
+- Decision未成立Adapterの正式実装／Release
+- Secret／Runtime Data Commit
+- Unsupported外部Plugin内部APIへの推測依存
 
-可能ならDependency Verification、SBOM、Source JARおよびJavadoc JARを提供する。
-
----
-
-## 16. 停止／Escalation条件
-
-次の場合は推測で進めず停止し、Project OwnerへDecisionを求める。
-
-- Project正本とPlugin仕様でGameplay結果または責務境界が矛盾する。
-- CoreからMain／Frontierへの依存が必要になる。
-- MainとFrontierの相互依存が必要になる。
-- 通常Inventory、MVI、mcMMO、EliteMobs、RedisEconomy内部Dataへ直接アクセスする必要がある。
-- Waymark Providerの正式APIまたはThread Contractを確認できない。
-- Main Threadを長時間Blockする以外にProvider操作を安全に行えない。
-- Migrationの破壊的変更、適用済みMigration書換え、Data Lossまたは手動DB補正が必要になる。
-- Public API互換性を破壊する必要がある。
-- Secret、Runtime Data、World、DB Data、Logまたは外部Plugin ArtifactをCommitする必要がある。
-- Project Runtimeへの配置・Migration・Server起動が必要になる。
-- 条件未成立Adapterの作成が必要になる。
-- Test Serverで重複課金、Data不整合、Main Thread同期I/O、停止不能または重大な未解決障害が発生する。
-
-報告形式：
+変更が必要と判断した場合は、次を提示して停止する。
 
 ```text
 Question
@@ -1210,166 +954,115 @@ Owner decision required
 
 ---
 
-## 17. Git／PR運用
+## 15. Commit／Release運用
 
-`main`へ直接Pushしない。
+Plugin担当はRepositoryの運用方針を決めてよい。
 
-最初の準備Branch例：
+最低条件：
 
-```text
-feature/V0.0.1-release-foundation
-```
+- Force Pushしない。
+- Owner変更を巻き戻さない。
+- SecretをCommitしない。
+- Runtime DataをCommitしない。
+- ArtifactとSource Commitを対応付ける。
+- Release Tagを付ける。
+- Release Notesを作る。
+- Test ReportをSourceと対応付ける。
+- Failed Testを隠さない。
+- Generated JARを通常Source履歴へ混在させない。
 
-Core実装Branch例：
-
-```text
-feature/V0.0.1-core-lifecycle
-feature/V0.0.1-core-persistence
-feature/V0.0.1-core-redis-tasks
-feature/V0.0.1-core-transactions
-```
-
-各Branchで：
-
-1. `main`の最新化
-2. 変更前HEAD記録
-3. 実装
-4. Narrow test
-5. `check`
-6. `assemble`
-7. `git diff --check`
-8. Secret／Binary／Runtime Data非追跡確認
-9. Commit
-10. Push
-11. Draft PR
-12. CI確認
-13. Review
-14. Merge
-
-禁止：
-
-- Force Push
-- History Rewrite
-- 既存Tag移動
-- Release Asset上書き
-- Secret Commit
-- Runtime Data Commit
-- JAR Commit
-- Failed Testの隠蔽
+Commit分割、Branch、PR、Squash、Merge方式はPlugin担当の裁量とする。ただし最終履歴とRelease provenanceを追跡可能にする。
 
 ---
 
-## 18. Codexの初回作業
+## 16. 完了条件
 
-最初の作業では、まだ`V0.0.1-alpha.1`をReleaseしない。
+### 最低完了
 
-次を実施する。
+- Repository FoundationがRelease可能
+- Wayfarer_Core実装
+- Automated Test
+- Standalone Test Server試験
+- Non-SNAPSHOT Release／Pre-release
+- JAR／SHA-256
+- Test Report
+- Handoff Package
+- Project Runtime未変更
 
-1. Pre-execution HEADを記録する。
-2. 全Authority文書を読む。
-3. 受領要求書をRepositoryへ保存する。
-4. `source.md`を作成する。
-5. `assessment.md`を作成する。
-6. `traceability.md`へRequirement IDを作成する。
-7. `docs/operations/release-process.md`を`V0.0.x`方針へ更新する。
-8. `AGENTS.md`へRepository-managed handoff原則を追加する。
-9. `prerelease.yml`／`release.yml`を大文字`V`＋`release_scope=core`へ対応させる。
-10. `V0.0.1` Release Planを作成する。
-11. Test Plan／Result／Handoff Directory Skeletonを作成する。
-12. `check`と`assemble`を実行する。
-13. 変更ファイル、Test結果、未解決事項、Authority conflictを報告する。
-14. Draft PRを作成する。
+### 追加Artifactがある場合
 
-初回準備PRのMerge後、`V0.0.1-alpha.1`向けLifecycle Foundation実装へ進む。
+- ArtifactごとのRelease evidence
+- ArtifactごとのTest
+- Artifact Matrix
+- Project配置境界
+- Roadmap Order対応
+- Project acceptance pending表示
+- 条件付きDecision遵守
 
----
+### 品質
 
-## 19. 各プレリリース実行前の承認
-
-CodexはWorkflow実行前に次を表示し、Userの明示承認を待つ。
-
-### Pre-release
-
-```text
-Repository
-Workflow
-Selected ref
-Source commit
-Release version
-Release scope
-Test instruction path
-Expected artifacts
-Environment
-```
-
-### Stable Release
-
-追加で次を表示する。
-
-```text
-Approved pre-release tag
-Approved source commit
-Test evidence path／commit
-Main-server requirement path／commit
-Requirement traceability result
-Known limitations
-Open decisions
-requirements_cleared value
-```
-
-Codexは`requirements_cleared=true`を独断で設定しない。
+- Project方針に反しない
+- Authority境界を維持
+- Main Thread同期I/Oなし
+- 二重課金／返金なし
+- Migration安全
+- Secret非露出
+- Fail-closed
+- Known Limitation明示
+- Reproduction可能
 
 ---
 
-## 20. 完了報告
+## 17. 完了報告
 
-最終報告では最低でも次を記録する。
+次を報告する。
 
-1. Recommended Sol
+1. 推奨Sol
 2. Pre-execution HEAD
 3. Final Source Commit
 4. Release Tag／URL
-5. Release Version
-6. 実装Artifact
-7. 追加実装
-8. Project方針適合
-9. Artifact Filename／SHA-256
-10. Config Version
-11. Migration Version
-12. Public API
-13. Module／Dependency
-14. Packaging／Relocation
-15. Commands
-16. Permissions
-17. Database Schema
-18. Transaction保証
-19. Waymark Provider方式
-20. Redis用途
-21. Health
-22. Threading
-23. Build結果
-24. Automated Test結果
-25. Standalone Test Server結果
-26. Main Thread I/O結果
-27. Failure Injection結果
-28. Restart／Disable／Reconnect結果
-29. API Class Identity
-30. Performance／Tick影響
-31. Secret Redaction
-32. Known Limitations
-33. Failed／Skipped Test
-34. Open Decisions
-35. Test Report Path
-36. Artifact Matrix
-37. Project受入Input
-38. Runtime非変更
-39. Secret／Runtime Data非追跡
-40. Final Git status
-41. Project Ownerへ渡すGit Commit／Release URL／File一覧
+5. 実装Artifact一覧
+6. 追加実装一覧
+7. Project方針適合確認
+8. ArtifactごとのVersion／Filename／SHA-256
+9. Config Version
+10. Migration Version
+11. Public API
+12. Module／Dependency構成
+13. Packaging／Relocation
+14. Commands
+15. Permissions
+16. Database Schema
+17. Transaction保証
+18. Waymark Provider方式
+19. Redis用途
+20. Health
+21. Threading
+22. Build結果
+23. Automated Test結果
+24. Standalone Test Server結果
+25. Main Thread I/O結果
+26. Failure Injection結果
+27. Restart／Disable／Reconnect結果
+28. API Class Identity
+29. Performance／Tick影響
+30. Secret Redaction
+31. Known Limitations
+32. Failed／Skipped Test
+33. Open Decisions
+34. Test Report Path
+35. Artifact Matrix
+36. Project受入Input
+37. Runtime非変更
+38. Secret／Runtime Data非追跡
+39. Final Git status
+40. Project Ownerへ渡すFile／URL一覧
 
 ---
 
-## 21. 完了後の期待状態
+## 18. 完了後の状態
+
+最低状態：
 
 ```text
 Plugin Repository Foundation:
@@ -1377,29 +1070,33 @@ Plugin Repository Foundation:
 
 Wayfarer_Core:
   plugin-side implementation complete
-  plugin-side automated test complete
   plugin-side standalone test complete
-  V0.0.1 released
-
-Wayfarer_Main:
-  not included
-
-Wayfarer_Frontier:
-  not included
-
-Conditional Adapter:
-  not authorized / not included
-
-Project Runtime integration:
-  not performed
-
-Project acceptance:
-  pending
+  released
 
 Project Roadmap Order 9:
   plugin-side prerequisites complete
   Project integration／acceptance pending
+```
 
-Project Wayfarer V0.1.0:
-  incomplete
+追加Artifactがある場合：
+
+```text
+Wayfarer_Main:
+  plugin-side status reported
+  Project acceptance pending
+  Order 10 not automatically complete
+
+Wayfarer_Frontier:
+  plugin-side status reported
+  Project acceptance pending
+  Order 11 not automatically complete
+```
+
+次Action：
+
+```text
+Project OwnerがRelease、Artifact、Hash、Config、Migration、Test Report、
+Known LimitationsおよびArtifact MatrixをProject Wayfarer本流へ共有する。
+
+本流は、その情報を基にProject Wayfarer Serverへの統合・受入Test指示書を作成する。
 ```

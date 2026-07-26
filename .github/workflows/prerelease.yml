@@ -68,13 +68,13 @@ jobs:
             exit 1
           fi
 
-          if [[ ! "$INPUT_VERSION" =~ ^V[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
+          if [[ ! "$INPUT_VERSION" =~ ^V0\.0\.[1-9][0-9]*-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
             echo "::error::Pre-release version must resemble V0.0.1-alpha.1."
             exit 1
           fi
 
           if [[ "$RELEASE_SCOPE" != "core" ]]; then
-            echo "::error::The V0.0.1 release line permits only release_scope=core."
+            echo "::error::The current V0.0.x release policy permits only release_scope=core."
             exit 1
           fi
 

@@ -1,5 +1,6 @@
 # V0.0.1 Release Readiness
 
+- Release readiness: BLOCKED
 - Release URL/tag/version: Pending
 - Final source commit: Pending
 - Approved RC/source: Pending
@@ -11,4 +12,6 @@
 - `requirements_cleared`: Must be supplied explicitly by the Project Owner
 - Project Runtime placement/acceptance: Pending / pending
 
-Stable release is blocked until every applicable gate in the release plan is evidenced.
+Stable release is blocked until every applicable gate in the release plan is evidenced. This
+marker changes to `READY` only when implementation, automated verification, isolated runtime
+evidence, packaging, traceability, and handoff content are complete and commit-pinned.
