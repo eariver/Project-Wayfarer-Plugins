@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Check out selected main commit
+      - name: Check out release automation
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -74,6 +74,11 @@ jobs:
           VERSION="$INPUT_VERSION"
           TAG="v$VERSION"
 
+          if [[ "$APPROVED_PRERELEASE_TAG" != "${TAG}-"* ]]; then
+            echo "::error::Approved pre-release $APPROVED_PRERELEASE_TAG does not belong to stable version $TAG."
+            exit 1
+          fi
+
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "::error::Release $TAG already exists."
             exit 1
@@ -90,19 +95,24 @@ jobs:
             exit 1
           fi
 
-          git fetch --tags --force
+          git fetch origin main --tags --force
           PRERELEASE_SHA="$(git rev-list -n 1 "$APPROVED_PRERELEASE_TAG")"
 
-          if [[ "$PRERELEASE_SHA" != "$GITHUB_SHA" ]]; then
-            echo "::error::Approved pre-release $APPROVED_PRERELEASE_TAG points to $PRERELEASE_SHA, but this workflow selected $GITHUB_SHA. Run the workflow from the exact approved source commit on main."
+          if ! git merge-base --is-ancestor "$PRERELEASE_SHA" origin/main; then
+            echo "::error::Approved pre-release source $PRERELEASE_SHA is not contained in the current main history."
             exit 1
           fi
 
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
-          echo "SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_ENV"
+          echo "SOURCE_SHA=$PRERELEASE_SHA" >> "$GITHUB_ENV"
           echo "APPROVED_PRERELEASE_TAG=$APPROVED_PRERELEASE_TAG" >> "$GITHUB_ENV"
           echo "MAIN_SERVER_INSTRUCTION=$MAIN_SERVER_INSTRUCTION" >> "$GITHUB_ENV"
+
+      - name: Check out approved pre-release source
+        run: |
+          set -euo pipefail
+          git checkout --detach "$SOURCE_SHA"
 
       - name: Set up Java 25
         uses: actions/setup-java@v4
@@ -161,7 +171,7 @@ jobs:
           - Version: ${VERSION}
           - Tag: ${TAG}
           - Source commit: ${SOURCE_SHA}
-          - Source branch: main
+          - Source lineage: contained in main
           - Approved pre-release: ${APPROVED_PRERELEASE_TAG}
           - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
           - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
