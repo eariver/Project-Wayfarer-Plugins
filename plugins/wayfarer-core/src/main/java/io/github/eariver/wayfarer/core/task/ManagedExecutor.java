@@ -1,6 +1,7 @@
 package io.github.eariver.wayfarer.core.task;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +20,8 @@ public final class ManagedExecutor implements AutoCloseable {
     private final Consumer<Throwable> failureObserver;
     private final Consumer<String> warningSink;
     private final AtomicBoolean accepting = new AtomicBoolean(true);
+    private final Object shutdownLock = new Object();
+    private volatile ShutdownResult shutdownResult;
 
     public ManagedExecutor(
         int threads,
@@ -34,6 +37,9 @@ public final class ManagedExecutor implements AutoCloseable {
             throw new IllegalArgumentException("threadNamePrefix must contain Wayfarer");
         }
         this.shutdownTimeout = Objects.requireNonNull(shutdownTimeout, "shutdownTimeout");
+        if (shutdownTimeout.isZero() || shutdownTimeout.isNegative()) {
+            throw new IllegalArgumentException("shutdownTimeout must be positive");
+        }
         this.failureObserver = Objects.requireNonNull(failureObserver, "failureObserver");
         this.warningSink = Objects.requireNonNull(warningSink, "warningSink");
         this.executor = Executors.newFixedThreadPool(
@@ -82,26 +88,75 @@ public final class ManagedExecutor implements AutoCloseable {
 
     @Override
     public void close() {
-        accepting.set(false);
-        executor.shutdown();
-        boolean terminated = false;
-        try {
-            terminated = executor.awaitTermination(
-                shutdownTimeout.toMillis(),
-                TimeUnit.MILLISECONDS
-            );
-        } catch (InterruptedException interrupted) {
-            Thread.currentThread().interrupt();
-        }
-        if (!terminated) {
-            executor.shutdownNow();
-            try {
-                warningSink.accept(
-                    "Wayfarer executor exceeded shutdown timeout; forcing termination"
-                );
-            } catch (RuntimeException ignored) {
-                // Forced shutdown must complete even if diagnostics are unavailable.
+        shutdown();
+    }
+
+    public ShutdownResult shutdown() {
+        synchronized (shutdownLock) {
+            if (shutdownResult != null) {
+                return shutdownResult;
             }
+
+            accepting.set(false);
+            executor.shutdown();
+            boolean interrupted = false;
+            try {
+                if (awaitTermination()) {
+                    shutdownResult = new ShutdownResult(
+                        ShutdownStatus.GRACEFUL,
+                        true,
+                        0
+                    );
+                    return shutdownResult;
+                }
+            } catch (InterruptedException interruption) {
+                interrupted = true;
+            }
+
+            List<Runnable> droppedTasks = executor.shutdownNow();
+            warn(
+                interrupted
+                    ? "Wayfarer executor shutdown was interrupted; forcing termination"
+                    : "Wayfarer executor exceeded graceful shutdown timeout; forcing termination"
+            );
+
+            boolean terminated = executor.isTerminated();
+            if (!terminated) {
+                try {
+                    terminated = awaitTermination();
+                } catch (InterruptedException interruption) {
+                    interrupted = true;
+                    terminated = executor.isTerminated();
+                }
+            }
+
+            ShutdownStatus status;
+            if (interrupted) {
+                status = ShutdownStatus.INTERRUPTED;
+                warn("Wayfarer executor shutdown was interrupted");
+            } else if (terminated) {
+                status = ShutdownStatus.FORCED_TERMINATED;
+            } else {
+                status = ShutdownStatus.INCOMPLETE;
+                warn("Wayfarer executor did not terminate after forced shutdown");
+            }
+            shutdownResult = new ShutdownResult(status, terminated, droppedTasks.size());
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+            return shutdownResult;
+        }
+    }
+
+    private boolean awaitTermination() throws InterruptedException {
+        return executor.awaitTermination(shutdownTimeout.toNanos(), TimeUnit.NANOSECONDS);
+    }
+
+    private void warn(String warning) {
+        try {
+            warningSink.accept(warning);
+        } catch (RuntimeException ignored) {
+            // Shutdown result must survive unavailable diagnostics.
         }
     }
 

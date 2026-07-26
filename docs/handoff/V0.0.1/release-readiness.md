@@ -5,7 +5,8 @@
 - Final source commit: Pending
 - Approved RC/source: Pending
 - Requirement traceability: In progress
-- Automated tests: alpha.1 local suite passed (65 tests, 0 failed, 0 skipped); final CI pending
+- Automated tests: alpha.1 correction local suite and all build gates passed
+  (75 tests, 0 failed, 0 skipped); corrected-head CI is required before merge
 - Isolated test server: Not run
 - User observations: Pending
 - Known limitations/open decisions: See linked handoff records

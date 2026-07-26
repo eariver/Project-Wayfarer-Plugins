@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
 import java.time.Clock;
+import java.time.Duration;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -117,6 +121,113 @@ class CoreRuntimeServicesTest {
             assertTrue(failure.getMessage().contains("not implemented"));
         } finally {
             runtime.disable();
+        }
+    }
+
+    @Test
+    void forcedButConfirmedShutdownIsReportedDisabled() throws Exception {
+        RecordingPublisher publisher = new RecordingPublisher();
+        CoreRuntime runtime = runtime(
+            TestCoreConfigs.withShutdownTimeout(Duration.ofMillis(20)),
+            publisher
+        );
+        CountDownLatch started = new CountDownLatch(1);
+        runtime.enable();
+        CompletionStage<Void> task = runtime.services().tasks().database(() -> {
+            started.countDown();
+            try {
+                Thread.sleep(10_000);
+            } catch (InterruptedException expected) {
+                Thread.currentThread().interrupt();
+            }
+            return null;
+        });
+        assertTrue(started.await(1, TimeUnit.SECONDS));
+
+        runtime.disable();
+
+        WayfarerHealth.ComponentHealth executor =
+            runtime.health().snapshot().components().get("Executor");
+        assertEquals(WayfarerHealth.Status.DISABLED, executor.status());
+        assertEquals("Executor stopped after forced termination", executor.detail());
+        task.toCompletableFuture().get(1, TimeUnit.SECONDS);
+    }
+
+    @Test
+    void incompleteExecutorShutdownIsReportedDown() throws Exception {
+        RecordingPublisher publisher = new RecordingPublisher();
+        CoreRuntime runtime = runtime(
+            TestCoreConfigs.withShutdownTimeout(Duration.ofMillis(20)),
+            publisher
+        );
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        runtime.enable();
+        CompletionStage<Void> task = runtime.services().tasks().database(() -> {
+            started.countDown();
+            awaitUninterruptibly(release);
+            return null;
+        });
+        assertTrue(started.await(1, TimeUnit.SECONDS));
+
+        try {
+            runtime.disable();
+
+            WayfarerHealth.ComponentHealth executor =
+                runtime.health().snapshot().components().get("Executor");
+            assertEquals(WayfarerLifecycleState.DISABLED, runtime.state());
+            assertEquals(WayfarerHealth.Status.DOWN, executor.status());
+            assertEquals(
+                "Executor did not terminate after forced shutdown",
+                executor.detail()
+            );
+        } finally {
+            release.countDown();
+            task.toCompletableFuture().get(1, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    void incompleteShutdownDoesNotReportExecutorStopped() throws Exception {
+        RecordingPublisher publisher = new RecordingPublisher();
+        CoreRuntime runtime = runtime(
+            TestCoreConfigs.withShutdownTimeout(Duration.ofMillis(20)),
+            publisher
+        );
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        runtime.enable();
+        CompletionStage<Void> task = runtime.services().tasks().database(() -> {
+            started.countDown();
+            awaitUninterruptibly(release);
+            return null;
+        });
+        assertTrue(started.await(1, TimeUnit.SECONDS));
+
+        try {
+            runtime.disable();
+            String detail = runtime.health().snapshot()
+                .components()
+                .get("Executor")
+                .detail();
+            assertFalse(detail.contains("Executor stopped"));
+        } finally {
+            release.countDown();
+            task.toCompletableFuture().get(1, TimeUnit.SECONDS);
+        }
+    }
+
+    private static void awaitUninterruptibly(CountDownLatch release) {
+        boolean interrupted = false;
+        while (release.getCount() > 0) {
+            try {
+                release.await();
+            } catch (InterruptedException ignored) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 

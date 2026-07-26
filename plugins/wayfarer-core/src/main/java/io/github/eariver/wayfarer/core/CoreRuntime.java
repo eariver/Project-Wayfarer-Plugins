@@ -12,6 +12,7 @@ import io.github.eariver.wayfarer.core.service.WayfarerServiceFactory;
 import io.github.eariver.wayfarer.core.task.DefaultWayfarerTasks;
 import io.github.eariver.wayfarer.core.task.MainThreadDispatcher;
 import io.github.eariver.wayfarer.core.task.ManagedExecutor;
+import io.github.eariver.wayfarer.core.task.ShutdownResult;
 
 import java.time.Clock;
 import java.util.List;
@@ -109,13 +110,33 @@ public final class CoreRuntime {
         );
         health.update(HealthRegistry.EXECUTOR, WayfarerHealth.Status.UP, "Executor accepting tasks");
         return () -> {
-            executor.close();
-            health.update(
+            applyExecutorShutdownHealth(executor.shutdown());
+        };
+    }
+
+    private void applyExecutorShutdownHealth(ShutdownResult result) {
+        switch (result.status()) {
+            case GRACEFUL -> health.update(
                 HealthRegistry.EXECUTOR,
                 WayfarerHealth.Status.DISABLED,
-                "Executor stopped"
+                "Executor stopped gracefully"
             );
-        };
+            case FORCED_TERMINATED -> health.update(
+                HealthRegistry.EXECUTOR,
+                WayfarerHealth.Status.DISABLED,
+                "Executor stopped after forced termination"
+            );
+            case INCOMPLETE -> health.update(
+                HealthRegistry.EXECUTOR,
+                WayfarerHealth.Status.DOWN,
+                "Executor did not terminate after forced shutdown"
+            );
+            case INTERRUPTED -> health.update(
+                HealthRegistry.EXECUTOR,
+                WayfarerHealth.Status.DOWN,
+                "Executor shutdown was interrupted"
+            );
+        }
     }
 
     private AutoCloseable initializeServices() {

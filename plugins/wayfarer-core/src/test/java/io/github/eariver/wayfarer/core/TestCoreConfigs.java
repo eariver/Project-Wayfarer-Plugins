@@ -13,10 +13,18 @@ final class TestCoreConfigs {
     }
 
     static CoreConfig withThreadPrefix(String prefix) {
+        return withShutdownTimeout(prefix, Duration.ofSeconds(1));
+    }
+
+    static CoreConfig withShutdownTimeout(Duration timeout) {
+        return withShutdownTimeout("Wayfarer-Test", timeout);
+    }
+
+    private static CoreConfig withShutdownTimeout(String prefix, Duration timeout) {
         return new CoreConfig(
             1,
             "test-server",
-            Duration.ofSeconds(1),
+            timeout,
             new CoreConfig.ExecutorSettings(1, prefix),
             new CoreConfig.AuditSettings(true),
             new CoreConfig.HealthSettings(false),

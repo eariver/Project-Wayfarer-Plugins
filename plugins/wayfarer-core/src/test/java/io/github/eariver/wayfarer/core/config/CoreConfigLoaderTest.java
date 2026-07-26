@@ -55,6 +55,49 @@ class CoreConfigLoaderTest {
     }
 
     @Test
+    void placeholderServerIdsFailClosed() {
+        for (String placeholder : List.of(
+            "CHANGE_ME",
+            "change_me",
+            "Change_Me",
+            "change-me",
+            "changeme",
+            "default",
+            "example"
+        )) {
+            Map<String, Object> values = validValues();
+            values.put("server-id", placeholder);
+            assertMessage(values, Map.of(), "explicitly configured");
+        }
+    }
+
+    @Test
+    void explicitServerIdLoads() {
+        Map<String, Object> values = validValues();
+        values.put("server-id", "wayfarer-test");
+        try (CoreConfig config = load(values, Map.of())) {
+            assertEquals("wayfarer-test", config.serverId());
+        }
+    }
+
+    @Test
+    void placeholderFailureDoesNotExposeSecrets() {
+        Map<String, Object> values = validValues();
+        values.put("server-id", "CHANGE_ME");
+        values.put("mariadb.enabled", true);
+        CoreConfigException failure = assertThrows(
+            CoreConfigException.class,
+            () -> load(values, Map.of(
+                "WAYFARER_DB_URL", "jdbc:mariadb://example/wayfarer",
+                "WAYFARER_DB_USERNAME", "wayfarer",
+                "WAYFARER_DB_PASSWORD", SECRET
+            ))
+        );
+        assertTrue(failure.getMessage().contains("explicitly configured"));
+        assertFalse(failure.getMessage().contains(SECRET));
+    }
+
+    @Test
     void invalidShutdownTimeoutFailsClosed() {
         Map<String, Object> values = validValues();
         values.put("shutdown-timeout.seconds", 0);

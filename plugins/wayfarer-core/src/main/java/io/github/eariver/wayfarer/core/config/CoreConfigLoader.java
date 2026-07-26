@@ -7,12 +7,21 @@ import io.github.eariver.wayfarer.common.secret.SecretValue;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public final class CoreConfigLoader {
     public static final int SUPPORTED_CONFIG_VERSION = 1;
     private static final Pattern SERVER_ID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
+    private static final Set<String> RESERVED_SERVER_IDS = Set.of(
+        "change_me",
+        "change-me",
+        "changeme",
+        "default",
+        "example"
+    );
 
     public CoreConfig load(ConfigView source, SecretReferenceResolver secrets) {
         Objects.requireNonNull(source, "source");
@@ -23,10 +32,7 @@ public final class CoreConfigLoader {
             throw new CoreConfigException("Unsupported config-version: " + version);
         }
 
-        String serverId = requiredString(source, "server-id");
-        if (!SERVER_ID.matcher(serverId).matches()) {
-            throw new CoreConfigException("server-id must match " + SERVER_ID.pattern());
-        }
+        String serverId = validateServerId(requiredString(source, "server-id"));
 
         Duration shutdownTimeout = durationSeconds(
             requiredInt(source, "shutdown-timeout.seconds"),
@@ -148,6 +154,17 @@ public final class CoreConfigLoader {
         } catch (SecretResolutionException failure) {
             throw new CoreConfigException(failure.getMessage());
         }
+    }
+
+    private static String validateServerId(String value) {
+        String serverId = value.trim();
+        if (!SERVER_ID.matcher(serverId).matches()) {
+            throw new CoreConfigException("server-id must match " + SERVER_ID.pattern());
+        }
+        if (RESERVED_SERVER_IDS.contains(serverId.toLowerCase(Locale.ROOT))) {
+            throw new CoreConfigException("server-id must be explicitly configured");
+        }
+        return serverId;
     }
 
     private static String requiredString(ConfigView source, String path) {

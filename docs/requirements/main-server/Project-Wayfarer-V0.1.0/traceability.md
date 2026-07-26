@@ -52,10 +52,10 @@ evidence as applicable.
 | LIF-008 | Waymark capability probe | 8.1 | Transaction slice | Provider fixture | alpha.4 | Pending | Not started | Provider contract gate |
 | LIF-009 | Services registration | 8.1 | `BukkitServicePublisher`; `CoreRuntime` | ServicesManager/runtime tests | alpha.1 | Pending | Automated test passed | Paper runtime lookup pending |
 | LIF-010 | Services unregister | 8.1 | `BukkitServicePublisher`; reverse cleanup | Disable/idempotency tests | alpha.1 | Pending | Automated test passed | Paper runtime lookup pending |
-| LIF-011 | Executor lifecycle | 8.1 | `ManagedExecutor` | `ManagedExecutorTest` | alpha.1/3 | Pending | Automated test passed | Queue/backpressure deferred to alpha.3 |
+| LIF-011 | Executor lifecycle | 8.1 | `ManagedExecutor`; explicit shutdown result | Graceful/forced/incomplete/interrupted tests | alpha.1/3 | Pending | Automated test passed | Queue/backpressure deferred to alpha.3 |
 | LIF-012 | Scheduler lifecycle | 8.1 | lifecycle-guarded `MainThreadDispatcher` | `DefaultWayfarerTasksTest` | alpha.1 | Pending | Automated test passed | Paper scheduler runtime pending |
-| LIF-013 | Clean disable | 8.1 | `LifecycleCoordinator`; `CoreRuntime` | Lifecycle/runtime tests | alpha.1 | Pending | Automated test passed | Restart runtime pending |
-| LIF-014 | Timeout-bounded flush | 8.1 | Executor shutdown timeout | Graceful/forced timeout tests | alpha.1 | Pending | Automated test passed | Runtime observation pending |
+| LIF-013 | Clean disable | 8.1 | `LifecycleCoordinator`; shutdown-result health | Lifecycle/runtime health tests | alpha.1 | Pending | Automated test passed | Incomplete shutdown remains `DOWN`; restart runtime pending |
+| LIF-014 | Timeout-bounded flush | 8.1 | Two-phase executor shutdown timeout | Graceful/forced/incomplete/interrupt tests | alpha.1 | Pending | Automated test passed | Each phase is bounded; runtime observation pending |
 | LIF-015 | Partial initialization cleanup | 8.1 | Reverse-order lifecycle resources | Failure injection tests | alpha.1 | Pending | Automated test passed | Runtime failure injection pending |
 | LIF-016 | Fail-closed lifecycle | 8.1 | Explicit lifecycle state machine | Invalid/double/failure tests | alpha.1 | Pending | Automated test passed | Runtime invalid config pending |
 | LIF-017 | Reject callbacks after disable | 8.1 | Double-guarded task bridge | Late callback test | alpha.1/3 | Pending | Automated test passed | Paper callback runtime pending |
@@ -78,7 +78,7 @@ evidence as applicable.
 | API-016 | Paper Event/Player/ItemStack not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
 | API-017 | Server gameplay domain not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
 | CFG-001 | Config version | 8.3 | `config-version: 1`; loader | Missing/unsupported tests | alpha.1 | Pending | Automated test passed | Runtime test pending |
-| CFG-002 | Server ID | 8.3 | Typed validated server ID | Missing/blank/format tests | alpha.1 | Pending | Automated test passed | Runtime value operator-owned |
+| CFG-002 | Server ID | 8.3 | Typed validated ID with reserved-placeholder rejection | Missing/blank/format/placeholder/explicit tests | alpha.1 | Pending | Automated test passed | Runtime value operator-owned; default fails closed |
 | CFG-003 | MariaDB connection settings | 8.3 | Typed inactive alpha.1 settings | Validation/secret tests | alpha.2 | Pending | Automated test passed | Connection deferred to alpha.2 |
 | CFG-004 | Redis connection settings | 8.3 | Typed inactive alpha.1 settings | Validation/missing-secret test | alpha.3 | Pending | Automated test passed | Connection deferred to alpha.3 |
 | CFG-005 | Migration settings | 8.3 | Typed location/dependency settings | Dependency/list validation | alpha.2 | Pending | Automated test passed | Execution deferred to alpha.2 |
@@ -189,7 +189,7 @@ evidence as applicable.
 | ADM-008 | Admin permission rules | 8.10 | `wayfarer.admin.health` | Authorization/denial tests | alpha.1/4 | Pending | Automated test passed | Project grant review pending |
 | ADM-009 | Console eligibility | 8.10 | Bukkit audience adapter | Console command tests | alpha.1/4 | Pending | Automated test passed | Runtime console test pending |
 | ADM-010 | Admin redaction/audit/confirmation | 8.10 | Admin slice | Security test | alpha.4 | Pending | Not started | Implementation pending |
-| TST-001 | Unit tests | 10.1 | Common/Core test sources | 65 tests passed | alpha.1+ | Pending | Automated test passed | Later-slice suites pending |
+| TST-001 | Unit tests | 10.1 | Common/Core test sources | 75 tests passed | alpha.1+ | Pending | Automated test passed | 0 failed, 0 skipped; later-slice suites pending |
 | TST-002 | MariaDB integration | 10.1 | alpha.2 plan | Testcontainers | alpha.2 | Pending | Not started | Implementation pending |
 | TST-003 | Redis integration | 10.1 | alpha.3 plan | Testcontainers | alpha.3 | Pending | Not started | Implementation pending |
 | TST-004 | Migration tests | 10.1 | alpha.2 plan | Testcontainers | alpha.2 | Pending | Not started | Implementation pending |

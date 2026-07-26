@@ -39,6 +39,15 @@ Command:    /wayfarer admin health
 Permission: wayfarer.admin.health
 ```
 
+Defaultの`server-id: CHANGE_ME`と予約値`change_me`、`change-me`、`changeme`、
+`default`、`example`は大文字小文字を区別せず拒否されます。Operatorが明示的な
+Server IDへ変更するまでCoreはfail-closedします。
+
+Executor shutdownは、設定timeoutをgraceful待機とforced待機にそれぞれ適用します。
+最大block時間は概ね設定値の2倍です。結果は`GRACEFUL`、`FORCED_TERMINATED`、
+`INCOMPLETE`、`INTERRUPTED`として区別され、未終了またはinterruptされた停止を
+clean stopとして扱いません。
+
 MariaDB、Flyway、Redis、Waymark、transaction、identity、audit persistenceは後続Sliceです。
 未実装dependencyはhealthで`UNKNOWN`と表示されます。現在のrelease gate/readinessは
 `BLOCKED`で、Runtime testとPre-releaseは未実施です。
