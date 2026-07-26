@@ -70,7 +70,11 @@ Use the **Create Main-Server Release** workflow only after:
 - the selected pre-release completed test-server verification;
 - the main-server project supplied its current requirements or work instruction as Markdown;
 - every applicable requirement was cleared;
-- the selected `main` commit is exactly the source commit of the approved pre-release.
+- the approved pre-release source commit remains contained in the current `main` history.
+
+The stable release is rebuilt from the exact source commit referenced by the approved pre-release
+tag. Development may continue on `main` during test-server verification; later `main` commits are
+not included in the stable package unless they receive their own pre-release and verification cycle.
 
 ### Inputs
 
@@ -84,14 +88,15 @@ The workflow rejects the request when:
 
 - the stable version is malformed;
 - the approved tag is not an existing GitHub pre-release;
+- the approved pre-release does not belong to the requested stable version line;
 - the workflow is not run from `main`;
-- the approved pre-release tag points to a different source commit;
+- the approved pre-release source commit is not contained in the current `main` history;
 - the operator does not explicitly confirm requirement clearance;
 - the target stable release already exists.
 
-After verification it rebuilds the three JARs with the stable version, records the approved
-pre-release and main-server instruction in `RELEASE_MANIFEST.md`, creates build provenance, and
-publishes a stable GitHub release.
+After verification it checks out the approved pre-release source commit, rebuilds the three JARs
+with the stable version, records the approved pre-release and main-server instruction in
+`RELEASE_MANIFEST.md`, creates build provenance, and publishes a stable GitHub release.
 
 A stable release means **ready for source-side handoff**. It does not itself authorize or execute
 runtime deployment.
