@@ -1,6 +1,7 @@
 # Requirement Traceability
 
 - Release gate: BLOCKED
+- Acceptance units: 245
 
 The Project mainline requirement snapshot is the authority for source sections. A documentation
 skeleton does not satisfy the underlying implementation or test requirement. `Passed` and
@@ -9,18 +10,16 @@ evidence as applicable.
 
 | Requirement ID | Requirement | Source section | Implementation | Automated test | Pre-release | Runtime evidence | Status | Notes |
 |---|---|---|---|---|---|---|---|---|
-| GOV-001 | Preserve mainline requirement snapshot and hash | 4, 5 | `source.md`; snapshot | Hash check | N/A | N/A | Implemented | Mainline and work order separated |
-| GOV-002 | Record Codex work order separately | 4, 5 | `docs/work-orders/V0.0.1/` | Path/header check | N/A | N/A | Implemented | Lower authority than snapshot |
-| GOV-003 | Preserve Project authority references | 5 | `source.md` | Reference review | N/A | N/A | Implemented | Commit/blob pinned |
-| GOV-004 | Core-only initial artifact scope | 3, 6.1 | Workflows; plan | Scope assertions | V0.0.x | N/A | Implemented | Runtime release not executed |
-| GOV-005 | Main excluded from V0.0.1 release | 3, 6.1 | Workflows | Forbidden-asset assertion | V0.0.x | N/A | Implemented | Build skeleton only |
-| GOV-006 | Frontier excluded from V0.0.1 release | 3, 6.1 | Workflows | Forbidden-asset assertion | V0.0.x | N/A | Implemented | Build skeleton only |
-| GOV-007 | Conditional adapter requires `ADAPTER_REQUIRED` | 2.3, 6.1 | `AGENTS.md`; plans | Repository inspection | All | N/A | Implemented | Not authorized |
-| GOV-008 | Core does not depend on Main/Frontier | 6.2 | Gradle boundary | Dependency test planned | beta.1 | N/A | Not started | Acceptance test pending |
-| GOV-009 | Main and Frontier do not interdepend | 6.2 | Gradle boundary | Dependency test planned | beta.1 | N/A | Not started | Acceptance test pending |
-| GOV-010 | Preserve MariaDB/Redis/MVI/Waymark authority | 6.3 | Architecture docs | Boundary tests planned | beta.1 | Pending | Not started | Runtime evidence pending |
-| GOV-011 | Do not alter Project Runtime | 6.5, 14 | `AGENTS.md`; process | Forbidden tracking check | All | N/A | Implemented | Repository-only work |
-| GOV-012 | No cross-backend item transfer | 6.3, 14 | Architecture boundary | Domain inspection planned | beta.1 | Pending | Not started | Core must remain item-independent |
+| GOV-001 | Preserve Project authority references | 5 | `source.md` | Reference review | N/A | N/A | Implemented | Commit/blob pinned |
+| GOV-002 | Core-only initial artifact scope | 3, 6.1 | Workflows; plan | Scope assertions | V0.0.x | N/A | Implemented | Runtime release not executed |
+| GOV-003 | Main excluded from V0.0.1 release | 3, 6.1 | Workflows | Forbidden-asset assertion | V0.0.x | N/A | Implemented | Build skeleton only |
+| GOV-004 | Frontier excluded from V0.0.1 release | 3, 6.1 | Workflows | Forbidden-asset assertion | V0.0.x | N/A | Implemented | Build skeleton only |
+| GOV-005 | Conditional adapter requires `ADAPTER_REQUIRED` | 2.3, 6.1 | `AGENTS.md`; plans | Repository inspection | All | N/A | Implemented | Not authorized |
+| GOV-006 | Core does not depend on Main/Frontier | 6.2 | Gradle boundary | Dependency test planned | beta.1 | N/A | Not started | Acceptance test pending |
+| GOV-007 | Main and Frontier do not interdepend | 6.2 | Gradle boundary | Dependency test planned | beta.1 | N/A | Not started | Acceptance test pending |
+| GOV-008 | Preserve MariaDB/Redis/MVI/Waymark authority | 6.3 | Architecture docs | Boundary tests planned | beta.1 | Pending | Not started | Runtime evidence pending |
+| GOV-009 | Do not alter Project Runtime | 6.5, 14 | `AGENTS.md`; process | Forbidden tracking check | All | N/A | Implemented | Repository-only work |
+| GOV-010 | No cross-backend item transfer | 6.3, 14 | Architecture boundary | Domain inspection planned | beta.1 | Pending | Not started | Core must remain item-independent |
 | FND-001 | Java 25 baseline | 7 | Gradle toolchain | Build validation | beta.1 | N/A | In progress | Build passes; clean evidence pending |
 | FND-002 | Gradle 9.6.1 baseline | 7 | Wrapper properties | Wrapper validation | beta.1 | N/A | In progress | Checksum evidence pending |
 | FND-003 | Kotlin DSL build | 7 | `*.gradle.kts` | Build validation | beta.1 | N/A | In progress | Full acceptance pending |
