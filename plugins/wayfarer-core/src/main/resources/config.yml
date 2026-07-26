@@ -1,6 +1,21 @@
+config-version: 1
 server-id: CHANGE_ME
 
-database:
+shutdown-timeout:
+  seconds: 15
+
+executor:
+  threads: 2
+  thread-name-prefix: Wayfarer-Core
+
+audit:
+  enabled: true
+
+health:
+  player-details: false
+
+mariadb:
+  enabled: false
   jdbc-url-env: WAYFARER_DB_URL
   username-env: WAYFARER_DB_USERNAME
   password-env: WAYFARER_DB_PASSWORD
@@ -9,14 +24,16 @@ database:
   connection-timeout-ms: 5000
 
 redis:
-  enabled: true
+  enabled: false
   uri-env: WAYFARER_REDIS_URI
   connect-timeout-ms: 3000
 
-economy:
-  expected-provider: RedisEconomy
-  currency-name: Waymark
-  operation-timeout-ms: 5000
+migration:
+  enabled: false
+  locations:
+    - db/migration/core
 
-shutdown:
-  flush-timeout-seconds: 15
+waymark:
+  enabled: false
+  expected-provider: RedisEconomy
+  operation-timeout-ms: 5000
