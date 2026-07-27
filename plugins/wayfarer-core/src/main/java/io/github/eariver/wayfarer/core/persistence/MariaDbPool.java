@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
 import io.github.eariver.wayfarer.core.health.HealthRegistry;
 import io.github.eariver.wayfarer.core.task.ManagedExecutor;
+import io.github.eariver.wayfarer.core.transaction.TransactionRepository;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -130,6 +131,10 @@ public final class MariaDbPool implements AutoCloseable {
             uuidGenerator,
             warningSink
         );
+    }
+
+    public TransactionRepository createTransactionRepository() {
+        return new MariaDbTransactionRepository(internalDatabase());
     }
 
     InternalDatabase internalDatabaseForTesting() {

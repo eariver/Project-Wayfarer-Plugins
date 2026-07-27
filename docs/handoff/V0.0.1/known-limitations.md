@@ -42,7 +42,9 @@
   isolated Redis CI passed; Paper runtime evidence remains pending.
 - The executor now has an immediate-rejection bounded queue and the task bridge validates
   immutable JDK-only data. Runtime queue-pressure/tick evidence remains pending.
-- Waymark remains pending alpha.4.
+- The alpha.4 provider-independent transaction engine, V003 repository/history, reconcile path,
+  fixture SPI, and admin handlers are implemented. Concrete RedisEconomy/Vault invocation remains
+  blocked by ADR 0006 because its safe thread/timeout/reference contract is not immutable authority.
 - Incomplete and interrupted shutdown remain `DOWN` in Executor health even after lifecycle
   state becomes `DISABLED`.
 - Permission-denial events use durable audit when audit is enabled. Shutdown-timeout durable

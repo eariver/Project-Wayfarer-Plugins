@@ -85,7 +85,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | CFG-003 | MariaDB connection settings | 8.3 | Typed Hikari mapping and secret resolution | Config/pool/integration tests | alpha.2 | alpha.1 runtime evidence | Automated test passed | Active mapping tested; Project Runtime configuration remains unchanged |
 | CFG-004 | Redis connection settings | 8.3 | Typed URI reference, connect/operation timeouts, TTL/lease bounds, key prefix | Validation/missing-secret and isolated connection tests | alpha.3 | alpha.1 runtime evidence | Automated test passed | Backward defaults, bounds, and isolated connection passed in CI `30290422624` |
 | CFG-005 | Migration settings | 8.3 | Typed canonical classpath locations and dependency guard | Config/location/migration tests | alpha.2 | alpha.1 runtime evidence | Automated test passed | Empty, traversal, and non-classpath locations fail closed |
-| CFG-006 | Waymark provider settings | 8.3 | Typed inactive provider settings | Config validation suite | alpha.4 | alpha.1 runtime evidence | In progress | Disabled config accepted; capability probe deferred to alpha.4 |
+| CFG-006 | Waymark provider settings | 8.3 | Typed settings plus fail-closed injected-provider probe | Config/capability tests | alpha.4 | alpha.1 runtime evidence | In progress | Fixture boundary implemented; concrete provider blocked by ADR 0006 |
 | CFG-007 | Executor settings | 8.3 | Typed thread count/name and backward-compatible bounded queue capacity | Range/name/queue tests | V0.0.1-alpha.1 / alpha.3 | alpha.1 runtime evidence | In progress | Queue capacity defaults to 256; invalid bounds fail closed; runtime pressure pending |
 | CFG-008 | Audit settings | 8.3 | Typed durable-audit dependency gate | Enabled/disabled/dependency tests | alpha.2 | Pending | Automated test passed | Version remains 1; true requires MariaDB and migration; sample false |
 | CFG-009 | Health settings | 8.3 | Typed player detail flag | Valid config/command tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Player status rows shown while parenthetical internal details were suppressed |
@@ -108,36 +108,36 @@ In the table below, `alpha.1 runtime evidence` refers to
 | DB-011 | UUID authority | 8.4 | Canonical UUID repositories and raw-claim gate | Unit/repository tests | alpha.2 | Pending | In progress | Unit validation passed; MariaDB CI pending |
 | DB-012 | UTC timestamps | 8.4 | Eight `TIMESTAMP(3)` columns, UTC pool, repository mapping | Schema/session/mapping inspection | alpha.2 | Pending | In progress | Existing UTC tests passed; V002/repository CI pending |
 | DB-013 | Unique constraints | 8.4 | Existing Core V001 | Duplicate idempotency/event tests | alpha.2 | Pending | Automated test passed | Current transaction and audit unique constraints enforced |
-| DB-014 | Optimistic locking | 8.4 | Player newer-only lock increment; item lock foundation | Concurrency/repository tests | alpha.2 | Pending | In progress | Identity implementation present; broader transaction locking pending |
+| DB-014 | Optimistic locking | 8.4 | Identity newer-only updates and transaction state/version claims | Concurrency/repository tests | alpha.2/4 | Pending | In progress | Transaction provider effects require a winning state/version claim; CI pending |
 | DB-015 | Required indexes | 8.4 | V001 indexes plus four V002 identity indexes | Information-schema inspection | alpha.2 | Pending | In progress | V002 integration source compiled; CI execution pending |
 | DB-016 | JSON validation | 8.4 | Existing Core V001 | Transaction/audit invalid-JSON tests | alpha.2 | Pending | Automated test passed | Both current JSON check constraints enforced |
-| DB-017 | Restart recovery | 8.4 | Durable audit/player/item repositories | Restart integration suite | alpha.2 | Pending | In progress | Identity/audit source complete; CI pending; transaction/reconcile later |
+| DB-017 | Restart recovery | 8.4 | Durable audit/player/item/transaction repositories | Restart integration suite | alpha.2/4 | Pending | In progress | Transaction idempotency/restart integration source added; CI pending |
 | DB-018 | Core does not create `wf_main_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_main_*` table created |
 | DB-019 | Core does not create `wf_frontier_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_frontier_*` table created |
-| TX-001 | Persist/recover PREPARED and DEBIT_PENDING | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-002 | Persist/recover DEBITED | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-003 | Persist/recover DOMAIN_COMMIT_PENDING and COMMITTED | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-004 | Persist/recover REFUND_PENDING and REFUNDED | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-005 | Persist/recover UNKNOWN and FAILED | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-006 | Persist RECONCILED_COMMITTED | 8.5 | Transaction slice | Reconcile test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-007 | Persist RECONCILED_REFUNDED | 8.5 | Transaction slice | Reconcile test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-008 | Unique idempotency key | 8.5 | Transaction slice | Idempotency test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-009 | Prevent duplicate debit | 8.5 | Transaction slice | Concurrency/restart test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-010 | Prevent duplicate refund | 8.5 | Transaction slice | Concurrency/restart test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-011 | Detect crash windows | 8.5 | Transaction slice | Failure injection | alpha.4 | Pending | Not started | Implementation pending |
-| TX-012 | Timeout behavior | 8.5 | Transaction slice | Timeout test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-013 | Retry behavior | 8.5 | Transaction slice | Retry test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-014 | UNKNOWN handling | 8.5 | Transaction slice | Failure/recovery test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-015 | Manual reconcile | 8.5 | Transaction/admin slice | Reconcile test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-016 | Automatic reconcile | 8.5 | Transaction slice | Restart/reconcile test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-017 | Provider reference | 8.5 | Transaction slice | Persistence test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-018 | Transaction audit | 8.5 | Transaction/audit slice | Audit test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-019 | Transaction restart recovery | 8.5 | Transaction slice | Restart test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-020 | Insufficient funds | 8.5 | Provider adapter | Provider fixture | alpha.4 | Pending | Not started | Implementation pending |
-| TX-021 | Provider outage | 8.5 | Provider adapter | Outage test | alpha.4 | Pending | Not started | Implementation pending |
-| TX-022 | Do not claim unconditional exactly-once | 8.5 | API/docs pending | Documentation test | beta.1 | N/A | Not started | Must state compensation limits |
-| TX-023 | Do not access RedisEconomy internal keys | 8.5, 14 | Adapter boundary | Code inspection | alpha.4 | Pending | Not started | Implementation pending |
-| TX-024 | Use supported API/Vault boundary | 8.5 | Adapter boundary | Capability/thread test | alpha.4 | Pending | Not started | Owner decision if unavailable |
+| TX-001 | Persist/recover PREPARED and DEBIT_PENDING | 8.5 | V001 row plus V003 history/repository | State/repository test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-002 | Persist/recover DEBITED | 8.5 | Central state machine and repository | State test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-003 | Persist/recover DOMAIN_COMMIT_PENDING and COMMITTED | 8.5 | Central state machine and repository | State test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-004 | Persist/recover REFUND_PENDING and REFUNDED | 8.5 | Central state machine and repository | State test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-005 | Persist/recover UNKNOWN and FAILED | 8.5 | Explicit uncertain/known-failure paths | State test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-006 | Persist RECONCILED_COMMITTED | 8.5 | Automatic/manual reconcile | Reconcile test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-007 | Persist RECONCILED_REFUNDED | 8.5 | Claimed refund reconcile | Reconcile test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-008 | Unique idempotency key | 8.5 | V001 unique key plus immutable input check | Idempotency test | alpha.4 | Pending | In progress | Implemented; CI pending |
+| TX-009 | Prevent duplicate debit | 8.5 | PREPARED optimistic claim before provider effect | Concurrency/restart test | alpha.4 | Pending | In progress | Fixture passed locally; MariaDB CI pending |
+| TX-010 | Prevent duplicate refund | 8.5 | UNKNOWN optimistic refund claim | Concurrency/restart test | alpha.4 | Pending | In progress | Fixture passed locally; MariaDB CI pending |
+| TX-011 | Detect crash windows | 8.5 | DEBIT_PENDING/UNKNOWN distinction | Failure injection | alpha.4 | Pending | In progress | Unknown-effect path implemented |
+| TX-012 | Timeout behavior | 8.5 | Bounded provider completion | Timeout test | alpha.4 | Pending | In progress | Timeout becomes UNKNOWN; local test passed |
+| TX-013 | Retry behavior | 8.5 | Existing-state return without effect replay | Retry test | alpha.4 | Pending | In progress | Idempotent retry implemented |
+| TX-014 | UNKNOWN handling | 8.5 | Explicit UNKNOWN and no implicit replay | Failure/recovery test | alpha.4 | Pending | In progress | Implemented |
+| TX-015 | Manual reconcile | 8.5 | Confirmed commit/refund/fail action | Reconcile/command test | alpha.4 | Pending | In progress | Handler implemented; CI pending |
+| TX-016 | Automatic reconcile | 8.5 | Provider `resolve` classification | Restart/reconcile test | alpha.4 | Pending | In progress | Fixture implemented; concrete provider blocked |
+| TX-017 | Provider reference | 8.5 | Bounded durable provider reference/operation ID | Persistence test | alpha.4 | Pending | In progress | V003 and repository implemented |
+| TX-018 | Transaction audit | 8.5 | Durable transition/reconcile event types | Audit test | alpha.4 | Pending | In progress | Fixture audit assertions pass locally |
+| TX-019 | Transaction restart recovery | 8.5 | MariaDB idempotency/history reconstruction | Restart test | alpha.4 | Pending | In progress | Integration source compiled; CI pending |
+| TX-020 | Insufficient funds | 8.5 | Explicit provider fixture result | Provider fixture | alpha.4 | Pending | Automated test passed | No debit retry |
+| TX-021 | Provider outage | 8.5 | Exception/timeout/unknown fixture result | Outage test | alpha.4 | Pending | In progress | Provider-independent path implemented |
+| TX-022 | Do not claim unconditional exactly-once | 8.5 | Crash-window architecture and UNKNOWN policy | Documentation test | beta.1 | N/A | Implemented | No unconditional claim; external effect requires reconcile |
+| TX-023 | Do not access RedisEconomy internal keys | 8.5, 14 | SPI/ADR 0006 boundary | Code inspection | alpha.4 | Pending | Implemented | No concrete adapter or internal key access |
+| TX-024 | Use supported API/Vault boundary | 8.5 | ADR 0006 authority gate | Capability/thread test | alpha.4 | Pending | BLOCKED | Concrete provider contract requires owner/provider authority |
 | AUD-001 | Audit enable/disable/migration | 8.6 | Probe, enable/migration events, bounded close event | Lifecycle/persistence suite | alpha.2 | Pending | In progress | Implementation complete; MariaDB CI and Paper runtime pending |
 | AUD-002 | Audit health transitions/dependency outage | 8.6 | Dynamic Audit and Redis UP/DOWN/recovery/close health | Validation/failure/integration suite | alpha.2/3 | Pending | In progress | Alpha.2 CI passed; Redis dependency outage/recovery implementation awaits alpha.3 CI |
 | AUD-003 | Audit transaction/refund/UNKNOWN | 8.6 | Audit slice | Transaction test | alpha.4 | Pending | Not started | Implementation pending |
@@ -187,11 +187,11 @@ In the table below, `alpha.1 runtime evidence` refers to
 | ADM-003 | Health: Audit/Transaction | 8.10 | Dynamic Audit and Identity components | Health/failure tests | alpha.2/4 | Pending | In progress | Audit/Identity implemented; Transaction remains alpha.4 |
 | ADM-004 | Health: Executor/Services | 8.10 | Dynamic executor/services components | Health/runtime tests | V0.0.1-alpha.1 / alpha.3 | alpha.1 runtime evidence | In progress | Executor and Services `UP`; later executor slice remains pending |
 | ADM-005 | `/wayfarer admin health` | 8.10 | `HealthCommandHandler`; Bukkit adapter | Command suite | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Console and authorized-player output observed |
-| ADM-006 | Transaction inspect command | 8.10 | Admin slice | Command test | alpha.4 | Pending | Not started | Implementation pending |
-| ADM-007 | Transaction reconcile command | 8.10 | Admin slice | Command test | alpha.4 | Pending | Not started | Implementation pending |
+| ADM-006 | Transaction inspect command | 8.10 | Sanitized async `TransactionCommandHandler` | Command test | alpha.4 | Pending | Automated test passed | Provider reference value is not displayed |
+| ADM-007 | Transaction reconcile command | 8.10 | Explicit action plus trailing confirmation | Command test | alpha.4 | Pending | Automated test passed | Async response dispatched to main thread |
 | ADM-008 | Admin permission rules | 8.10 | `wayfarer.admin.health` | Authorization/denial tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Non-OP denial and OP authorization observed; later admin grants pending |
 | ADM-009 | Console eligibility | 8.10 | Bukkit audience adapter | Console command tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Console health observed; later admin command slices pending |
-| ADM-010 | Admin redaction/audit/confirmation | 8.10 | Admin slice | Security test | alpha.4 | Pending | Not started | Implementation pending |
+| ADM-010 | Admin redaction/audit/confirmation | 8.10 | Presence-only reference, operational audit, explicit confirm | Security test | alpha.4 | Pending | Automated test passed | Concrete runtime command wiring remains provider-gated |
 | TST-001 | Unit tests | 10.1 | API/Common/Core test sources | 120 PR B unit tests | V0.0.1-alpha.1+ | N/A | In progress | Local: 120 passed, 0 failed, 0 skipped; final CI pending |
 | TST-002 | MariaDB integration | 10.1 | Testkit fixture; mandatory Core integration task | Persistence plus PR B Testcontainers suite | alpha.2 | Pending | In progress | Local Docker stopped; source compiled; GitHub Actions mandatory authority |
 | TST-003 | Redis integration | 10.1 | `redisIntegrationTest` using authoritative `redis:8-alpine` | Testcontainers | alpha.3 | Pending | Automated test passed | Six cases passed in CI `30290422624`; Paper runtime remains pending |

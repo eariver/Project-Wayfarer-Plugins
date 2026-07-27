@@ -2,16 +2,20 @@ package io.github.eariver.wayfarer.core;
 
 import io.github.eariver.wayfarer.api.WayfarerHealth;
 import io.github.eariver.wayfarer.api.WayfarerServices;
+import io.github.eariver.wayfarer.api.WayfarerTransactions;
+import io.github.eariver.wayfarer.api.WayfarerWaymarkProvider;
 import io.github.eariver.wayfarer.common.secret.SecretValue;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
 import io.github.eariver.wayfarer.core.lifecycle.LifecycleException;
 import io.github.eariver.wayfarer.core.persistence.MariaDbPool;
 import io.github.eariver.wayfarer.core.persistence.MigrationLifecycle;
 import io.github.eariver.wayfarer.core.service.ServicePublisher;
+import io.github.eariver.wayfarer.core.transaction.TransactionEngine;
 import io.github.eariver.wayfarer.testkit.MariaDbContainerFixture;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -25,6 +29,10 @@ import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,23 +63,82 @@ class PersistenceFoundationIntegrationTest {
                  fixture.username(),
                  fixture.password()
              )) {
-            assertEquals(2, first.appliedMigrationCount());
-            assertEquals(2, second.appliedMigrationCount());
+            assertEquals(3, first.appliedMigrationCount());
+            assertEquals(3, second.appliedMigrationCount());
             assertEquals(
                 Set.of(
                     "flyway_schema_history",
                     "wf_core_audit",
                     "wf_core_transaction",
+                    "wf_core_transaction_event",
                     "wf_core_player_identity",
                     "wf_core_item_identity"
                 ),
                 tableNames(connection)
             );
-            assertEquals(2, appliedMigrationRows(connection));
+            assertEquals(3, appliedMigrationRows(connection));
             assertRequiredIndexes(connection);
             assertTimestampPrecision(connection);
             assertCoreConstraints(connection);
             assertIdentitySchema(connection);
+        }
+    }
+
+    @Test
+    void transactionIdempotencyAndHistorySurviveRuntimeRestart() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            CountingProvider provider = new CountingProvider();
+            WayfarerTransactions.TransactionRequest request =
+                new WayfarerTransactions.TransactionRequest(
+                    "restart-idempotency",
+                    "SHOP",
+                    UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                    "WAYMARK",
+                    "integration-subject",
+                    25,
+                    "{\"case\":\"restart\"}"
+                );
+
+            UUID transactionId;
+            try (CoreConfig config = enabledConfig(fixture, List.of("db/migration/core"))) {
+                CoreRuntime runtime = runtime(config, new RecordingPublisher());
+                runtime.enable();
+                TransactionEngine engine = engine(runtime, provider);
+                WayfarerTransactions.TransactionResult result = engine.execute(request)
+                    .toCompletableFuture().join();
+                transactionId = result.transactionId();
+                assertEquals(WayfarerTransactions.State.COMMITTED, result.state());
+                runtime.disable();
+            }
+
+            try (CoreConfig config = enabledConfig(fixture, List.of("db/migration/core"))) {
+                CoreRuntime runtime = runtime(config, new RecordingPublisher());
+                runtime.enable();
+                WayfarerTransactions.TransactionResult duplicate = engine(runtime, provider)
+                    .execute(request)
+                    .toCompletableFuture().join();
+                assertEquals(transactionId, duplicate.transactionId());
+                assertEquals(WayfarerTransactions.State.COMMITTED, duplicate.state());
+                assertEquals(1, provider.debits.get());
+                runtime.disable();
+            }
+
+            try (Connection connection = DriverManager.getConnection(
+                fixture.jdbcUrl(),
+                fixture.username(),
+                fixture.password()
+            )) {
+                assertEquals(1, scalar(
+                    connection,
+                    "SELECT COUNT(*) FROM wf_core_transaction "
+                        + "WHERE idempotency_key = 'restart-idempotency'"
+                ));
+                assertEquals(5, scalar(
+                    connection,
+                    "SELECT COUNT(*) FROM wf_core_transaction_event "
+                        + "WHERE transaction_id = '" + transactionId + "'"
+                ));
+            }
         }
     }
 
@@ -235,6 +302,79 @@ class PersistenceFoundationIntegrationTest {
         );
     }
 
+    private static TransactionEngine engine(
+        CoreRuntime runtime,
+        WayfarerWaymarkProvider provider
+    ) throws ReflectiveOperationException {
+        Field field = CoreRuntime.class.getDeclaredField("mariaDbPool");
+        field.setAccessible(true);
+        MariaDbPool pool = (MariaDbPool) field.get(runtime);
+        return new TransactionEngine(
+            pool.createTransactionRepository(),
+            provider,
+            runtime.services().audit(),
+            "alpha-2-integration",
+            Duration.ofSeconds(1),
+            Clock.systemUTC()
+        );
+    }
+
+    private static final class CountingProvider implements WayfarerWaymarkProvider {
+        private final AtomicInteger debits = new AtomicInteger();
+
+        @Override
+        public CompletionStage<ProbeResult> probe() {
+            return CompletableFuture.completedFuture(
+                new ProbeResult(true, "fixture", null)
+            );
+        }
+
+        @Override
+        public CompletionStage<Long> balance(UUID playerUuid) {
+            return CompletableFuture.completedFuture(100L);
+        }
+
+        @Override
+        public CompletionStage<EffectResult> debit(
+            UUID playerUuid,
+            long amount,
+            String operationId
+        ) {
+            debits.incrementAndGet();
+            return CompletableFuture.completedFuture(
+                new EffectResult(EffectStatus.SUCCEEDED, "provider-debit-1", null)
+            );
+        }
+
+        @Override
+        public CompletionStage<EffectResult> refund(
+            UUID playerUuid,
+            long amount,
+            String operationId,
+            String debitProviderReference
+        ) {
+            return CompletableFuture.completedFuture(
+                new EffectResult(EffectStatus.SUCCEEDED, "provider-refund-1", null)
+            );
+        }
+
+        @Override
+        public CompletionStage<EffectResolution> resolve(
+            String operationId,
+            String providerReference
+        ) {
+            return CompletableFuture.completedFuture(EffectResolution.APPLIED);
+        }
+    }
+
+    private static int scalar(Connection connection, String sql) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(sql)) {
+            assertTrue(result.next());
+            return result.getInt(1);
+        }
+    }
+
     private static Set<String> tableNames(Connection connection) throws SQLException {
         Set<String> tables = new HashSet<>();
         try (Statement statement = connection.createStatement();
@@ -335,7 +475,8 @@ class PersistenceFoundationIntegrationTest {
                  "SELECT DISTINCT index_name FROM information_schema.statistics "
                      + "WHERE table_schema = DATABASE() "
                      + "AND table_name IN ('wf_core_transaction', 'wf_core_audit', "
-                     + "'wf_core_player_identity', 'wf_core_item_identity')"
+                     + "'wf_core_transaction_event', 'wf_core_player_identity', "
+                     + "'wf_core_item_identity')"
              )) {
             while (result.next()) {
                 indexes.add(result.getString(1));
@@ -344,6 +485,7 @@ class PersistenceFoundationIntegrationTest {
         assertTrue(indexes.containsAll(Set.of(
             "uq_wf_core_transaction_idempotency",
             "ix_wf_core_transaction_state_updated",
+            "ix_wf_core_transaction_event_transaction",
             "uq_wf_core_audit_event",
             "ix_wf_core_audit_subject",
             "ix_wf_core_audit_actor",
@@ -411,11 +553,12 @@ class PersistenceFoundationIntegrationTest {
                  "SELECT COUNT(*) FROM information_schema.columns "
                      + "WHERE table_schema = DATABASE() "
                      + "AND table_name IN ('wf_core_transaction', 'wf_core_audit', "
-                     + "'wf_core_player_identity', 'wf_core_item_identity') "
+                     + "'wf_core_transaction_event', 'wf_core_player_identity', "
+                     + "'wf_core_item_identity') "
                      + "AND data_type = 'timestamp' AND datetime_precision = 3"
              )) {
             assertTrue(result.next());
-            assertEquals(8, result.getInt(1));
+            assertEquals(9, result.getInt(1));
         }
     }
 
