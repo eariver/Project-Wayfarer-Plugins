@@ -26,6 +26,7 @@ include(
     "libraries:wayfarer-api",
     "libraries:wayfarer-common",
     "libraries:wayfarer-testkit",
+    "testkit:headless-paper",
     "integrations:wayfarer-leafgrapple-adapter",
     "plugins:wayfarer-core",
     "plugins:wayfarer-main",
