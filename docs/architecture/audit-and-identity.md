@@ -46,10 +46,11 @@ fixed failure code. The original operation remains exceptional whether that audi
 fails; both paths keep Identity `DOWN` and warnings contain no player name or raw exception.
 
 Identity shutdown is `OPEN → CLOSING → CLOSED`. `CLOSING` rejects new operations but preserves
-completion of already accepted work. Identity is finalized only after the database drain result
-is known. Accepted failure, drain timeout/interruption, or identity-finalization timeout/
-interruption remains `DOWN`; only accepted-work completion plus a clean database drain becomes
-`DISABLED`.
+completion of already accepted work. A bounded quiescence step settles that work before Audit
+persists its disable event and database intake closes; Identity is finalized only after the
+database drain result is known. Accepted failure, drain timeout/interruption, or Identity
+quiescence timeout/interruption remains `DOWN`; only accepted-work completion plus a clean
+database drain becomes `DISABLED`.
 
 ## Item identity
 

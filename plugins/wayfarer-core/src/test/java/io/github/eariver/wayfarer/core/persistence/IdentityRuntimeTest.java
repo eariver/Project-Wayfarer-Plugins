@@ -242,6 +242,14 @@ class IdentityRuntimeTest {
         assertEquals(Optional.empty(), accepted.join());
         assertEquals(
             IdentityRuntime.IdentityCloseStatus.CLEAN,
+            runtime.quiesce(Duration.ofSeconds(1))
+        );
+        assertEquals(
+            WayfarerHealth.Status.UNKNOWN,
+            health.snapshot().components().get(HealthRegistry.IDENTITY).status()
+        );
+        assertEquals(
+            IdentityRuntime.IdentityCloseStatus.CLEAN,
             runtime.finishClosing(drained(), Duration.ofSeconds(1))
         );
         assertEquals(

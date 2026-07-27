@@ -33,9 +33,10 @@ Disable separates database intake from accepted work. Its effective order is:
 Services unpublished
 → Player join listener unregistered
 → Identity service enters CLOSING and rejects new work
-→ Database intake closed and accepted database work drained while audit/executor/Hikari remain available
-→ Identity accepted work finalized against the database drain result
-→ Durable audit disable-start event and audit intake closed
+→ Accepted Identity work quiesced while audit/database/executor remain available
+→ Durable audit disable-start event persisted and audit intake closed
+→ Database intake closed and accepted database work drained
+→ Identity health finalized against the database drain result
 → Migration lifecycle released
 → Hikari pool closed
 → Executor shutdown
@@ -55,10 +56,10 @@ bounded and continues through migration release, pool close, and the executor's 
 reported graceful, forced, incomplete, or interrupted result.
 
 Identity has separate `OPEN`, `CLOSING`, and `CLOSED` states. Its initial close action does not
-set health to `DISABLED`. A later finalizer waits within the configured bound, consumes the
-database drain result, and reports `DISABLED` only if all accepted work completed successfully
-and the database result was `DRAINED`. Accepted failure, identity wait timeout/interruption, or a
-non-drained database result remains `DOWN`.
+set health to `DISABLED`. A bounded quiescence step first settles already accepted Identity work
+while durable audit and database intake remain available. Audit then persists its disable event;
+only after the database drain result is known does a finalizer report `DISABLED`. Accepted
+failure, quiescence timeout/interruption, or a non-drained database result remains `DOWN`.
 
 Pool, migration, gate, and runtime close operations are idempotent. A pool/connect/migration
 failure marks the applicable health component `DOWN`, prevents service publication, closes

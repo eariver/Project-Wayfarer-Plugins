@@ -33,6 +33,8 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
     private LifecycleState lifecycleState = LifecycleState.OPEN;
     private int inFlight;
     private boolean acceptedFailureDuringClose;
+    private IdentityCloseStatus quiesceFailure;
+    private boolean quiesced;
 
     IdentityRuntime(
         InternalDatabase database,
@@ -257,37 +259,11 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
     ) {
         Objects.requireNonNull(persistenceDrain, "persistenceDrain");
         Objects.requireNonNull(timeout, "timeout");
-        close();
-        long remainingNanos = timeout.toNanos();
-        long deadline = System.nanoTime() + remainingNanos;
+        IdentityCloseStatus quiesceStatus = quiesce(timeout);
         synchronized (lifecycleMonitor) {
-            while (inFlight > 0 && remainingNanos > 0) {
-                try {
-                    long millis = remainingNanos / 1_000_000L;
-                    int nanos = (int) (remainingNanos % 1_000_000L);
-                    lifecycleMonitor.wait(millis, nanos);
-                } catch (InterruptedException failure) {
-                    Thread.currentThread().interrupt();
-                    lifecycleState = LifecycleState.CLOSED;
-                    health.update(
-                        HealthRegistry.IDENTITY,
-                        WayfarerHealth.Status.DOWN,
-                        "Identity finalization was interrupted"
-                    );
-                    warn("Wayfarer identity finalization was interrupted");
-                    return IdentityCloseStatus.INTERRUPTED;
-                }
-                remainingNanos = deadline - System.nanoTime();
-            }
             lifecycleState = LifecycleState.CLOSED;
-            if (inFlight > 0) {
-                health.update(
-                    HealthRegistry.IDENTITY,
-                    WayfarerHealth.Status.DOWN,
-                    "Identity finalization timed out with accepted operations remaining"
-                );
-                warn("Wayfarer identity finalization timed out");
-                return IdentityCloseStatus.TIMED_OUT;
+            if (quiesceStatus != IdentityCloseStatus.CLEAN) {
+                return quiesceStatus;
             }
             if (persistenceDrain.status() != PersistenceDrainStatus.DRAINED
                 || acceptedFailureDuringClose) {
@@ -303,6 +279,51 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
                 WayfarerHealth.Status.DISABLED,
                 "Identity services closed after accepted work drained"
             );
+            return IdentityCloseStatus.CLEAN;
+        }
+    }
+
+    public IdentityCloseStatus quiesce(Duration timeout) {
+        Objects.requireNonNull(timeout, "timeout");
+        close();
+        long remainingNanos = timeout.toNanos();
+        long deadline = System.nanoTime() + remainingNanos;
+        synchronized (lifecycleMonitor) {
+            if (quiesceFailure != null) {
+                return quiesceFailure;
+            }
+            if (quiesced) {
+                return IdentityCloseStatus.CLEAN;
+            }
+            while (inFlight > 0 && remainingNanos > 0) {
+                try {
+                    long millis = remainingNanos / 1_000_000L;
+                    int nanos = (int) (remainingNanos % 1_000_000L);
+                    lifecycleMonitor.wait(millis, nanos);
+                } catch (InterruptedException failure) {
+                    Thread.currentThread().interrupt();
+                    quiesceFailure = IdentityCloseStatus.INTERRUPTED;
+                    health.update(
+                        HealthRegistry.IDENTITY,
+                        WayfarerHealth.Status.DOWN,
+                        "Identity accepted-work quiescence was interrupted"
+                    );
+                    warn("Wayfarer identity accepted-work quiescence was interrupted");
+                    return quiesceFailure;
+                }
+                remainingNanos = deadline - System.nanoTime();
+            }
+            if (inFlight > 0) {
+                quiesceFailure = IdentityCloseStatus.TIMED_OUT;
+                health.update(
+                    HealthRegistry.IDENTITY,
+                    WayfarerHealth.Status.DOWN,
+                    "Identity accepted-work quiescence timed out"
+                );
+                warn("Wayfarer identity accepted-work quiescence timed out");
+                return quiesceFailure;
+            }
+            quiesced = true;
             return IdentityCloseStatus.CLEAN;
         }
     }
