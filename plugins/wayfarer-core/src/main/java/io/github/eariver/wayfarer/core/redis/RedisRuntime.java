@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -54,6 +55,7 @@ public final class RedisRuntime implements AutoCloseable {
     private final StatefulRedisPubSubConnection<String, String> pubSubConnection;
     private final RedisAsyncCommands<String, String> commands;
     private final RedisEnvelopeCodec envelopeCodec = new RedisEnvelopeCodec();
+    private final AtomicInteger commandReconnects = new AtomicInteger();
     private final List<Consumer<RedisEnvelope>> messageHandlers = new CopyOnWriteArrayList<>();
     private final Map<UUID, Boolean> recentMessages = Collections.synchronizedMap(
         new LinkedHashMap<>() {
@@ -309,6 +311,10 @@ public final class RedisRuntime implements AutoCloseable {
         }
     }
 
+    int commandReconnects() {
+        return commandReconnects.get();
+    }
+
     @Override
     public void close() {
         shutdown(settings.operationTimeout());
@@ -384,6 +390,9 @@ public final class RedisRuntime implements AutoCloseable {
     private void connectionState(boolean command, boolean connected) {
         synchronized (lifecycleMonitor) {
             if (command) {
+                if (connected && !commandConnected) {
+                    commandReconnects.incrementAndGet();
+                }
                 commandConnected = connected;
             } else {
                 pubSubConnected = connected;

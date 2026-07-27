@@ -42,7 +42,7 @@ class RedisRuntimeIntegrationTest {
     @Container
     private static final GenericContainer<?> REDIS = new GenericContainer<>(
         DockerImageName.parse("redis:8-alpine")
-    ).withExposedPorts(6379).withCommand(
+    ).withExposedPorts(6379).withEnv("REDISCLI_AUTH", PASSWORD).withCommand(
         "redis-server",
         "--requirepass",
         PASSWORD,
@@ -155,9 +155,9 @@ class RedisRuntimeIntegrationTest {
     }
 
     @Test
-    void outageMarksDownAndSuccessfulReconnectMarksUp() {
+    void outageMarksDownAndSuccessfulReconnectMarksUp() throws Exception {
         try (Fixture fixture = fixture("main-1", () -> false)) {
-            REDIS.getDockerClient().stopContainerCmd(REDIS.getContainerId()).exec();
+            REDIS.getDockerClient().pauseContainerCmd(REDIS.getContainerId()).exec();
             try {
                 assertThrows(
                     CompletionException.class,
@@ -167,22 +167,25 @@ class RedisRuntimeIntegrationTest {
                 );
                 assertEquals(WayfarerHealth.Status.DOWN, fixture.redisHealth());
             } finally {
-                REDIS.getDockerClient().startContainerCmd(REDIS.getContainerId()).exec();
+                REDIS.getDockerClient().unpauseContainerCmd(REDIS.getContainerId()).exec();
             }
 
-            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
-            boolean recovered = false;
-            while (!recovered && System.nanoTime() < deadline) {
-                try {
-                    fixture.runtime.cacheGet("health", "probe", 1)
-                        .toCompletableFuture()
-                        .join();
-                    recovered = true;
-                } catch (CompletionException ignored) {
-                    Thread.onSpinWait();
-                }
-            }
-            assertTrue(recovered);
+            awaitRedisSuccess(fixture.runtime);
+            assertEquals(WayfarerHealth.Status.UP, fixture.redisHealth());
+
+            int reconnects = fixture.runtime.commandReconnects();
+            var kill = REDIS.execInContainer(
+                "redis-cli",
+                "CLIENT",
+                "KILL",
+                "TYPE",
+                "normal",
+                "SKIPME",
+                "yes"
+            );
+            assertEquals(0, kill.getExitCode());
+            awaitReconnect(fixture.runtime, reconnects);
+            awaitRedisSuccess(fixture.runtime);
             assertEquals(WayfarerHealth.Status.UP, fixture.redisHealth());
         }
     }
@@ -381,6 +384,28 @@ class RedisRuntimeIntegrationTest {
             Thread.onSpinWait();
         }
         assertFalse(runtime.isAccepting());
+    }
+
+    private static void awaitReconnect(RedisRuntime runtime, int previousCount)
+        throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (runtime.commandReconnects() <= previousCount && System.nanoTime() < deadline) {
+            Thread.sleep(25);
+        }
+        assertTrue(runtime.commandReconnects() > previousCount);
+    }
+
+    private static void awaitRedisSuccess(RedisRuntime runtime) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (System.nanoTime() < deadline) {
+            try {
+                runtime.cacheGet("health", "probe", 1).toCompletableFuture().join();
+                return;
+            } catch (CompletionException ignored) {
+                Thread.sleep(25);
+            }
+        }
+        throw new AssertionError("Redis did not accept a command before the deadline");
     }
 
     private record Fixture(
