@@ -9,6 +9,7 @@ paper_sha256="5ffef465eeeb5f2a3c23a24419d97c51afd7dbb4923ff42df9a3f58bba1ccfba"
 evidence_root="$runtime_root/evidence"
 server_pid=""
 server_input_fd=""
+java_executable="${JAVA_HOME:?JAVA_HOME is required}/bin/java"
 
 : "${WAYFARER_DB_URL:?WAYFARER_DB_URL is required}"
 : "${WAYFARER_DB_USERNAME:?WAYFARER_DB_USERNAME is required}"
@@ -19,6 +20,7 @@ server_input_fd=""
 : "${REDIS_CONTAINER_ID:?REDIS_CONTAINER_ID is required}"
 
 mkdir -p "$runtime_root" "$evidence_root"
+"$java_executable" -version
 
 curl --fail --silent --show-error --location \
   --user-agent "Project-Wayfarer-Plugins-preclient/0.0.1 (https://github.com/eariver/Project-Wayfarer-Plugins)" \
@@ -115,7 +117,7 @@ start_server() {
   (
     cd "$server_root"
     WAYFARER_DB_URL="$jdbc_url" \
-      exec java -Xms512M -Xmx1024M -jar "$paper_jar" --nogui \
+      exec "$java_executable" -Xms512M -Xmx1024M -jar "$paper_jar" --nogui \
       < "$input_pipe" > "$log_file" 2>&1
   ) &
   server_pid="$!"
