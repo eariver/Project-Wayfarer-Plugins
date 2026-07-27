@@ -4,12 +4,16 @@ import io.github.eariver.wayfarer.api.WayfarerHealth;
 import io.github.eariver.wayfarer.api.WayfarerLifecycleState;
 import io.github.eariver.wayfarer.api.WayfarerServices;
 import io.github.eariver.wayfarer.core.lifecycle.LifecycleException;
+import io.github.eariver.wayfarer.core.persistence.PersistenceDrainResult;
+import io.github.eariver.wayfarer.core.persistence.PersistenceDrainStatus;
 import io.github.eariver.wayfarer.core.service.ServicePublisher;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -215,6 +219,64 @@ class CoreRuntimeServicesTest {
             release.countDown();
             task.toCompletableFuture().get(1, TimeUnit.SECONDS);
         }
+    }
+
+    @Test
+    void persistenceDrainTimeoutIsDownAndWarnedWithoutCleanMarker() {
+        List<String> warnings = new ArrayList<>();
+        CoreRuntime runtime = new CoreRuntime(
+            TestCoreConfigs.valid(),
+            new RecordingPublisher(),
+            Runnable::run,
+            Clock.systemUTC(),
+            warnings::add
+        );
+
+        runtime.recordPersistenceDrainResult(
+            new PersistenceDrainResult(PersistenceDrainStatus.TIMED_OUT, 2)
+        );
+
+        WayfarerHealth.ComponentHealth mariaDb =
+            runtime.health().snapshot().components().get("MariaDB");
+        assertEquals(WayfarerHealth.Status.DOWN, mariaDb.status());
+        assertEquals(
+            "Database work drain timed out with 2 operation(s) remaining",
+            mariaDb.detail()
+        );
+        assertEquals(
+            List.of("Wayfarer database work exceeded shutdown drain timeout"),
+            warnings
+        );
+        assertFalse(mariaDb.detail().contains("drained successfully"));
+    }
+
+    @Test
+    void interruptedPersistenceDrainIsDownAndWarnedWithoutCleanMarker() {
+        List<String> warnings = new ArrayList<>();
+        CoreRuntime runtime = new CoreRuntime(
+            TestCoreConfigs.valid(),
+            new RecordingPublisher(),
+            Runnable::run,
+            Clock.systemUTC(),
+            warnings::add
+        );
+
+        runtime.recordPersistenceDrainResult(
+            new PersistenceDrainResult(PersistenceDrainStatus.INTERRUPTED, 1)
+        );
+
+        WayfarerHealth.ComponentHealth mariaDb =
+            runtime.health().snapshot().components().get("MariaDB");
+        assertEquals(WayfarerHealth.Status.DOWN, mariaDb.status());
+        assertEquals(
+            "Database work drain was interrupted with 1 operation(s) remaining",
+            mariaDb.detail()
+        );
+        assertEquals(
+            List.of("Wayfarer database work drain was interrupted"),
+            warnings
+        );
+        assertFalse(mariaDb.detail().contains("drained successfully"));
     }
 
     private static void awaitUninterruptibly(CountDownLatch release) {

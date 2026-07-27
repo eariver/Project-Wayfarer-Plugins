@@ -14,7 +14,10 @@
   recovery, and Final Smoke newline-regex mismatch. Corrected reruns or canonical evidence passed,
   so these incidents do not invalidate the product runtime result.
 - The alpha.2 PR A source implements the internal MariaDB/Hikari/Flyway lifecycle and isolated
-  `mariadb:11.8` migration tests. Merge and isolated Paper runtime evidence remain pending.
+  `mariadb:11.8` migration tests. PR A remains Draft and unmerged. Persistence shutdown drain
+  ordering is automated-test covered after the fix: intake closes independently, accepted work
+  drains before Hikari close, and timeout/interruption remain non-clean. Isolated Paper runtime
+  evidence remains pending.
   MariaDB and Migration health are `UP` only after pool connectivity and Flyway validation/
   migration succeed; failures are `DOWN` and stop service publication.
 - Durable audit persistence and player/item identity remain pending alpha.2 PR B. The transaction

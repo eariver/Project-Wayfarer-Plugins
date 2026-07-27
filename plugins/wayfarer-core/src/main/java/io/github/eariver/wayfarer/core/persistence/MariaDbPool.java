@@ -10,14 +10,15 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BooleanSupplier;
 
 public final class MariaDbPool implements AutoCloseable {
     private static final String POOL_PREFIX = "Wayfarer-Core-";
     private final HikariDataSource dataSource;
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final PersistenceWorkGate workGate = new PersistenceWorkGate();
     private InternalDatabase database;
 
     MariaDbPool(HikariDataSource dataSource) {
@@ -69,8 +70,7 @@ public final class MariaDbPool implements AutoCloseable {
 
     public void initializeInternalBoundary(
         ManagedExecutor executor,
-        ThreadContext threadContext,
-        BooleanSupplier accepting
+        ThreadContext threadContext
     ) {
         if (closed.get()) {
             throw new PersistenceException("MariaDB pool is closed");
@@ -79,9 +79,20 @@ public final class MariaDbPool implements AutoCloseable {
             dataSource,
             executor,
             threadContext,
-            accepting,
+            workGate,
             () -> !isClosed()
         );
+    }
+
+    public PersistenceDrainResult stopAcceptingAndAwait(Duration timeout) {
+        return workGate.stopAcceptingAndAwait(timeout);
+    }
+
+    InternalDatabase internalDatabaseForTesting() {
+        if (database == null) {
+            throw new IllegalStateException("Internal database boundary is unavailable");
+        }
+        return database;
     }
 
     public boolean isClosed() {
@@ -91,6 +102,7 @@ public final class MariaDbPool implements AutoCloseable {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
+            workGate.close();
             database = null;
             dataSource.close();
         }

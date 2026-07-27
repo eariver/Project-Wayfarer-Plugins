@@ -9,6 +9,8 @@ import io.github.eariver.wayfarer.core.lifecycle.LifecycleCoordinator;
 import io.github.eariver.wayfarer.core.lifecycle.LifecycleStep;
 import io.github.eariver.wayfarer.core.persistence.MariaDbPool;
 import io.github.eariver.wayfarer.core.persistence.MigrationLifecycle;
+import io.github.eariver.wayfarer.core.persistence.PersistenceDrainResult;
+import io.github.eariver.wayfarer.core.persistence.PersistenceDrainStatus;
 import io.github.eariver.wayfarer.core.persistence.PersistenceException;
 import io.github.eariver.wayfarer.core.persistence.ThreadContext;
 import io.github.eariver.wayfarer.core.service.ServicePublisher;
@@ -34,6 +36,7 @@ public final class CoreRuntime {
     private ManagedExecutor executor;
     private MariaDbPool mariaDbPool;
     private MigrationLifecycle migration;
+    private PersistenceDrainResult persistenceDrainResult;
     private WayfarerServices services;
 
     public CoreRuntime(
@@ -69,7 +72,8 @@ public final class CoreRuntime {
                 new LifecycleStep("Config", this::initializeConfig),
                 new LifecycleStep("Executor", this::initializeExecutor),
                 new LifecycleStep("MariaDB", this::initializeMariaDb),
-                new LifecycleStep("Migration", this::initializeMigration)
+                new LifecycleStep("Migration", this::initializeMigration),
+                new LifecycleStep("DatabaseDrain", this::initializeDatabaseDrain)
             ), new LifecycleStep("Services", this::initializeServices));
             health.refreshLifecycle();
         } catch (RuntimeException failure) {
@@ -179,8 +183,7 @@ public final class CoreRuntime {
             ).join();
             mariaDbPool.initializeInternalBoundary(
                 executor,
-                threadContext,
-                lifecycle::acceptsCallbacks
+                threadContext
             );
             health.update(
                 HealthRegistry.MARIA_DB,
@@ -189,11 +192,7 @@ public final class CoreRuntime {
             );
             return () -> {
                 mariaDbPool.close();
-                health.update(
-                    HealthRegistry.MARIA_DB,
-                    WayfarerHealth.Status.DISABLED,
-                    "Connection pool closed"
-                );
+                applyMariaDbClosedHealth();
             };
         } catch (RuntimeException failure) {
             if (mariaDbPool != null && !mariaDbPool.isClosed()) {
@@ -252,6 +251,81 @@ public final class CoreRuntime {
                 "Core schema migration failed"
             );
             throw new PersistenceException("Migration initialization failed");
+        }
+    }
+
+    private AutoCloseable initializeDatabaseDrain() {
+        if (!config.mariadb().enabled()) {
+            return () -> {};
+        }
+        if (mariaDbPool == null || mariaDbPool.isClosed()) {
+            throw new PersistenceException("Database drain requires MariaDB");
+        }
+        return () -> recordPersistenceDrainResult(
+            mariaDbPool.stopAcceptingAndAwait(config.shutdownTimeout())
+        );
+    }
+
+    void recordPersistenceDrainResult(PersistenceDrainResult result) {
+        persistenceDrainResult = Objects.requireNonNull(result, "result");
+        switch (result.status()) {
+            case DRAINED -> {
+                // MariaDB remains available until migration release and pool close complete.
+            }
+            case TIMED_OUT -> {
+                health.update(
+                    HealthRegistry.MARIA_DB,
+                    WayfarerHealth.Status.DOWN,
+                    "Database work drain timed out with "
+                        + result.remainingInFlight()
+                        + " operation(s) remaining"
+                );
+                warn("Wayfarer database work exceeded shutdown drain timeout");
+            }
+            case INTERRUPTED -> {
+                health.update(
+                    HealthRegistry.MARIA_DB,
+                    WayfarerHealth.Status.DOWN,
+                    "Database work drain was interrupted with "
+                        + result.remainingInFlight()
+                        + " operation(s) remaining"
+                );
+                warn("Wayfarer database work drain was interrupted");
+            }
+        }
+    }
+
+    private void applyMariaDbClosedHealth() {
+        if (persistenceDrainResult == null
+            || persistenceDrainResult.status() == PersistenceDrainStatus.DRAINED) {
+            health.update(
+                HealthRegistry.MARIA_DB,
+                WayfarerHealth.Status.DISABLED,
+                "Connection pool closed after database work drain"
+            );
+            return;
+        }
+        String incompleteDetail = switch (persistenceDrainResult.status()) {
+            case DRAINED -> throw new IllegalStateException("Unexpected drained result");
+            case TIMED_OUT -> "Connection pool closed after database work drain timeout with "
+                + persistenceDrainResult.remainingInFlight()
+                + " operation(s) remaining";
+            case INTERRUPTED -> "Connection pool closed after interrupted database work drain with "
+                + persistenceDrainResult.remainingInFlight()
+                + " operation(s) remaining";
+        };
+        health.update(
+            HealthRegistry.MARIA_DB,
+            WayfarerHealth.Status.DOWN,
+            incompleteDetail
+        );
+    }
+
+    private void warn(String warning) {
+        try {
+            warningSink.accept(warning);
+        } catch (RuntimeException ignored) {
+            // Cleanup and health transitions must survive unavailable diagnostics.
         }
     }
 
