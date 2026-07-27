@@ -29,11 +29,15 @@ jobs:
       - name: Verify Core packaging
         shell: bash
         run: |
-          mapfile -t core_jars < <(find plugins/wayfarer-core/build/libs -maxdepth 1 -type f -name '*.jar')
-          echo "Core JAR count: ${#core_jars[@]}"
-          printf 'Core JAR: %s\n' "${core_jars[@]}"
-          test "${#core_jars[@]}" -eq 1
-          core_jar="${core_jars[0]}"
+          mapfile -t core_runtime_jars < <(
+            find plugins/wayfarer-core/build/libs -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-javadoc.jar'
+          )
+          echo "Core runtime JAR count: ${#core_runtime_jars[@]}"
+          printf 'Core runtime JAR: %s\n' "${core_runtime_jars[@]}"
+          test "${#core_runtime_jars[@]}" -eq 1
+          core_jar="${core_runtime_jars[0]}"
           jar tf "$core_jar" > core-jar-entries.txt
 
           for migration in \
