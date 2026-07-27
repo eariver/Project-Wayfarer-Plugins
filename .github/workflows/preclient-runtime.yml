@@ -42,8 +42,6 @@ jobs:
       WAYFARER_DB_PASSWORD: preclient-ci-only
       WAYFARER_REDIS_URI: redis://127.0.0.1:6379
       MARIADB_ROOT_PASSWORD: preclient-root-ci-only
-      MARIADB_CONTAINER_ID: ${{ job.services.mariadb.id }}
-      REDIS_CONTAINER_ID: ${{ job.services.redis.id }}
 
     steps:
       - uses: actions/checkout@v4
@@ -63,6 +61,9 @@ jobs:
           :testkit:headless-paper:jar
       - name: Run pinned headless Paper cases
         run: bash scripts/runtime/preclient/run-headless-paper.sh
+        env:
+          MARIADB_CONTAINER_ID: ${{ job.services.mariadb.id }}
+          REDIS_CONTAINER_ID: ${{ job.services.redis.id }}
       - name: Upload raw headless evidence
         if: always()
         uses: actions/upload-artifact@v4
