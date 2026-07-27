@@ -19,6 +19,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -142,7 +143,7 @@ class RedisRuntimeIntegrationTest {
                 "main-1",
                 "CACHE_INVALIDATED",
                 "{\"namespace\":\"balances\",\"revision\":5}",
-                Instant.now()
+                Instant.now().truncatedTo(ChronoUnit.MILLIS)
             );
 
             main.runtime.publish(envelope).toCompletableFuture().join();
