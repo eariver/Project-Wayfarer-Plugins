@@ -24,3 +24,32 @@ jobs:
         run: ./gradlew --no-daemon check
       - name: Assemble
         run: ./gradlew --no-daemon assemble
+      - name: Reuse configuration cache
+        run: ./gradlew --no-daemon --configuration-cache check assemble
+      - name: Verify Core packaging
+        shell: bash
+        run: |
+          mapfile -t core_jars < <(find plugins/wayfarer-core/build/libs -maxdepth 1 -type f -name '*.jar')
+          test "${#core_jars[@]}" -eq 1
+          core_jar="${core_jars[0]}"
+          jar tf "$core_jar" > core-jar-entries.txt
+
+          for migration in \
+            db/migration/core/V001__core_schema.sql \
+            db/migration/core/V002__core_identity_schema.sql \
+            db/migration/core/V003__core_transaction_history.sql
+          do
+            test "$(grep -Fxc "$migration" core-jar-entries.txt)" -eq 1
+          done
+
+          if grep -Eq \
+            '(^|/)(src/test|test-results|org/junit|org/testcontainers|com/github/dockerjava)(/|$)|^io/github/eariver/wayfarer/(main|frontier)/|(^|/)(application|runtime|server)\.(yml|yaml|properties)$' \
+            core-jar-entries.txt
+          then
+            echo "Forbidden test, Docker, sibling-plugin, or runtime configuration entry found"
+            exit 1
+          fi
+
+          duplicate_api_entries="$(grep '^io/github/eariver/wayfarer/api/.*\.class$' core-jar-entries.txt | sort | uniq -d)"
+          test -z "$duplicate_api_entries"
+          test "$(grep -Ec '^META-INF/(LICENSE|LICENSE\.txt|NOTICE)$' core-jar-entries.txt)" -ge 1

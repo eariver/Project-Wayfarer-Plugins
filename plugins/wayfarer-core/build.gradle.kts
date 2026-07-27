@@ -54,7 +54,7 @@ dependencies {
     )
 }
 
-val mariaDbIntegrationTest by tasks.registering(Test::class) {
+val mariaDbIntegrationTest = tasks.register<Test>("mariaDbIntegrationTest") {
     description = "Runs isolated MariaDB persistence integration tests."
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     testClassesDirs = mariaDbIntegrationTestSourceSet.output.classesDirs
@@ -63,7 +63,7 @@ val mariaDbIntegrationTest by tasks.registering(Test::class) {
     useJUnitPlatform()
 }
 
-val redisIntegrationTest by tasks.registering(Test::class) {
+val redisIntegrationTest = tasks.register<Test>("redisIntegrationTest") {
     description = "Runs isolated Redis foundation integration tests."
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     testClassesDirs = redisIntegrationTestSourceSet.output.classesDirs

@@ -28,3 +28,9 @@ Stable release remains blocked until later alpha slices, every applicable tracea
 gate, a stable final source commit, Project Runtime placement/acceptance, and explicit
 Project Owner requirements clearance are complete. The alpha.1 source commit is not the stable
 final source, and release readiness must remain `BLOCKED` after alpha.1 evidence alone.
+
+The beta feature-complete candidate adds automated API/module boundaries, Core packaging
+inspection, configuration-cache reuse, dependency/license inventory, and same-source JAR
+reproducibility evidence. Updated-head CI and the rc.1 headless runtime gate are still required;
+ADR 0006 also blocks a concrete Waymark provider. These additions do not change the `BLOCKED`
+marker.

@@ -18,32 +18,32 @@ In the table below, `alpha.1 runtime evidence` refers to
 | GOV-003 | Main excluded from V0.0.1 release | 3, 6.1 | Workflows | Forbidden-asset assertion | V0.0.x | N/A | Implemented | Build skeleton only |
 | GOV-004 | Frontier excluded from V0.0.1 release | 3, 6.1 | Workflows | Forbidden-asset assertion | V0.0.x | N/A | Implemented | Build skeleton only |
 | GOV-005 | Conditional adapter requires `ADAPTER_REQUIRED` | 2.3, 6.1 | `AGENTS.md`; plans | Repository inspection | All | N/A | Implemented | Not authorized |
-| GOV-006 | Core does not depend on Main/Frontier | 6.2 | Gradle boundary | Dependency test planned | beta.1 | N/A | Not started | Acceptance test pending |
-| GOV-007 | Main and Frontier do not interdepend | 6.2 | Gradle boundary | Dependency test planned | beta.1 | N/A | Not started | Acceptance test pending |
-| GOV-008 | Preserve MariaDB/Redis/MVI/Waymark authority | 6.3 | Architecture docs | Boundary tests planned | beta.1 | Pending | Not started | Runtime evidence pending |
+| GOV-006 | Core does not depend on Main/Frontier | 6.2 | Gradle and runtime classpath boundary | `CoreDependencyBoundaryTest`; package scan | beta.1 | N/A | Automated test passed | Local passed; updated-head CI pending |
+| GOV-007 | Main and Frontier do not interdepend | 6.2 | Separate Gradle modules and Core-only release scan | Dependency/package inspection | beta.1 | N/A | Automated test passed | Neither sibling is in the Core runtime JAR |
+| GOV-008 | Preserve MariaDB/Redis/MVI/Waymark authority | 6.3 | Architecture, API, and package boundaries | Public API and package scans | beta.1 | Pending | In progress | Source boundaries passed locally; runtime evidence pending |
 | GOV-009 | Do not alter Project Runtime | 6.5, 14 | `AGENTS.md`; process | Forbidden tracking check | All | N/A | Implemented | Repository-only work |
-| GOV-010 | No cross-backend item transfer | 6.3, 14 | Architecture boundary | Domain inspection planned | beta.1 | Pending | Not started | Core must remain item-independent |
+| GOV-010 | No cross-backend item transfer | 6.3, 14 | Architecture/API boundary | Domain and public-signature inspection | beta.1 | Pending | In progress | Core persists identity metadata only; runtime evidence pending |
 | FND-001 | Java 25 baseline | 7 | Gradle toolchain | Build validation | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Java 25 build and runtime observed; full acceptance pending |
 | FND-002 | Gradle 9.6.1 baseline | 7 | Wrapper properties | Wrapper validation | beta.1 | N/A | In progress | Checksum evidence pending |
 | FND-003 | Kotlin DSL build | 7 | `*.gradle.kts` | Build validation | beta.1 | N/A | In progress | Full acceptance pending |
 | FND-004 | Paper API 1.21.11 baseline | 7 | Version catalog | Dependency inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Paper 1.21.11 observed; full acceptance remains pending |
-| FND-005 | Group/package `io.github.eariver.wayfarer` | 7 | Build/source | Package inspection | beta.1 | N/A | In progress | Full artifact inspection pending |
+| FND-005 | Group/package `io.github.eariver.wayfarer` | 7 | Build/source | Package inspection | beta.1 | N/A | Automated test passed | Local candidate package scan passed |
 | FND-006 | Gradle Wrapper tracked | 7 | `gradlew*`; `gradle/wrapper` | Git inspection | beta.1 | N/A | In progress | Clean clone test pending |
 | FND-007 | Wrapper version verified | 7 | Wrapper properties | Wrapper test | beta.1 | N/A | Not started | Evidence pending |
 | FND-008 | Wrapper checksum verified | 7 | Pending verification metadata | Checksum test | beta.1 | N/A | Not started | Evidence pending |
 | FND-009 | Clean `check` succeeds | 7 | Gradle | Clean build | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Alpha.1 corrected-head clean check passed; later release recheck pending |
 | FND-010 | Clean `assemble` succeeds | 7 | Gradle | Clean build | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Alpha.1 corrected-head clean assemble passed; later release recheck pending |
 | FND-011 | CI uses Java 25 | 7 | `ci.yml` | CI run | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Alpha.1 corrected-head CI passed; full acceptance pending |
-| FND-012 | Configuration cache compatible | 7 | Gradle configuration | Cache check/assemble | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Alpha.1 cache check/assemble passed; later release recheck pending |
+| FND-012 | Configuration cache compatible | 7 | Gradle configuration and CI reuse step | Cache check/assemble | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Local candidate cache store/reuse passed; updated-head CI pending |
 | FND-013 | Versions centralized | 7 | Version catalog/properties | Dependency inspection | beta.1 | N/A | In progress | Full inspection pending |
-| FND-014 | Compiler warnings fail build | 7 | `-Xlint:all -Werror` | Compile test | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Alpha.1 compiler warnings were zero; later source coverage remains |
-| FND-015 | Reproducible artifact | 7 | Reproducible Shadow archive | Two clean build SHA-256 comparison | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Alpha.1 same-source local rebuild hashes matched; later release recheck pending |
+| FND-014 | Compiler warnings fail build | 7 | `-Xlint:all -Werror` | Compile test | V0.0.1-alpha.1 / beta.1 | N/A | Automated test passed | All beta source and test source sets compiled locally with zero compiler warnings |
+| FND-015 | Reproducible artifact | 7 | Reproducible Shadow archive | Two clean build SHA-256 comparison | V0.0.1-alpha.1 / beta.1 | N/A | Automated test passed | Local beta candidate builds matched `14454fbd395a06b56e2c75bfed1721962ac2b36dfb34b47f7ed1a9e79f9dab81` |
 | FND-016 | Source commit maps to artifact hash | 7, 12 | Release manifest | Packaging test | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Annotated tag source and released Core JAR hash verified |
 | FND-017 | API class identity preserved | 7, 10.1 | API contracts; Core service factory | `CoreRuntimeServicesTest` | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | ServicesManager lookup and class isolation observed; full beta compatibility pending |
-| FND-018 | Runtime JAR excludes tests/secrets/runtime data | 7 | Core Shadow archive | JAR entry/config inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 release JAR packaging passed; full beta scan pending |
+| FND-018 | Runtime JAR excludes tests/secrets/runtime data | 7 | Core Shadow archive | JAR entry/config inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | Automated test passed | Local beta scan found zero forbidden entries; CI repeats inspection |
 | FND-019 | Generated JAR is not tracked | 7, 15 | `.gitignore`; policy | Git inspection | All | N/A | Implemented | No JAR tracked |
 | FND-020 | License supplied | 7, 12 | `LICENSE` | Package inspection | beta.1 | N/A | In progress | Release inclusion pending |
-| FND-021 | Third-party notice supplied | 7, 12 | Pending | Package inspection | beta.1 | N/A | Not started | Document pending |
+| FND-021 | Third-party notice supplied | 7, 12 | `docs/handoff/V0.0.1/third-party-notices.md` | Dependency/license inspection | beta.1 | N/A | Implemented | Direct and transitive bundled inventory recorded; publication pending |
 | FND-022 | Secrets/runtime/world/DB/log/cache not tracked | 7, 14 | `.gitignore`; policy | Git inspection | All | N/A | Implemented | Recheck each release |
 | LIF-001 | Typed config validation | 8.1 | `CoreConfig`; `CoreConfigLoader` | `CoreConfigLoaderTest` | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Valid and unsupported config runtime paths observed |
 | LIF-002 | Environment secret resolution | 8.1 | `EnvironmentSecretResolver`; `SecretValue` | Common/config secret tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Missing and resolved secret validation paths observed without disclosure |
@@ -66,20 +66,20 @@ In the table below, `alpha.1 runtime evidence` refers to
 | API-001 | `WayfarerServices` contract | 8.2 | Typed metadata/services contract | Service/API identity tests | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Runtime service lookup passed; full beta contract remains pending |
 | API-002 | `WayfarerDatabase` contract | 8.2 | JDK-only zero-method reserved marker; runtime unavailable; ADR 0005 | Full public API boundary scan and reflection check | beta.1 | Pending | In progress | JDBC-typed pre-alpha stub rejected and removed; accepted opaque beta contract requires a new decision |
 | API-003 | `WayfarerAudit` contract | 8.2 | Async JDK API plus durable Core implementation | API boundary/unit/integration suite | beta.1 | Pending | In progress | Contract implemented; beta compatibility and Paper runtime pending |
-| API-004 | `WayfarerTransactions` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
-| API-005 | `WayfarerWaymark` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
+| API-004 | `WayfarerTransactions` contract | 8.2 | JDK-only async transaction contract | API boundary and engine suites | beta.1 | Pending | In progress | Provider-independent engine complete; concrete provider blocked |
+| API-005 | `WayfarerWaymark` contract | 8.2 | JDK-only async capability contract | API boundary and fixture tests | beta.1 | Pending | In progress | Concrete provider authority remains ADR 0006 BLOCKED |
 | API-006 | `WayfarerItemIdentity` contract | 8.2 | ADR 0004 asynchronous JDK-only contract | API boundary and identity suites | beta.1 | Pending | In progress | Stub revised before accepted consumers; beta compatibility and runtime pending |
-| API-007 | `WayfarerTasks` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
+| API-007 | `WayfarerTasks` contract | 8.2 | Immutable JDK-only bridge contract | Boundary/thread/backpressure tests | beta.1 | Pending | Automated test passed | Local suite passed; Paper callback evidence pending |
 | API-008 | `WayfarerHealth` contract | 8.2 | Timestamped snapshot/component contract | Health/API identity tests | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Health summary/component output observed; full beta contract remains pending |
-| API-009 | Service lookup/thread/completion/timeout semantics documented | 8.2 | API design pending | Contract tests | beta.1 | Pending | Not started | Implementation pending |
-| API-010 | Idempotency/disable/health semantics documented | 8.2 | API design pending | Contract tests | beta.1 | Pending | Not started | Implementation pending |
-| API-011 | Item/transaction/Waymark/audit/task semantics documented | 8.2 | API design pending | Contract tests | beta.1 | Pending | Not started | Implementation pending |
-| API-012 | Hikari not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
-| API-013 | Flyway not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
-| API-014 | Lettuce not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
-| API-015 | JDBC Connection/plugin implementation not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
-| API-016 | Paper Event/Player/ItemStack not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
-| API-017 | Server gameplay domain not exposed | 8.2 | API boundary | Leak test | beta.1 | N/A | Not started | Inspection pending |
+| API-009 | Service lookup/thread/completion/timeout semantics documented | 8.2 | `docs/contracts/public-api.md` | Reflection and contract suites | beta.1 | Pending | In progress | Source contract complete; Paper lookup evidence pending |
+| API-010 | Idempotency/disable/health semantics documented | 8.2 | `docs/contracts/public-api.md`; component architecture | Contract/lifecycle suites | beta.1 | Pending | In progress | Automated paths pass; runtime evidence pending |
+| API-011 | Item/transaction/Waymark/audit/task semantics documented | 8.2 | Public API and component contract documents | Boundary/component suites | beta.1 | Pending | In progress | Concrete provider remains blocked |
+| API-012 | Hikari not exposed | 8.2 | API reflection boundary | Leak test | beta.1 | N/A | Automated test passed | Local full public-signature scan passed |
+| API-013 | Flyway not exposed | 8.2 | API reflection boundary | Leak test | beta.1 | N/A | Automated test passed | Local full public-signature scan passed |
+| API-014 | Lettuce not exposed | 8.2 | API reflection boundary | Leak test | beta.1 | N/A | Automated test passed | Local full public-signature scan passed |
+| API-015 | JDBC Connection/plugin implementation not exposed | 8.2 | API reflection boundary | Leak test | beta.1 | N/A | Automated test passed | Local full public-signature scan passed |
+| API-016 | Paper Event/Player/ItemStack not exposed | 8.2 | API reflection boundary | Leak test | beta.1 | N/A | Automated test passed | Local full public-signature scan passed |
+| API-017 | Server gameplay domain not exposed | 8.2 | API reflection and package boundary | Leak test | beta.1 | N/A | Automated test passed | Local full public-signature and Core JAR scans passed |
 | CFG-001 | Config version | 8.3 | `config-version: 1`; loader | Missing/unsupported tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Version 1 accepted; version 2 failed closed |
 | CFG-002 | Server ID | 8.3 | Typed validated ID with reserved-placeholder rejection | Missing/blank/format/placeholder/explicit tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Default placeholder rejected; explicit `wayfarer-test` accepted |
 | CFG-003 | MariaDB connection settings | 8.3 | Typed Hikari mapping and secret resolution | Config/pool/integration tests | alpha.2 | alpha.1 runtime evidence | Automated test passed | Active mapping tested; Project Runtime configuration remains unchanged |
@@ -192,7 +192,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | ADM-008 | Admin permission rules | 8.10 | `wayfarer.admin.health` | Authorization/denial tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Non-OP denial and OP authorization observed; later admin grants pending |
 | ADM-009 | Console eligibility | 8.10 | Bukkit audience adapter | Console command tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Console health observed; later admin command slices pending |
 | ADM-010 | Admin redaction/audit/confirmation | 8.10 | Presence-only reference, operational audit, explicit confirm | Security test | alpha.4 | Pending | Automated test passed | Concrete runtime command wiring remains provider-gated |
-| TST-001 | Unit tests | 10.1 | API/Common/Core test sources | 120 PR B unit tests | V0.0.1-alpha.1+ | N/A | In progress | Local: 120 passed, 0 failed, 0 skipped; final CI pending |
+| TST-001 | Unit tests | 10.1 | API/Common/Core test sources | 153 beta unit tests | V0.0.1-alpha.1+ | N/A | In progress | Local: 153 passed, 0 failed, 0 errors, 0 skipped; updated-head CI pending |
 | TST-002 | MariaDB integration | 10.1 | Testkit fixture; mandatory Core integration task | Persistence plus PR B Testcontainers suite | alpha.2 | Pending | In progress | Local Docker stopped; source compiled; GitHub Actions mandatory authority |
 | TST-003 | Redis integration | 10.1 | `redisIntegrationTest` using authoritative `redis:8-alpine` | Testcontainers | alpha.3 | Pending | Automated test passed | Six cases passed in CI `30290422624`; Paper runtime remains pending |
 | TST-004 | Migration tests | 10.1 | Alpha.2 persistence/audit/identity suite | Empty/V001-upgrade/repeated/failure/hash tests | alpha.2 | Pending | In progress | Existing V001 tests passed; V002 GitHub Actions execution pending |
@@ -201,13 +201,13 @@ In the table below, `alpha.1 runtime evidence` refers to
 | TST-007 | Failure/timeout tests | 10.1 | Lifecycle/executor and persistence-drain failure suites | Gradle test | V0.0.1-alpha.1+ | alpha.1 runtime evidence | In progress | Drain timeout/interruption are bounded, warned, and non-clean; Paper persistence evidence pending |
 | TST-008 | Restart recovery tests | 10.1 | Audit/player/item repository reconstruction | MariaDB restart suite | alpha.2+ | Pending | In progress | Source compiled; GitHub Actions execution pending |
 | TST-009 | Config validation tests | 10.1 | `CoreConfigLoaderTest` | Gradle test | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Placeholder, valid, unsupported, and dependency-validation paths observed |
-| TST-010 | Secret redaction tests | 10.1 | Common/config/health/audit sanitizer | Unit plus zero-hit MariaDB test | beta.1 | alpha.1 runtime evidence | In progress | PR B unit passed; MariaDB CI and full beta scan pending |
-| TST-011 | Packaging/API compatibility tests | 10.1 | beta plan | Automated inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 packaging and class isolation passed; full beta suite pending |
+| TST-010 | Secret redaction tests | 10.1 | Common/config/health/audit sanitizer | Unit plus zero-hit MariaDB test | beta.1 | alpha.1 runtime evidence | In progress | Local unit passed; updated-head MariaDB CI pending |
+| TST-011 | Packaging/API compatibility tests | 10.1 | API reflection tests and CI package scan | Automated inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Local beta boundary/package scans passed; updated-head CI pending |
 | TST-012 | Isolated test server | 10.2 | Result and evidence index | Runtime procedure | V0.0.1-alpha.1–rc.1 | alpha.1 runtime evidence | In progress | Alpha.1 runtime gate passed; later candidates and Project acceptance pending |
 | TST-013 | Main-thread I/O and callback tests | 10.2 | JDBC/Redis guards, immutable player snapshot, task bridge | Automated/runtime | alpha.2/3 | Pending | Automated test passed | JDBC/Redis/task automated paths passed; Paper runtime pending |
 | TST-014 | Tick/performance verification | 10.2, 11 | RC plan | Runtime measurement | rc.1 | Pending | Not started | Implementation pending |
 | TST-015 | Permission denial verification | 10.2 | Async operational audit sink with actor snapshot | Unit/MariaDB permission tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Unit command path passed; durable MariaDB CI pending; later admin slices pending |
-| TST-016 | JAR dependency/class identity inspection | 10.2 | beta plan | Packaging test | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 Core JAR and Probe isolation passed; full beta inspection pending |
+| TST-016 | JAR dependency/class identity inspection | 10.2 | CI package scan and API boundary | Packaging test | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Local beta scan: one Core JAR, V001–V003 once, no forbidden or duplicate API entries; CI pending |
 | TST-017 | Test Report release/artifact/environment identity | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final values pending |
 | TST-018 | Test Report authority/scope/policy compliance | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final evidence pending |
 | TST-019 | Test Report build/unit results and counts | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | No test source yet |
@@ -232,9 +232,9 @@ In the table below, `alpha.1 runtime evidence` refers to
 | REL-013 | Release notes/config/migration metadata | 12 | Workflow/handoff | Packaging test | beta.1+ | N/A | Not started | Final content pending |
 | REL-014 | Sanitized config asset | 12 | Handoff skeleton | Packaging test | beta.1+ | N/A | Not started | Final asset pending |
 | REL-015 | Command/permission reference asset | 12 | Handoff skeleton | Packaging test | beta.1+ | N/A | Not started | Final asset pending |
-| REL-016 | Dependency list asset | 12 | Handoff skeleton | Packaging test | beta.1+ | N/A | Not started | Final asset pending |
-| REL-017 | Bundled/relocated library list asset | 12 | Pending | Packaging test | beta.1+ | N/A | Not started | Final asset pending |
-| REL-018 | License/third-party notice assets | 12 | License; notice pending | Packaging test | beta.1+ | N/A | Not started | Notice pending |
+| REL-016 | Dependency list asset | 12 | Dependency/placement and third-party notice documents | Packaging test | beta.1+ | N/A | In progress | Candidate inventory complete; release asset pending |
+| REL-017 | Bundled/relocated library list asset | 12 | `third-party-notices.md`; Shadow configuration | Packaging test | beta.1+ | N/A | In progress | Candidate bundled inventory complete; release asset pending |
+| REL-018 | License/third-party notice assets | 12 | `LICENSE`; `third-party-notices.md` | Packaging test | beta.1+ | N/A | In progress | Source assets complete; release packaging pending |
 | REL-019 | Plugin Test Report asset | 12 | Report skeleton | Packaging test | rc.1 | N/A | Not started | Final report pending |
 | REL-020 | Known limitations asset | 12 | Handoff skeleton | Packaging test | rc.1 | N/A | Not started | Final content pending |
 | REL-021 | Rollback/removal asset | 12 | Handoff skeleton | Packaging test | rc.1 | N/A | Not started | Final content pending |
