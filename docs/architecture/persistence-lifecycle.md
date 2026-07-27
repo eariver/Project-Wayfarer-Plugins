@@ -24,6 +24,7 @@ Config and secrets
 → Identity finalization and database drain resources
 → Player/item identity repository probe
 → Player join listener registration
+→ Redis command/Pub/Sub connection and health probe when enabled
 → Bukkit service publication
 ```
 
@@ -31,6 +32,7 @@ Disable separates database intake from accepted work. Its effective order is:
 
 ```text
 Services unpublished
+→ Redis intake stopped, accepted work bounded-drained, Pub/Sub/connection/client closed
 → Player join listener unregistered
 → Identity service enters CLOSING and rejects new work
 → Accepted Identity work quiesced while audit/database/executor remain available

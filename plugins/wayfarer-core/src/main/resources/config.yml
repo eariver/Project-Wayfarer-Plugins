@@ -6,6 +6,7 @@ shutdown-timeout:
 
 executor:
   threads: 2
+  queue-capacity: 256
   thread-name-prefix: Wayfarer-Core
 
 audit:
@@ -27,6 +28,10 @@ redis:
   enabled: false
   uri-env: WAYFARER_REDIS_URI
   connect-timeout-ms: 3000
+  operation-timeout-ms: 3000
+  cache-maximum-ttl-seconds: 3600
+  lock-maximum-lease-seconds: 30
+  key-prefix: wayfarer
 
 migration:
   enabled: false

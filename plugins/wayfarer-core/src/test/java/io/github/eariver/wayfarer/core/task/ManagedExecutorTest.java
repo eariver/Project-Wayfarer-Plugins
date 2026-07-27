@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
@@ -211,6 +212,94 @@ class ManagedExecutorTest {
             );
             assertInstanceOf(IllegalStateException.class, failure.getCause());
             assertInstanceOf(IllegalStateException.class, observed.get());
+        }
+    }
+
+    @Test
+    void boundedQueueRejectsOverflowAndDrainsAlreadyAcceptedTask() throws Exception {
+        CountDownLatch firstStarted = new CountDownLatch(1);
+        CountDownLatch releaseFirst = new CountDownLatch(1);
+        List<Throwable> observed = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        ManagedExecutor executor = new ManagedExecutor(
+            1,
+            "Wayfarer-Bounded",
+            1,
+            Duration.ofSeconds(1),
+            observed::add,
+            warnings::add
+        );
+        try {
+            CompletableFuture<Integer> first = executor.submit(() -> {
+                firstStarted.countDown();
+                releaseFirst.await();
+                return 1;
+            });
+            assertTrue(firstStarted.await(1, TimeUnit.SECONDS));
+            CompletableFuture<Integer> queued = executor.submit(() -> 2);
+            assertEquals(1, executor.queuedTaskCount());
+            assertEquals(0, executor.remainingQueueCapacity());
+
+            CompletionException overflow = assertThrows(
+                CompletionException.class,
+                () -> executor.submit(() -> 3).join()
+            );
+            assertInstanceOf(RejectedExecutionException.class, overflow.getCause());
+            assertEquals(1, observed.size());
+            assertEquals(
+                "Wayfarer executor queue capacity exceeded; task rejected",
+                warnings.getFirst()
+            );
+
+            AtomicReference<ShutdownResult> shutdownResult = new AtomicReference<>();
+            Thread shutdown = new Thread(
+                () -> shutdownResult.set(executor.shutdown()),
+                "Wayfarer-Bounded-Shutdown"
+            );
+            shutdown.start();
+            awaitNotAccepting(executor);
+            releaseFirst.countDown();
+            assertEquals(1, first.join());
+            assertEquals(2, queued.join());
+            shutdown.join(1_000);
+            assertFalse(shutdown.isAlive());
+            assertEquals(ShutdownStatus.GRACEFUL, shutdownResult.get().status());
+        } finally {
+            releaseFirst.countDown();
+            executor.shutdown();
+        }
+    }
+
+    @Test
+    void forcedShutdownCompletesDroppedQueuedTaskExceptionally() throws Exception {
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ManagedExecutor executor = new ManagedExecutor(
+            1,
+            "Wayfarer-Dropped",
+            1,
+            Duration.ofMillis(10),
+            ignored -> {},
+            ignored -> {}
+        );
+        try {
+            executor.submit(() -> {
+                started.countDown();
+                awaitUninterruptibly(release);
+                return 1;
+            });
+            assertTrue(started.await(1, TimeUnit.SECONDS));
+            CompletableFuture<Integer> queued = executor.submit(() -> 2);
+
+            ShutdownResult result = executor.shutdown();
+
+            assertEquals(ShutdownStatus.INCOMPLETE, result.status());
+            assertEquals(1, result.droppedTaskCount());
+            CompletionException failure = assertThrows(CompletionException.class, queued::join);
+            assertInstanceOf(RejectedExecutionException.class, failure.getCause());
+        } finally {
+            release.countDown();
+            awaitTermination(executor);
         }
     }
 

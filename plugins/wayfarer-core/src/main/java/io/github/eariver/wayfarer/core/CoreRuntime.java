@@ -16,6 +16,8 @@ import io.github.eariver.wayfarer.core.persistence.PersistenceDrainResult;
 import io.github.eariver.wayfarer.core.persistence.PersistenceDrainStatus;
 import io.github.eariver.wayfarer.core.persistence.PersistenceException;
 import io.github.eariver.wayfarer.core.persistence.ThreadContext;
+import io.github.eariver.wayfarer.core.redis.RedisRuntime;
+import io.github.eariver.wayfarer.core.redis.RedisRuntimeException;
 import io.github.eariver.wayfarer.core.service.ServicePublisher;
 import io.github.eariver.wayfarer.core.service.WayfarerServiceFactory;
 import io.github.eariver.wayfarer.core.task.DefaultWayfarerTasks;
@@ -44,6 +46,7 @@ public final class CoreRuntime {
     private MigrationLifecycle migration;
     private DurableAudit audit;
     private IdentityRuntime identity;
+    private RedisRuntime redis;
     private PersistenceDrainResult persistenceDrainResult;
     private WayfarerServices services;
 
@@ -119,7 +122,8 @@ public final class CoreRuntime {
                 new LifecycleStep("Audit", this::initializeAudit),
                 new LifecycleStep("IdentityQuiescence", this::initializeIdentityQuiescence),
                 new LifecycleStep("Identity", this::initializeIdentity),
-                new LifecycleStep("PlayerIdentityListener", this::initializeIdentityListener)
+                new LifecycleStep("PlayerIdentityListener", this::initializeIdentityListener),
+                new LifecycleStep("Redis", this::initializeRedis)
             ), new LifecycleStep("Services", this::initializeServices));
             health.refreshLifecycle();
         } catch (RuntimeException failure) {
@@ -172,6 +176,7 @@ public final class CoreRuntime {
         executor = new ManagedExecutor(
             config.executor().threads(),
             config.executor().threadNamePrefix(),
+            config.executor().queueCapacity(),
             config.shutdownTimeout(),
             failure -> health.update(
                 HealthRegistry.EXECUTOR,
@@ -406,6 +411,35 @@ public final class CoreRuntime {
             return () -> {};
         }
         return identityListenerRegistrar.register(identity);
+    }
+
+    private AutoCloseable initializeRedis() {
+        if (!config.redis().enabled()) {
+            health.update(
+                HealthRegistry.REDIS,
+                WayfarerHealth.Status.UNKNOWN,
+                "Disabled by configuration"
+            );
+            return () -> {};
+        }
+        try {
+            redis = executor.submit(() -> RedisRuntime.connect(
+                config.redis(),
+                config.serverId(),
+                health,
+                threadContext,
+                executor,
+                warningSink
+            )).join();
+            return redis;
+        } catch (RuntimeException failure) {
+            health.update(
+                HealthRegistry.REDIS,
+                WayfarerHealth.Status.DOWN,
+                "Redis initialization failed"
+            );
+            throw new RedisRuntimeException("Redis initialization failed");
+        }
     }
 
     void recordPersistenceDrainResult(PersistenceDrainResult result) {

@@ -37,8 +37,12 @@
   methods were removed because no accepted consumer exists; ADR 0005 records that incompatible
   governance decision. Any future opaque asynchronous contract requires a separate decision.
   Downstream plugins receive no JDBC `Connection`, Hikari, or Flyway implementation.
-- Redis remains pending alpha.3 and Waymark remains pending alpha.4.
-- The alpha.1 executor uses a fixed pool. Bounded queue/backpressure is deferred to alpha.3.
+- The alpha.3 branch implements internal Redis cache/lock/message/idempotency assistance,
+  explicit outage/reconnect health, main-thread rejection, and a bounded shutdown. Updated-head
+  isolated Redis CI and Paper runtime evidence remain pending.
+- The executor now has an immediate-rejection bounded queue and the task bridge validates
+  immutable JDK-only data. Runtime queue-pressure/tick evidence remains pending.
+- Waymark remains pending alpha.4.
 - Incomplete and interrupted shutdown remain `DOWN` in Executor health even after lifecycle
   state becomes `DISABLED`.
 - Permission-denial events use durable audit when audit is enabled. Shutdown-timeout durable

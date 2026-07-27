@@ -7,6 +7,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public final class DefaultWayfarerTasks implements WayfarerTasks {
@@ -31,6 +34,42 @@ public final class DefaultWayfarerTasks implements WayfarerTasks {
             return rejected();
         }
         return executor.submit(operation::get);
+    }
+
+    @Override
+    public <I, O> CompletionStage<TaskBridgeResult<O>> bridge(
+        I immutableRequest,
+        Function<? super I, ? extends O> asyncOperation,
+        Predicate<? super O> mainThreadRevalidation,
+        Consumer<? super O> mainThreadMutation
+    ) {
+        Objects.requireNonNull(asyncOperation, "asyncOperation");
+        Objects.requireNonNull(mainThreadRevalidation, "mainThreadRevalidation");
+        Objects.requireNonNull(mainThreadMutation, "mainThreadMutation");
+        TaskDataGuard.requireImmutable(immutableRequest, "immutableRequest");
+        if (!callbacksAllowed.getAsBoolean()) {
+            return rejected();
+        }
+        return executor.submit(() -> {
+            O immutableResult = asyncOperation.apply(immutableRequest);
+            TaskDataGuard.requireImmutable(immutableResult, "immutableResult");
+            return immutableResult;
+        }).thenCompose(immutableResult -> {
+            CompletableFuture<TaskBridgeResult<O>> bridged = new CompletableFuture<>();
+            CompletionStage<Void> callback = mainThread(() -> {
+                boolean current = mainThreadRevalidation.test(immutableResult);
+                if (current) {
+                    mainThreadMutation.accept(immutableResult);
+                }
+                bridged.complete(new TaskBridgeResult<>(immutableResult, current));
+            });
+            callback.whenComplete((ignored, failure) -> {
+                if (failure != null) {
+                    bridged.completeExceptionally(failure);
+                }
+            });
+            return bridged;
+        });
     }
 
     @Override
