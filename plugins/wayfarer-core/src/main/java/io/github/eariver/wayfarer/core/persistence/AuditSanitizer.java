@@ -44,7 +44,7 @@ final class AuditSanitizer {
     }
 
     static void validateText(String value, SecretValue... secrets) {
-        if (FORBIDDEN_VALUE.matcher(value).find()) {
+        if (FORBIDDEN_VALUE.matcher(value).find() || sensitiveKey(value)) {
             throw new AuditValidationException("Audit field contains sensitive data");
         }
         for (SecretValue secret : secrets) {

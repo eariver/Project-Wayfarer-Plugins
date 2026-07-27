@@ -118,7 +118,8 @@ public final class MariaDbPool implements AutoCloseable {
         HealthRegistry health,
         String serverId,
         Clock clock,
-        Supplier<UUID> uuidGenerator
+        Supplier<UUID> uuidGenerator,
+        Consumer<String> warningSink
     ) {
         return new IdentityRuntime(
             internalDatabase(),
@@ -126,7 +127,8 @@ public final class MariaDbPool implements AutoCloseable {
             health,
             serverId,
             clock,
-            uuidGenerator
+            uuidGenerator,
+            warningSink
         );
     }
 

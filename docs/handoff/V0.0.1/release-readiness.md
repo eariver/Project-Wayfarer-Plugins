@@ -7,6 +7,8 @@
 - Stable final source commit: Pending
 - Requirement traceability: In progress; global gate remains `BLOCKED`
 - Automated tests: Passed, 75 tests / 0 failed / 0 skipped; corrected-head CI passed
+- Alpha.2 PR B correction local unit gate: 131 tests / 0 failed / 0 skipped; updated-head CI
+  remains required before the stacked alpha.3 branch gate
 - Build gates: `check`, `assemble`, configuration-cache variants, compiler warnings,
   packaging, and reproducibility passed
 - Isolated test server: Alpha.1 `PASSED`;

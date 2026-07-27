@@ -6,7 +6,9 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PublicApiBoundaryTest {
     private static final Set<String> FORBIDDEN = Set.of(
@@ -39,6 +41,12 @@ class PublicApiBoundaryTest {
                 inspect(nested);
             }
         }
+    }
+
+    @Test
+    void databaseCapabilityIsAnOpaqueUnavailableMarker() {
+        assertTrue(WayfarerDatabase.class.isInterface());
+        assertEquals(0, WayfarerDatabase.class.getDeclaredMethods().length);
     }
 
     private static void inspect(Class<?> type) {

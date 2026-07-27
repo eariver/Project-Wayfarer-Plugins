@@ -36,7 +36,7 @@ public final class DurableAudit implements WayfarerAudit, AutoCloseable {
         SecretValue... secrets
     ) {
         this.repository = new MariaDbAuditRepository(database);
-        this.validator = new AuditEventValidator(secrets);
+        this.validator = new AuditEventValidator(serverId, secrets);
         this.health = Objects.requireNonNull(health, "health");
         this.warningSink = Objects.requireNonNull(warningSink, "warningSink");
         this.serverId = Objects.requireNonNull(serverId, "serverId");

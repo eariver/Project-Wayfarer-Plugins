@@ -15,9 +15,22 @@ final class AuditEventValidator {
     private static final Set<String> RESERVED_SERVER_IDS = Set.of(
         "change_me", "change-me", "changeme", "default", "example"
     );
+    private final String configuredServerId;
     private final SecretValue[] secrets;
 
     AuditEventValidator(SecretValue... secrets) {
+        this("test-server", secrets);
+    }
+
+    AuditEventValidator(String configuredServerId, SecretValue... secrets) {
+        matches(configuredServerId, SERVER_ID, "configuredServerId");
+        if (RESERVED_SERVER_IDS.contains(
+            configuredServerId.toLowerCase(java.util.Locale.ROOT)
+        )) {
+            throw new AuditValidationException("configuredServerId is reserved");
+        }
+        AuditSanitizer.validateText(configuredServerId, secrets);
+        this.configuredServerId = configuredServerId;
         this.secrets = secrets.clone();
     }
 
@@ -25,12 +38,18 @@ final class AuditEventValidator {
         Objects.requireNonNull(event, "event");
         Objects.requireNonNull(event.eventId(), "event.eventId");
         matches(event.eventType(), EVENT_TYPE, "event.eventType");
+        AuditSanitizer.validateText(event.eventType(), secrets);
         matches(event.subjectType(), SUBJECT_TYPE, "event.subjectType");
+        AuditSanitizer.validateText(event.subjectType(), secrets);
         String subjectId = boundedText(event.subjectId(), 191, "event.subjectId");
         AuditSanitizer.validateText(subjectId, secrets);
         matches(event.serverId(), SERVER_ID, "event.serverId");
         if (RESERVED_SERVER_IDS.contains(event.serverId().toLowerCase(java.util.Locale.ROOT))) {
             throw new AuditValidationException("event.serverId is reserved");
+        }
+        AuditSanitizer.validateText(event.serverId(), secrets);
+        if (!configuredServerId.equals(event.serverId())) {
+            throw new AuditValidationException("event.serverId does not match configured authority");
         }
         Objects.requireNonNull(event.occurredAt(), "event.occurredAt");
         String details = AuditSanitizer.validate(event.detailsJson(), secrets);
@@ -40,7 +59,7 @@ final class AuditEventValidator {
             event.actorUuid(),
             event.subjectType(),
             subjectId,
-            event.serverId(),
+            configuredServerId,
             details,
             event.occurredAt().truncatedTo(ChronoUnit.MILLIS)
         );

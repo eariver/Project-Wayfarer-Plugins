@@ -20,8 +20,8 @@ Config and secrets
 → Managed executor
 → Hikari pool creation and connection validation on the executor
 → Flyway pre-validation, migrate, post-validation, and schema-info check on the executor
-→ Database drain resource
 → Durable audit probe and enable/migration events
+→ Identity finalization and database drain resources
 → Player/item identity repository probe
 → Player join listener registration
 → Bukkit service publication
@@ -32,10 +32,10 @@ Disable separates database intake from accepted work. Its effective order is:
 ```text
 Services unpublished
 → Player join listener unregistered
-→ Identity service intake closed
+→ Identity service enters CLOSING and rejects new work
+→ Database intake closed and accepted database work drained while audit/executor/Hikari remain available
+→ Identity accepted work finalized against the database drain result
 → Durable audit disable-start event and audit intake closed
-→ Database intake closed
-→ Accepted database work drained while the executor and Hikari pool remain available
 → Migration lifecycle released
 → Hikari pool closed
 → Executor shutdown
@@ -53,6 +53,12 @@ Timeout and interruption keep MariaDB health `DOWN`, emit only a sanitized warni
 claim a clean drain; interruption also restores the thread interrupt status. Cleanup remains
 bounded and continues through migration release, pool close, and the executor's independently
 reported graceful, forced, incomplete, or interrupted result.
+
+Identity has separate `OPEN`, `CLOSING`, and `CLOSED` states. Its initial close action does not
+set health to `DISABLED`. A later finalizer waits within the configured bound, consumes the
+database drain result, and reports `DISABLED` only if all accepted work completed successfully
+and the database result was `DRAINED`. Accepted failure, identity wait timeout/interruption, or a
+non-drained database result remains `DOWN`.
 
 Pool, migration, gate, and runtime close operations are idempotent. A pool/connect/migration
 failure marks the applicable health component `DOWN`, prevents service publication, closes
@@ -85,7 +91,8 @@ converted to sanitized internal exceptions.
 
 The `WayfarerDatabase` class identity remains as a JDK-only marker and is intentionally
 unavailable. Its pre-alpha JDBC-typed stub methods were removed to satisfy the public API boundary;
-an accepted opaque database contract remains beta work.
+ADR 0005 records the source/binary incompatibility, absence of accepted consumers, and rejection
+of public JDBC. An accepted opaque database contract remains future work.
 `WayfarerServices.database()` remains unavailable, so downstream plugins receive no JDBC
 `Connection`, Hikari, Flyway, or implementation class. Durable `WayfarerAudit` and the JDK-only
 asynchronous `WayfarerItemIdentity` are published only when `audit.enabled=true` and their

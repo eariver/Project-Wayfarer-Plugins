@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 class DurableAuditValidationTest {
     @Test
-    void callerValidationFailureDoesNotReachDatabaseOrMarkAuditDown() {
+    void configuredServerAuthorityFailureDoesNotReachDatabaseOrMarkAuditDown() {
         InternalDatabase database = mock(InternalDatabase.class);
         HealthRegistry health = new HealthRegistry(
             Clock.fixed(Instant.EPOCH, ZoneOffset.UTC),
@@ -43,11 +43,11 @@ class DurableAuditValidationTest {
             CompletionException.class,
             () -> audit.record(new WayfarerAudit.AuditEvent(
                 UUID.randomUUID(),
-                "invalid-lowercase",
+                "VALID_EVENT",
                 null,
                 "CORE",
                 "subject",
-                "test-server",
+                "caller-supplied-server",
                 "{}",
                 Instant.EPOCH
             )).toCompletableFuture().join()

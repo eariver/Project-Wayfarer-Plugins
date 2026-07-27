@@ -5,6 +5,7 @@ import io.github.eariver.wayfarer.common.secret.SecretValue;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,14 +18,16 @@ class AuditEventValidatorTest {
 
     @Test
     void validEventIsNormalizedToMilliseconds() {
-        AuditRecord result = new AuditEventValidator().validate(event(
+        AuditRecord result = new AuditEventValidator("configured-server").validate(event(
             "CORE_READY",
             "{\"result\":\"ok\",\"duration_ms\":3}",
-            Instant.parse("2026-07-27T12:00:00.123456Z")
+            Instant.parse("2026-07-27T12:00:00.123456Z"),
+            "configured-server"
         ));
 
         assertEquals(Instant.parse("2026-07-27T12:00:00.123Z"), result.occurredAt());
         assertEquals("{\"result\":\"ok\",\"duration_ms\":3}", result.detailsJson());
+        assertEquals("configured-server", result.serverId());
     }
 
     @Test
@@ -111,10 +114,116 @@ class AuditEventValidatorTest {
         );
     }
 
+    @Test
+    void rejectsSecretsAndCredentialMarkersInEveryPersistentCallerString() {
+        List<WayfarerAudit.AuditEvent> events;
+        try (SecretValue eventSecret = SecretValue.of("CORE_READY");
+             SecretValue subjectTypeSecret = SecretValue.of("PLAYER_IDENTITY");
+             SecretValue subjectIdSecret = SecretValue.of("safe-subject")) {
+            events = List.of(
+                new WayfarerAudit.AuditEvent(
+                    EVENT_ID,
+                    "CORE_READY",
+                    null,
+                    "CORE",
+                    "safe-subject",
+                    "configured-server",
+                    "{}",
+                    Instant.now()
+                ),
+                new WayfarerAudit.AuditEvent(
+                    EVENT_ID,
+                    "VALID",
+                    null,
+                    "PLAYER_IDENTITY",
+                    "safe-subject",
+                    "configured-server",
+                    "{}",
+                    Instant.now()
+                ),
+                new WayfarerAudit.AuditEvent(
+                    EVENT_ID,
+                    "VALID",
+                    null,
+                    "CORE",
+                    "safe-subject",
+                    "configured-server",
+                    "{}",
+                    Instant.now()
+                )
+            );
+            List<SecretValue> secrets = List.of(
+                eventSecret,
+                subjectTypeSecret,
+                subjectIdSecret
+            );
+            for (int index = 0; index < events.size(); index++) {
+                AuditEventValidator validator = new AuditEventValidator(
+                    "configured-server",
+                    secrets.get(index)
+                );
+                WayfarerAudit.AuditEvent rejected = events.get(index);
+                assertThrows(
+                    AuditValidationException.class,
+                    () -> validator.validate(rejected)
+                );
+            }
+        }
+
+        assertThrows(
+            AuditValidationException.class,
+            () -> new AuditEventValidator("configured-server").validate(
+                new WayfarerAudit.AuditEvent(
+                    EVENT_ID,
+                    "ACCESS_TOKEN",
+                    null,
+                    "CORE",
+                    "safe-subject",
+                    "configured-server",
+                    "{}",
+                    Instant.now()
+                )
+            )
+        );
+        assertThrows(
+            AuditValidationException.class,
+            () -> new AuditEventValidator("configured-server").validate(
+                new WayfarerAudit.AuditEvent(
+                    EVENT_ID,
+                    "VALID",
+                    null,
+                    "AUTHORIZATION",
+                    "safe-subject",
+                    "configured-server",
+                    "{}",
+                    Instant.now()
+                )
+            )
+        );
+    }
+
+    @Test
+    void rejectsCallerServerIdThatDoesNotMatchConfiguredAuthority() {
+        AuditEventValidator validator = new AuditEventValidator("configured-server");
+        assertThrows(
+            AuditValidationException.class,
+            () -> validator.validate(event("VALID", "{}", Instant.now(), "other-server"))
+        );
+    }
+
     private static WayfarerAudit.AuditEvent event(
         String type,
         String details,
         Instant occurredAt
+    ) {
+        return event(type, details, occurredAt, "test-server");
+    }
+
+    private static WayfarerAudit.AuditEvent event(
+        String type,
+        String details,
+        Instant occurredAt,
+        String serverId
     ) {
         return new WayfarerAudit.AuditEvent(
             EVENT_ID,
@@ -122,7 +231,7 @@ class AuditEventValidatorTest {
             null,
             "CORE",
             "test-server",
-            "test-server",
+            serverId,
             details,
             occurredAt
         );

@@ -114,8 +114,9 @@ public final class CoreRuntime {
                 new LifecycleStep("Executor", this::initializeExecutor),
                 new LifecycleStep("MariaDB", this::initializeMariaDb),
                 new LifecycleStep("Migration", this::initializeMigration),
-                new LifecycleStep("DatabaseDrain", this::initializeDatabaseDrain),
                 new LifecycleStep("Audit", this::initializeAudit),
+                new LifecycleStep("IdentityFinalization", this::initializeIdentityFinalization),
+                new LifecycleStep("DatabaseDrain", this::initializeDatabaseDrain),
                 new LifecycleStep("Identity", this::initializeIdentity),
                 new LifecycleStep("PlayerIdentityListener", this::initializeIdentityListener)
             ), new LifecycleStep("Services", this::initializeServices));
@@ -361,7 +362,8 @@ public final class CoreRuntime {
             health,
             config.serverId(),
             clock,
-            UUID::randomUUID
+            UUID::randomUUID,
+            warningSink
         );
         try {
             identity.initialize().toCompletableFuture()
@@ -372,6 +374,22 @@ public final class CoreRuntime {
             throw new PersistenceException("Identity initialization failed");
         }
         return identity;
+    }
+
+    private AutoCloseable initializeIdentityFinalization() {
+        return () -> {
+            if (identity == null) {
+                return;
+            }
+            PersistenceDrainResult drain = persistenceDrainResult;
+            if (drain == null) {
+                drain = new PersistenceDrainResult(
+                    PersistenceDrainStatus.TIMED_OUT,
+                    0
+                );
+            }
+            identity.finishClosing(drain, config.shutdownTimeout());
+        };
     }
 
     private AutoCloseable initializeIdentityListener() {

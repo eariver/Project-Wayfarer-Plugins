@@ -24,14 +24,19 @@
   common item identity, and required repositories. Local Docker was stopped, so PR B MariaDB
   integration is not claimed locally and GitHub Actions is mandatory authority. Paper runtime
   evidence remains pending.
+- PR B correction separates Identity `OPEN`/`CLOSING`/`CLOSED`, defers clean Identity health until
+  database drain finalization, adds durable player-upsert failure audit, and makes the configured
+  Core server ID the sole audit persistence authority. Paper shutdown/runtime evidence remains
+  pending.
 - Audit retention scheduling is pending. A durable shutdown-timeout record is not guaranteed
   after database intake closes; health and sanitized logging remain the evidence. Main/Frontier
   PDC adapters remain pending.
 - Transaction and reconcile repositories, their optimistic locking, and their restart recovery
   remain pending alpha.4.
 - Public `WayfarerDatabase` remains unavailable as a JDK-only marker. Its pre-alpha JDBC-typed
-  methods were removed because no accepted consumer exists; an opaque beta contract remains
-  pending. Downstream plugins receive no JDBC `Connection`, Hikari, or Flyway implementation.
+  methods were removed because no accepted consumer exists; ADR 0005 records that incompatible
+  governance decision. Any future opaque asynchronous contract requires a separate decision.
+  Downstream plugins receive no JDBC `Connection`, Hikari, or Flyway implementation.
 - Redis remains pending alpha.3 and Waymark remains pending alpha.4.
 - The alpha.1 executor uses a fixed pool. Bounded queue/backpressure is deferred to alpha.3.
 - Incomplete and interrupted shutdown remain `DOWN` in Executor health even after lifecycle

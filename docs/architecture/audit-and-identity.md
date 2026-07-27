@@ -15,9 +15,11 @@ work and performs all JDBC access on the managed executor. No `Player`, `ItemSta
 
 `WayfarerAudit.record` is asynchronous. It validates event/subject/server identifiers, truncates
 timestamps to milliseconds, parses JSON, and enforces a 16 KiB UTF-8 details limit before any
-database work. Sensitive key tokens, resolved config-secret values, JDBC/Redis URIs,
-authorization/bearer material, blank/invalid JSON, and sensitive subject values are rejected
-without a database hit. Warnings and health details never echo event content or raw exceptions.
+database work. Every caller-controlled persistent string (`eventType`, `subjectType`, `subjectId`,
+and `detailsJson`) rejects sensitive key tokens, resolved config-secret values, JDBC/Redis URIs,
+and authorization/bearer material before a database hit. Warnings and health details never echo
+event content or raw exceptions. The caller server ID must equal the configured Core server ID;
+the configured value is the only persisted server authority.
 
 `event_id` is idempotent. A retry succeeds only when every persisted field is equal at
 `TIMESTAMP(3)` precision. Different content is an exceptional conflict and never overwrites the
@@ -38,6 +40,16 @@ upserts by UUID. Only a strictly newer observation changes name/server/last-seen
 `lock_version`; a stale or equal observation cannot regress the row. Equal names for different
 UUIDs remain separate. The listener is explicitly registered after identity initialization and
 unregistered before identity/audit close.
+
+An upsert failure attempts `PLAYER_IDENTITY_UPSERT_FAILED` with only the canonical UUID and a
+fixed failure code. The original operation remains exceptional whether that audit succeeds or
+fails; both paths keep Identity `DOWN` and warnings contain no player name or raw exception.
+
+Identity shutdown is `OPEN → CLOSING → CLOSED`. `CLOSING` rejects new operations but preserves
+completion of already accepted work. Identity is finalized only after the database drain result
+is known. Accepted failure, drain timeout/interruption, or identity-finalization timeout/
+interruption remains `DOWN`; only accepted-work completion plus a clean database drain becomes
+`DISABLED`.
 
 ## Item identity
 

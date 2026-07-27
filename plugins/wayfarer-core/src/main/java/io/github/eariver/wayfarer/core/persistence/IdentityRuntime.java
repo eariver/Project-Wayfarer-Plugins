@@ -9,6 +9,7 @@ import io.github.eariver.wayfarer.core.identity.PlayerIdentitySink;
 
 import java.sql.PreparedStatement;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
@@ -16,15 +17,22 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable {
     private final InternalDatabase database;
     private final MariaDbPlayerIdentityRepository players;
     private final DefaultWayfarerItemIdentity items;
+    private final WayfarerAudit audit;
     private final HealthRegistry health;
-    private final AtomicBoolean open = new AtomicBoolean(true);
+    private final Consumer<String> warningSink;
+    private final String serverId;
+    private final Clock clock;
+    private final Object lifecycleMonitor = new Object();
+    private LifecycleState lifecycleState = LifecycleState.OPEN;
+    private int inFlight;
+    private boolean acceptedFailureDuringClose;
 
     IdentityRuntime(
         InternalDatabase database,
@@ -34,18 +42,37 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
         Clock clock,
         Supplier<UUID> uuidGenerator
     ) {
-        this.database = Objects.requireNonNull(database, "database");
-        this.players = new MariaDbPlayerIdentityRepository(database);
-        this.items = new DefaultWayfarerItemIdentity(
-            new MariaDbItemIdentityRepository(database),
+        this(
+            database,
             audit,
             health,
             serverId,
             clock,
             uuidGenerator,
-            open::get
+            ignored -> {}
         );
+    }
+
+    IdentityRuntime(
+        InternalDatabase database,
+        WayfarerAudit audit,
+        HealthRegistry health,
+        String serverId,
+        Clock clock,
+        Supplier<UUID> uuidGenerator,
+        Consumer<String> warningSink
+    ) {
+        this.database = Objects.requireNonNull(database, "database");
+        this.players = new MariaDbPlayerIdentityRepository(database);
+        this.audit = Objects.requireNonNull(audit, "audit");
         this.health = Objects.requireNonNull(health, "health");
+        this.warningSink = Objects.requireNonNull(warningSink, "warningSink");
+        this.serverId = Objects.requireNonNull(serverId, "serverId");
+        this.clock = Objects.requireNonNull(clock, "clock");
+        this.items = new DefaultWayfarerItemIdentity(
+            new MariaDbItemIdentityRepository(database),
+            uuidGenerator
+        );
     }
 
     public CompletionStage<Void> initialize() {
@@ -74,27 +101,47 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
 
     @Override
     public CompletionStage<Void> observe(PlayerIdentityObservation observation) {
-        if (!open.get()) {
+        if (observation == null || observation.playerUuid() == null) {
             return CompletableFuture.failedFuture(
-                new IllegalStateException("Identity is unavailable")
+                new IllegalArgumentException("Player identity observation is invalid")
             );
         }
+        return accept(
+            () -> observeAccepted(observation),
+            "Identity is unavailable"
+        );
+    }
+
+    private CompletionStage<Void> observeAccepted(PlayerIdentityObservation observation) {
         CompletionStage<Void> operation;
         try {
             operation = players.upsert(observation);
         } catch (RuntimeException failure) {
-            markDown();
-            return CompletableFuture.failedFuture(failure);
+            return playerUpsertFailure(observation.playerUuid());
         }
-        return observe(operation);
+        CompletableFuture<Void> result = new CompletableFuture<>();
+        operation.whenComplete((ignored, failure) -> {
+            if (failure == null) {
+                markUp();
+                result.complete(null);
+            } else {
+                playerUpsertFailure(observation.playerUuid())
+                    .whenComplete((auditIgnored, finalFailure) ->
+                        result.completeExceptionally(unwrap(finalFailure))
+                    );
+            }
+        });
+        return result;
     }
 
     CompletionStage<Optional<PlayerIdentityRecord>> findPlayer(UUID playerUuid) {
-        if (!open.get()) {
-            return CompletableFuture.failedFuture(
-                new IllegalStateException("Identity is unavailable")
-            );
-        }
+        return accept(
+            () -> findPlayerAccepted(playerUuid),
+            "Identity is unavailable"
+        );
+    }
+
+    private CompletionStage<Optional<PlayerIdentityRecord>> findPlayerAccepted(UUID playerUuid) {
         CompletionStage<Optional<PlayerIdentityRecord>> operation;
         try {
             operation = players.find(playerUuid);
@@ -115,6 +162,40 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
         return result;
     }
 
+    private CompletionStage<Void> playerUpsertFailure(UUID playerUuid) {
+        markDown();
+        warn("Wayfarer player identity upsert failed");
+        CompletableFuture<Void> result = new CompletableFuture<>();
+        CompletionStage<Void> auditAttempt;
+        try {
+            auditAttempt = audit.record(new WayfarerAudit.AuditEvent(
+                UUID.randomUUID(),
+                "PLAYER_IDENTITY_UPSERT_FAILED",
+                null,
+                "PLAYER_IDENTITY",
+                playerUuid.toString(),
+                serverId,
+                "{\"failure_code\":\"PERSISTENCE_OPERATION_FAILED\"}",
+                clock.instant()
+            ));
+        } catch (RuntimeException failure) {
+            auditAttempt = CompletableFuture.failedFuture(failure);
+        }
+        auditAttempt.whenComplete((ignored, auditFailure) -> {
+            if (auditFailure == null) {
+                result.completeExceptionally(
+                    new PersistenceException("Player identity upsert failed")
+                );
+            } else {
+                warn("Wayfarer player identity failure audit failed");
+                result.completeExceptionally(
+                    new PersistenceException("Player identity upsert and failure audit failed")
+                );
+            }
+        });
+        return result;
+    }
+
     private CompletionStage<Void> observe(CompletionStage<Void> operation) {
         CompletableFuture<Void> result = new CompletableFuture<>();
         operation.whenComplete((ignored, failure) -> {
@@ -130,7 +211,10 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
     }
 
     private void markUp() {
-        if (open.get()) {
+        synchronized (lifecycleMonitor) {
+            if (lifecycleState != LifecycleState.OPEN) {
+                return;
+            }
             health.update(
                 HealthRegistry.IDENTITY,
                 WayfarerHealth.Status.UP,
@@ -140,7 +224,10 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
     }
 
     private void markDown() {
-        if (open.get()) {
+        synchronized (lifecycleMonitor) {
+            if (lifecycleState == LifecycleState.CLOSED) {
+                return;
+            }
             health.update(
                 HealthRegistry.IDENTITY,
                 WayfarerHealth.Status.DOWN,
@@ -151,12 +238,127 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
 
     @Override
     public void close() {
-        if (open.compareAndSet(true, false)) {
+        synchronized (lifecycleMonitor) {
+            if (lifecycleState != LifecycleState.OPEN) {
+                return;
+            }
+            lifecycleState = LifecycleState.CLOSING;
+            health.update(
+                HealthRegistry.IDENTITY,
+                WayfarerHealth.Status.UNKNOWN,
+                "Identity intake closed; accepted operations draining"
+            );
+        }
+    }
+
+    public IdentityCloseStatus finishClosing(
+        PersistenceDrainResult persistenceDrain,
+        Duration timeout
+    ) {
+        Objects.requireNonNull(persistenceDrain, "persistenceDrain");
+        Objects.requireNonNull(timeout, "timeout");
+        close();
+        long remainingNanos = timeout.toNanos();
+        long deadline = System.nanoTime() + remainingNanos;
+        synchronized (lifecycleMonitor) {
+            while (inFlight > 0 && remainingNanos > 0) {
+                try {
+                    long millis = remainingNanos / 1_000_000L;
+                    int nanos = (int) (remainingNanos % 1_000_000L);
+                    lifecycleMonitor.wait(millis, nanos);
+                } catch (InterruptedException failure) {
+                    Thread.currentThread().interrupt();
+                    lifecycleState = LifecycleState.CLOSED;
+                    health.update(
+                        HealthRegistry.IDENTITY,
+                        WayfarerHealth.Status.DOWN,
+                        "Identity finalization was interrupted"
+                    );
+                    warn("Wayfarer identity finalization was interrupted");
+                    return IdentityCloseStatus.INTERRUPTED;
+                }
+                remainingNanos = deadline - System.nanoTime();
+            }
+            lifecycleState = LifecycleState.CLOSED;
+            if (inFlight > 0) {
+                health.update(
+                    HealthRegistry.IDENTITY,
+                    WayfarerHealth.Status.DOWN,
+                    "Identity finalization timed out with accepted operations remaining"
+                );
+                warn("Wayfarer identity finalization timed out");
+                return IdentityCloseStatus.TIMED_OUT;
+            }
+            if (persistenceDrain.status() != PersistenceDrainStatus.DRAINED
+                || acceptedFailureDuringClose) {
+                health.update(
+                    HealthRegistry.IDENTITY,
+                    WayfarerHealth.Status.DOWN,
+                    "Identity finalization was not clean"
+                );
+                return IdentityCloseStatus.FAILED;
+            }
             health.update(
                 HealthRegistry.IDENTITY,
                 WayfarerHealth.Status.DISABLED,
-                "Identity services closed"
+                "Identity services closed after accepted work drained"
             );
+            return IdentityCloseStatus.CLEAN;
+        }
+    }
+
+    LifecycleState lifecycleState() {
+        synchronized (lifecycleMonitor) {
+            return lifecycleState;
+        }
+    }
+
+    private <T> CompletionStage<T> accept(
+        Supplier<CompletionStage<T>> submission,
+        String unavailableMessage
+    ) {
+        synchronized (lifecycleMonitor) {
+            if (lifecycleState != LifecycleState.OPEN) {
+                return CompletableFuture.failedFuture(
+                    new IllegalStateException(unavailableMessage)
+                );
+            }
+            inFlight++;
+        }
+        CompletionStage<T> operation;
+        try {
+            operation = Objects.requireNonNull(submission.get(), "operation");
+        } catch (RuntimeException failure) {
+            operationCompleted(failure);
+            return CompletableFuture.failedFuture(failure);
+        }
+        CompletableFuture<T> result = new CompletableFuture<>();
+        operation.whenComplete((value, failure) -> {
+            operationCompleted(failure);
+            if (failure == null) {
+                result.complete(value);
+            } else {
+                result.completeExceptionally(unwrap(failure));
+            }
+        });
+        return result;
+    }
+
+    private void operationCompleted(Throwable failure) {
+        synchronized (lifecycleMonitor) {
+            if (failure != null && lifecycleState == LifecycleState.CLOSING) {
+                acceptedFailureDuringClose = true;
+            }
+            inFlight--;
+            lifecycleMonitor.notifyAll();
+        }
+    }
+
+    private void warn(String warning) {
+        try {
+            warningSink.accept(warning);
+        } catch (RuntimeException ignored) {
+            // Health and exceptional completion remain authoritative.
         }
     }
 
@@ -168,38 +370,37 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
         return current;
     }
 
-    private static final class DefaultWayfarerItemIdentity implements WayfarerItemIdentity {
+    enum LifecycleState {
+        OPEN,
+        CLOSING,
+        CLOSED
+    }
+
+    public enum IdentityCloseStatus {
+        CLEAN,
+        FAILED,
+        TIMED_OUT,
+        INTERRUPTED
+    }
+
+    private final class DefaultWayfarerItemIdentity implements WayfarerItemIdentity {
         private final MariaDbItemIdentityRepository repository;
-        private final WayfarerAudit audit;
-        private final HealthRegistry health;
-        private final String serverId;
-        private final Clock clock;
         private final Supplier<UUID> uuidGenerator;
-        private final java.util.function.BooleanSupplier open;
 
         private DefaultWayfarerItemIdentity(
             MariaDbItemIdentityRepository repository,
-            WayfarerAudit audit,
-            HealthRegistry health,
-            String serverId,
-            Clock clock,
-            Supplier<UUID> uuidGenerator,
-            java.util.function.BooleanSupplier open
+            Supplier<UUID> uuidGenerator
         ) {
             this.repository = repository;
-            this.audit = Objects.requireNonNull(audit, "audit");
-            this.health = health;
-            this.serverId = serverId;
-            this.clock = clock;
             this.uuidGenerator = uuidGenerator;
-            this.open = open;
         }
 
         @Override
         public CompletionStage<Identity> create(CreateRequest request) {
-            if (!open.getAsBoolean()) {
-                return unavailable();
-            }
+            return accept(() -> createAccepted(request), "Item identity is unavailable");
+        }
+
+        private CompletionStage<Identity> createAccepted(CreateRequest request) {
             try {
                 ItemIdentityValidator.validateCreate(request);
             } catch (RuntimeException failure) {
@@ -248,9 +449,10 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
 
         @Override
         public CompletionStage<Optional<Identity>> find(UUID itemInstanceId) {
-            if (!open.getAsBoolean()) {
-                return unavailable();
-            }
+            return accept(() -> findAccepted(itemInstanceId), "Item identity is unavailable");
+        }
+
+        private CompletionStage<Optional<Identity>> findAccepted(UUID itemInstanceId) {
             if (itemInstanceId == null) {
                 return CompletableFuture.failedFuture(
                     new IllegalArgumentException("Item instance UUID is required")
@@ -277,9 +479,10 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
 
         @Override
         public CompletionStage<ValidationResult> validate(ValidationRequest request) {
-            if (!open.getAsBoolean()) {
-                return unavailable();
-            }
+            return accept(() -> validateAccepted(request), "Item identity is unavailable");
+        }
+
+        private CompletionStage<ValidationResult> validateAccepted(ValidationRequest request) {
             if (request == null) {
                 return CompletableFuture.failedFuture(
                     new IllegalArgumentException("Validation request is required")
@@ -389,29 +592,11 @@ public final class IdentityRuntime implements PlayerIdentitySink, AutoCloseable 
         }
 
         private void markUp() {
-            if (open.getAsBoolean()) {
-                health.update(
-                    HealthRegistry.IDENTITY,
-                    WayfarerHealth.Status.UP,
-                    "Identity repositories available"
-                );
-            }
+            IdentityRuntime.this.markUp();
         }
 
         private void markDown() {
-            if (open.getAsBoolean()) {
-                health.update(
-                    HealthRegistry.IDENTITY,
-                    WayfarerHealth.Status.DOWN,
-                    "Identity operation failed"
-                );
-            }
-        }
-
-        private static <T> CompletionStage<T> unavailable() {
-            return CompletableFuture.failedFuture(
-                new IllegalStateException("Item identity is unavailable")
-            );
+            IdentityRuntime.this.markDown();
         }
     }
 }
