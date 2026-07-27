@@ -10,8 +10,8 @@
 - Alpha.2 PR B correction: 131 local unit tests / 0 failed / 0 skipped; updated-head GitHub
   Actions `check` and `assemble` passed at
   `0d5bf928a489d7fcbac51e93244af2180b4a539c`
-- Alpha.3 local unit gate: 140 tests / 0 failed / 0 skipped; Redis/MariaDB integration execution
-  and updated-head CI remain required
+- Alpha.3 automated gate: 140 unit, 9 MariaDB, and 6 Redis cases / 0 failed / 0 skipped;
+  commit-pinned CI `30290422624` passed
 - Build gates: `check`, `assemble`, configuration-cache variants, compiler warnings,
   packaging, and reproducibility passed
 - Isolated test server: Alpha.1 `PASSED`;

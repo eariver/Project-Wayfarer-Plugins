@@ -38,8 +38,8 @@
   governance decision. Any future opaque asynchronous contract requires a separate decision.
   Downstream plugins receive no JDBC `Connection`, Hikari, or Flyway implementation.
 - The alpha.3 branch implements internal Redis cache/lock/message/idempotency assistance,
-  explicit outage/reconnect health, main-thread rejection, and a bounded shutdown. Updated-head
-  isolated Redis CI and Paper runtime evidence remain pending.
+  explicit outage/reconnect health, main-thread rejection, and a bounded shutdown. Commit-pinned
+  isolated Redis CI passed; Paper runtime evidence remains pending.
 - The executor now has an immediate-rejection bounded queue and the task bridge validates
   immutable JDK-only data. Runtime queue-pressure/tick evidence remains pending.
 - Waymark remains pending alpha.4.
