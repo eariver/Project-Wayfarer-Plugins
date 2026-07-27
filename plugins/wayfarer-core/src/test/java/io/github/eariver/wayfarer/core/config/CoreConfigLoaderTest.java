@@ -23,6 +23,10 @@ class CoreConfigLoaderTest {
             assertEquals(2, config.executor().threads());
             assertEquals(15, config.shutdownTimeout().toSeconds());
             assertFalse(config.redis().enabled());
+            assertEquals(
+                List.of("classpath:db/migration/core"),
+                config.migration().locations()
+            );
         }
     }
 
@@ -169,6 +173,13 @@ class CoreConfigLoaderTest {
         Map<String, Object> values = validValues();
         values.put("migration.enabled", true);
         assertMessage(values, Map.of(), "mariadb.enabled");
+    }
+
+    @Test
+    void invalidMigrationLocationFailsClosed() {
+        Map<String, Object> values = validValues();
+        values.put("migration.locations", List.of("../runtime"));
+        assertMessage(values, Map.of(), "Migration location is invalid");
     }
 
     private static CoreConfig load(

@@ -16,8 +16,10 @@ public final class HealthRegistry implements WayfarerHealth {
     public static final String EXECUTOR = "Executor";
     public static final String SERVICES = "Services";
     public static final String LIFECYCLE = "Lifecycle";
-    private static final String[] FUTURE_DEPENDENCIES = {
-        "MariaDB", "Migration", "Redis", "Waymark", "Audit", "Transaction"
+    public static final String MARIA_DB = "MariaDB";
+    public static final String MIGRATION = "Migration";
+    private static final String[] UNAVAILABLE_DEPENDENCIES = {
+        "Redis", "Waymark", "Audit", "Transaction"
     };
 
     private final Clock clock;
@@ -27,8 +29,10 @@ public final class HealthRegistry implements WayfarerHealth {
     public HealthRegistry(Clock clock, Supplier<WayfarerLifecycleState> lifecycleState) {
         this.clock = Objects.requireNonNull(clock, "clock");
         this.lifecycleState = Objects.requireNonNull(lifecycleState, "lifecycleState");
-        for (String dependency : FUTURE_DEPENDENCIES) {
-            update(dependency, Status.UNKNOWN, "Not implemented in V0.0.1-alpha.1");
+        update(MARIA_DB, Status.UNKNOWN, "Not initialized");
+        update(MIGRATION, Status.UNKNOWN, "Not initialized");
+        for (String dependency : UNAVAILABLE_DEPENDENCIES) {
+            update(dependency, Status.UNKNOWN, "Unavailable");
         }
         update(CONFIG, Status.UNKNOWN, "Configuration not loaded");
         update(EXECUTOR, Status.UNKNOWN, "Executor not initialized");

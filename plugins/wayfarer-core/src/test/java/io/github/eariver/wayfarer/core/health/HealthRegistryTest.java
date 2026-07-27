@@ -73,12 +73,12 @@ class HealthRegistryTest {
     }
 
     @Test
-    void unimplementedDependenciesRemainUnknown() {
+    void inactiveDependenciesRemainUnknown() {
         Fixture fixture = fixture(WayfarerLifecycleState.ENABLED);
         WayfarerHealth.ComponentHealth mariaDb =
             fixture.registry().snapshot().components().get("MariaDB");
         assertEquals(WayfarerHealth.Status.UNKNOWN, mariaDb.status());
-        assertTrue(mariaDb.detail().contains("Not implemented"));
+        assertEquals("Not initialized", mariaDb.detail());
     }
 
     @Test

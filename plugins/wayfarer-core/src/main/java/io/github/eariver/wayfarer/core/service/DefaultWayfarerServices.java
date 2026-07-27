@@ -85,6 +85,6 @@ final class DefaultWayfarerServices implements WayfarerServices {
     }
 
     private static IllegalStateException unavailable(String component) {
-        return new IllegalStateException(component + " is not implemented in V0.0.1-alpha.1");
+        return new IllegalStateException(component + " is unavailable");
     }
 }

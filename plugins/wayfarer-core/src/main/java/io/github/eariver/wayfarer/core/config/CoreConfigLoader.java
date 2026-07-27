@@ -3,6 +3,8 @@ package io.github.eariver.wayfarer.core.config;
 import io.github.eariver.wayfarer.common.secret.SecretReferenceResolver;
 import io.github.eariver.wayfarer.common.secret.SecretResolutionException;
 import io.github.eariver.wayfarer.common.secret.SecretValue;
+import io.github.eariver.wayfarer.core.persistence.MigrationLocations;
+import io.github.eariver.wayfarer.core.persistence.PersistenceException;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -60,6 +62,11 @@ public final class CoreConfigLoader {
             List<String> locations = stringList(source, "migration.locations");
             if (locations.isEmpty()) {
                 throw new CoreConfigException("migration.locations must not be empty");
+            }
+            try {
+                locations = MigrationLocations.canonicalize(locations);
+            } catch (PersistenceException failure) {
+                throw new CoreConfigException(failure.getMessage());
             }
 
             boolean waymarkEnabled = requiredBoolean(source, "waymark.enabled");
