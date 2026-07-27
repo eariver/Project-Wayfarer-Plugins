@@ -4,8 +4,11 @@ import io.github.eariver.wayfarer.api.WayfarerLifecycleState;
 import io.github.eariver.wayfarer.common.secret.EnvironmentSecretResolver;
 import io.github.eariver.wayfarer.core.bukkit.BukkitConfigView;
 import io.github.eariver.wayfarer.core.bukkit.BukkitHealthCommand;
+import io.github.eariver.wayfarer.core.bukkit.BukkitPlayerIdentityListenerRegistrar;
 import io.github.eariver.wayfarer.core.bukkit.BukkitServicePublisher;
 import io.github.eariver.wayfarer.core.command.HealthCommandHandler;
+import io.github.eariver.wayfarer.core.command.OperationalAuditSink;
+import io.github.eariver.wayfarer.core.command.OperationalEventSink;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
 import io.github.eariver.wayfarer.core.config.CoreConfigException;
 import io.github.eariver.wayfarer.core.config.CoreConfigLoader;
@@ -13,6 +16,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Clock;
+import java.util.concurrent.CompletableFuture;
 
 public final class WayfarerCorePlugin extends JavaPlugin {
     private CoreRuntime runtime;
@@ -25,13 +29,20 @@ public final class WayfarerCorePlugin extends JavaPlugin {
                 new BukkitConfigView(getConfig()),
                 new EnvironmentSecretResolver()
             );
+            Clock clock = Clock.systemUTC();
             runtime = new CoreRuntime(
                 config,
                 new BukkitServicePublisher(getServer().getServicesManager(), this),
                 operation -> getServer().getScheduler().runTask(this, operation),
-                Clock.systemUTC(),
+                clock,
                 getLogger()::warning,
-                getServer()::isPrimaryThread
+                getServer()::isPrimaryThread,
+                new BukkitPlayerIdentityListenerRegistrar(
+                    this,
+                    config.serverId(),
+                    clock,
+                    getLogger()::warning
+                )
             );
             runtime.enable();
 
@@ -39,11 +50,19 @@ public final class WayfarerCorePlugin extends JavaPlugin {
             if (command == null) {
                 throw new IllegalStateException("Command registration is unavailable");
             }
+            OperationalEventSink operationalEvents = config.audit().enabled()
+                ? new OperationalAuditSink(
+                    runtime.services().audit(),
+                    config.serverId(),
+                    clock
+                )
+                : ignored -> CompletableFuture.completedFuture(null);
             HealthCommandHandler handler = new HealthCommandHandler(
                 runtime::services,
                 getPluginMeta().getVersion(),
                 config.health().playerDetails(),
-                event -> getLogger().info("Operational event: " + event)
+                operationalEvents,
+                getLogger()::warning
             );
             command.setExecutor(new BukkitHealthCommand(handler));
             getLogger().info(

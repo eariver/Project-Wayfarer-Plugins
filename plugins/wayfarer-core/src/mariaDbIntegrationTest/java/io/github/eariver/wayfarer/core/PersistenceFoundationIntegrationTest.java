@@ -55,20 +55,23 @@ class PersistenceFoundationIntegrationTest {
                  fixture.username(),
                  fixture.password()
              )) {
-            assertEquals(1, first.appliedMigrationCount());
-            assertEquals(1, second.appliedMigrationCount());
+            assertEquals(2, first.appliedMigrationCount());
+            assertEquals(2, second.appliedMigrationCount());
             assertEquals(
                 Set.of(
                     "flyway_schema_history",
                     "wf_core_audit",
-                    "wf_core_transaction"
+                    "wf_core_transaction",
+                    "wf_core_player_identity",
+                    "wf_core_item_identity"
                 ),
                 tableNames(connection)
             );
-            assertEquals(1, appliedMigrationRows(connection));
+            assertEquals(2, appliedMigrationRows(connection));
             assertRequiredIndexes(connection);
             assertTimestampPrecision(connection);
             assertCoreConstraints(connection);
+            assertIdentitySchema(connection);
         }
     }
 
@@ -194,7 +197,7 @@ class PersistenceFoundationIntegrationTest {
             Runnable::run,
             Clock.systemUTC(),
             warningSink,
-            () -> true
+            () -> false
         );
     }
 
@@ -331,7 +334,8 @@ class PersistenceFoundationIntegrationTest {
              ResultSet result = statement.executeQuery(
                  "SELECT DISTINCT index_name FROM information_schema.statistics "
                      + "WHERE table_schema = DATABASE() "
-                     + "AND table_name IN ('wf_core_transaction', 'wf_core_audit')"
+                     + "AND table_name IN ('wf_core_transaction', 'wf_core_audit', "
+                     + "'wf_core_player_identity', 'wf_core_item_identity')"
              )) {
             while (result.next()) {
                 indexes.add(result.getString(1));
@@ -343,8 +347,62 @@ class PersistenceFoundationIntegrationTest {
             "uq_wf_core_audit_event",
             "ix_wf_core_audit_subject",
             "ix_wf_core_audit_actor",
-            "ix_wf_core_audit_type"
+            "ix_wf_core_audit_type",
+            "ix_wf_core_player_identity_last_seen",
+            "ix_wf_core_player_identity_name",
+            "ix_wf_core_item_identity_owner_type",
+            "ix_wf_core_item_identity_type_updated"
         )));
+    }
+
+    private static void assertIdentitySchema(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(
+                 "SELECT COUNT(*) FROM information_schema.columns "
+                     + "WHERE table_schema = DATABASE() "
+                     + "AND ((table_name = 'wf_core_player_identity' "
+                     + "AND column_name = 'player_uuid') "
+                     + "OR (table_name = 'wf_core_item_identity' "
+                     + "AND column_name IN ('item_instance_id', 'owner_uuid'))) "
+                     + "AND character_set_name = 'ascii' AND character_maximum_length = 36"
+             )) {
+            assertTrue(result.next());
+            assertEquals(3, result.getInt(1));
+        }
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(
+                 "SELECT COUNT(*) FROM information_schema.table_constraints "
+                     + "WHERE constraint_schema = DATABASE() "
+                     + "AND table_name IN "
+                     + "('wf_core_player_identity', 'wf_core_item_identity') "
+                     + "AND constraint_type = 'CHECK'"
+             )) {
+            assertTrue(result.next());
+            assertEquals(5, result.getInt(1));
+        }
+        try (Statement statement = connection.createStatement()) {
+            assertThrows(
+                SQLException.class,
+                () -> statement.executeUpdate(
+                    "INSERT INTO wf_core_player_identity "
+                        + "(player_uuid, last_known_name, first_seen_at, last_seen_at, "
+                        + "last_server_id, lock_version) VALUES "
+                        + "('10000000-0000-0000-0000-000000000001', 'PlayerOne', "
+                        + "CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3), 'test', -1)"
+                )
+            );
+            assertThrows(
+                SQLException.class,
+                () -> statement.executeUpdate(
+                    "INSERT INTO wf_core_item_identity "
+                        + "(item_instance_id, item_type, owner_uuid, instance_epoch, "
+                        + "schema_version, display_revision, created_at, updated_at) VALUES "
+                        + "('20000000-0000-0000-0000-000000000001', 'type', "
+                        + "'30000000-0000-0000-0000-000000000001', -1, 0, -1, "
+                        + "CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))"
+                )
+            );
+        }
     }
 
     private static void assertTimestampPrecision(Connection connection) throws SQLException {
@@ -352,11 +410,12 @@ class PersistenceFoundationIntegrationTest {
              ResultSet result = statement.executeQuery(
                  "SELECT COUNT(*) FROM information_schema.columns "
                      + "WHERE table_schema = DATABASE() "
-                     + "AND table_name IN ('wf_core_transaction', 'wf_core_audit') "
+                     + "AND table_name IN ('wf_core_transaction', 'wf_core_audit', "
+                     + "'wf_core_player_identity', 'wf_core_item_identity') "
                      + "AND data_type = 'timestamp' AND datetime_precision = 3"
              )) {
             assertTrue(result.next());
-            assertEquals(4, result.getInt(1));
+            assertEquals(8, result.getInt(1));
         }
     }
 

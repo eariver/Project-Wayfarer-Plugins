@@ -3,8 +3,12 @@ package io.github.eariver.wayfarer.core.bukkit;
 import io.github.eariver.wayfarer.core.command.CommandAudience;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import io.github.eariver.wayfarer.core.command.OperationalEvent;
 
 final class BukkitCommandAudience implements CommandAudience {
     private final CommandSender sender;
@@ -21,6 +25,24 @@ final class BukkitCommandAudience implements CommandAudience {
     @Override
     public boolean console() {
         return sender instanceof ConsoleCommandSender;
+    }
+
+    @Override
+    public Optional<UUID> actorUuid() {
+        return sender instanceof Player player
+            ? Optional.of(player.getUniqueId())
+            : Optional.empty();
+    }
+
+    @Override
+    public OperationalEvent.AudienceKind audienceKind() {
+        if (sender instanceof Player) {
+            return OperationalEvent.AudienceKind.PLAYER;
+        }
+        if (sender instanceof ConsoleCommandSender) {
+            return OperationalEvent.AudienceKind.CONSOLE;
+        }
+        return OperationalEvent.AudienceKind.OTHER;
     }
 
     @Override

@@ -19,19 +19,25 @@ final class DefaultWayfarerServices implements WayfarerServices {
     private final Supplier<WayfarerLifecycleState> lifecycleState;
     private final WayfarerTasks tasks;
     private final WayfarerHealth health;
+    private final WayfarerAudit audit;
+    private final WayfarerItemIdentity itemIdentity;
 
     DefaultWayfarerServices(
         String serverId,
         int configVersion,
         Supplier<WayfarerLifecycleState> lifecycleState,
         WayfarerTasks tasks,
-        WayfarerHealth health
+        WayfarerHealth health,
+        WayfarerAudit audit,
+        WayfarerItemIdentity itemIdentity
     ) {
         this.serverId = Objects.requireNonNull(serverId, "serverId");
         this.configVersion = configVersion;
         this.lifecycleState = Objects.requireNonNull(lifecycleState, "lifecycleState");
         this.tasks = Objects.requireNonNull(tasks, "tasks");
         this.health = Objects.requireNonNull(health, "health");
+        this.audit = audit;
+        this.itemIdentity = itemIdentity;
     }
 
     @Override
@@ -56,7 +62,10 @@ final class DefaultWayfarerServices implements WayfarerServices {
 
     @Override
     public WayfarerAudit audit() {
-        throw unavailable("Audit");
+        if (audit == null) {
+            throw unavailable("Audit");
+        }
+        return audit;
     }
 
     @Override
@@ -71,7 +80,10 @@ final class DefaultWayfarerServices implements WayfarerServices {
 
     @Override
     public WayfarerItemIdentity itemIdentity() {
-        throw unavailable("Item identity");
+        if (itemIdentity == null) {
+            throw unavailable("Item identity");
+        }
+        return itemIdentity;
     }
 
     @Override

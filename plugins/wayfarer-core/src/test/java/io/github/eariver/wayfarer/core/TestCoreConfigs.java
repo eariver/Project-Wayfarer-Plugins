@@ -26,7 +26,7 @@ final class TestCoreConfigs {
             "test-server",
             timeout,
             new CoreConfig.ExecutorSettings(1, prefix),
-            new CoreConfig.AuditSettings(true),
+            new CoreConfig.AuditSettings(false),
             new CoreConfig.HealthSettings(false),
             new CoreConfig.MariaDbSettings(
                 false,

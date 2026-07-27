@@ -5,10 +5,13 @@ import io.github.eariver.wayfarer.api.WayfarerLifecycleState;
 import io.github.eariver.wayfarer.api.WayfarerServices;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
 import io.github.eariver.wayfarer.core.health.HealthRegistry;
+import io.github.eariver.wayfarer.core.identity.PlayerIdentityListenerRegistrar;
 import io.github.eariver.wayfarer.core.lifecycle.LifecycleCoordinator;
 import io.github.eariver.wayfarer.core.lifecycle.LifecycleStep;
 import io.github.eariver.wayfarer.core.persistence.MariaDbPool;
 import io.github.eariver.wayfarer.core.persistence.MigrationLifecycle;
+import io.github.eariver.wayfarer.core.persistence.DurableAudit;
+import io.github.eariver.wayfarer.core.persistence.IdentityRuntime;
 import io.github.eariver.wayfarer.core.persistence.PersistenceDrainResult;
 import io.github.eariver.wayfarer.core.persistence.PersistenceDrainStatus;
 import io.github.eariver.wayfarer.core.persistence.PersistenceException;
@@ -23,6 +26,7 @@ import io.github.eariver.wayfarer.core.task.ShutdownResult;
 import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public final class CoreRuntime {
@@ -33,9 +37,13 @@ public final class CoreRuntime {
     private final LifecycleCoordinator lifecycle;
     private final HealthRegistry health;
     private final ThreadContext threadContext;
+    private final Clock clock;
+    private final PlayerIdentityListenerRegistrar identityListenerRegistrar;
     private ManagedExecutor executor;
     private MariaDbPool mariaDbPool;
     private MigrationLifecycle migration;
+    private DurableAudit audit;
+    private IdentityRuntime identity;
     private PersistenceDrainResult persistenceDrainResult;
     private WayfarerServices services;
 
@@ -46,7 +54,15 @@ public final class CoreRuntime {
         Clock clock,
         Consumer<String> warningSink
     ) {
-        this(config, publisher, mainThread, clock, warningSink, () -> false);
+        this(
+            config,
+            publisher,
+            mainThread,
+            clock,
+            warningSink,
+            () -> false,
+            PlayerIdentityListenerRegistrar.unavailable()
+        );
     }
 
     public CoreRuntime(
@@ -57,11 +73,36 @@ public final class CoreRuntime {
         Consumer<String> warningSink,
         ThreadContext threadContext
     ) {
+        this(
+            config,
+            publisher,
+            mainThread,
+            clock,
+            warningSink,
+            threadContext,
+            PlayerIdentityListenerRegistrar.unavailable()
+        );
+    }
+
+    public CoreRuntime(
+        CoreConfig config,
+        ServicePublisher publisher,
+        MainThreadDispatcher mainThread,
+        Clock clock,
+        Consumer<String> warningSink,
+        ThreadContext threadContext,
+        PlayerIdentityListenerRegistrar identityListenerRegistrar
+    ) {
         this.config = Objects.requireNonNull(config, "config");
         this.publisher = Objects.requireNonNull(publisher, "publisher");
         this.mainThread = Objects.requireNonNull(mainThread, "mainThread");
         this.warningSink = Objects.requireNonNull(warningSink, "warningSink");
         this.threadContext = Objects.requireNonNull(threadContext, "threadContext");
+        this.clock = Objects.requireNonNull(clock, "clock");
+        this.identityListenerRegistrar = Objects.requireNonNull(
+            identityListenerRegistrar,
+            "identityListenerRegistrar"
+        );
         this.lifecycle = new LifecycleCoordinator(warningSink);
         this.health = new HealthRegistry(clock, lifecycle::state);
     }
@@ -73,7 +114,10 @@ public final class CoreRuntime {
                 new LifecycleStep("Executor", this::initializeExecutor),
                 new LifecycleStep("MariaDB", this::initializeMariaDb),
                 new LifecycleStep("Migration", this::initializeMigration),
-                new LifecycleStep("DatabaseDrain", this::initializeDatabaseDrain)
+                new LifecycleStep("DatabaseDrain", this::initializeDatabaseDrain),
+                new LifecycleStep("Audit", this::initializeAudit),
+                new LifecycleStep("Identity", this::initializeIdentity),
+                new LifecycleStep("PlayerIdentityListener", this::initializeIdentityListener)
             ), new LifecycleStep("Services", this::initializeServices));
             health.refreshLifecycle();
         } catch (RuntimeException failure) {
@@ -266,6 +310,77 @@ public final class CoreRuntime {
         );
     }
 
+    private AutoCloseable initializeAudit() {
+        if (!config.audit().enabled()) {
+            health.update(
+                HealthRegistry.AUDIT,
+                WayfarerHealth.Status.UNKNOWN,
+                "Disabled by configuration"
+            );
+            return () -> {};
+        }
+        if (mariaDbPool == null || mariaDbPool.isClosed() || migration == null) {
+            health.update(
+                HealthRegistry.AUDIT,
+                WayfarerHealth.Status.DOWN,
+                "Durable audit dependency unavailable"
+            );
+            throw new PersistenceException("Audit requires migrated MariaDB");
+        }
+        audit = mariaDbPool.createDurableAudit(config, health, clock, warningSink);
+        try {
+            audit.initialize().toCompletableFuture()
+                .orTimeout(config.shutdownTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                .join();
+        } catch (RuntimeException failure) {
+            audit.close();
+            throw new PersistenceException("Audit initialization failed");
+        }
+        return audit;
+    }
+
+    private AutoCloseable initializeIdentity() {
+        if (!config.audit().enabled()) {
+            health.update(
+                HealthRegistry.IDENTITY,
+                WayfarerHealth.Status.UNKNOWN,
+                "Durable audit disabled"
+            );
+            return () -> {};
+        }
+        if (audit == null) {
+            health.update(
+                HealthRegistry.IDENTITY,
+                WayfarerHealth.Status.DOWN,
+                "Durable audit dependency unavailable"
+            );
+            throw new PersistenceException("Identity requires durable audit");
+        }
+        identity = mariaDbPool.createIdentityRuntime(
+            audit,
+            health,
+            config.serverId(),
+            clock,
+            UUID::randomUUID
+        );
+        try {
+            identity.initialize().toCompletableFuture()
+                .orTimeout(config.shutdownTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                .join();
+        } catch (RuntimeException failure) {
+            identity.close();
+            throw new PersistenceException("Identity initialization failed");
+        }
+        return identity;
+    }
+
+    private AutoCloseable initializeIdentityListener() {
+        if (identity == null) {
+            return () -> {};
+        }
+        return identityListenerRegistrar.register(identity);
+    }
+
     void recordPersistenceDrainResult(PersistenceDrainResult result) {
         persistenceDrainResult = Objects.requireNonNull(result, "result");
         switch (result.status()) {
@@ -340,7 +455,9 @@ public final class CoreRuntime {
             config.configVersion(),
             lifecycle::state,
             tasks,
-            health
+            health,
+            audit,
+            identity == null ? null : identity.itemIdentity()
         );
         publisher.publish(services, health);
         health.update(HealthRegistry.SERVICES, WayfarerHealth.Status.UP, "Services registered");

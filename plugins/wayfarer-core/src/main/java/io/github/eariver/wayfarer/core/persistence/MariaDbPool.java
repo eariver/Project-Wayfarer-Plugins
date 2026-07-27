@@ -3,6 +3,7 @@ package io.github.eariver.wayfarer.core.persistence;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
+import io.github.eariver.wayfarer.core.health.HealthRegistry;
 import io.github.eariver.wayfarer.core.task.ManagedExecutor;
 
 import javax.sql.DataSource;
@@ -10,9 +11,13 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class MariaDbPool implements AutoCloseable {
     private static final String POOL_PREFIX = "Wayfarer-Core-";
@@ -88,11 +93,45 @@ public final class MariaDbPool implements AutoCloseable {
         return workGate.stopAcceptingAndAwait(timeout);
     }
 
+    public DurableAudit createDurableAudit(
+        CoreConfig config,
+        HealthRegistry health,
+        Clock clock,
+        Consumer<String> warningSink
+    ) {
+        return new DurableAudit(
+            internalDatabase(),
+            health,
+            warningSink,
+            config.serverId(),
+            clock,
+            config.shutdownTimeout(),
+            config.mariadb().jdbcUrl(),
+            config.mariadb().username(),
+            config.mariadb().password(),
+            config.redis().uri()
+        );
+    }
+
+    public IdentityRuntime createIdentityRuntime(
+        io.github.eariver.wayfarer.api.WayfarerAudit audit,
+        HealthRegistry health,
+        String serverId,
+        Clock clock,
+        Supplier<UUID> uuidGenerator
+    ) {
+        return new IdentityRuntime(
+            internalDatabase(),
+            audit,
+            health,
+            serverId,
+            clock,
+            uuidGenerator
+        );
+    }
+
     InternalDatabase internalDatabaseForTesting() {
-        if (database == null) {
-            throw new IllegalStateException("Internal database boundary is unavailable");
-        }
-        return database;
+        return internalDatabase();
     }
 
     public boolean isClosed() {
@@ -149,5 +188,12 @@ public final class MariaDbPool implements AutoCloseable {
                 throw new PersistenceException("MariaDB UTC session initialization failed");
             }
         }
+    }
+
+    private InternalDatabase internalDatabase() {
+        if (database == null) {
+            throw new IllegalStateException("Internal database boundary is unavailable");
+        }
+        return database;
     }
 }

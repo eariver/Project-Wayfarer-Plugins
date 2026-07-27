@@ -1,10 +1,8 @@
 package io.github.eariver.wayfarer.api;
 
-import java.sql.Connection;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
-
-public interface WayfarerDatabase {
-    <T> CompletionStage<T> read(Function<Connection, T> operation);
-    <T> CompletionStage<T> transaction(Function<Connection, T> operation);
-}
+/**
+ * Reserved JDK-only service identity for a future database contract.
+ *
+ * <p>The service is unavailable until an opaque, non-JDBC beta contract is accepted.</p>
+ */
+public interface WayfarerDatabase {}

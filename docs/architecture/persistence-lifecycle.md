@@ -2,7 +2,8 @@
 
 ## Scope and authority
 
-The alpha.2 PR A persistence foundation is internal to `wayfarer-core`. MariaDB remains the
+The alpha.2 PR A persistence foundation and PR B durable audit/identity slice are internal to
+`wayfarer-core`. MariaDB remains the
 authority for approved Wayfarer-owned durable domains. Redis, MVI, Waymark, normal inventories,
 Main, and Frontier authority are unchanged.
 
@@ -19,6 +20,10 @@ Config and secrets
 → Managed executor
 → Hikari pool creation and connection validation on the executor
 → Flyway pre-validation, migrate, post-validation, and schema-info check on the executor
+→ Database drain resource
+→ Durable audit probe and enable/migration events
+→ Player/item identity repository probe
+→ Player join listener registration
 → Bukkit service publication
 ```
 
@@ -26,6 +31,9 @@ Disable separates database intake from accepted work. Its effective order is:
 
 ```text
 Services unpublished
+→ Player join listener unregistered
+→ Identity service intake closed
+→ Durable audit disable-start event and audit intake closed
 → Database intake closed
 → Accepted database work drained while the executor and Hikari pool remain available
 → Migration lifecycle released
@@ -62,7 +70,9 @@ plugins/wayfarer-core/src/main/resources/db/migration/core/V001__core_schema.sql
 SHA-256 59035d3bf0ee9f11e2a6756138fa55f331dc79546778c473bacbde887a894840
 ```
 
-No production V002 migration is added by PR A.
+PR B adds only `V002__core_identity_schema.sql`, which creates
+`wf_core_player_identity` and `wf_core_item_identity`. It does not alter V001 or create
+Main/Frontier/external-plugin tables.
 
 ## JDBC threading and API boundary
 
@@ -73,14 +83,19 @@ Reads close their connection with try-with-resources. Transactions explicitly se
 `READ_COMMITTED`, disable auto-commit, commit success, and roll back failure. SQL diagnostics are
 converted to sanitized internal exceptions.
 
-The existing public `WayfarerDatabase` stub is intentionally not implemented or published.
+The `WayfarerDatabase` class identity remains as a JDK-only marker and is intentionally
+unavailable. Its pre-alpha JDBC-typed stub methods were removed to satisfy the public API boundary;
+an accepted opaque database contract remains beta work.
 `WayfarerServices.database()` remains unavailable, so downstream plugins receive no JDBC
-`Connection`, Hikari, Flyway, or implementation class.
+`Connection`, Hikari, Flyway, or implementation class. Durable `WayfarerAudit` and the JDK-only
+asynchronous `WayfarerItemIdentity` are published only when `audit.enabled=true` and their
+MariaDB/migration initialization succeeds.
 
 ## Automated gate
 
 `libraries/wayfarer-testkit` owns the Testcontainers MariaDB fixture. Production modules do not
 depend on testkit. `:plugins:wayfarer-core:mariaDbIntegrationTest` starts uniquely named isolated
 databases, fails when Docker is unavailable, and is a mandatory dependency of `check`; it is not
-silently skipped. The suite includes a one-thread queued-operation regression and a real
-MariaDB test proving both accepted effects commit before disable closes Hikari.
+silently skipped. The suite includes a one-thread queued-operation regression, V001→V002 upgrade,
+audit idempotency/redaction, player/item recovery, permission-denial audit, and a real MariaDB
+test proving accepted effects commit before disable closes Hikari.

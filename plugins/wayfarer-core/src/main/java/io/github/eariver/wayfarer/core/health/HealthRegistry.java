@@ -18,8 +18,10 @@ public final class HealthRegistry implements WayfarerHealth {
     public static final String LIFECYCLE = "Lifecycle";
     public static final String MARIA_DB = "MariaDB";
     public static final String MIGRATION = "Migration";
+    public static final String AUDIT = "Audit";
+    public static final String IDENTITY = "Identity";
     private static final String[] UNAVAILABLE_DEPENDENCIES = {
-        "Redis", "Waymark", "Audit", "Transaction"
+        "Redis", "Waymark", AUDIT, IDENTITY, "Transaction"
     };
 
     private final Clock clock;

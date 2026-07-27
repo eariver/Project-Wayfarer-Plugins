@@ -64,11 +64,11 @@ In the table below, `alpha.1 runtime evidence` refers to
 | LIF-017 | Reject callbacks after disable | 8.1 | Double-guarded task bridge | Late callback test | alpha.1/3 | Pending | Automated test passed | Paper callback runtime pending |
 | LIF-018 | Do not continue after migration failure | 8.1 | Fail-closed Core persistence lifecycle | Broken-migration failure injection | alpha.2 | Pending | Automated test passed | Services remained unpublished and Hikari closed; runtime evidence pending |
 | API-001 | `WayfarerServices` contract | 8.2 | Typed metadata/services contract | Service/API identity tests | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Runtime service lookup passed; full beta contract remains pending |
-| API-002 | `WayfarerDatabase` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
-| API-003 | `WayfarerAudit` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
+| API-002 | `WayfarerDatabase` contract | 8.2 | JDK-only reserved marker; runtime unavailable | Full public API boundary scan | beta.1 | Pending | In progress | JDBC-typed pre-alpha stub removed; accepted opaque beta contract pending |
+| API-003 | `WayfarerAudit` contract | 8.2 | Async JDK API plus durable Core implementation | API boundary/unit/integration suite | beta.1 | Pending | In progress | Contract implemented; beta compatibility and Paper runtime pending |
 | API-004 | `WayfarerTransactions` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
 | API-005 | `WayfarerWaymark` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
-| API-006 | `WayfarerItemIdentity` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
+| API-006 | `WayfarerItemIdentity` contract | 8.2 | ADR 0004 asynchronous JDK-only contract | API boundary and identity suites | beta.1 | Pending | In progress | Stub revised before accepted consumers; beta compatibility and runtime pending |
 | API-007 | `WayfarerTasks` contract | 8.2 | `wayfarer-api` | API compatibility test | beta.1 | Pending | Not started | Existing stub not accepted |
 | API-008 | `WayfarerHealth` contract | 8.2 | Timestamped snapshot/component contract | Health/API identity tests | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Health summary/component output observed; full beta contract remains pending |
 | API-009 | Service lookup/thread/completion/timeout semantics documented | 8.2 | API design pending | Contract tests | beta.1 | Pending | Not started | Implementation pending |
@@ -87,7 +87,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | CFG-005 | Migration settings | 8.3 | Typed canonical classpath locations and dependency guard | Config/location/migration tests | alpha.2 | alpha.1 runtime evidence | Automated test passed | Empty, traversal, and non-classpath locations fail closed |
 | CFG-006 | Waymark provider settings | 8.3 | Typed inactive provider settings | Config validation suite | alpha.4 | alpha.1 runtime evidence | In progress | Disabled config accepted; capability probe deferred to alpha.4 |
 | CFG-007 | Executor settings | 8.3 | Typed thread count/name | Range/name tests | V0.0.1-alpha.1 / alpha.3 | alpha.1 runtime evidence | In progress | Thread and timeout behavior observed; queue settings deferred to alpha.3 |
-| CFG-008 | Audit settings | 8.3 | Typed enable flag | Valid config test | alpha.2 | alpha.1 runtime evidence | In progress | Flag accepted; persistence deferred to alpha.2 |
+| CFG-008 | Audit settings | 8.3 | Typed durable-audit dependency gate | Enabled/disabled/dependency tests | alpha.2 | Pending | Automated test passed | Version remains 1; true requires MariaDB and migration; sample false |
 | CFG-009 | Health settings | 8.3 | Typed player detail flag | Valid config/command tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Player status rows shown while parenthetical internal details were suppressed |
 | CFG-010 | Shutdown timeout settings | 8.3 | Typed bounded duration | Range/timeout tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | One-second graceful and forced phases observed |
 | CFG-011 | Sanitized sample | 8.3, 12 | Core `config.yml`; handoff | Secret/redaction tests | beta.1 | alpha.1 runtime evidence | In progress | Sanitized runtime config observed; full beta asset scan pending |
@@ -98,20 +98,20 @@ In the table below, `alpha.1 runtime evidence` refers to
 | DB-001 | Core owns only `wf_core_*` | 8.4 | Existing immutable Core V001 | Isolated schema inspection | alpha.2 | Pending | Automated test passed | Only Flyway history, `wf_core_transaction`, and `wf_core_audit` created |
 | DB-002 | Transaction domain | 8.4 | Core migration/repository | Integration test | alpha.2/4 | Pending | Not started | Implementation pending |
 | DB-003 | Transaction event/history domain | 8.4 | Core migration/repository | Integration test | alpha.2/4 | Pending | Not started | Implementation pending |
-| DB-004 | Audit domain | 8.4 | Core migration/repository | Integration test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-005 | Player identity domain | 8.4 | Core migration/repository | Integration test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-006 | Item identity domain | 8.4 | Core migration/repository | Integration test | alpha.2 | Pending | Not started | Implementation pending |
+| DB-004 | Audit domain | 8.4 | V001 table plus durable repository | Idempotency/redaction/restart integration suite | alpha.2 | Pending | In progress | Implementation and test source complete; GitHub Actions authority pending |
+| DB-005 | Player identity domain | 8.4 | Additive V002 and newer-only repository | Repository/restart integration suite | alpha.2 | Pending | In progress | Implementation and test source complete; GitHub Actions authority pending |
+| DB-006 | Item identity domain | 8.4 | Additive V002 and async repository | Create/find/validate/restart suite | alpha.2 | Pending | In progress | Implementation and test source complete; GitHub Actions authority pending |
 | DB-007 | Reconcile state domain | 8.4 | Core migration/repository | Recovery test | alpha.2/4 | Pending | Not started | Implementation pending |
 | DB-008 | Empty DB migration | 8.4 | `MigrationLifecycle`; MariaDB testkit fixture | `mariaDbIntegrationTest` | alpha.2 | Pending | Automated test passed | Empty isolated MariaDB 11.8 migrated successfully |
-| DB-009 | Additive migration | 8.4 | Flyway additive policy; no new production migration | Repeated validate/migrate test | alpha.2 | Pending | In progress | Repeated V001 startup passed; a future V002 additive migration is not exercised |
+| DB-009 | Additive migration | 8.4 | V002 adds only two Core identity tables | Empty/V001-upgrade/repeated tests | alpha.2 | Pending | In progress | V001 unchanged; integration source compiled; CI execution pending |
 | DB-010 | Applied migration immutable | 8.4 | V001 unchanged | Released/current/classpath SHA-256 checks | alpha.2+ | N/A | Automated test passed | All checked bytes match `59035d3b...4840`; no new production migration |
-| DB-011 | UUID authority | 8.4 | Persistence slice | Repository test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-012 | UTC timestamps | 8.4 | V001 `TIMESTAMP(3)` plus Hikari UTC session | Schema/session inspection | alpha.2 | Pending | Automated test passed | Four current timestamp columns and `+00:00` session verified; repository mapping pending |
+| DB-011 | UUID authority | 8.4 | Canonical UUID repositories and raw-claim gate | Unit/repository tests | alpha.2 | Pending | In progress | Unit validation passed; MariaDB CI pending |
+| DB-012 | UTC timestamps | 8.4 | Eight `TIMESTAMP(3)` columns, UTC pool, repository mapping | Schema/session/mapping inspection | alpha.2 | Pending | In progress | Existing UTC tests passed; V002/repository CI pending |
 | DB-013 | Unique constraints | 8.4 | Existing Core V001 | Duplicate idempotency/event tests | alpha.2 | Pending | Automated test passed | Current transaction and audit unique constraints enforced |
-| DB-014 | Optimistic locking | 8.4 | Repository | Concurrency test | alpha.2 | Pending | Not started | Implementation pending |
-| DB-015 | Required indexes | 8.4 | Existing Core V001 | Information-schema index inspection | alpha.2 | Pending | Automated test passed | All six named current secondary/unique indexes verified |
+| DB-014 | Optimistic locking | 8.4 | Player newer-only lock increment; item lock foundation | Concurrency/repository tests | alpha.2 | Pending | In progress | Identity implementation present; broader transaction locking pending |
+| DB-015 | Required indexes | 8.4 | V001 indexes plus four V002 identity indexes | Information-schema inspection | alpha.2 | Pending | In progress | V002 integration source compiled; CI execution pending |
 | DB-016 | JSON validation | 8.4 | Existing Core V001 | Transaction/audit invalid-JSON tests | alpha.2 | Pending | Automated test passed | Both current JSON check constraints enforced |
-| DB-017 | Restart recovery | 8.4 | Persistence slice | Restart test | alpha.2 | Pending | Not started | Implementation pending |
+| DB-017 | Restart recovery | 8.4 | Durable audit/player/item repositories | Restart integration suite | alpha.2 | Pending | In progress | Identity/audit source complete; CI pending; transaction/reconcile later |
 | DB-018 | Core does not create `wf_main_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_main_*` table created |
 | DB-019 | Core does not create `wf_frontier_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_frontier_*` table created |
 | TX-001 | Persist/recover PREPARED and DEBIT_PENDING | 8.5 | Transaction slice | State test | alpha.4 | Pending | Not started | Implementation pending |
@@ -138,28 +138,28 @@ In the table below, `alpha.1 runtime evidence` refers to
 | TX-022 | Do not claim unconditional exactly-once | 8.5 | API/docs pending | Documentation test | beta.1 | N/A | Not started | Must state compensation limits |
 | TX-023 | Do not access RedisEconomy internal keys | 8.5, 14 | Adapter boundary | Code inspection | alpha.4 | Pending | Not started | Implementation pending |
 | TX-024 | Use supported API/Vault boundary | 8.5 | Adapter boundary | Capability/thread test | alpha.4 | Pending | Not started | Owner decision if unavailable |
-| AUD-001 | Audit enable/disable/migration | 8.6 | Audit slice | Persistence test | alpha.2 | Pending | Not started | Implementation pending |
-| AUD-002 | Audit health transitions/dependency outage | 8.6 | Audit slice | Failure test | alpha.2/3 | Pending | Not started | Implementation pending |
+| AUD-001 | Audit enable/disable/migration | 8.6 | Probe, enable/migration events, bounded close event | Lifecycle/persistence suite | alpha.2 | Pending | In progress | Implementation complete; MariaDB CI and Paper runtime pending |
+| AUD-002 | Audit health transitions/dependency outage | 8.6 | Dynamic UP/DOWN/recovery/close health | Validation/failure/integration suite | alpha.2/3 | Pending | In progress | Caller failures stay UP; infrastructure paths implemented; CI pending |
 | AUD-003 | Audit transaction/refund/UNKNOWN | 8.6 | Audit slice | Transaction test | alpha.4 | Pending | Not started | Implementation pending |
 | AUD-004 | Audit reconcile/admin action | 8.6 | Audit/admin slice | Admin test | alpha.4 | Pending | Not started | Implementation pending |
-| AUD-005 | Audit identity failures | 8.6 | Audit/identity slice | Identity test | alpha.2 | Pending | Not started | Implementation pending |
-| AUD-006 | Audit permission denial/shutdown timeout | 8.6 | Sanitized operational event/warning hooks | Permission/timeout tests | alpha.1 | Pending | In progress | Durable audit persistence deferred to alpha.2 |
-| AUD-007 | Redact secrets in audit | 8.6 | Redaction pending | Redaction test | beta.1 | Pending | Not started | Implementation pending |
-| AUD-008 | Do not silently drop critical events | 8.6 | Audit durability pending | Backpressure/failure test | beta.1 | Pending | Not started | Implementation pending |
-| ID-001 | Player UUID authority | 8.7 | Identity slice | Identity test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-002 | Last-known name is auxiliary only | 8.7 | Identity slice | Repository test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-003 | Do not reimplement authentication/permission/inventory | 8.7 | Boundary | Code/schema inspection | beta.1 | Pending | Not started | Implementation pending |
-| ID-004 | PDC `item_type` | 8.7 | Identity slice | PDC test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-005 | PDC `owner_uuid` | 8.7 | Identity slice | PDC test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-006 | PDC `instance_epoch` | 8.7 | Identity slice | PDC test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-007 | PDC `schema_version` | 8.7 | Identity slice | PDC test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-008 | PDC `item_instance_id` | 8.7 | Identity slice | PDC test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-009 | PDC `display_revision` | 8.7 | Identity slice | PDC test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-010 | Do not identify by lore/name/material alone | 8.7 | Identity slice | Forgery test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-011 | Unknown schema/type fails closed | 8.7 | Identity slice | Negative test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-012 | Invalid UUID fails closed | 8.7 | Identity slice | Negative test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-013 | Owner mismatch fails closed | 8.7 | Identity slice | Negative test | alpha.2 | Pending | Not started | Implementation pending |
-| ID-014 | Epoch mismatch fails closed | 8.7 | Identity slice | Negative test | alpha.2 | Pending | Not started | Implementation pending |
+| AUD-005 | Audit identity failures | 8.6 | Mandatory durable invalid-identity event | Unit/integration identity suite | alpha.2 | Pending | In progress | Audit failure makes validation exceptional; MariaDB CI pending |
+| AUD-006 | Audit permission denial/shutdown timeout | 8.6 | Async durable permission sink plus bounded shutdown warning | Permission/timeout tests | alpha.2 | Pending | In progress | Permission persistence CI pending; shutdown-timeout durable record not guaranteed |
+| AUD-007 | Redact secrets in audit | 8.6 | Pre-DB JSON/key/resolved-secret/URI rejection | Unit and sentinel integration tests | beta.1 | Pending | In progress | Unit tests passed; MariaDB zero-hit CI pending |
+| AUD-008 | Do not silently drop critical events | 8.6 | Exceptional completion and observed warning/health | Failure/backpressure tests | beta.1 | Pending | In progress | Failure semantics implemented; bounded queue/backpressure remains alpha.3 |
+| ID-001 | Player UUID authority | 8.7 | UUID-keyed player repository and join snapshot | Repository/restart tests | alpha.2 | Pending | In progress | Implementation complete; MariaDB CI pending |
+| ID-002 | Last-known name is auxiliary only | 8.7 | Non-unique indexed name; stale update ignored | Repository tests | alpha.2 | Pending | In progress | Schema and repository complete; MariaDB CI pending |
+| ID-003 | Do not reimplement authentication/permission/inventory | 8.7 | V002 and API boundary contain identity metadata only | Boundary/schema inspection | beta.1 | Pending | In progress | Source boundary implemented; beta packaging acceptance pending |
+| ID-004 | PDC `item_type` | 8.7 | Common constant and raw claim | Contract/negative tests | alpha.2 | Pending | Automated test passed | Paper adapter runtime pending |
+| ID-005 | PDC `owner_uuid` | 8.7 | Common constant and raw claim | Contract/negative tests | alpha.2 | Pending | Automated test passed | Paper adapter runtime pending |
+| ID-006 | PDC `instance_epoch` | 8.7 | Common constant and raw claim | Contract/negative tests | alpha.2 | Pending | Automated test passed | Paper adapter runtime pending |
+| ID-007 | PDC `schema_version` | 8.7 | Common constant and raw claim | Contract/negative tests | alpha.2 | Pending | Automated test passed | Paper adapter runtime pending |
+| ID-008 | PDC `item_instance_id` | 8.7 | Common constant and raw claim | Contract/negative tests | alpha.2 | Pending | Automated test passed | Paper adapter runtime pending |
+| ID-009 | PDC `display_revision` | 8.7 | Common constant and raw claim | Contract/negative tests | alpha.2 | Pending | Automated test passed | Paper adapter runtime pending |
+| ID-010 | Do not identify by lore/name/material alone | 8.7 | Six-claim JDK contract excludes presentation fields | API/source inspection | alpha.2 | Pending | Automated test passed | Main/Frontier adapters pending |
+| ID-011 | Unknown schema/type fails closed | 8.7 | Ordered raw-claim validator | Negative unit/integration tests | alpha.2 | Pending | In progress | Unit passed; MariaDB CI pending |
+| ID-012 | Invalid UUID fails closed | 8.7 | Canonical UUID parser | Negative unit tests | alpha.2 | Pending | Automated test passed | Runtime pending |
+| ID-013 | Owner mismatch fails closed | 8.7 | Persisted/raw/expected owner comparison | Negative unit/integration tests | alpha.2 | Pending | In progress | Unit passed; MariaDB CI pending |
+| ID-014 | Epoch mismatch fails closed | 8.7 | Persisted/raw/expected epoch comparison | Negative unit/integration tests | alpha.2 | Pending | In progress | Unit passed; MariaDB CI pending |
 | RED-001 | Redis cache foundation | 8.8 | Redis slice | Integration test | alpha.3 | Pending | Not started | Implementation pending |
 | RED-002 | Redis lock foundation | 8.8 | Redis slice | Concurrency test | alpha.3 | Pending | Not started | Implementation pending |
 | RED-003 | Redis pub/sub and invalidation | 8.8 | Redis slice | Integration test | alpha.3 | Pending | Not started | Implementation pending |
@@ -184,7 +184,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | TASK-013 | Reject callback after disable | 8.9 | Task slice | Race test | alpha.3 | Pending | Not started | Implementation pending |
 | ADM-001 | Health: Config/MariaDB/Migration | 8.10 | Active persistence lifecycle health | Success/failure/disable integration tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 runtime evidence | In progress | Automated `UNKNOWN`/`UP`/`DOWN`/`DISABLED` paths passed; alpha.2 runtime pending |
 | ADM-002 | Health: Redis/Waymark | 8.10 | Health slice | Health test | alpha.3/4 | Pending | Not started | Implementation pending |
-| ADM-003 | Health: Audit/Transaction | 8.10 | Health slice | Health test | alpha.2/4 | Pending | Not started | Implementation pending |
+| ADM-003 | Health: Audit/Transaction | 8.10 | Dynamic Audit and Identity components | Health/failure tests | alpha.2/4 | Pending | In progress | Audit/Identity implemented; Transaction remains alpha.4 |
 | ADM-004 | Health: Executor/Services | 8.10 | Dynamic executor/services components | Health/runtime tests | V0.0.1-alpha.1 / alpha.3 | alpha.1 runtime evidence | In progress | Executor and Services `UP`; later executor slice remains pending |
 | ADM-005 | `/wayfarer admin health` | 8.10 | `HealthCommandHandler`; Bukkit adapter | Command suite | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Console and authorized-player output observed |
 | ADM-006 | Transaction inspect command | 8.10 | Admin slice | Command test | alpha.4 | Pending | Not started | Implementation pending |
@@ -192,21 +192,21 @@ In the table below, `alpha.1 runtime evidence` refers to
 | ADM-008 | Admin permission rules | 8.10 | `wayfarer.admin.health` | Authorization/denial tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Non-OP denial and OP authorization observed; later admin grants pending |
 | ADM-009 | Console eligibility | 8.10 | Bukkit audience adapter | Console command tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Console health observed; later admin command slices pending |
 | ADM-010 | Admin redaction/audit/confirmation | 8.10 | Admin slice | Security test | alpha.4 | Pending | Not started | Implementation pending |
-| TST-001 | Unit tests | 10.1 | Common/Core test sources | 96 unit tests passed | V0.0.1-alpha.1+ | N/A | In progress | Includes persistence gate/drain races; 0 failed, 0 skipped locally; corrected-head CI pending |
-| TST-002 | MariaDB integration | 10.1 | Testkit fixture; mandatory Core integration task | 6 Testcontainers tests | alpha.2 | Pending | Automated test passed | MariaDB 11.8; includes accepted-work drain; 0 failed, 0 skipped locally; corrected-head CI pending |
+| TST-001 | Unit tests | 10.1 | API/Common/Core test sources | 120 PR B unit tests | V0.0.1-alpha.1+ | N/A | In progress | Local: 120 passed, 0 failed, 0 skipped; final CI pending |
+| TST-002 | MariaDB integration | 10.1 | Testkit fixture; mandatory Core integration task | Persistence plus PR B Testcontainers suite | alpha.2 | Pending | In progress | Local Docker stopped; source compiled; GitHub Actions mandatory authority |
 | TST-003 | Redis integration | 10.1 | alpha.3 plan | Testcontainers | alpha.3 | Pending | Not started | Implementation pending |
-| TST-004 | Migration tests | 10.1 | Alpha.2 persistence integration suite | Empty/repeated/failure/checksum tests | alpha.2 | Pending | Automated test passed | V001 apply/validate and failure cleanup passed |
-| TST-005 | Concurrency tests | 10.1 | Persistence drain race suite; broader phase plans | One-thread queued-operation and disable-race tests | alpha.2+ | Pending | In progress | Accepted database work race covered; repository and broader concurrency remain pending |
+| TST-004 | Migration tests | 10.1 | Alpha.2 persistence/audit/identity suite | Empty/V001-upgrade/repeated/failure/hash tests | alpha.2 | Pending | In progress | Existing V001 tests passed; V002 GitHub Actions execution pending |
+| TST-005 | Concurrency tests | 10.1 | Persistence drain and newer-only identity semantics | Queue/drain/stale observation tests | alpha.2+ | Pending | In progress | Existing drain passed; identity MariaDB CI pending; broader concurrency later |
 | TST-006 | Idempotency tests | 10.1 | alpha.4 plan | Automated suite | alpha.4 | Pending | Not started | Implementation pending |
 | TST-007 | Failure/timeout tests | 10.1 | Lifecycle/executor and persistence-drain failure suites | Gradle test | V0.0.1-alpha.1+ | alpha.1 runtime evidence | In progress | Drain timeout/interruption are bounded, warned, and non-clean; Paper persistence evidence pending |
-| TST-008 | Restart recovery tests | 10.1 | phase plans | Automated suite | alpha.2+ | Pending | Not started | Implementation pending |
+| TST-008 | Restart recovery tests | 10.1 | Audit/player/item repository reconstruction | MariaDB restart suite | alpha.2+ | Pending | In progress | Source compiled; GitHub Actions execution pending |
 | TST-009 | Config validation tests | 10.1 | `CoreConfigLoaderTest` | Gradle test | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Placeholder, valid, unsupported, and dependency-validation paths observed |
-| TST-010 | Secret redaction tests | 10.1 | Common/config/health/command tests | Gradle test | beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 runtime secret hit count zero; full beta coverage pending |
+| TST-010 | Secret redaction tests | 10.1 | Common/config/health/audit sanitizer | Unit plus zero-hit MariaDB test | beta.1 | alpha.1 runtime evidence | In progress | PR B unit passed; MariaDB CI and full beta scan pending |
 | TST-011 | Packaging/API compatibility tests | 10.1 | beta plan | Automated inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 packaging and class isolation passed; full beta suite pending |
 | TST-012 | Isolated test server | 10.2 | Result and evidence index | Runtime procedure | V0.0.1-alpha.1–rc.1 | alpha.1 runtime evidence | In progress | Alpha.1 runtime gate passed; later candidates and Project acceptance pending |
-| TST-013 | Main-thread I/O and callback tests | 10.2 | Persistence `ThreadContext` and independent intake gate; task callback guards | Automated/runtime | alpha.2/3 | Pending | In progress | Main-thread JDBC pre-acquisition and lifecycle-lock-independent drain passed; Paper and Redis paths pending |
+| TST-013 | Main-thread I/O and callback tests | 10.2 | Persistence guard plus immutable player join snapshot | Automated/runtime | alpha.2/3 | Pending | In progress | JDBC guard passed; listener stores no Player async; Paper and Redis paths pending |
 | TST-014 | Tick/performance verification | 10.2, 11 | RC plan | Runtime measurement | rc.1 | Pending | Not started | Implementation pending |
-| TST-015 | Permission denial verification | 10.2 | Command permission suite | Gradle test | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Alpha.1 denial and operational event observed; later admin slices pending |
+| TST-015 | Permission denial verification | 10.2 | Async operational audit sink with actor snapshot | Unit/MariaDB permission tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Unit command path passed; durable MariaDB CI pending; later admin slices pending |
 | TST-016 | JAR dependency/class identity inspection | 10.2 | beta plan | Packaging test | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Alpha.1 Core JAR and Probe isolation passed; full beta inspection pending |
 | TST-017 | Test Report release/artifact/environment identity | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final values pending |
 | TST-018 | Test Report authority/scope/policy compliance | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final evidence pending |

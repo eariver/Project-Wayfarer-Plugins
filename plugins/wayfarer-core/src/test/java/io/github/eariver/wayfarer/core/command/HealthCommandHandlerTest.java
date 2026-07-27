@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,7 +23,7 @@ class HealthCommandHandlerTest {
     @Test
     void authorizedHealthCommandShowsSummary() {
         FakeAudience audience = new FakeAudience(true, false);
-        handler(services(), false, ignored -> {}).execute(
+        handler(services(), false, noEvents()).execute(
             audience,
             new String[] {"admin", "health"}
         );
@@ -30,21 +33,32 @@ class HealthCommandHandlerTest {
 
     @Test
     void permissionDenialIsStableAndObserved() {
-        List<String> events = new ArrayList<>();
+        List<OperationalEvent> events = new ArrayList<>();
         FakeAudience audience = new FakeAudience(false, false);
-        boolean handled = handler(services(), false, events::add).execute(
+        boolean handled = handler(
+            services(),
+            false,
+            event -> {
+                events.add(event);
+                return CompletableFuture.completedFuture(null);
+            }
+        ).execute(
             audience,
             new String[] {"admin", "health"}
         );
         assertTrue(handled);
         assertTrue(audience.messages.getFirst().contains("permission"));
-        assertTrue(events.contains("ADMIN_HEALTH_PERMISSION_DENIED"));
+        assertTrue(events.stream().anyMatch(
+            event -> "ADMIN_HEALTH_PERMISSION_DENIED".equals(event.eventType())
+                && event.actorUuid() != null
+                && event.audienceKind() == OperationalEvent.AudienceKind.PLAYER
+        ));
     }
 
     @Test
     void consoleReceivesSanitizedComponentDetails() {
         FakeAudience audience = new FakeAudience(true, true);
-        handler(services(), false, ignored -> {}).execute(
+        handler(services(), false, noEvents()).execute(
             audience,
             new String[] {"admin", "health"}
         );
@@ -59,7 +73,7 @@ class HealthCommandHandlerTest {
     @Test
     void playerDoesNotReceiveInternalDetailsByDefault() {
         FakeAudience audience = new FakeAudience(true, false);
-        handler(services(), false, ignored -> {}).execute(
+        handler(services(), false, noEvents()).execute(
             audience,
             new String[] {"admin", "health"}
         );
@@ -71,7 +85,7 @@ class HealthCommandHandlerTest {
     @Test
     void unknownSubcommandReturnsUsage() {
         FakeAudience audience = new FakeAudience(true, true);
-        boolean handled = handler(services(), false, ignored -> {}).execute(
+        boolean handled = handler(services(), false, noEvents()).execute(
             audience,
             new String[] {"admin", "unknown"}
         );
@@ -81,28 +95,48 @@ class HealthCommandHandlerTest {
 
     @Test
     void commandFailureDoesNotEscape() {
-        List<String> events = new ArrayList<>();
+        List<OperationalEvent> events = new ArrayList<>();
         FakeAudience audience = new FakeAudience(true, true);
         boolean handled = handler(
             () -> {
                 throw new IllegalStateException("raw-secret");
             },
             false,
-            events::add
+            event -> {
+                events.add(event);
+                return CompletableFuture.completedFuture(null);
+            }
         ).execute(audience, new String[] {"admin", "health"});
         assertTrue(handled);
         assertTrue(audience.messages.getFirst().contains("unavailable"));
         assertFalse(audience.messages.getFirst().contains("raw-secret"));
-        assertTrue(events.contains("ADMIN_HEALTH_COMMAND_FAILED"));
+        assertTrue(events.stream().anyMatch(
+            event -> "ADMIN_HEALTH_COMMAND_FAILED".equals(event.eventType())
+        ));
     }
 
     @Test
     void consoleIsStillSubjectToPermissionContract() {
         FakeAudience audience = new FakeAudience(false, true);
-        handler(services(), false, ignored -> {}).execute(
+        handler(services(), false, noEvents()).execute(
             audience,
             new String[] {"admin", "health"}
         );
+        assertTrue(audience.messages.getFirst().contains("permission"));
+    }
+
+    @Test
+    void commandResponseDoesNotWaitForAuditCompletion() {
+        CompletableFuture<Void> pendingAudit = new CompletableFuture<>();
+        FakeAudience audience = new FakeAudience(false, false);
+        boolean handled = handler(
+            services(),
+            false,
+            ignored -> pendingAudit
+        ).execute(audience, new String[] {"admin", "health"});
+
+        assertTrue(handled);
+        assertFalse(pendingAudit.isDone());
         assertTrue(audience.messages.getFirst().contains("permission"));
     }
 
@@ -112,6 +146,10 @@ class HealthCommandHandlerTest {
         OperationalEventSink events
     ) {
         return handler(() -> services, playerDetails, events);
+    }
+
+    private static OperationalEventSink noEvents() {
+        return ignored -> CompletableFuture.completedFuture(null);
     }
 
     private static HealthCommandHandler handler(
@@ -174,6 +212,20 @@ class HealthCommandHandlerTest {
         @Override
         public boolean console() {
             return console;
+        }
+
+        @Override
+        public Optional<UUID> actorUuid() {
+            return console
+                ? Optional.empty()
+                : Optional.of(UUID.fromString("11111111-1111-1111-1111-111111111111"));
+        }
+
+        @Override
+        public OperationalEvent.AudienceKind audienceKind() {
+            return console
+                ? OperationalEvent.AudienceKind.CONSOLE
+                : OperationalEvent.AudienceKind.PLAYER;
         }
 
         @Override

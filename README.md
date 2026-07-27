@@ -48,9 +48,10 @@ Executor shutdownは、設定timeoutをgraceful待機とforced待機にそれぞ
 `INCOMPLETE`、`INTERRUPTED`として区別され、未終了またはinterruptされた停止を
 clean stopとして扱いません。
 
-MariaDB、Flyway、Redis、Waymark、transaction、identity、audit persistenceは後続Sliceです。
-未実装dependencyはhealthで`UNKNOWN`と表示されます。現在のrelease gate/readinessは
-`BLOCKED`で、Runtime testとPre-releaseは未実施です。
+Alpha.2ではMariaDB/Flyway lifecycleに加え、additive V002、durable audit、Player UUID
+snapshot、共通Item Identityを実装します。`audit.enabled: true`はMariaDBとmigrationを
+必須とし、満たさないConfigはfail-closedします。Redis、Waymark、transactionは後続
+Sliceです。release gate/readinessは`BLOCKED`で、alpha.2 Runtime testは未実施です。
 
 ## Important boundaries
 
