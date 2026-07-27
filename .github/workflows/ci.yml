@@ -30,6 +30,8 @@ jobs:
         shell: bash
         run: |
           mapfile -t core_jars < <(find plugins/wayfarer-core/build/libs -maxdepth 1 -type f -name '*.jar')
+          echo "Core JAR count: ${#core_jars[@]}"
+          printf 'Core JAR: %s\n' "${core_jars[@]}"
           test "${#core_jars[@]}" -eq 1
           core_jar="${core_jars[0]}"
           jar tf "$core_jar" > core-jar-entries.txt
@@ -39,7 +41,9 @@ jobs:
             db/migration/core/V002__core_identity_schema.sql \
             db/migration/core/V003__core_transaction_history.sql
           do
-            test "$(grep -Fxc "$migration" core-jar-entries.txt)" -eq 1
+            migration_count="$(awk -v target="$migration" '$0 == target { count++ } END { print count + 0 }' core-jar-entries.txt)"
+            echo "$migration count: $migration_count"
+            test "$migration_count" -eq 1
           done
 
           if grep -Eq \
@@ -50,6 +54,22 @@ jobs:
             exit 1
           fi
 
-          duplicate_api_entries="$(grep '^io/github/eariver/wayfarer/api/.*\.class$' core-jar-entries.txt | sort | uniq -d)"
-          test -z "$duplicate_api_entries"
-          test "$(grep -Ec '^META-INF/(LICENSE|LICENSE\.txt|NOTICE)$' core-jar-entries.txt)" -ge 1
+          duplicate_api_count="$(
+            awk '/^io\/github\/eariver\/wayfarer\/api\/.*\.class$/ {
+                   count[$0]++
+                 }
+                 END {
+                   duplicates = 0
+                   for (entry in count) {
+                     if (count[entry] > 1) {
+                       duplicates++
+                     }
+                   }
+                   print duplicates
+                 }' core-jar-entries.txt
+          )"
+          license_count="$(awk '/^META-INF\/(LICENSE|LICENSE\.txt|NOTICE)$/ { count++ } END { print count + 0 }' core-jar-entries.txt)"
+          echo "Duplicate API class count: $duplicate_api_count"
+          echo "License/notice entry count: $license_count"
+          test "$duplicate_api_count" -eq 0
+          test "$license_count" -ge 1
