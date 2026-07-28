@@ -7,6 +7,13 @@ public interface WayfarerWaymark {
     CompletionStage<Long> balance(UUID playerUuid);
     CompletionStage<OperationResult> debit(UUID playerUuid, long amount, String reference);
     CompletionStage<OperationResult> credit(UUID playerUuid, long amount, String reference);
+    default CompletionStage<OperationResult> refund(
+        UUID playerUuid,
+        long amount,
+        String reference
+    ) {
+        return credit(playerUuid, amount, reference);
+    }
 
     record OperationResult(boolean success, String providerReference, String failureCode) {}
 }

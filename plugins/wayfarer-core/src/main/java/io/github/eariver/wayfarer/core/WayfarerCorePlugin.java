@@ -6,6 +6,7 @@ import io.github.eariver.wayfarer.core.bukkit.BukkitConfigView;
 import io.github.eariver.wayfarer.core.bukkit.BukkitHealthCommand;
 import io.github.eariver.wayfarer.core.bukkit.BukkitPlayerIdentityListenerRegistrar;
 import io.github.eariver.wayfarer.core.bukkit.BukkitServicePublisher;
+import io.github.eariver.wayfarer.core.bukkit.BukkitWaymarkProviderSource;
 import io.github.eariver.wayfarer.core.command.HealthCommandHandler;
 import io.github.eariver.wayfarer.core.command.OperationalAuditSink;
 import io.github.eariver.wayfarer.core.command.OperationalEventSink;
@@ -42,7 +43,8 @@ public final class WayfarerCorePlugin extends JavaPlugin {
                     config.serverId(),
                     clock,
                     getLogger()::warning
-                )
+                ),
+                new BukkitWaymarkProviderSource(getServer().getServicesManager())
             );
             runtime.enable();
 

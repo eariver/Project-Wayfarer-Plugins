@@ -13,3 +13,9 @@ permissions:
   wayfarer.admin.health:
     description: View sanitized Wayfarer_Core health
     default: op
+  wayfarer.admin.transaction.inspect:
+    description: Inspect sanitized Wayfarer_Core transaction state
+    default: op
+  wayfarer.admin.transaction.reconcile:
+    description: Reconcile an uncertain Wayfarer_Core transaction with confirmation
+    default: op

@@ -31,8 +31,10 @@
 - Audit retention scheduling is pending. A durable shutdown-timeout record is not guaranteed
   after database intake closes; health and sanitized logging remain the evidence. Main/Frontier
   PDC adapters remain pending.
-- Transaction and reconcile repositories, their optimistic locking, and their restart recovery
-  remain pending alpha.4.
+- Transaction and reconcile repositories now use exact full-input idempotency, separate durable
+  debit/refund effect identities, bounded recovery claims, atomic transaction history, and
+  startup/manual recovery. Corrected alpha.4 CI `30354268891` passed; concrete provider behavior
+  remains blocked by ADR 0006.
 - Public `WayfarerDatabase` remains unavailable as a JDK-only marker. Its pre-alpha JDBC-typed
   methods were removed because no accepted consumer exists; ADR 0005 records that incompatible
   governance decision. Any future opaque asynchronous contract requires a separate decision.
@@ -42,7 +44,9 @@
   isolated Redis CI passed; Paper runtime evidence remains pending.
 - The executor now has an immediate-rejection bounded queue and the task bridge validates
   immutable JDK-only data. Runtime queue-pressure/tick evidence remains pending.
-- Waymark remains pending alpha.4.
+- The alpha.4 provider-independent transaction engine, V003 repository/history, reconcile path,
+  fixture SPI, and admin handlers are implemented. Concrete RedisEconomy/Vault invocation remains
+  blocked by ADR 0006 because its safe thread/timeout/reference contract is not immutable authority.
 - Incomplete and interrupted shutdown remain `DOWN` in Executor health even after lifecycle
   state becomes `DISABLED`.
 - Permission-denial events use durable audit when audit is enabled. Shutdown-timeout durable
@@ -51,7 +55,9 @@
 - The EliteMobs–MVI adapter is not authorized.
 - Redis is not a persistent gameplay or inventory authority.
 - Waymark operations cannot claim unconditional exactly-once across an external provider.
-- Provider API/thread behavior remains an open gate until the transaction slice.
+- The JDK-only provider discovery seam and worker-thread fixture probe/recovery passed automated
+  tests. Concrete provider API/thread/timeout/crash-reference behavior remains an open authority
+  gate; external plugin class identity/load order is not inferred.
 - Hot reload/PlugMan-style reload is unsupported.
 - Project placement, migration execution, configuration, permission application, server restart,
   runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.

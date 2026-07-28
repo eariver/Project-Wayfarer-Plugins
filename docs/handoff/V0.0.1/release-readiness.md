@@ -12,6 +12,10 @@
   `0d5bf928a489d7fcbac51e93244af2180b4a539c`
 - Alpha.3 automated gate: 140 unit, 9 MariaDB, and 6 Redis cases / 0 failed / 0 skipped;
   commit-pinned CI `30290422624` passed
+- Corrected alpha.4 provider-independent gate: 167 unit, 14 MariaDB, and 6 Redis cases /
+  0 failed / 0 skipped; CI `30354268891` passed at
+  `38fc2b55cfa1c91f2ca04daab47d062aada8a42e`. Concrete Waymark provider authority remains
+  blocked by ADR 0006
 - Build gates: `check`, `assemble`, configuration-cache variants, compiler warnings,
   packaging, and reproducibility passed
 - Isolated test server: Alpha.1 `PASSED`;
