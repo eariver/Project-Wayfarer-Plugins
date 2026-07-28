@@ -20,12 +20,15 @@ failure, unknown effect, outage, resolution outcomes, restart, and duplicate req
 same provider-source seam as production Core tests, is excluded from the runtime candidate, and is
 test authority only—not a runtime economy.
 
-Production discovery uses the shared unshaded `wayfarer-api` class identity through Bukkit
-ServicesManager. No authorized concrete provider currently satisfies the required classloader/load
-order and immutable behavior contract, so absence fails closed.
+Production discovery loads Vault `Economy` through Bukkit ServicesManager and wraps it with a
+Core-private `WayfarerWaymarkProvider`. The adapter requires the configured safe provider identity
+`RedisEconomy`; absence, disablement, or an unexpected provider fails closed. Vault, Bukkit,
+`OfflinePlayer`, `EconomyResponse`, RedisEconomy classes, and raw provider values do not cross the
+SPI.
 
-ADR 0007 inspected the exact fixed RedisEconomy source and JAR. The Vault call returns after a
-local-cache mutation while Redis persistence continues on an unobserved provider executor; it has
-no UUID-only overload, caller operation ID, atomic effect acknowledgement, or effect lookup.
-Accordingly, Vault `SUCCESS` cannot be promoted to a durable `SUCCEEDED` result without an explicit
-Owner trade-off decision. ADR 0006 remains enforced and ADR 0007 records Gate B/C/D.
+ADR 0007 records the Owner-approved V0.0.1 trade-off. Vault `SUCCESS` becomes SPI `SUCCEEDED` only
+in the limited sense that the shared Vault/RedisEconomy route accepted the operation. It does not
+prove durable Redis completion, atomic operation identity, or effect lookup. Provider exceptions,
+timeouts, and post-dispatch ambiguity become `UNKNOWN`; `resolve` is always `UNKNOWN`; provider
+references remain null. No automatic debit/refund is authorized from `UNKNOWN`, and no
+exactly-once claim is made.

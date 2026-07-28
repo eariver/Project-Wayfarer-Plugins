@@ -10,12 +10,12 @@ requires exact `CLEARED` and `READY` markers in addition to explicit owner clear
 | Area | Evidence commit/path | Status |
 |---|---|---|
 | Governance and scope | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/traceability.md` | In progress; global gate BLOCKED |
-| Core implementation | `6d25105f516a76cc373e5259fcef9d34de414543` | Provider-independent Core pre-client candidate implemented |
-| Automated verification | `docs/testing/results/V0.0.1-beta.1.md` | 153 unit, 10 MariaDB, 6 Redis; green commit-pinned CI |
-| Runtime verification | `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md` | Automated/headless runtime passed; client pending |
-| Packaging and provenance | `docs/testing/results/V0.0.1-rc.1.md` | Candidate JAR/hash and workflow artifact fixed; publication pending |
+| Core implementation | `5039e008659be1f7e23658aabba12cb95a8a600d` | Owner-approved Vault-backed rc.2 concrete provider |
+| Automated verification | `docs/testing/results/V0.0.1-concrete-waymark-provider.md` | 176 unit, 14 MariaDB, 6 Redis; GitHub CI `30378563840` passed |
+| Runtime verification | `docs/testing/results/V0.0.1-concrete-waymark-provider.md` | Dedicated concrete provider and provider-absent runs passed |
+| Packaging and provenance | `docs/testing/results/V0.0.1-concrete-waymark-provider.md` | rc.2 candidate JAR/hash fixed; publication pending |
 | Handoff and acceptance input | `docs/handoff/V0.0.1/`; `docs/testing/plans/V0.0.1-client-acceptance.md` | Pre-client package complete; Owner/Project acceptance pending |
 
-No pre-client result completes concrete provider authority, Minecraft client acceptance, release
-publication, Project placement/acceptance, or Owner clearance. The release gate remains
-`BLOCKED`.
+Concrete provider authority and dedicated standalone acceptance are complete. Draft review/merge,
+normal CI, release publication, Project placement/acceptance, and explicit Owner requirements
+clearance remain. The stable release gate remains `BLOCKED`.

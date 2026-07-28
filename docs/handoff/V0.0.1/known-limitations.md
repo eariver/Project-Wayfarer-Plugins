@@ -34,10 +34,10 @@
 - Audit retention scheduling is pending. A durable shutdown-timeout record is not guaranteed
   after database intake closes; health and sanitized logging remain the evidence. Main/Frontier
   PDC adapters remain pending.
-- Transaction and reconcile repositories now use exact full-input idempotency, separate durable
+- Transaction and reconcile repositories use exact full-input idempotency, separate durable
   debit/refund effect identities, bounded recovery claims, atomic transaction history, and
-  startup/manual recovery. Corrected alpha.4 CI `30354268891` passed; concrete provider behavior
-  remains blocked by ADR 0006.
+  startup/manual recovery. The rc.2 Vault-backed concrete provider retains those boundaries and
+  does not automatically repeat an UNKNOWN effect.
 - Public `WayfarerDatabase` remains unavailable as a JDK-only marker. Its pre-alpha JDBC-typed
   methods were removed because no accepted consumer exists; ADR 0005 records that incompatible
   governance decision. Any future opaque asynchronous contract requires a separate decision.
@@ -49,9 +49,9 @@
 - The executor now has an immediate-rejection bounded queue and the task bridge validates
   immutable JDK-only data. The Paper probe verified queue rejection, worker/main-thread bridge,
   accepted-work drain, non-clean shutdown timeout, and one 20 TPS / 15.8 ms tick observation.
-- The alpha.4 provider-independent transaction engine, V003 repository/history, reconcile path,
-  fixture SPI, and admin handlers are implemented. Concrete RedisEconomy/Vault invocation remains
-  blocked by ADR 0006 because its safe thread/timeout/reference contract is not immutable authority.
+- The alpha.4 transaction engine, V003 repository/history, reconcile path, SPI, and admin handlers
+  are implemented. ADR 0007 now authorizes a Core-private Vault adapter to the selected
+  RedisEconomy provider while leaving the SPI/engine JDK-only.
 - Incomplete and interrupted shutdown remain `DOWN` in Executor health even after lifecycle
   state becomes `DISABLED`.
 - Permission-denial events use durable audit when audit is enabled. Shutdown-timeout durable
@@ -60,11 +60,16 @@
 - The EliteMobs–MVI adapter is not authorized.
 - Redis is not a persistent gameplay or inventory authority.
 - Waymark operations cannot claim unconditional exactly-once across an external provider.
-- The JDK-only provider discovery seam and worker-thread fixture probe/recovery passed automated
-  tests. ADR 0007 establishes the fixed external plugin load order, but also establishes that the
-  Vault success response precedes RedisEconomy's deferred Redis completion, the debit
-  read/check/write is not one atomic provider operation, Vault has no UUID-only overload, and the
-  fixed surface has no caller operation ID/effect lookup. Gate B/C/D therefore remains open.
+- The concrete provider discovers Vault `Economy`, resolves UUID to a short-lived `OfflinePlayer`
+  only inside the main-thread call, and records only safe `Vault/RedisEconomy` identity. Missing,
+  disabled, or unexpected providers fail closed without disabling provider-independent services.
+- Owner Gate B/C/D is resolved for V0.0.1 by explicit acceptance of the shared Vault semantics.
+  Vault `SUCCESS` means only that the common Vault/RedisEconomy route accepted the operation. It
+  does not prove durable Redis completion, provider transaction-record completion, atomic
+  operation identity, effect lookup, crash-window resolution, or exactly-once.
+- The concrete provider cannot automatically resolve an ambiguous debit/refund: `resolve` remains
+  `UNKNOWN`, balance differences are not used as proof, provider references remain null, and
+  UNKNOWN is not automatically re-applied.
 - The successful rc.1 pre-client evidence is limited to client-independent scope. Harness
   calibration, corrected Paper classloader defects, the corrected main-thread provider-call
   defect, and corrected harness assertions are indexed in
@@ -80,12 +85,27 @@
   authorized health, and normal movement/chat/reconnect responsiveness passed in the dedicated
   client-acceptance runtime. Core-only Item/PDC is N/A because V0.0.1 has no player item issuance
   path.
-- Concrete Waymark balance/debit/refund behavior remains blocked by ADR 0006/0007 and was not
-  executed. The designated RedisEconomy source worktree was also dirty: commit `581091a` does not
-  itself contain the determinable two-file compatibility patch. A future fixed artifact must have
-  a clean immutable source authority.
+- Concrete Waymark balance/debit/refund, insufficient funds, idempotent debit replay, direct Vault
+  interoperability, provider absence, safe health, and clean disable passed in the dedicated
+  rc.2 runtime. Duplicate refund, provider exception/timeout, UNKNOWN, and no automatic replay are
+  automated-test evidence rather than runtime failure injection.
+- The designated RedisEconomy source worktree is dirty: commit `581091a` does not itself contain
+  the determinable two-file compatibility patch. The fixed JAR hash remains authority for V0.0.1;
+  a future fixed artifact should have a clean immutable source commit.
+- The shared Vault limitation affects EvenMoreFish and EconomyShopGUI as well as Wayfarer. If
+  stronger guarantees become necessary, improve/replace Vault and/or RedisEconomy for all economy
+  consumers; do not add a Wayfarer-only side channel. Transfer this deferred concern to a
+  Project-side record such as `docs/11-deferred-design-items.md`.
 - Hot reload/PlugMan-style reload is unsupported.
 - Project placement, migration execution, configuration, permission application, server restart,
   runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.
+
+## Open decisions
+
+- Review and merge authority for Draft PR #12.
+- Stable final source, tag, release assets, and release workflow approval.
+- Project Runtime placement/configuration/acceptance and explicit `requirements_cleared`.
+- Project-side ownership and scheduling of the shared economy durability/effect-lookup deferred
+  design item.
 
 Update this file at every candidate; do not remove a limitation without commit-pinned evidence.

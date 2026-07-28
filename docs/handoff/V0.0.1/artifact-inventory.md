@@ -14,3 +14,9 @@
 Additional sanitized configuration, command/permission, dependency, license/notice, test report,
 limitations, and rollback documents must be included before stable publication. Binary assets are
 stored in GitHub Releases, not Git history.
+
+Current review candidate (not a release asset):
+
+| Filename | SHA-256 | Source commit |
+|---|---|---|
+| `wayfarer-core-0.0.1-rc.2.jar` | `8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6` | `5039e008659be1f7e23658aabba12cb95a8a600d` |

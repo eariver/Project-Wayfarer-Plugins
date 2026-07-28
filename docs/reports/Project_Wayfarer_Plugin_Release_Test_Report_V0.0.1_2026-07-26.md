@@ -1,18 +1,19 @@
 # Project Wayfarer Plugin Release Test Report V0.0.1
 
-Status: Pre-client candidate complete; client acceptance and final release identity pending.
+Status: RC.2 concrete-provider candidate complete; review, final release identity, and Project
+acceptance pending.
 
 ## Release identity
 
-- Tested plugin source: `6d25105f516a76cc373e5259fcef9d34de414543`
+- Tested plugin source: `5039e008659be1f7e23658aabba12cb95a8a600d`
 - Release tag / URL: Pending
 - Candidate artifact/version/filename/SHA-256:
-  `0.0.1-rc.1` / `wayfarer-core-0.0.1-rc.1.jar` /
-  `f36fe57370b4d123b13b5bf328c029c03407338e83e781953db81547de8a334a`
+  `0.0.1-rc.2` / `wayfarer-core-0.0.1-rc.2.jar` /
+  `8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6`
 - Config/migration version: `1` / `V003`
 - Java/Gradle/Paper: 25 / 9.6.1 / 1.21.11 build 132 (`c5eb079`)
-- MariaDB/Redis/Waymark configuration: MariaDB 11.8, Redis 8-alpine; fixture provider in
-  automated suites only; concrete provider `BLOCKED` by ADR 0006
+- MariaDB/Redis/Waymark configuration: MariaDB 11.8, Redis 8-alpine; fixed VaultUnlocked 2.20.2
+  and RedisEconomy 4.5.12-wayfarer.1 through ADR 0007's approved Vault boundary
 
 ## Authority
 
@@ -28,17 +29,15 @@ Status: Pre-client candidate complete; client acceptance and final release ident
 - Module/dependency and public API boundary: Beta automated boundary/package scans passed
 - Commands/permissions: Health runtime observed; transaction handlers automated; remaining player
   observations are in the client plan
-- Database schema/transactions/provider/Redis/health/threading: Provider-independent implementation
-  and automated suites passed; headless MariaDB/migration/Redis/health/task bridge passed; concrete
-  provider blocked
+- Database schema/transactions/provider/Redis/health/threading: automated suites passed; dedicated
+  Vault/RedisEconomy balance/debit/refund/interoperability and provider-absent runtime passed
 
 ## Build and automated verification
 
-- Commands/results/test counts: 153 unit, 10 MariaDB, and 6 Redis cases; 0 failed, 0 errors,
-  0 skipped in the beta measured suite; rc.1 successful workflow had 0 failed and 0 skipped
-- Local rc.1 verification: 153 unit tests and `assemble` passed. Full local `check` was
-  environment-blocked at Testcontainers initialization because Docker remained stopped; Docker
-  was not started, and successful GitHub Actions is the integration authority.
+- Commands/results/test counts: 176 unit, 14 MariaDB, and 6 Redis cases; 0 failed, 0 errors,
+  0 skipped; `check assemble` passed
+- Local rc.2 verification: 176 unit, 14 MariaDB, and 6 Redis tests plus `check assemble` passed.
+  GitHub Actions `30378563840` passed check, assemble, cache reuse, reproducibility, and packaging.
 - Unit/MariaDB/Redis/migration/concurrency/idempotency/failure/restart tests: Passed in
   commit-pinned CI; see phase results and traceability
 - Main-thread I/O and disable-callback tests: Automated suite passed; Paper probe verified worker
@@ -68,11 +67,12 @@ Status: Pre-client candidate complete; client acceptance and final release ident
 - Known limitations: `docs/handoff/V0.0.1/known-limitations.md`
 - Failed/skipped/not applicable with reasons: Successful rc.1 run 0/0; earlier harness incidents
   and corrected Paper classloader defects are disclosed in the pre-client evidence index
-- Open decisions: ADR 0006 concrete Waymark provider, client acceptance, Project placement/
-  acceptance, Owner clearance, final release
-- Evidence paths/commits: Successful workflow
-  [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610)
-  at `6d25105f516a76cc373e5259fcef9d34de414543`; client result remains blank
+- Open decisions: Draft review/merge, Project placement/acceptance, Owner clearance, final release,
+  and Project scheduling of the shared economy durability deferred item
+- Evidence paths/commits: prior rc.1 workflow
+  [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610);
+  rc.2 concrete result at `5039e008659be1f7e23658aabba12cb95a8a600d`; CI `30378563840`
+  passed
 - Artifact matrix: `docs/handoff/V0.0.1/artifact-matrix.md`
 - Project acceptance input: `docs/handoff/V0.0.1/project-acceptance-input.md`
 - Project Runtime changed: No

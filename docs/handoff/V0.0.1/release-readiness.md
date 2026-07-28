@@ -6,7 +6,7 @@
 - Alpha.1 source commit: `192cda35dce0dba855c2da4eb1ed71a0425f549a`
 - Stable final source commit: Pending
 - Requirement traceability: In progress; global gate remains `BLOCKED`
-- Automated tests: Passed, 75 tests / 0 failed / 0 skipped; corrected-head CI passed
+- Latest local automated tests: Passed, 176 unit / 14 MariaDB / 6 Redis; 0 failed/errors/skipped
 - Alpha.2 PR B correction: 131 local unit tests / 0 failed / 0 skipped; updated-head GitHub
   Actions `check` and `assemble` passed at
   `0d5bf928a489d7fcbac51e93244af2180b4a539c`
@@ -52,25 +52,32 @@
 - User observations: Real-player reconnect/identity, non-OP denial, authorized health,
   responsiveness, and corrected sanitized inspect passed
 - Known limitations/open decisions: See linked handoff records
-- Concrete provider authority resolution: ADR 0007 confirms Gate B/C/D. Fixed Vault
-  `SUCCESS` precedes RedisEconomy's deferred Redis completion and provides neither atomic caller
-  operation identity nor effect lookup; no concrete candidate or runtime result was created.
-  The independent baseline passed 35 focused tests, full `check` (174 unit / 14 MariaDB /
-  6 Redis, zero failed/errors/skipped), and `assemble`.
+- RC.2 concrete-provider candidate:
+  `5039e008659be1f7e23658aabba12cb95a8a600d`;
+  `wayfarer-core-0.0.1-rc.2.jar` SHA-256
+  `8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6`.
+  Focused Vault/config tests, 176 unit, 14 MariaDB, and 6 Redis tests passed with zero
+  failed/errors/skipped; `check`, `assemble`, and configuration-cache reuse passed. GitHub Actions
+  [`30378563840`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30378563840)
+  passed check, assemble, cache reuse, same-source JAR reproducibility, and Core packaging at the
+  candidate source.
+- Concrete provider standalone: Paper 1.21.11 build 132 / Java 25 with task-only MariaDB 11.8,
+  Redis 8, fixed VaultUnlocked, and fixed RedisEconomy passed shared balance, debit, idempotent
+  replay, insufficient funds, refund, representative direct Vault withdraw/deposit, safe health,
+  provider-absent fail-closed, and clean disable. Test containers/volumes were removed.
+- ADR 0007 Owner Decision resolves Gate B/C/D for V0.0.1 by accepting common Vault semantics.
+  Vault `SUCCESS` is not durable Redis proof; concrete resolve remains UNKNOWN and no provider
+  reference or exactly-once guarantee is synthesized.
 - `requirements_cleared`: Project Owner input remains required
 - Project Runtime placement/acceptance: Pending / pending
 
-Stable release remains blocked until the stacked PRs are reviewed and merged, concrete Waymark
-provider authority is resolved, client acceptance and every applicable traceability/handoff gate
-are complete, a stable final source is fixed, Project Runtime placement/acceptance is recorded, and
-the Project Owner explicitly clears requirements. The alpha.1 source commit and the unmerged rc.1
-head are not stable final source.
+Stable release remains blocked until Draft PR #12 is reviewed and approved/merged, every applicable
+traceability/handoff gate is complete, a stable final source is fixed, Project Runtime
+placement/acceptance is recorded, and the Project Owner explicitly clears requirements. RC.2 is a
+review candidate, not stable final source.
 
-The beta feature-complete candidate has current-head automated API/module boundaries, Core
-packaging inspection, configuration-cache reuse, dependency/license inventory, and same-source JAR
-reproducibility evidence. The rc.1 pre-client workflow adds commit-pinned client-independent Paper
-evidence. Candidate C's client failure and the Client Fix Candidate's targeted correction are both
-retained in the client result. ADR 0006 blocks a concrete Waymark provider, and ADR 0007 replaces
-the earlier unknowns with fixed-source evidence requiring an Owner choice of a new formal
-RedisEconomy Waymark API or explicit acceptance of the documented safety trade-off. These results
-do not change the `BLOCKED` marker.
+The beta/rc.1 evidence and Candidate C client failure remain immutable history; the Client Fix
+Candidate retains its targeted correction. RC.2 adds the Owner-approved Vault concrete provider
+and dedicated standalone acceptance without overwriting those candidates. The accepted provider
+limitation and Project-side future design item remain disclosed. These results do not change the
+stable-release `BLOCKED` marker.
