@@ -73,9 +73,9 @@ public final class TransactionCommandHandler {
             safeEvent("ADMIN_TRANSACTION_INSPECT_PERMISSION_DENIED", audience, transactionId);
             return true;
         }
-        complete(
+        completeTransactionOperation(
             audience,
-            transactions.get().inspect(transactionId),
+            () -> transactions.get().inspect(transactionId),
             details -> audience.sendMessage(
                 "Transaction " + details.transactionId()
                     + " | state=" + details.state()
@@ -127,15 +127,28 @@ public final class TransactionCommandHandler {
             return true;
         }
         safeEvent("ADMIN_TRANSACTION_RECONCILED", audience, transactionId);
-        complete(
+        completeTransactionOperation(
             audience,
-            transactions.get().reconcile(transactionId, action),
+            () -> transactions.get().reconcile(transactionId, action),
             result -> audience.sendMessage(
                 "Transaction " + result.transactionId()
                     + " reconciliation result=" + result.state()
             )
         );
         return true;
+    }
+
+    private <T> void completeTransactionOperation(
+        CommandAudience audience,
+        Supplier<CompletionStage<T>> operation,
+        Consumer<T> success
+    ) {
+        try {
+            complete(audience, operation.get(), success);
+        } catch (RuntimeException failure) {
+            audience.sendMessage("Transaction service is unavailable; inspect health.");
+            warnUnavailable();
+        }
     }
 
     private <T> void complete(
@@ -182,6 +195,14 @@ public final class TransactionCommandHandler {
             warningSink.accept("Wayfarer transaction command audit failed");
         } catch (RuntimeException ignored) {
             // Command response remains available.
+        }
+    }
+
+    private void warnUnavailable() {
+        try {
+            warningSink.accept("Wayfarer transaction service is unavailable");
+        } catch (RuntimeException ignored) {
+            // Sanitized command response remains available.
         }
     }
 

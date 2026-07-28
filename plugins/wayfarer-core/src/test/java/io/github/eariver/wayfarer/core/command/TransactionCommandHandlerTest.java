@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -68,6 +69,43 @@ class TransactionCommandHandlerTest {
         assertEquals(WayfarerTransactions.ReconcileAction.REFUND, fixture.transactions.action);
         assertTrue(fixture.events.contains("ADMIN_TRANSACTION_RECONCILED"));
         assertTrue(fixture.audience.messages.get(0).contains("RECONCILED_REFUNDED"));
+    }
+
+    @Test
+    void synchronousServiceFailureIsSanitizedForInspectAndReconcile() {
+        FakeAudience audience = new FakeAudience(true, true);
+        List<String> warnings = new ArrayList<>();
+        TransactionCommandHandler handler = new TransactionCommandHandler(
+            () -> {
+                throw new IllegalStateException("provider-secret-internal-detail");
+            },
+            ignored -> CompletableFuture.completedFuture(null),
+            Runnable::run,
+            warnings::add
+        );
+
+        assertDoesNotThrow(() -> handler.execute(
+            audience,
+            new String[]{"admin", "transaction", "inspect", ID.toString()}
+        ));
+        assertDoesNotThrow(() -> handler.execute(
+            audience,
+            new String[]{
+                "admin", "transaction", "reconcile", ID.toString(), "fail", "confirm"
+            }
+        ));
+
+        assertEquals(List.of(
+            "Transaction service is unavailable; inspect health.",
+            "Transaction service is unavailable; inspect health."
+        ), audience.messages);
+        assertEquals(List.of(
+            "Wayfarer transaction service is unavailable",
+            "Wayfarer transaction service is unavailable"
+        ), warnings);
+        assertTrue(audience.messages.stream().noneMatch(
+            message -> message.contains("provider-secret-internal-detail")
+        ));
     }
 
     private static Fixture fixture(boolean inspect, boolean reconcile) {
