@@ -68,9 +68,17 @@
   defect, and corrected harness assertions are indexed in
   `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md`; unsuccessful runs are not evidence of
   a pass.
-- Real PlayerJoin/reconnect identity, player-visible permissions/output/responsiveness, and any
-  authorized concrete Waymark balance/debit/refund behavior remain pending the client acceptance
-  package.
+- Candidate C failed client acceptance because authorized transaction inspect leaked the
+  synchronous provider-absent service exception to Paper. Client Fix Candidate
+  `d8804c68e2f7501b83206c8d4afa5e31dfdc3eb7` adds a command-boundary guard for inspect and
+  reconcile; focused regression, local `check`, and a targeted Paper/client rerun passed with a
+  sanitized unavailable response and fixed warning. Candidate C's successful headless evidence
+  remains historical evidence and its failed client result is not overwritten.
+- Real PlayerJoin/reconnect identity, one-row UUID authority, player-visible permission denial and
+  authorized health, and normal movement/chat/reconnect responsiveness passed in the dedicated
+  client-acceptance runtime. Core-only Item/PDC is N/A because V0.0.1 has no player item issuance
+  path.
+- Concrete Waymark balance/debit/refund behavior remains blocked by ADR 0006 and was not executed.
 - Hot reload/PlugMan-style reload is unsupported.
 - Project placement, migration execution, configuration, permission application, server restart,
   runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.
