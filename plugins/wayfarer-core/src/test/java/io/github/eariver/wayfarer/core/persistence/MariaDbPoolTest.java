@@ -22,6 +22,7 @@ class MariaDbPoolTest {
         try (CoreConfig.MariaDbSettings settings = settings(true)) {
             HikariConfig hikari = MariaDbPool.configuration("alpha.2 server", settings);
             assertEquals("jdbc:mariadb://example/wayfarer", hikari.getJdbcUrl());
+            assertEquals("org.mariadb.jdbc.Driver", hikari.getDriverClassName());
             assertEquals("wayfarer", hikari.getUsername());
             assertEquals("Wayfarer-Core-alpha-2-server", hikari.getPoolName());
             assertEquals(7, hikari.getMaximumPoolSize());

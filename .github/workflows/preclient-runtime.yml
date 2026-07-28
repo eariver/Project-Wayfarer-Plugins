@@ -1,0 +1,106 @@
+name: Pre-client Headless Runtime
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/preclient-runtime.yml"
+      - "build.gradle.kts"
+      - "gradle/**"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - "libraries/**"
+      - "plugins/**"
+      - "scripts/runtime/preclient/**"
+      - "settings.gradle.kts"
+      - "testkit/headless-paper/**"
+      - "testkit/headless-waymark-fixture/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  headless-paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_DATABASE: wayfarer_preclient
+          MARIADB_USER: wayfarer_preclient
+          MARIADB_PASSWORD: preclient-ci-only
+          MARIADB_ROOT_PASSWORD: preclient-root-ci-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 30
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 30
+
+    env:
+      WAYFARER_DB_URL: jdbc:mariadb://127.0.0.1:3306/wayfarer_preclient
+      WAYFARER_DB_USERNAME: wayfarer_preclient
+      WAYFARER_DB_PASSWORD: preclient-ci-only
+      WAYFARER_REDIS_URI: redis://127.0.0.1:6379
+      MARIADB_ROOT_PASSWORD: preclient-root-ci-only
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.6.1"
+      - name: Build and run isolated automated suites
+        run: >-
+          ./gradlew --no-daemon
+          -PwayfarerVersion=0.0.1-rc.1
+          clean check
+          :plugins:wayfarer-core:shadowJar
+          :testkit:headless-paper:jar
+          :testkit:headless-waymark-fixture:jar
+      - name: Run pinned headless Paper cases
+        run: bash scripts/runtime/preclient/run-headless-paper.sh
+        env:
+          MARIADB_CONTAINER_ID: ${{ job.services.mariadb.id }}
+          REDIS_CONTAINER_ID: ${{ job.services.redis.id }}
+      - name: Fix raw evidence digest
+        if: always()
+        shell: bash
+        run: |
+          if [[ -d build/preclient-runtime/evidence ]]; then
+            tar \
+              --sort=name \
+              --mtime='UTC 1970-01-01' \
+              --owner=0 \
+              --group=0 \
+              --numeric-owner \
+              -cf build/preclient-runtime/preclient-headless-evidence.tar \
+              -C build/preclient-runtime evidence
+            sha256sum build/preclient-runtime/preclient-headless-evidence.tar \
+              | tee build/preclient-runtime/evidence/raw-artifact-sha256.txt
+          fi
+      - name: Upload raw headless evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preclient-headless-evidence
+          path: |
+            build/preclient-runtime/evidence/
+            build/preclient-runtime/preclient-headless-evidence.tar
+          if-no-files-found: warn
+          retention-days: 7

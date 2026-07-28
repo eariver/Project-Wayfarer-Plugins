@@ -561,7 +561,11 @@ public final class CoreRuntime {
                 )
                 .join();
             transactions = candidate;
-            waymark = new DefaultWayfarerWaymark(verifiedProvider);
+            waymark = new DefaultWayfarerWaymark(
+                verifiedProvider,
+                executor,
+                config.waymark().operationTimeout()
+            );
             health.update("Waymark", WayfarerHealth.Status.UP, "Provider capability available");
             health.update("Transaction", WayfarerHealth.Status.UP, "Transaction engine available");
             return () -> {

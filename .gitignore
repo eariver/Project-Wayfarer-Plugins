@@ -18,6 +18,9 @@ out/
 !.env.example
 run/
 runtime/
+!scripts/runtime/
+!scripts/runtime/preclient/
+!scripts/runtime/preclient/*.sh
 servers/
 world/
 world_*/

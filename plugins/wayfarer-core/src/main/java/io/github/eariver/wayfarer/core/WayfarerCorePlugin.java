@@ -10,6 +10,7 @@ import io.github.eariver.wayfarer.core.bukkit.BukkitWaymarkProviderSource;
 import io.github.eariver.wayfarer.core.command.HealthCommandHandler;
 import io.github.eariver.wayfarer.core.command.OperationalAuditSink;
 import io.github.eariver.wayfarer.core.command.OperationalEventSink;
+import io.github.eariver.wayfarer.core.command.TransactionCommandHandler;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
 import io.github.eariver.wayfarer.core.config.CoreConfigException;
 import io.github.eariver.wayfarer.core.config.CoreConfigLoader;
@@ -66,7 +67,14 @@ public final class WayfarerCorePlugin extends JavaPlugin {
                 operationalEvents,
                 getLogger()::warning
             );
-            command.setExecutor(new BukkitHealthCommand(handler));
+            TransactionCommandHandler transactionHandler =
+                new TransactionCommandHandler(
+                    () -> runtime.services().transactions(),
+                    operationalEvents,
+                    operation -> getServer().getScheduler().runTask(this, operation),
+                    getLogger()::warning
+                );
+            command.setExecutor(new BukkitHealthCommand(handler, transactionHandler));
             getLogger().info(
                 "Wayfarer_Core enabled for server " + config.serverId()
                     + " with config version " + config.configVersion()

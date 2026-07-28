@@ -1,0 +1,7 @@
+name: Wayfarer_Preclient_Probe
+version: '${version}'
+main: io.github.eariver.wayfarer.preclient.PreclientProbePlugin
+api-version: '1.21.11'
+description: Test-only Project Wayfarer pre-client runtime probe
+author: eariver
+depend: [Wayfarer_Core]

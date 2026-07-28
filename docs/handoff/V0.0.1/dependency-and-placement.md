@@ -3,7 +3,7 @@
 | Component | Version | Placement | Required | Notes |
 |---|---|---|---|---|
 | Paper | 1.21.11 | Main + Frontier runtime | Yes | Java 25 |
-| Wayfarer_Core | V0.0.1 beta candidate source | Main + Frontier | Yes | Only planned V0.0.1 runtime artifact |
+| Wayfarer_Core | V0.0.1-rc.1 pre-client candidate source | Main + Frontier | Yes | Only planned V0.0.1 runtime artifact |
 | MariaDB | 11.8 isolated authority | External service | Yes when persistence enabled | Core schema authority, V001–V003 |
 | Redis | 8-alpine isolated authority | External service | Yes when Redis enabled | Coordination/cache only |
 | VaultUnlocked | 2.20.2 locked baseline | Main + Frontier as Project defines | Provider-gated | Formal boundary |

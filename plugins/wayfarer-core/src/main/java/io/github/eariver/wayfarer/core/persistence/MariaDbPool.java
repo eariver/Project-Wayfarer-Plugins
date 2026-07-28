@@ -174,6 +174,7 @@ public final class MariaDbPool implements AutoCloseable {
     ) {
         HikariConfig hikari = new HikariConfig();
         hikari.setJdbcUrl(settings.jdbcUrl().use(String::new));
+        hikari.setDriverClassName("org.mariadb.jdbc.Driver");
         hikari.setUsername(settings.username().use(String::new));
         hikari.setPassword(settings.password().use(String::new));
         hikari.setMaximumPoolSize(settings.maximumPoolSize());
