@@ -27,6 +27,7 @@ include(
     "libraries:wayfarer-common",
     "libraries:wayfarer-testkit",
     "testkit:headless-paper",
+    "testkit:headless-waymark-fixture",
     "integrations:wayfarer-leafgrapple-adapter",
     "plugins:wayfarer-core",
     "plugins:wayfarer-main",

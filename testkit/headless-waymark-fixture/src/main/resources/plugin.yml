@@ -1,0 +1,8 @@
+name: Wayfarer_Preclient_Waymark_Fixture
+version: '${version}'
+main: io.github.eariver.wayfarer.preclient.fixture.PreclientWaymarkFixturePlugin
+api-version: '1.21.11'
+load: STARTUP
+description: Test-only Project Wayfarer Waymark provider fixture
+author: eariver
+loadbefore: [Wayfarer_Core]
