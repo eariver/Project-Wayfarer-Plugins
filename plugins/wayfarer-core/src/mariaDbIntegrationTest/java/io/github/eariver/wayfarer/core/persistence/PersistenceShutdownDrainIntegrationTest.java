@@ -150,7 +150,7 @@ class PersistenceShutdownDrainIntegrationTest {
             "alpha-2-drain-integration",
             Duration.ofSeconds(2),
             new CoreConfig.ExecutorSettings(1, "Wayfarer-Persistence-Drain-Integration"),
-            new CoreConfig.AuditSettings(true),
+            new CoreConfig.AuditSettings(false),
             new CoreConfig.HealthSettings(false),
             new CoreConfig.MariaDbSettings(
                 true,

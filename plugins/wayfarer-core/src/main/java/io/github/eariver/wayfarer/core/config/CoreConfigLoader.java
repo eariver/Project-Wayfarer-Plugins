@@ -59,6 +59,12 @@ public final class CoreConfigLoader {
             if (migrationEnabled && !mariadb.enabled()) {
                 throw new CoreConfigException("migration.enabled requires mariadb.enabled");
             }
+            if (auditEnabled && !mariadb.enabled()) {
+                throw new CoreConfigException("audit.enabled requires mariadb.enabled");
+            }
+            if (auditEnabled && !migrationEnabled) {
+                throw new CoreConfigException("audit.enabled requires migration.enabled");
+            }
             List<String> locations = stringList(source, "migration.locations");
             if (locations.isEmpty()) {
                 throw new CoreConfigException("migration.locations must not be empty");

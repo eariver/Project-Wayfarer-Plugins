@@ -7,12 +7,15 @@
 - MariaDB: `enabled`, environment references `WAYFARER_DB_URL`,
   `WAYFARER_DB_USERNAME`, `WAYFARER_DB_PASSWORD`, pool sizes, and timeout.
 - Redis: `enabled`, environment reference `WAYFARER_REDIS_URI`, and connect timeout.
-- Migration: `enabled` plus Core-only `db/migration/core`; execution is not implemented in
-  alpha.1 and enabling migration requires MariaDB to be enabled.
+- Migration: `enabled` plus Core-only `db/migration/core`; alpha.2 applies immutable V001 and
+  additive V002, and enabling migration requires MariaDB.
 - Waymark: `enabled`, expected provider `RedisEconomy`, and operation timeout. Provider
   capability/thread verification remains a later gate.
 - Executor: 1–64 threads and a thread prefix containing `Wayfarer`.
-- Audit: typed enable flag; persistence begins in alpha.2.
+- Audit: `enabled: true` activates durable MariaDB audit plus player/item identity and therefore
+  requires both MariaDB and migration. The sample defaults to `false`. An alpha.1 config with
+  audit enabled but MariaDB/migration disabled now intentionally fails closed; config version
+  remains `1`.
 - Health: player detail output defaults to `false`.
 - Shutdown timeout: 1–300 seconds. The configured duration is used once for graceful
   termination and once after `shutdownNow`, so the maximum blocking duration is approximately

@@ -6,6 +6,7 @@ import io.github.eariver.wayfarer.api.WayfarerServices;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class HealthCommandHandler {
@@ -16,6 +17,7 @@ public final class HealthCommandHandler {
     private final String version;
     private final boolean playerDetails;
     private final OperationalEventSink events;
+    private final Consumer<String> warningSink;
 
     public HealthCommandHandler(
         Supplier<WayfarerServices> services,
@@ -23,10 +25,21 @@ public final class HealthCommandHandler {
         boolean playerDetails,
         OperationalEventSink events
     ) {
+        this(services, version, playerDetails, events, ignored -> {});
+    }
+
+    public HealthCommandHandler(
+        Supplier<WayfarerServices> services,
+        String version,
+        boolean playerDetails,
+        OperationalEventSink events,
+        Consumer<String> warningSink
+    ) {
         this.services = Objects.requireNonNull(services, "services");
         this.version = Objects.requireNonNull(version, "version");
         this.playerDetails = playerDetails;
         this.events = Objects.requireNonNull(events, "events");
+        this.warningSink = Objects.requireNonNull(warningSink, "warningSink");
     }
 
     public boolean execute(CommandAudience audience, String[] arguments) {
@@ -39,8 +52,8 @@ public final class HealthCommandHandler {
             return false;
         }
         if (!audience.hasPermission(PERMISSION)) {
-            safeEvent("ADMIN_HEALTH_PERMISSION_DENIED");
             audience.sendMessage("You do not have permission to view Wayfarer health.");
+            safeEvent("ADMIN_HEALTH_PERMISSION_DENIED", audience);
             return true;
         }
 
@@ -60,17 +73,37 @@ public final class HealthCommandHandler {
                 .forEach(entry -> audience.sendMessage(format(entry.getValue(), showDetails)));
             return true;
         } catch (RuntimeException failure) {
-            safeEvent("ADMIN_HEALTH_COMMAND_FAILED");
             audience.sendMessage("Wayfarer health is currently unavailable.");
+            safeEvent("ADMIN_HEALTH_COMMAND_FAILED", audience);
             return true;
         }
     }
 
-    private void safeEvent(String eventType) {
+    private void safeEvent(String eventType, CommandAudience audience) {
         try {
-            events.record(eventType);
+            OperationalEvent event = new OperationalEvent(
+                eventType,
+                audience.actorUuid().orElse(null),
+                audience.audienceKind(),
+                "ADMIN_COMMAND",
+                "health",
+                null
+            );
+            events.record(event).whenComplete((ignored, failure) -> {
+                if (failure != null) {
+                    warn("Wayfarer operational audit failed");
+                }
+            });
+        } catch (RuntimeException failure) {
+            warn("Wayfarer operational audit failed");
+        }
+    }
+
+    private void warn(String warning) {
+        try {
+            warningSink.accept(warning);
         } catch (RuntimeException ignored) {
-            // Command handling remains stable even before persistent audit exists.
+            // Command response must remain available.
         }
     }
 

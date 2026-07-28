@@ -1,6 +1,8 @@
 package io.github.eariver.wayfarer.core.command;
 
+import java.util.concurrent.CompletionStage;
+
 @FunctionalInterface
 public interface OperationalEventSink {
-    void record(String eventType);
+    CompletionStage<Void> record(OperationalEvent event);
 }

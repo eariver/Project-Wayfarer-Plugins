@@ -176,6 +176,26 @@ class CoreConfigLoaderTest {
     }
 
     @Test
+    void durableAuditRequiresMariaDb() {
+        Map<String, Object> values = validValues();
+        values.put("audit.enabled", true);
+        assertMessage(values, Map.of(), "audit.enabled requires mariadb.enabled");
+    }
+
+    @Test
+    void durableAuditRequiresMigration() {
+        Map<String, Object> values = validValues();
+        values.put("audit.enabled", true);
+        values.put("mariadb.enabled", true);
+        Map<String, String> environment = Map.of(
+            "WAYFARER_DB_URL", "jdbc:mariadb://localhost/wayfarer",
+            "WAYFARER_DB_USERNAME", "wayfarer",
+            "WAYFARER_DB_PASSWORD", "test-password"
+        );
+        assertMessage(values, environment, "audit.enabled requires migration.enabled");
+    }
+
+    @Test
     void invalidMigrationLocationFailsClosed() {
         Map<String, Object> values = validValues();
         values.put("migration.locations", List.of("../runtime"));
@@ -211,7 +231,7 @@ class CoreConfigLoaderTest {
         values.put("shutdown-timeout.seconds", 15);
         values.put("executor.threads", 2);
         values.put("executor.thread-name-prefix", "Wayfarer-Test");
-        values.put("audit.enabled", true);
+        values.put("audit.enabled", false);
         values.put("health.player-details", false);
         values.put("mariadb.enabled", false);
         values.put("mariadb.jdbc-url-env", "WAYFARER_DB_URL");

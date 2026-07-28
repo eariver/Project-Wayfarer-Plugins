@@ -9,7 +9,7 @@ executor:
   thread-name-prefix: Wayfarer-Core
 
 audit:
-  enabled: true
+  enabled: false
 
 health:
   player-details: false
