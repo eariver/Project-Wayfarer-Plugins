@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public final class ManagedExecutor implements AutoCloseable {
-    private final ExecutorService executor;
+    private final ThreadPoolExecutor executor;
     private final Duration shutdownTimeout;
     private final Consumer<Throwable> failureObserver;
     private final Consumer<String> warningSink;
@@ -30,11 +30,32 @@ public final class ManagedExecutor implements AutoCloseable {
         Consumer<Throwable> failureObserver,
         Consumer<String> warningSink
     ) {
+        this(
+            threads,
+            threadNamePrefix,
+            256,
+            shutdownTimeout,
+            failureObserver,
+            warningSink
+        );
+    }
+
+    public ManagedExecutor(
+        int threads,
+        String threadNamePrefix,
+        int queueCapacity,
+        Duration shutdownTimeout,
+        Consumer<Throwable> failureObserver,
+        Consumer<String> warningSink
+    ) {
         if (threads < 1) {
             throw new IllegalArgumentException("threads must be positive");
         }
         if (threadNamePrefix == null || !threadNamePrefix.contains("Wayfarer")) {
             throw new IllegalArgumentException("threadNamePrefix must contain Wayfarer");
+        }
+        if (queueCapacity < 1) {
+            throw new IllegalArgumentException("queueCapacity must be positive");
         }
         this.shutdownTimeout = Objects.requireNonNull(shutdownTimeout, "shutdownTimeout");
         if (shutdownTimeout.isZero() || shutdownTimeout.isNegative()) {
@@ -42,9 +63,14 @@ public final class ManagedExecutor implements AutoCloseable {
         }
         this.failureObserver = Objects.requireNonNull(failureObserver, "failureObserver");
         this.warningSink = Objects.requireNonNull(warningSink, "warningSink");
-        this.executor = Executors.newFixedThreadPool(
+        this.executor = new ThreadPoolExecutor(
             threads,
-            threadFactory(threadNamePrefix, failureObserver)
+            threads,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(queueCapacity),
+            threadFactory(threadNamePrefix, failureObserver),
+            new ThreadPoolExecutor.AbortPolicy()
         );
     }
 
@@ -57,25 +83,23 @@ public final class ManagedExecutor implements AutoCloseable {
         }
 
         CompletableFuture<T> result = new CompletableFuture<>();
+        ManagedTask<T> task = new ManagedTask<>(operation, result);
         try {
-            executor.execute(() -> {
-                if (!accepting.get()) {
-                    result.completeExceptionally(
-                        new RejectedExecutionException("Wayfarer executor is stopping")
-                    );
-                    return;
-                }
-                try {
-                    result.complete(operation.call());
-                } catch (Throwable failure) {
-                    observeFailure(failure);
-                    result.completeExceptionally(failure);
-                }
-            });
+            executor.execute(task);
         } catch (RejectedExecutionException failure) {
-            result.completeExceptionally(failure);
+            observeFailure(failure);
+            warn("Wayfarer executor queue capacity exceeded; task rejected");
+            task.reject(failure);
         }
         return result;
+    }
+
+    int queuedTaskCount() {
+        return executor.getQueue().size();
+    }
+
+    int remainingQueueCapacity() {
+        return executor.getQueue().remainingCapacity();
     }
 
     public boolean isAccepting() {
@@ -114,6 +138,13 @@ public final class ManagedExecutor implements AutoCloseable {
             }
 
             List<Runnable> droppedTasks = executor.shutdownNow();
+            for (Runnable droppedTask : droppedTasks) {
+                if (droppedTask instanceof ManagedExecutor.ManagedTask<?> managedTask) {
+                    managedTask.reject(new RejectedExecutionException(
+                        "Wayfarer task dropped during forced shutdown"
+                    ));
+                }
+            }
             warn(
                 interrupted
                     ? "Wayfarer executor shutdown was interrupted; forcing termination"
@@ -185,5 +216,29 @@ public final class ManagedExecutor implements AutoCloseable {
             });
             return thread;
         };
+    }
+
+    private final class ManagedTask<T> implements Runnable {
+        private final Callable<T> operation;
+        private final CompletableFuture<T> result;
+
+        private ManagedTask(Callable<T> operation, CompletableFuture<T> result) {
+            this.operation = operation;
+            this.result = result;
+        }
+
+        @Override
+        public void run() {
+            try {
+                result.complete(operation.call());
+            } catch (Throwable failure) {
+                observeFailure(failure);
+                result.completeExceptionally(failure);
+            }
+        }
+
+        private void reject(RejectedExecutionException failure) {
+            result.completeExceptionally(failure);
+        }
     }
 }

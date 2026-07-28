@@ -23,7 +23,15 @@ public record CoreConfig(
         redis.close();
     }
 
-    public record ExecutorSettings(int threads, String threadNamePrefix) {}
+    public record ExecutorSettings(
+        int threads,
+        String threadNamePrefix,
+        int queueCapacity
+    ) {
+        public ExecutorSettings(int threads, String threadNamePrefix) {
+            this(threads, threadNamePrefix, 256);
+        }
+    }
 
     public record AuditSettings(boolean enabled) {}
 
@@ -53,8 +61,30 @@ public record CoreConfig(
         boolean enabled,
         String uriReference,
         Duration connectTimeout,
+        Duration operationTimeout,
+        Duration cacheMaximumTtl,
+        Duration lockMaximumLease,
+        String keyPrefix,
         SecretValue uri
     ) implements AutoCloseable {
+        public RedisSettings(
+            boolean enabled,
+            String uriReference,
+            Duration connectTimeout,
+            SecretValue uri
+        ) {
+            this(
+                enabled,
+                uriReference,
+                connectTimeout,
+                Duration.ofSeconds(3),
+                Duration.ofHours(1),
+                Duration.ofSeconds(30),
+                "wayfarer",
+                uri
+            );
+        }
+
         @Override
         public void close() {
             closeSecret(uri);

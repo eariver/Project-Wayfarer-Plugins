@@ -21,8 +21,13 @@ class CoreConfigLoaderTest {
             assertEquals(1, config.configVersion());
             assertEquals("test-server", config.serverId());
             assertEquals(2, config.executor().threads());
+            assertEquals(256, config.executor().queueCapacity());
             assertEquals(15, config.shutdownTimeout().toSeconds());
             assertFalse(config.redis().enabled());
+            assertEquals(3, config.redis().operationTimeout().toSeconds());
+            assertEquals(3_600, config.redis().cacheMaximumTtl().toSeconds());
+            assertEquals(30, config.redis().lockMaximumLease().toSeconds());
+            assertEquals("wayfarer", config.redis().keyPrefix());
             assertEquals(
                 List.of("classpath:db/migration/core"),
                 config.migration().locations()
@@ -116,6 +121,13 @@ class CoreConfigLoaderTest {
     }
 
     @Test
+    void invalidExecutorQueueCapacityFailsClosed() {
+        Map<String, Object> values = validValues();
+        values.put("executor.queue-capacity", 0);
+        assertMessage(values, Map.of(), "executor.queue-capacity");
+    }
+
+    @Test
     void executorThreadPrefixMustIdentifyWayfarer() {
         Map<String, Object> values = validValues();
         values.put("executor.thread-name-prefix", "generic");
@@ -126,15 +138,19 @@ class CoreConfigLoaderTest {
     void enabledSecretReferencesResolve() {
         Map<String, Object> values = validValues();
         values.put("mariadb.enabled", true);
+        values.put("redis.enabled", true);
         Map<String, String> environment = Map.of(
             "WAYFARER_DB_URL", "jdbc:mariadb://example/wayfarer",
             "WAYFARER_DB_USERNAME", "wayfarer",
-            "WAYFARER_DB_PASSWORD", SECRET
+            "WAYFARER_DB_PASSWORD", SECRET,
+            "WAYFARER_REDIS_URI", "redis://:test-credential@cache.invalid:6379/0"
         );
         try (CoreConfig config = load(values, environment)) {
             assertTrue(config.mariadb().enabled());
+            assertTrue(config.redis().enabled());
             assertEquals(SECRET, config.mariadb().password().use(String::new));
             assertFalse(config.toString().contains(SECRET));
+            assertFalse(config.toString().contains("test-credential"));
         }
     }
 
@@ -148,6 +164,25 @@ class CoreConfigLoaderTest {
         );
         assertTrue(failure.getMessage().contains("WAYFARER_REDIS_URI"));
         assertFalse(failure.getMessage().contains(SECRET));
+    }
+
+    @Test
+    void invalidRedisBoundsAndPrefixFailClosed() {
+        Map<String, Object> values = validValues();
+        values.put("redis.operation-timeout-ms", 99);
+        assertMessage(values, Map.of(), "redis.operation-timeout-ms");
+
+        values = validValues();
+        values.put("redis.cache-maximum-ttl-seconds", 86_401);
+        assertMessage(values, Map.of(), "redis.cache-maximum-ttl-seconds");
+
+        values = validValues();
+        values.put("redis.lock-maximum-lease-seconds", 0);
+        assertMessage(values, Map.of(), "redis.lock-maximum-lease-seconds");
+
+        values = validValues();
+        values.put("redis.key-prefix", "Wayfarer Invalid");
+        assertMessage(values, Map.of(), "redis.key-prefix");
     }
 
     @Test

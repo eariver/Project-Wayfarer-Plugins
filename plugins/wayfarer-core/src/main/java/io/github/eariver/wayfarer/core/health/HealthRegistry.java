@@ -20,8 +20,9 @@ public final class HealthRegistry implements WayfarerHealth {
     public static final String MIGRATION = "Migration";
     public static final String AUDIT = "Audit";
     public static final String IDENTITY = "Identity";
+    public static final String REDIS = "Redis";
     private static final String[] UNAVAILABLE_DEPENDENCIES = {
-        "Redis", "Waymark", AUDIT, IDENTITY, "Transaction"
+        REDIS, "Waymark", AUDIT, IDENTITY, "Transaction"
     };
 
     private final Clock clock;

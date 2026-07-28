@@ -6,12 +6,15 @@
   case-insensitively. The default `CHANGE_ME` fails closed until explicitly replaced.
 - MariaDB: `enabled`, environment references `WAYFARER_DB_URL`,
   `WAYFARER_DB_USERNAME`, `WAYFARER_DB_PASSWORD`, pool sizes, and timeout.
-- Redis: `enabled`, environment reference `WAYFARER_REDIS_URI`, and connect timeout.
+- Redis: `enabled`, environment reference `WAYFARER_REDIS_URI`, connect/operation timeouts,
+  cache maximum TTL (1–86400 seconds), lock maximum lease (1–300 seconds), and a lowercase
+  namespaced key prefix. Defaults are 3000 ms, 3600 seconds, 30 seconds, and `wayfarer`.
 - Migration: `enabled` plus Core-only `db/migration/core`; alpha.2 applies immutable V001 and
   additive V002, and enabling migration requires MariaDB.
 - Waymark: `enabled`, expected provider `RedisEconomy`, and operation timeout. Provider
   capability/thread verification remains a later gate.
-- Executor: 1–64 threads and a thread prefix containing `Wayfarer`.
+- Executor: 1–64 threads, a thread prefix containing `Wayfarer`, and bounded queue capacity
+  1–65536. A missing queue setting retains the backward-compatible capacity 256.
 - Audit: `enabled: true` activates durable MariaDB audit plus player/item identity and therefore
   requires both MariaDB and migration. The sample defaults to `false`. An alpha.1 config with
   audit enabled but MariaDB/migration disabled now intentionally fails closed; config version

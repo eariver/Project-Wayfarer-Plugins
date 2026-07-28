@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 public final class CoreConfigLoader {
     public static final int SUPPORTED_CONFIG_VERSION = 1;
     private static final Pattern SERVER_ID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
+    private static final Pattern REDIS_KEY_PREFIX = Pattern.compile("[a-z0-9][a-z0-9._-]{0,31}");
     private static final Set<String> RESERVED_SERVER_IDS = Set.of(
         "change_me",
         "change-me",
@@ -43,6 +44,13 @@ public final class CoreConfigLoader {
             300
         );
         int executorThreads = rangedInt(source, "executor.threads", 1, 64);
+        int executorQueueCapacity = optionalRangedInt(
+            source,
+            "executor.queue-capacity",
+            256,
+            1,
+            65_536
+        );
         String threadNamePrefix = requiredString(source, "executor.thread-name-prefix");
         if (!threadNamePrefix.contains("Wayfarer")) {
             throw new CoreConfigException("executor.thread-name-prefix must contain Wayfarer");
@@ -85,7 +93,11 @@ public final class CoreConfigLoader {
                 version,
                 serverId,
                 shutdownTimeout,
-                new CoreConfig.ExecutorSettings(executorThreads, threadNamePrefix),
+                new CoreConfig.ExecutorSettings(
+                    executorThreads,
+                    threadNamePrefix,
+                    executorQueueCapacity
+                ),
                 new CoreConfig.AuditSettings(auditEnabled),
                 new CoreConfig.HealthSettings(playerDetails),
                 mariadb,
@@ -157,8 +169,44 @@ public final class CoreConfigLoader {
         Duration timeout = durationMillis(
             rangedInt(source, "redis.connect-timeout-ms", 100, 60_000)
         );
+        Duration operationTimeout = durationMillis(optionalRangedInt(
+            source,
+            "redis.operation-timeout-ms",
+            3_000,
+            100,
+            60_000
+        ));
+        Duration cacheMaximumTtl = Duration.ofSeconds(optionalRangedInt(
+            source,
+            "redis.cache-maximum-ttl-seconds",
+            3_600,
+            1,
+            86_400
+        ));
+        Duration lockMaximumLease = Duration.ofSeconds(optionalRangedInt(
+            source,
+            "redis.lock-maximum-lease-seconds",
+            30,
+            1,
+            300
+        ));
+        String keyPrefix = optionalString(source, "redis.key-prefix", "wayfarer");
+        if (!REDIS_KEY_PREFIX.matcher(keyPrefix).matches()) {
+            throw new CoreConfigException(
+                "redis.key-prefix must match " + REDIS_KEY_PREFIX.pattern()
+            );
+        }
         SecretValue uri = enabled ? resolve(secrets, uriReference) : null;
-        return new CoreConfig.RedisSettings(enabled, uriReference, timeout, uri);
+        return new CoreConfig.RedisSettings(
+            enabled,
+            uriReference,
+            timeout,
+            operationTimeout,
+            cacheMaximumTtl,
+            lockMaximumLease,
+            keyPrefix,
+            uri
+        );
     }
 
     private static SecretValue resolve(SecretReferenceResolver resolver, String reference) {
@@ -188,6 +236,14 @@ public final class CoreConfigLoader {
         return text.trim();
     }
 
+    private static String optionalString(
+        ConfigView source,
+        String path,
+        String defaultValue
+    ) {
+        return source.contains(path) ? requiredString(source, path) : defaultValue;
+    }
+
     private static int requiredInt(ConfigView source, String path) {
         Object value = required(source, path);
         if (!(value instanceof Number number)) {
@@ -209,6 +265,19 @@ public final class CoreConfigLoader {
             );
         }
         return value;
+    }
+
+    private static int optionalRangedInt(
+        ConfigView source,
+        String path,
+        int defaultValue,
+        int minimum,
+        int maximum
+    ) {
+        if (!source.contains(path)) {
+            return defaultValue;
+        }
+        return rangedInt(source, path, minimum, maximum);
     }
 
     private static boolean requiredBoolean(ConfigView source, String path) {

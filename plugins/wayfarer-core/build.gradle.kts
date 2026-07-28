@@ -16,11 +16,18 @@ dependencies {
 }
 
 val mariaDbIntegrationTestSourceSet = sourceSets.create("mariaDbIntegrationTest")
+val redisIntegrationTestSourceSet = sourceSets.create("redisIntegrationTest")
 
 configurations.named(mariaDbIntegrationTestSourceSet.implementationConfigurationName) {
     extendsFrom(configurations.testImplementation.get())
 }
 configurations.named(mariaDbIntegrationTestSourceSet.runtimeOnlyConfigurationName) {
+    extendsFrom(configurations.testRuntimeOnly.get())
+}
+configurations.named(redisIntegrationTestSourceSet.implementationConfigurationName) {
+    extendsFrom(configurations.testImplementation.get())
+}
+configurations.named(redisIntegrationTestSourceSet.runtimeOnlyConfigurationName) {
     extendsFrom(configurations.testRuntimeOnly.get())
 }
 
@@ -33,6 +40,18 @@ dependencies {
         mariaDbIntegrationTestSourceSet.implementationConfigurationName,
         project(":libraries:wayfarer-testkit")
     )
+    add(
+        redisIntegrationTestSourceSet.implementationConfigurationName,
+        sourceSets.main.get().output
+    )
+    add(
+        redisIntegrationTestSourceSet.implementationConfigurationName,
+        project(":libraries:wayfarer-testkit")
+    )
+    add(
+        redisIntegrationTestSourceSet.implementationConfigurationName,
+        libs.testcontainers.junit
+    )
 }
 
 val mariaDbIntegrationTest by tasks.registering(Test::class) {
@@ -44,8 +63,18 @@ val mariaDbIntegrationTest by tasks.registering(Test::class) {
     useJUnitPlatform()
 }
 
+val redisIntegrationTest by tasks.registering(Test::class) {
+    description = "Runs isolated Redis foundation integration tests."
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    testClassesDirs = redisIntegrationTestSourceSet.output.classesDirs
+    classpath = redisIntegrationTestSourceSet.runtimeClasspath
+    shouldRunAfter(tasks.test)
+    useJUnitPlatform()
+}
+
 tasks.check {
     dependsOn(mariaDbIntegrationTest)
+    dependsOn(redisIntegrationTest)
 }
 
 tasks.processResources {
