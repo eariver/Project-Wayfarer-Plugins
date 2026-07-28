@@ -35,9 +35,12 @@
   `d8804c68e2f7501b83206c8d4afa5e31dfdc3eb7`;
   `wayfarer-core-0.0.1-rc.1-client-fix.1.jar` SHA-256
   `c58a550a5fc0811bf8bbdfc4e42e6cee4316fc2bc6ece9db83bbc1784550674f`.
-  Focused regression and local `check` passed. The targeted Paper/client rerun returned the
-  sanitized unavailable response with no dispatcher exception, secret, internal exception
-  message, or provider reference.
+  Focused regression and local `check` passed. GitHub Actions CI
+  [`30367633302`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30367633302)
+  passed `check`, `assemble`, configuration-cache reuse, same-source JAR reproducibility, and Core
+  packaging at code-bearing PR head `586db6ddc49218ab06b2421de896148d75e27916`.
+  The targeted Paper/client rerun returned the sanitized unavailable response with no dispatcher
+  exception, secret, internal exception message, or provider reference.
 - Isolated test server: Alpha.1 `PASSED`;
   `docs/testing/evidence/V0.0.1-alpha.1-runtime-evidence.md`
 - Pre-client evidence:
