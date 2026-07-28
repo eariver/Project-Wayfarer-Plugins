@@ -22,4 +22,10 @@ test authority only—not a runtime economy.
 
 Production discovery uses the shared unshaded `wayfarer-api` class identity through Bukkit
 ServicesManager. No authorized concrete provider currently satisfies the required classloader/load
-order and immutable behavior contract, so absence fails closed and ADR 0006 remains `BLOCKED`.
+order and immutable behavior contract, so absence fails closed.
+
+ADR 0007 inspected the exact fixed RedisEconomy source and JAR. The Vault call returns after a
+local-cache mutation while Redis persistence continues on an unobserved provider executor; it has
+no UUID-only overload, caller operation ID, atomic effect acknowledgement, or effect lookup.
+Accordingly, Vault `SUCCESS` cannot be promoted to a durable `SUCCEEDED` result without an explicit
+Owner trade-off decision. ADR 0006 remains enforced and ADR 0007 records Gate B/C/D.

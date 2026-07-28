@@ -52,6 +52,11 @@
 - User observations: Real-player reconnect/identity, non-OP denial, authorized health,
   responsiveness, and corrected sanitized inspect passed
 - Known limitations/open decisions: See linked handoff records
+- Concrete provider authority resolution: ADR 0007 confirms Gate B/C/D. Fixed Vault
+  `SUCCESS` precedes RedisEconomy's deferred Redis completion and provides neither atomic caller
+  operation identity nor effect lookup; no concrete candidate or runtime result was created.
+  The independent baseline passed 35 focused tests, full `check` (174 unit / 14 MariaDB /
+  6 Redis, zero failed/errors/skipped), and `assemble`.
 - `requirements_cleared`: Project Owner input remains required
 - Project Runtime placement/acceptance: Pending / pending
 
@@ -65,5 +70,7 @@ The beta feature-complete candidate has current-head automated API/module bounda
 packaging inspection, configuration-cache reuse, dependency/license inventory, and same-source JAR
 reproducibility evidence. The rc.1 pre-client workflow adds commit-pinned client-independent Paper
 evidence. Candidate C's client failure and the Client Fix Candidate's targeted correction are both
-retained in the client result. ADR 0006 blocks a concrete Waymark provider. These results do not
-change the `BLOCKED` marker.
+retained in the client result. ADR 0006 blocks a concrete Waymark provider, and ADR 0007 replaces
+the earlier unknowns with fixed-source evidence requiring an Owner choice of a new formal
+RedisEconomy Waymark API or explicit acceptance of the documented safety trade-off. These results
+do not change the `BLOCKED` marker.

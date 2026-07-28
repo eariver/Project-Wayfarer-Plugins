@@ -61,8 +61,10 @@
 - Redis is not a persistent gameplay or inventory authority.
 - Waymark operations cannot claim unconditional exactly-once across an external provider.
 - The JDK-only provider discovery seam and worker-thread fixture probe/recovery passed automated
-  tests. Concrete provider API/thread/timeout/crash-reference behavior remains an open authority
-  gate; external plugin class identity/load order is not inferred.
+  tests. ADR 0007 establishes the fixed external plugin load order, but also establishes that the
+  Vault success response precedes RedisEconomy's deferred Redis completion, the debit
+  read/check/write is not one atomic provider operation, Vault has no UUID-only overload, and the
+  fixed surface has no caller operation ID/effect lookup. Gate B/C/D therefore remains open.
 - The successful rc.1 pre-client evidence is limited to client-independent scope. Harness
   calibration, corrected Paper classloader defects, the corrected main-thread provider-call
   defect, and corrected harness assertions are indexed in
@@ -78,7 +80,10 @@
   authorized health, and normal movement/chat/reconnect responsiveness passed in the dedicated
   client-acceptance runtime. Core-only Item/PDC is N/A because V0.0.1 has no player item issuance
   path.
-- Concrete Waymark balance/debit/refund behavior remains blocked by ADR 0006 and was not executed.
+- Concrete Waymark balance/debit/refund behavior remains blocked by ADR 0006/0007 and was not
+  executed. The designated RedisEconomy source worktree was also dirty: commit `581091a` does not
+  itself contain the determinable two-file compatibility patch. A future fixed artifact must have
+  a clean immutable source authority.
 - Hot reload/PlugMan-style reload is unsupported.
 - Project placement, migration execution, configuration, permission application, server restart,
   runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.

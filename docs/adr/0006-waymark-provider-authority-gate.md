@@ -42,3 +42,7 @@ Contract, boundary tests, beta API inventory, and downstream stacked branches mu
 alpha.4 provider-independent automated work may pass, but concrete provider completion and stable
 release remain `BLOCKED`. An owner-approved, version-pinned thread/failure/reference contract is
 required before a concrete adapter or runtime balance/debit/refund test can be added.
+
+ADR 0007 follows up with exact fixed-source and fixed-JAR evidence. It confirms that the current
+Vault surface does not satisfy the required contract and records Owner Gate B/C/D and the proposed
+resume path.

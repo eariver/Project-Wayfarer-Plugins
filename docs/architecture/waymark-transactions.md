@@ -63,5 +63,8 @@ retry the effect and does not claim unconditional exactly-once behavior.
 Redis locks/idempotency hints may reduce contention but never authorize an effect. Provider balance
 remains provider authority, and transaction/reconcile history remains MariaDB authority.
 
-Concrete RedisEconomy/Vault invocation is blocked by ADR 0006 until its immutable thread, timeout,
-error, and reference lookup contract is established.
+Concrete RedisEconomy/Vault invocation is blocked by ADR 0006 and the fixed-source conclusion in
+ADR 0007. The fixed Vault response completes before RedisEconomy's deferred authoritative write,
+does not accept the Wayfarer operation ID, and cannot resolve an ambiguous effect. Adapting that
+response would weaken the state machine's `APPLIED`/`UNKNOWN` distinction, so no such adapter is
+installed without the recorded Owner decision.
