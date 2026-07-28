@@ -28,12 +28,26 @@
   passed with 173 unit, 14 MariaDB, and 6 Redis cases and zero failed/skipped tests
 - RC.1 candidate Core SHA-256:
   `5ab6200839baa02d637bdf214126d79a10e925884da92b491bc9dcc0f8ddec1a`
+- Candidate C client acceptance: `FAIL`; authorized transaction inspect leaked a synchronous
+  provider-absent service exception to the Paper command dispatcher. The successful Candidate C
+  headless evidence remains valid and immutable.
+- Client Fix Candidate:
+  `d8804c68e2f7501b83206c8d4afa5e31dfdc3eb7`;
+  `wayfarer-core-0.0.1-rc.1-client-fix.1.jar` SHA-256
+  `c58a550a5fc0811bf8bbdfc4e42e6cee4316fc2bc6ece9db83bbc1784550674f`.
+  Focused regression and local `check` passed. The targeted Paper/client rerun returned the
+  sanitized unavailable response with no dispatcher exception, secret, internal exception
+  message, or provider reference.
 - Isolated test server: Alpha.1 `PASSED`;
   `docs/testing/evidence/V0.0.1-alpha.1-runtime-evidence.md`
 - Pre-client evidence:
   `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md`;
   result wording is `Automated/headless runtime passed`
-- User observations: Non-OP denial passed; OP health passed; internal-detail suppression passed
+- Client acceptance evidence:
+  `docs/testing/results/V0.0.1-client-acceptance.md` at
+  `f2deab28c307de460adffb3b8dfc8c7252c0ec7a`
+- User observations: Real-player reconnect/identity, non-OP denial, authorized health,
+  responsiveness, and corrected sanitized inspect passed
 - Known limitations/open decisions: See linked handoff records
 - `requirements_cleared`: Project Owner input remains required
 - Project Runtime placement/acceptance: Pending / pending
@@ -47,5 +61,6 @@ head are not stable final source.
 The beta feature-complete candidate has current-head automated API/module boundaries, Core
 packaging inspection, configuration-cache reuse, dependency/license inventory, and same-source JAR
 reproducibility evidence. The rc.1 pre-client workflow adds commit-pinned client-independent Paper
-evidence; Minecraft client acceptance is intentionally still blank. ADR 0006 blocks a concrete
-Waymark provider. These results do not change the `BLOCKED` marker.
+evidence. Candidate C's client failure and the Client Fix Candidate's targeted correction are both
+retained in the client result. ADR 0006 blocks a concrete Waymark provider. These results do not
+change the `BLOCKED` marker.
