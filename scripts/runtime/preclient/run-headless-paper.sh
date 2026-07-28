@@ -81,6 +81,7 @@ write_server_files() {
   local shutdown_seconds="$7"
   local redis_prefix="$8"
 
+  [[ "$redis_prefix" =~ ^[a-z0-9][a-z0-9._-]{0,31}$ ]]
   mkdir -p "$server_root/plugins/Wayfarer_Core"
   printf 'eula=true\n' > "$server_root/eula.txt"
   cat > "$server_root/server.properties" <<'PROPERTIES'
@@ -247,7 +248,7 @@ baseline_restart_log="$evidence_root/baseline-restart.log"
 rm -rf "$baseline_root"
 write_server_files \
   "$baseline_root" "$(db_url "$baseline_db")" yes yes baseline success 5 \
-  wayfarer-preclient-baseline
+  wf-preclient-baseline
 start_server "$baseline_root" "$baseline_first_log"
 wait_for_log "$baseline_first_log" "WAYFARER_PRECLIENT_PROBE: PASS scenario=baseline" 240
 baseline_transaction_id="$(
@@ -308,7 +309,7 @@ outage_log="$evidence_root/provider-outage.log"
 rm -rf "$outage_root"
 write_server_files \
   "$outage_root" "$(db_url "$outage_db")" yes yes provider-outage outage 5 \
-  wayfarer-preclient-provider-outage
+  wf-preclient-provider-outage
 start_server "$outage_root" "$outage_log"
 wait_for_log "$outage_log" "PASS scenario=provider-outage" 180
 send_command "wayfarer admin health"
@@ -328,7 +329,7 @@ for timeout_case in before after; do
   write_server_files \
     "$timeout_root" "$(db_url "$timeout_db")" yes yes \
     "timeout-${timeout_case}-effect" "timeout-${timeout_case}-effect" 5 \
-    "wayfarer-preclient-timeout-$timeout_case"
+    "wf-preclient-timeout-$timeout_case"
   start_server "$timeout_root" "$timeout_log"
   wait_for_log "$timeout_log" "PASS scenario=timeout-${timeout_case}-effect" 180
   stop_server
@@ -345,7 +346,7 @@ queue_log="$evidence_root/queue-rejection.log"
 rm -rf "$queue_root"
 write_server_files \
   "$queue_root" "$(db_url "$queue_db")" yes yes queue-rejection success 5 \
-  wayfarer-preclient-queue
+  wf-preclient-queue
 start_server "$queue_root" "$queue_log"
 wait_for_log "$queue_log" "WAYFARER_PRECLIENT_PROBE: QUEUE_PASS" 180
 wait_for_log "$queue_log" "PASS scenario=queue-rejection" 30
@@ -361,7 +362,7 @@ debit_recovery_log="$evidence_root/debit-recovery.log"
 rm -rf "$debit_root"
 write_server_files \
   "$debit_root" "$(db_url "$debit_db")" yes yes debit-crash crash-after-debit 5 \
-  wayfarer-preclient-debit-recovery
+  wf-preclient-debit-recovery
 start_server "$debit_root" "$debit_crash_log"
 wait_for_log "$debit_crash_log" "WAYFARER_FIXTURE: HALT_AFTER_DEBIT" 180
 wait_for_injected_exit 73
@@ -393,7 +394,7 @@ refund_recovery_log="$evidence_root/refund-recovery.log"
 rm -rf "$refund_root"
 write_server_files \
   "$refund_root" "$(db_url "$refund_db")" yes yes refund-crash unknown-after-effect 5 \
-  wayfarer-preclient-refund-recovery
+  wf-preclient-refund-recovery
 start_server "$refund_root" "$refund_crash_log"
 wait_for_log "$refund_crash_log" "WAYFARER_FIXTURE: HALT_AFTER_REFUND" 180
 wait_for_injected_exit 74
@@ -424,7 +425,7 @@ drain_log="$evidence_root/accepted-drain.log"
 rm -rf "$drain_root"
 write_server_files \
   "$drain_root" "$(db_url "$drain_db")" yes yes accepted-drain success 5 \
-  wayfarer-preclient-drain
+  wf-preclient-drain
 start_server "$drain_root" "$drain_log"
 wait_for_log "$drain_log" "ACCEPTED_WORK_RUNNING" 180
 stop_server
@@ -439,7 +440,7 @@ shutdown_log="$evidence_root/shutdown-timeout.log"
 rm -rf "$shutdown_root"
 write_server_files \
   "$shutdown_root" "$(db_url "$shutdown_db")" yes yes shutdown-timeout success 1 \
-  wayfarer-preclient-shutdown
+  wf-preclient-shutdown
 start_server "$shutdown_root" "$shutdown_log"
 wait_for_log "$shutdown_log" "SHUTDOWN_BLOCKER_RUNNING" 180
 stop_server
@@ -458,7 +459,7 @@ migration_failure_log="$evidence_root/migration-failure.log"
 rm -rf "$migration_failure_root"
 write_server_files \
   "$migration_failure_root" "$(db_url "$baseline_db")" no no baseline success 5 \
-  wayfarer-preclient-migration-failure
+  wf-preclient-migration-failure
 start_server "$migration_failure_root" "$migration_failure_log"
 wait_for_log "$migration_failure_log" "Wayfarer_Core failed closed during enable" 180
 send_command "stop"
@@ -473,7 +474,7 @@ rm -rf "$mariadb_failure_root"
 write_server_files \
   "$mariadb_failure_root" \
   "jdbc:mariadb://127.0.0.1:1/wayfarer_preclient_unavailable" \
-  no no baseline success 5 wayfarer-preclient-mariadb-failure
+  no no baseline success 5 wf-preclient-mariadb-failure
 start_server "$mariadb_failure_root" "$mariadb_failure_log"
 wait_for_log "$mariadb_failure_log" "Wayfarer_Core failed closed during enable" 90
 send_command "stop"
