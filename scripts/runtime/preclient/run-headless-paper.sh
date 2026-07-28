@@ -53,7 +53,7 @@ write_server_files() {
 online-mode=false
 server-port=25580
 level-name=preclient
-level-type=minecraft:flat
+level-type=minecraft:normal
 generate-structures=false
 spawn-protection=0
 max-players=1
@@ -235,7 +235,7 @@ latest_migration="$(
     -e "SELECT MAX(version) FROM wayfarer_preclient.flyway_schema_history WHERE success = 1;"
 )"
 test "$migration_count" -eq 3
-test "$latest_migration" = "3"
+test "$latest_migration" = "003"
 
 docker exec \
   "$MARIADB_CONTAINER_ID" \
