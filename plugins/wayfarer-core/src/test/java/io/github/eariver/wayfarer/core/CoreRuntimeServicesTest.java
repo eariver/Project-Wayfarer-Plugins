@@ -74,6 +74,29 @@ class CoreRuntimeServicesTest {
     }
 
     @Test
+    void missingWaymarkProviderDegradesOnlyProviderDependentServices() {
+        RecordingPublisher publisher = new RecordingPublisher();
+        CoreRuntime runtime = runtime(TestCoreConfigs.withWaymarkEnabled(), publisher);
+
+        runtime.enable();
+        try {
+            assertEquals(1, publisher.publishCount);
+            assertEquals(
+                WayfarerHealth.Status.DOWN,
+                runtime.health().snapshot().components().get("Waymark").status()
+            );
+            assertEquals(
+                WayfarerHealth.Status.DOWN,
+                runtime.health().snapshot().components().get("Transaction").status()
+            );
+            assertThrows(IllegalStateException.class, runtime.services()::transactions);
+            assertThrows(IllegalStateException.class, runtime.services()::waymark);
+        } finally {
+            runtime.disable();
+        }
+    }
+
+    @Test
     void failedServicePublicationLeavesNoPublishedService() {
         RecordingPublisher publisher = new RecordingPublisher();
         publisher.failPublication = true;

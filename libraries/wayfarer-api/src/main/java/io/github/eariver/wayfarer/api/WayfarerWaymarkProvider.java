@@ -20,7 +20,8 @@ public interface WayfarerWaymarkProvider {
         String operationId,
         String debitProviderReference
     );
-    CompletionStage<EffectResolution> resolve(
+    CompletionStage<ResolutionResult> resolve(
+        EffectKind effectKind,
         String operationId,
         String providerReference
     );
@@ -40,7 +41,18 @@ public interface WayfarerWaymarkProvider {
         UNKNOWN
     }
 
-    enum EffectResolution {
+    record ResolutionResult(
+        ResolutionStatus status,
+        String providerReference,
+        String failureCode
+    ) {}
+
+    enum EffectKind {
+        DEBIT,
+        REFUND
+    }
+
+    enum ResolutionStatus {
         APPLIED,
         NOT_APPLIED,
         UNKNOWN

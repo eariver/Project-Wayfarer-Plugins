@@ -12,11 +12,14 @@
   `0d5bf928a489d7fcbac51e93244af2180b4a539c`
 - Alpha.3 automated gate: 140 unit, 9 MariaDB, and 6 Redis cases / 0 failed / 0 skipped;
   commit-pinned CI `30290422624` passed
-- Alpha.4 provider-independent gate: 153 unit, 10 MariaDB, and 6 Redis cases / 0 failed /
-  0 skipped; CI `30292228251` passed. Concrete Waymark provider authority remains blocked by
-  ADR 0006
-- Build gates: `check`, `assemble`, configuration-cache variants, compiler warnings,
-  packaging, and reproducibility passed
+- Corrected alpha.4 provider-independent gate: 167 unit, 14 MariaDB, and 6 Redis cases /
+  0 failed / 0 skipped; CI `30354268891` passed at
+  `38fc2b55cfa1c91f2ca04daab47d062aada8a42e`. Concrete Waymark provider authority remains
+  blocked by ADR 0006
+- Corrected beta.1 gate: 169 unit, 14 MariaDB, and 6 Redis cases / 0 failed / 0 skipped;
+  clean `check`, clean `assemble`, configuration-cache reuse, API/module boundaries, packaging,
+  migration hashes, and same-source reproducibility passed in CI `30355673880` at
+  `b173ebfcff75b4fc4689155fc5b0d54960a04ab6`
 - RC.1 pre-client headless gate: passed at
   `6d25105f516a76cc373e5259fcef9d34de414543`; workflow
   [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610)
@@ -41,8 +44,8 @@ are complete, a stable final source is fixed, Project Runtime placement/acceptan
 the Project Owner explicitly clears requirements. The alpha.1 source commit and the unmerged rc.1
 head are not stable final source.
 
-The beta feature-complete candidate adds automated API/module boundaries, Core packaging
-inspection, configuration-cache reuse, dependency/license inventory, and same-source JAR
+The beta feature-complete candidate has current-head automated API/module boundaries, Core
+packaging inspection, configuration-cache reuse, dependency/license inventory, and same-source JAR
 reproducibility evidence. The rc.1 pre-client workflow adds commit-pinned client-independent Paper
 evidence; Minecraft client acceptance is intentionally still blank. ADR 0006 blocks a concrete
 Waymark provider. These results do not change the `BLOCKED` marker.

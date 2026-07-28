@@ -6,8 +6,16 @@
 - Database: MariaDB, UTC, `utf8mb4`, `READ COMMITTED`
 - First install: validate then migrate Core schema; fail closed on failure
 - Existing install: validate immutable applied migrations; apply additions only
-- V001/V002 remain byte-for-byte immutable; V003 adds transaction operation/reconcile metadata and
-  `wf_core_transaction_event`
+- V001/V002 remain byte-for-byte immutable.
+- Obsolete pre-merge V003 identity: SHA-256
+  `3f0ba44065b4fd3d0139048e9758b457f64c5ce3d2bd29de134e7d170f786954`, Git blob
+  `cb3152468143c3a2818ace767e57efcd19a3bf0e`.
+- Current stacked candidate V003 identity: SHA-256
+  `83483e0494b687ec4ff11af7872ae89e1406bb678ae2b000897fc66ff7a048b4`, Git blob
+  `f4f0b195318fa79518f331c0f519272c96c40ff3`.
+- Current V003 separates durable debit/refund operation IDs and references, adds bounded recovery
+  claim metadata/indexing, and makes `wf_core_transaction_event` the atomic append-only transition
+  authority.
 - Core scope prohibition: do not create `wf_main_*` or `wf_frontier_*`
 - Downgrade: Not supported unless a later approved procedure proves schema compatibility
 

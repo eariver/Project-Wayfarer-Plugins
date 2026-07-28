@@ -20,6 +20,26 @@ final class TestCoreConfigs {
         return withShutdownTimeout("Wayfarer-Test", timeout);
     }
 
+    static CoreConfig withWaymarkEnabled() {
+        CoreConfig baseline = valid();
+        return new CoreConfig(
+            baseline.configVersion(),
+            baseline.serverId(),
+            baseline.shutdownTimeout(),
+            baseline.executor(),
+            baseline.audit(),
+            baseline.health(),
+            baseline.mariadb(),
+            baseline.redis(),
+            baseline.migration(),
+            new CoreConfig.WaymarkSettings(
+                true,
+                "RedisEconomy",
+                Duration.ofMillis(50)
+            )
+        );
+    }
+
     private static CoreConfig withShutdownTimeout(String prefix, Duration timeout) {
         return new CoreConfig(
             1,

@@ -85,10 +85,50 @@ class DurableAuditIdentityIntegrationTest {
                 );
                 assertEquals(3, scalar(connection,
                     "SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1"));
-                assertEquals(9, scalar(connection,
+                assertEquals(11, scalar(connection,
                     "SELECT COUNT(*) FROM information_schema.columns "
                         + "WHERE table_schema = DATABASE() AND data_type = 'timestamp' "
                         + "AND datetime_precision = 3"));
+            }
+        }
+    }
+
+    @Test
+    void upgradesV002CurrentDatabaseToNewV003() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            Flyway.configure()
+                .dataSource(fixture.jdbcUrl(), fixture.username(), fixture.password())
+                .locations("classpath:db/migration/core")
+                .target("2")
+                .load()
+                .migrate();
+
+            try (CoreConfig config = config(fixture);
+                 MariaDbPool pool = MariaDbPool.open(config.serverId(), config.mariadb());
+                 MigrationLifecycle migration = MigrationLifecycle.migrate(
+                     pool,
+                     config.migration().locations()
+                 );
+                 Connection connection = connection(fixture)) {
+                assertEquals(3, migration.appliedMigrationCount());
+                assertEquals(3, scalar(
+                    connection,
+                    "SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1"
+                ));
+                assertEquals(1, scalar(
+                    connection,
+                    "SELECT COUNT(*) FROM information_schema.columns "
+                        + "WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'wf_core_transaction' "
+                        + "AND column_name = 'refund_operation_id'"
+                ));
+                assertEquals(1, scalar(
+                    connection,
+                    "SELECT COUNT(*) FROM information_schema.columns "
+                        + "WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'wf_core_transaction_event' "
+                        + "AND column_name = 'transaction_lock_version'"
+                ));
             }
         }
     }

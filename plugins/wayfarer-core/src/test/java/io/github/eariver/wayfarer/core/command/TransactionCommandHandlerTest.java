@@ -37,7 +37,7 @@ class TransactionCommandHandlerTest {
         );
 
         assertEquals(1, fixture.transactions.inspectCalls);
-        assertTrue(fixture.audience.messages.get(0).contains("providerReference=present"));
+        assertTrue(fixture.audience.messages.get(0).contains("debitReference=present"));
         assertTrue(fixture.audience.messages.stream().noneMatch(
             message -> message.contains("provider-secret-reference")
         ));
@@ -138,7 +138,10 @@ class TransactionCommandHandlerTest {
                 "subject",
                 25,
                 State.UNKNOWN,
+                "debit-operation",
                 "provider-secret-reference",
+                "refund-operation",
+                "refund-secret-reference",
                 "UNCERTAIN",
                 3
             ));
