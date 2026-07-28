@@ -283,7 +283,7 @@ grep -Fq "REDIS_PRIMITIVES PASS cache=true lock=true message=true" \
   "$baseline_first_log"
 grep -Fq "debitReference=present" "$baseline_first_log"
 grep -Fq "Reconciliation requires an explicit trailing 'confirm'." "$baseline_first_log"
-grep -Fq "Transaction operation failed; inspect health and audit." "$baseline_first_log"
+grep -Fq "reconciliation result=COMMITTED" "$baseline_first_log"
 grep -Fq "Full thread dump" "$baseline_first_log"
 grep -Fq "WAYFARER_PRECLIENT_PROBE: DISABLED" "$baseline_first_log"
 assert_fixture_worker_threads "$baseline_first_log"

@@ -2,21 +2,36 @@ package io.github.eariver.wayfarer.core.transaction;
 
 import io.github.eariver.wayfarer.api.WayfarerWaymark;
 import io.github.eariver.wayfarer.api.WayfarerWaymarkProvider;
+import io.github.eariver.wayfarer.core.task.ManagedExecutor;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 
 public final class DefaultWayfarerWaymark implements WayfarerWaymark {
     private final WayfarerWaymarkProvider provider;
+    private final ManagedExecutor executor;
+    private final Duration timeout;
 
-    public DefaultWayfarerWaymark(WayfarerWaymarkProvider provider) {
+    public DefaultWayfarerWaymark(
+        WayfarerWaymarkProvider provider,
+        ManagedExecutor executor,
+        Duration timeout
+    ) {
         this.provider = Objects.requireNonNull(provider, "provider");
+        this.executor = Objects.requireNonNull(executor, "executor");
+        this.timeout = Objects.requireNonNull(timeout, "timeout");
+        if (timeout.isZero() || timeout.isNegative()) {
+            throw new IllegalArgumentException("timeout must be positive");
+        }
     }
 
     @Override
     public CompletionStage<Long> balance(UUID playerUuid) {
-        return provider.balance(Objects.requireNonNull(playerUuid, "playerUuid"));
+        UUID checkedPlayerUuid = Objects.requireNonNull(playerUuid, "playerUuid");
+        return submit(() -> provider.balance(checkedPlayerUuid));
     }
 
     @Override
@@ -26,7 +41,13 @@ public final class DefaultWayfarerWaymark implements WayfarerWaymark {
         String reference
     ) {
         validateAmount(amount);
-        return provider.debit(playerUuid, amount, reference).thenApply(DefaultWayfarerWaymark::map);
+        UUID checkedPlayerUuid = Objects.requireNonNull(playerUuid, "playerUuid");
+        String checkedReference = Objects.requireNonNull(reference, "reference");
+        return submit(() -> provider.debit(
+            checkedPlayerUuid,
+            amount,
+            checkedReference
+        ).thenApply(DefaultWayfarerWaymark::map));
     }
 
     @Override
@@ -36,8 +57,34 @@ public final class DefaultWayfarerWaymark implements WayfarerWaymark {
         String reference
     ) {
         validateAmount(amount);
-        return provider.refund(playerUuid, amount, reference, reference)
-            .thenApply(DefaultWayfarerWaymark::map);
+        UUID checkedPlayerUuid = Objects.requireNonNull(playerUuid, "playerUuid");
+        String checkedReference = Objects.requireNonNull(reference, "reference");
+        return submit(() -> provider.refund(
+            checkedPlayerUuid,
+            amount,
+            checkedReference,
+            checkedReference
+        ).thenApply(DefaultWayfarerWaymark::map));
+    }
+
+    private <T> CompletionStage<T> submit(
+        Supplier<? extends CompletionStage<T>> operation
+    ) {
+        return executor.submit(() -> {
+            try {
+                return Objects.requireNonNull(
+                    operation.get(),
+                    "provider result"
+                ).toCompletableFuture()
+                    .orTimeout(
+                        timeout.toMillis(),
+                        java.util.concurrent.TimeUnit.MILLISECONDS
+                    )
+                    .join();
+            } catch (RuntimeException failure) {
+                throw new IllegalStateException("Waymark provider operation failed");
+            }
+        });
     }
 
     private static OperationResult map(WayfarerWaymarkProvider.EffectResult result) {
