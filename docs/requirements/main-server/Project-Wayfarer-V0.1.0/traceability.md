@@ -10,6 +10,9 @@ evidence as applicable.
 
 In the table below, `alpha.1 runtime evidence` refers to
 `docs/testing/evidence/V0.0.1-alpha.1-runtime-evidence.md`.
+`rc.1 pre-client evidence` refers to
+`docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md` and supports only
+`Automated/headless runtime passed`; client acceptance remains pending.
 
 | Requirement ID | Requirement | Source section | Implementation | Automated test | Pre-release | Runtime evidence | Status | Notes |
 |---|---|---|---|---|---|---|---|---|
@@ -29,8 +32,8 @@ In the table below, `alpha.1 runtime evidence` refers to
 | FND-004 | Paper API 1.21.11 baseline | 7 | Version catalog | Dependency inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Paper 1.21.11 observed; full acceptance remains pending |
 | FND-005 | Group/package `io.github.eariver.wayfarer` | 7 | Build/source | Package inspection | beta.1 | N/A | Automated test passed | Local candidate package scan passed |
 | FND-006 | Gradle Wrapper tracked | 7 | `gradlew*`; `gradle/wrapper` | Git inspection | beta.1 | N/A | In progress | Clean clone test pending |
-| FND-007 | Wrapper version verified | 7 | Wrapper properties | Wrapper test | beta.1 | N/A | Not started | Evidence pending |
-| FND-008 | Wrapper checksum verified | 7 | Pending verification metadata | Checksum test | beta.1 | N/A | Not started | Evidence pending |
+| FND-007 | Wrapper version verified | 7 | Wrapper properties pin Gradle 9.6.1 | Wrapper execution and property inspection | beta.1 | N/A | Automated test passed | CI used tracked wrapper; distribution URL/version fixed |
+| FND-008 | Wrapper checksum verified | 7 | Official wrapper and distribution SHA-256 | Official checksum comparison | beta.1 | N/A | Automated test passed | Wrapper `497c8c…9c7`; distribution `9c0f7f…e14`; both matched official Gradle values |
 | FND-009 | Clean `check` succeeds | 7 | Gradle | Clean build | V0.0.1-alpha.1 / beta.1 | N/A | Automated test passed | Beta implementation CI `30314769436` passed |
 | FND-010 | Clean `assemble` succeeds | 7 | Gradle | Clean build | V0.0.1-alpha.1 / beta.1 | N/A | Automated test passed | Beta implementation CI `30314769436` passed |
 | FND-011 | CI uses Java 25 | 7 | `ci.yml` | CI run | V0.0.1-alpha.1 / beta.1 | N/A | In progress | Alpha.1 corrected-head CI passed; full acceptance pending |
@@ -47,17 +50,17 @@ In the table below, `alpha.1 runtime evidence` refers to
 | FND-022 | Secrets/runtime/world/DB/log/cache not tracked | 7, 14 | `.gitignore`; policy | Git inspection | All | N/A | Implemented | Recheck each release |
 | LIF-001 | Typed config validation | 8.1 | `CoreConfig`; `CoreConfigLoader` | `CoreConfigLoaderTest` | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Valid and unsupported config runtime paths observed |
 | LIF-002 | Environment secret resolution | 8.1 | `EnvironmentSecretResolver`; `SecretValue` | Common/config secret tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Missing and resolved secret validation paths observed without disclosure |
-| LIF-003 | MariaDB pool lifecycle | 8.1 | `MariaDbPool`; persistence gate; `CoreRuntime` drain lifecycle | Pool, queued-drain, and MariaDB integration tests | alpha.2 | Pending | Automated test passed | Hikari mapping, connectivity, accepted-work drain before close, double-disable, outage, and cleanup passed; Paper runtime pending |
+| LIF-003 | MariaDB pool lifecycle | 8.1 | `MariaDbPool`; persistence gate; `CoreRuntime` drain lifecycle | Pool, queued-drain, and MariaDB integration tests | alpha.2 | rc.1 pre-client evidence | In progress | Paper startup, unavailable fail-closed, and clean close passed; in-flight drain injection remains automated-only |
 | LIF-004 | Flyway validate | 8.1 | `MigrationLifecycle` pre/post validation | Empty/repeated MariaDB migration tests | alpha.2 | Pending | Automated test passed | Pending migrations are allowed only for pre-validation; post-validation passed |
 | LIF-005 | Flyway migrate | 8.1 | `MigrationLifecycle` | Empty/repeated MariaDB migration tests | alpha.2 | Pending | Automated test passed | Core V001 applied once on isolated MariaDB 11.8 |
 | LIF-006 | Redis foundation | 8.1 | Internal `RedisRuntime`; command/Pub/Sub lifecycle | Isolated Redis integration test | alpha.3 | Pending | Automated test passed | Cache/lock/message/idempotency foundations passed in CI `30290422624` |
 | LIF-007 | Redis health | 8.1 | Connection listeners and operation/close health | Outage/reconnect/close test | alpha.3 | Pending | Automated test passed | UNKNOWN/UP/DOWN/recovery/DISABLED paths passed in CI `30290422624` |
-| LIF-008 | Waymark capability probe | 8.1 | Transaction slice | Provider fixture | alpha.4 | Pending | Not started | Provider contract gate |
+| LIF-008 | Waymark capability probe | 8.1 | Provider SPI and explicit unavailable capability | Provider fixture and fail-closed API tests | alpha.4 | rc.1 pre-client evidence | In progress | Fixture/unavailable behavior passed; concrete capability probe blocked by ADR 0006 |
 | LIF-009 | Services registration | 8.1 | `BukkitServicePublisher`; `CoreRuntime` | ServicesManager/runtime tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | ServicesManager lookup succeeded |
 | LIF-010 | Services unregister | 8.1 | `BukkitServicePublisher`; service-first cleanup | Disable/idempotency and persistence-drain tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 runtime evidence | Runtime test passed | Services unpublish before database intake closes; clean restart showed no duplicate registration |
 | LIF-011 | Executor lifecycle | 8.1 | Bounded `ManagedExecutor`; explicit shutdown result; persistence/Redis gates | Graceful/forced/incomplete/interrupted, overflow, and queued-drain tests | V0.0.1-alpha.1 / alpha.2 / alpha.3 | alpha.1 runtime evidence | In progress | Accepted queued work drains; overflow is exceptional/observed; runtime pressure evidence pending |
 | LIF-012 | Scheduler lifecycle | 8.1 | lifecycle-guarded `MainThreadDispatcher` | `DefaultWayfarerTasksTest` | alpha.1 | Pending | Automated test passed | Paper scheduler runtime pending |
-| LIF-013 | Clean disable | 8.1 | `LifecycleCoordinator`; Identity close/quiesce/finalize; audit close; persistence drain; shutdown-result health | Lifecycle, queued-drain, identity-finalization, and runtime health tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 runtime evidence | Runtime test passed | Accepted Identity work quiesces before audit close; clean health waits for the database drain; Paper persistence-drain evidence remains pending |
+| LIF-013 | Clean disable | 8.1 | `LifecycleCoordinator`; Identity close/quiesce/finalize; audit close; persistence drain; shutdown-result health | Lifecycle, queued-drain, identity-finalization, and runtime health tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 and rc.1 pre-client evidence | Runtime test passed | Paper clean disable/restart passed; accepted-work ordering is additionally covered by automated drain tests |
 | LIF-014 | Timeout-bounded flush | 8.1 | Bounded Identity quiescence/finalization and persistence drain plus two-phase executor shutdown | Identity/persistence timeout and interrupt plus executor shutdown tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 runtime evidence | Runtime test passed | Identity/persistence timeout/interruption are `DOWN` and non-clean; executor graceful and forced timeout phases observed |
 | LIF-015 | Partial initialization cleanup | 8.1 | Reverse-order lifecycle resources | Failure injection tests | alpha.1 | Pending | Automated test passed | Runtime failure injection pending |
 | LIF-016 | Fail-closed lifecycle | 8.1 | Explicit lifecycle state machine | Invalid/double/failure tests | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Placeholder, unsupported config, and missing secret failed closed |
@@ -65,7 +68,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | LIF-018 | Do not continue after migration failure | 8.1 | Fail-closed Core persistence lifecycle | Broken-migration failure injection | alpha.2 | Pending | Automated test passed | Services remained unpublished and Hikari closed; runtime evidence pending |
 | API-001 | `WayfarerServices` contract | 8.2 | Typed metadata/services contract | Service/API identity tests | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | In progress | Runtime service lookup passed; full beta contract remains pending |
 | API-002 | `WayfarerDatabase` contract | 8.2 | JDK-only zero-method reserved marker; runtime unavailable; ADR 0005 | Full public API boundary scan and reflection check | beta.1 | Pending | In progress | JDBC-typed pre-alpha stub rejected and removed; accepted opaque beta contract requires a new decision |
-| API-003 | `WayfarerAudit` contract | 8.2 | Async JDK API plus durable Core implementation | API boundary/unit/integration suite | beta.1 | Pending | In progress | Contract implemented; beta compatibility and Paper runtime pending |
+| API-003 | `WayfarerAudit` contract | 8.2 | Async JDK API plus durable Core implementation | API boundary/unit/integration suite | beta.1 | rc.1 pre-client evidence | Automated/headless runtime passed | Compatibility suite and Paper audit record passed |
 | API-004 | `WayfarerTransactions` contract | 8.2 | JDK-only async transaction contract | API boundary and engine suites | beta.1 | Pending | In progress | Provider-independent engine complete; concrete provider blocked |
 | API-005 | `WayfarerWaymark` contract | 8.2 | JDK-only async capability contract | API boundary and fixture tests | beta.1 | Pending | In progress | Concrete provider authority remains ADR 0006 BLOCKED |
 | API-006 | `WayfarerItemIdentity` contract | 8.2 | ADR 0004 asynchronous JDK-only contract | API boundary and identity suites | beta.1 | Pending | In progress | Stub revised before accepted consumers; beta compatibility and runtime pending |
@@ -96,12 +99,12 @@ In the table below, `alpha.1 runtime evidence` refers to
 | CFG-014 | No secret in audit | 8.3 | Sanitized operational event codes | Denial/failure event tests | beta.1 | Pending | Automated test passed | Durable audit deferred |
 | CFG-015 | No secret in exceptions | 8.3 | Safe config/lifecycle exceptions | Failure/redaction tests | beta.1 | alpha.1 runtime evidence | In progress | Surfaced runtime validation diagnostic was sanitized; full beta review pending |
 | DB-001 | Core owns only `wf_core_*` | 8.4 | Existing immutable Core V001 | Isolated schema inspection | alpha.2 | Pending | Automated test passed | Only Flyway history, `wf_core_transaction`, and `wf_core_audit` created |
-| DB-002 | Transaction domain | 8.4 | Core migration/repository | Integration test | alpha.2/4 | Pending | Not started | Implementation pending |
-| DB-003 | Transaction event/history domain | 8.4 | Core migration/repository | Integration test | alpha.2/4 | Pending | Not started | Implementation pending |
+| DB-002 | Transaction domain | 8.4 | V001/V003 transaction repository | Integration test | alpha.2/4 | Pending | Automated test passed | Provider-independent repository and state engine passed CI |
+| DB-003 | Transaction event/history domain | 8.4 | V003 event/history repository | Integration test | alpha.2/4 | Pending | Automated test passed | Append-only transition history passed MariaDB CI |
 | DB-004 | Audit domain | 8.4 | V001 table plus durable repository | Idempotency/redaction/restart integration suite | alpha.2 | Pending | In progress | Implementation and test source complete; GitHub Actions authority pending |
 | DB-005 | Player identity domain | 8.4 | Additive V002 and newer-only repository | Repository/restart integration suite | alpha.2 | Pending | In progress | Implementation and test source complete; GitHub Actions authority pending |
 | DB-006 | Item identity domain | 8.4 | Additive V002 and async repository | Create/find/validate/restart suite | alpha.2 | Pending | In progress | Implementation and test source complete; GitHub Actions authority pending |
-| DB-007 | Reconcile state domain | 8.4 | Core migration/repository | Recovery test | alpha.2/4 | Pending | Not started | Implementation pending |
+| DB-007 | Reconcile state domain | 8.4 | V003 reconcile metadata and repository | Recovery test | alpha.2/4 | Pending | Automated test passed | Automatic/manual fixture reconcile and recovery passed CI |
 | DB-008 | Empty DB migration | 8.4 | `MigrationLifecycle`; MariaDB testkit fixture | `mariaDbIntegrationTest` | alpha.2 | Pending | Automated test passed | Empty isolated MariaDB 11.8 migrated successfully |
 | DB-009 | Additive migration | 8.4 | V002 adds only two Core identity tables | Empty/V001-upgrade/repeated tests | alpha.2 | Pending | In progress | V001 unchanged; integration source compiled; CI execution pending |
 | DB-010 | Applied migration immutable | 8.4 | V001 unchanged | Released/current/classpath SHA-256 checks | alpha.2+ | N/A | Automated test passed | All checked bytes match `59035d3b...4840`; no new production migration |
@@ -111,7 +114,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | DB-014 | Optimistic locking | 8.4 | Identity newer-only updates and transaction state/version claims | Concurrency/repository tests | alpha.2/4 | Pending | Automated test passed | CI `30314769436`; provider effects require a winning claim |
 | DB-015 | Required indexes | 8.4 | V001 indexes plus four V002 identity indexes | Information-schema inspection | alpha.2 | Pending | In progress | V002 integration source compiled; CI execution pending |
 | DB-016 | JSON validation | 8.4 | Existing Core V001 | Transaction/audit invalid-JSON tests | alpha.2 | Pending | Automated test passed | Both current JSON check constraints enforced |
-| DB-017 | Restart recovery | 8.4 | Durable audit/player/item/transaction repositories | Restart integration suite | alpha.2/4 | Pending | Automated test passed | MariaDB CI `30314769436` passed; Paper restart pending |
+| DB-017 | Restart recovery | 8.4 | Durable audit/player/item/transaction repositories | Restart integration suite | alpha.2/4 | rc.1 pre-client evidence | Automated/headless runtime passed | MariaDB repository reconstruction passed; Paper repeated startup validated V003 and services |
 | DB-018 | Core does not create `wf_main_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_main_*` table created |
 | DB-019 | Core does not create `wf_frontier_*` | 8.4 | Core-only migration location | Exact schema-set test | alpha.2 | Pending | Automated test passed | No `wf_frontier_*` table created |
 | TX-001 | Persist/recover PREPARED and DEBIT_PENDING | 8.5 | V001 row plus V003 history/repository | State/repository test | alpha.4 | Pending | Automated test passed | CI `30292228251` |
@@ -138,7 +141,7 @@ In the table below, `alpha.1 runtime evidence` refers to
 | TX-022 | Do not claim unconditional exactly-once | 8.5 | Crash-window architecture and UNKNOWN policy | Documentation test | beta.1 | N/A | Implemented | No unconditional claim; external effect requires reconcile |
 | TX-023 | Do not access RedisEconomy internal keys | 8.5, 14 | SPI/ADR 0006 boundary | Code inspection | alpha.4 | Pending | Implemented | No concrete adapter or internal key access |
 | TX-024 | Use supported API/Vault boundary | 8.5 | ADR 0006 authority gate | Capability/thread test | alpha.4 | Pending | BLOCKED | Concrete provider contract requires owner/provider authority |
-| AUD-001 | Audit enable/disable/migration | 8.6 | Probe, enable/migration events, bounded close event | Lifecycle/persistence suite | alpha.2 | Pending | In progress | Implementation complete; MariaDB CI and Paper runtime pending |
+| AUD-001 | Audit enable/disable/migration | 8.6 | Probe, enable/migration events, bounded close event | Lifecycle/persistence suite | alpha.2 | rc.1 pre-client evidence | Automated/headless runtime passed | Paper probe recorded durable audit through enable/migration and clean close |
 | AUD-002 | Audit health transitions/dependency outage | 8.6 | Dynamic Audit and Redis UP/DOWN/recovery/close health | Validation/failure/integration suite | alpha.2/3 | Pending | In progress | Alpha.2 CI passed; Redis dependency outage/recovery implementation awaits alpha.3 CI |
 | AUD-003 | Audit transaction/refund/UNKNOWN | 8.6 | Durable engine audit events | Transaction test | alpha.4 | Pending | Automated test passed | Safe state/failure detail only |
 | AUD-004 | Audit reconcile/admin action | 8.6 | Engine and command operational audit | Admin test | alpha.4 | Pending | Automated test passed | Permission/confirmation actions covered |
@@ -179,12 +182,12 @@ In the table below, `alpha.1 runtime evidence` refers to
 | TASK-008 | Bounded executor queue | 8.9 | `ArrayBlockingQueue` with configured capacity | Queue test | alpha.3 | Pending | Automated test passed | No unbounded executor queue |
 | TASK-009 | Backpressure | 8.9 | Immediate exceptional rejection and warning/health observation | Pressure test | alpha.3 | Pending | Automated test passed | No main-thread capacity wait |
 | TASK-010 | Graceful shutdown | 8.9 | Persistence/Redis gates and bounded `ManagedExecutor` | Queued accepted-work drain and shutdown tests | alpha.2/3 | Pending | Automated test passed | Accepted queue and Redis work drain after intake closes; runtime pending |
-| TASK-011 | No main-thread DB I/O | 6.4, 8.9 | Internal database executor, persistence gate, and `ThreadContext` guard | Pre-acquisition guard and stopping-race tests | alpha.2/3 | Pending | Automated test passed | Worker avoids lifecycle synchronization; guarded connection acquisition remained zero; Paper runtime pending |
+| TASK-011 | No main-thread DB I/O | 6.4, 8.9 | Internal database executor, persistence gate, and `ThreadContext` guard | Pre-acquisition guard and stopping-race tests | alpha.2/3 | rc.1 pre-client evidence | Automated/headless runtime passed | Guard tests passed; Paper probe observed database work off the primary thread |
 | TASK-012 | No main-thread Redis I/O | 6.4, 8.9 | `RedisRuntime` pre-dispatch `ThreadContext` guard | Detection test | alpha.3 | Pending | Automated test passed | Fail-fast guard passed in CI `30290422624` |
 | TASK-013 | Reject callback after disable | 8.9 | Double-guarded `mainThread` and bridge callback | Race test | alpha.3 | Pending | Automated test passed | Late callback remains exceptional |
 | ADM-001 | Health: Config/MariaDB/Migration | 8.10 | Active persistence lifecycle health | Success/failure/disable integration tests | V0.0.1-alpha.1 / alpha.2 | alpha.1 runtime evidence | In progress | Automated `UNKNOWN`/`UP`/`DOWN`/`DISABLED` paths passed; alpha.2 runtime pending |
 | ADM-002 | Health: Redis/Waymark | 8.10 | Redis lifecycle plus provider probe health | Health test | alpha.3/4 | Pending | In progress | Fixture probe boundary implemented; concrete provider blocked |
-| ADM-003 | Health: Audit/Transaction | 8.10 | Dynamic Audit/Identity/Transaction components | Health/failure tests | alpha.2/4 | Pending | In progress | Transaction lifecycle implemented; headless runtime pending |
+| ADM-003 | Health: Audit/Transaction | 8.10 | Dynamic Audit/Identity/Transaction components | Health/failure tests | alpha.2/4 | rc.1 pre-client evidence | In progress | Paper observed Audit/Identity `UP`; Transaction remained `UNKNOWN` because concrete Waymark is blocked |
 | ADM-004 | Health: Executor/Services | 8.10 | Dynamic executor/services components | Health/runtime tests | V0.0.1-alpha.1 / alpha.3 | alpha.1 runtime evidence | In progress | Executor and Services `UP`; later executor slice remains pending |
 | ADM-005 | `/wayfarer admin health` | 8.10 | `HealthCommandHandler`; Bukkit adapter | Command suite | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Console and authorized-player output observed |
 | ADM-006 | Transaction inspect command | 8.10 | Sanitized async `TransactionCommandHandler` | Command test | alpha.4 | Pending | Automated test passed | Provider reference value is not displayed |
@@ -194,29 +197,29 @@ In the table below, `alpha.1 runtime evidence` refers to
 | ADM-010 | Admin redaction/audit/confirmation | 8.10 | Presence-only reference, operational audit, explicit confirm | Security test | alpha.4 | Pending | Automated test passed | Concrete runtime command wiring remains provider-gated |
 | TST-001 | Unit tests | 10.1 | API/Common/Core test sources | 153 beta unit tests | V0.0.1-alpha.1+ | N/A | Automated test passed | Local: 153 passed, 0 failed, 0 errors, 0 skipped; CI `30314769436` passed |
 | TST-002 | MariaDB integration | 10.1 | Testkit fixture; mandatory Core integration task | Persistence and identity/transaction Testcontainers suite | alpha.2 | Pending | Automated test passed | Ten cases passed in CI `30314769436`; local Docker remained stopped |
-| TST-003 | Redis integration | 10.1 | `redisIntegrationTest` using authoritative `redis:8-alpine` | Testcontainers | alpha.3 | Pending | Automated test passed | Six cases passed in CI `30314769436`; Paper runtime remains pending |
+| TST-003 | Redis integration | 10.1 | `redisIntegrationTest` using authoritative `redis:8-alpine` | Testcontainers | alpha.3 | rc.1 pre-client evidence | Automated/headless runtime passed | Six integration cases passed CI; Paper observed Redis `DOWN` and reconnect `UP` in run `30317207610` |
 | TST-004 | Migration tests | 10.1 | Alpha.2–alpha.4 persistence suite | Empty/upgrade/repeated/failure/hash tests | alpha.2 | Pending | Automated test passed | V001–V003 integration and package checks passed CI `30314769436` |
 | TST-005 | Concurrency tests | 10.1 | Persistence drain, newer-only identity, transaction claims | Queue/drain/stale/claim tests | alpha.2+ | Pending | Automated test passed | Unit and MariaDB CI `30314769436`; runtime pressure evidence pending |
 | TST-006 | Idempotency tests | 10.1 | Fixture concurrency plus MariaDB restart | Automated suite | alpha.4 | Pending | Automated test passed | CI `30292228251` |
-| TST-007 | Failure/timeout tests | 10.1 | Lifecycle/executor and persistence-drain failure suites | Gradle test | V0.0.1-alpha.1+ | alpha.1 runtime evidence | In progress | Drain timeout/interruption are bounded, warned, and non-clean; Paper persistence evidence pending |
-| TST-008 | Restart recovery tests | 10.1 | Audit/player/item/transaction repository reconstruction | MariaDB restart suite | alpha.2+ | Pending | Automated test passed | MariaDB CI `30314769436`; Paper restart pending |
+| TST-007 | Failure/timeout tests | 10.1 | Lifecycle/executor and persistence-drain failure suites | Gradle test | V0.0.1-alpha.1+ | alpha.1 and rc.1 pre-client evidence | In progress | Paper observed migration/MariaDB fail-closed; drain timeout/interruption remain automated-only |
+| TST-008 | Restart recovery tests | 10.1 | Audit/player/item/transaction repository reconstruction | MariaDB restart suite | alpha.2+ | rc.1 pre-client evidence | Automated/headless runtime passed | MariaDB restart suite passed; Paper repeated startup and service lookup passed |
 | TST-009 | Config validation tests | 10.1 | `CoreConfigLoaderTest` | Gradle test | V0.0.1-alpha.1 | alpha.1 runtime evidence | Runtime test passed | Placeholder, valid, unsupported, and dependency-validation paths observed |
 | TST-010 | Secret redaction tests | 10.1 | Common/config/health/audit sanitizer | Unit plus zero-hit MariaDB test | beta.1 | alpha.1 runtime evidence | Automated test passed | Local unit and MariaDB CI `30314769436` passed |
 | TST-011 | Packaging/API compatibility tests | 10.1 | API reflection tests and CI package scan | Automated inspection | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | Automated test passed | Local and CI `30314769436` boundary/package scans passed |
-| TST-012 | Isolated test server | 10.2 | Result and evidence index | Runtime procedure | V0.0.1-alpha.1–rc.1 | alpha.1 runtime evidence | In progress | Alpha.1 runtime gate passed; later candidates and Project acceptance pending |
-| TST-013 | Main-thread I/O and callback tests | 10.2 | JDBC/Redis guards, immutable player snapshot, task bridge | Automated/runtime | alpha.2/3 | Pending | Automated test passed | JDBC/Redis/task automated paths passed; Paper runtime pending |
-| TST-014 | Tick/performance verification | 10.2, 11 | RC plan | Runtime measurement | rc.1 | Pending | Not started | Implementation pending |
+| TST-012 | Isolated test server | 10.2 | Result and evidence index | Runtime procedure | V0.0.1-alpha.1–rc.1 | alpha.1 and rc.1 pre-client evidence | In progress | RC client-independent scope passed run `30317207610`; Minecraft client and Project acceptance pending |
+| TST-013 | Main-thread I/O and callback tests | 10.2 | JDBC/Redis guards, immutable player snapshot, task bridge | Automated/runtime | alpha.2/3 | rc.1 pre-client evidence | Automated/headless runtime passed | Paper probe verified database worker and worker-to-main-thread bridge |
+| TST-014 | Tick/performance verification | 10.2, 11 | RC plan | Runtime measurement | rc.1 | rc.1 pre-client evidence | In progress | One headless 20 TPS / 13.2 ms observation and Java 25 thread dump recorded; client-visible behavior pending |
 | TST-015 | Permission denial verification | 10.2 | Async operational audit sink with actor snapshot | Unit/MariaDB permission tests | V0.0.1-alpha.1 / alpha.4 | alpha.1 runtime evidence | In progress | Unit and durable MariaDB CI `30314769436` passed; later Paper admin commands pending |
 | TST-016 | JAR dependency/class identity inspection | 10.2 | CI package scan and API boundary | Packaging test | V0.0.1-alpha.1 / beta.1 | alpha.1 runtime evidence | Automated test passed | CI `30314769436`: one runtime JAR, V001–V003 once, forbidden/duplicate API entries 0 |
-| TST-017 | Test Report release/artifact/environment identity | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final values pending |
-| TST-018 | Test Report authority/scope/policy compliance | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final evidence pending |
-| TST-019 | Test Report build/unit results and counts | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | No test source yet |
-| TST-020 | Test Report MariaDB/Redis/migration results | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Tests pending |
-| TST-021 | Test Report isolated server cases expected/actual/evidence | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Runtime pending |
-| TST-022 | Test Report threading/failure/restart/performance | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Runtime pending |
-| TST-023 | Test Report API/packaging/permission/redaction | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Tests pending |
-| TST-024 | Test Report limitations/failures/open decisions | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final assessment pending |
-| TST-025 | Test Report reproduction/evidence/runtime-non-change | 11 | Report skeleton | Document validation | rc.1 | Pending | Not started | Final evidence pending |
+| TST-017 | Test Report release/artifact/environment identity | 11 | RC result and evidence index | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Candidate/run/environment fixed; release tag/URL remain pending |
+| TST-018 | Test Report authority/scope/policy compliance | 11 | RC result and evidence index | Document validation | rc.1 | rc.1 pre-client evidence | Automated/headless runtime passed | Core-only scope and headless/client split recorded |
+| TST-019 | Test Report build/unit results and counts | 11 | RC result plus beta result | Document validation | rc.1 | rc.1 pre-client evidence | Automated test passed | Successful workflow has 0 failed and 0 skipped |
+| TST-020 | Test Report MariaDB/Redis/migration results | 11 | RC result and evidence index | Document validation | rc.1 | rc.1 pre-client evidence | Automated/headless runtime passed | MariaDB 11.8, Redis 8-alpine, and V001–V003 recorded |
+| TST-021 | Test Report isolated server cases expected/actual/evidence | 11 | RC plan/result/evidence | Document validation | rc.1 | rc.1 pre-client evidence | Automated/headless runtime passed | Sanitized case matrix and retained artifact digest recorded |
+| TST-022 | Test Report threading/failure/restart/performance | 11 | RC result and evidence index | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Headless observations recorded; client-visible and some runtime injection cases pending |
+| TST-023 | Test Report API/packaging/permission/redaction | 11 | Beta and RC results | Document validation | rc.1 | alpha.1 and rc.1 pre-client evidence | In progress | API/package/redaction automated gates passed; remaining player commands are in client plan |
+| TST-024 | Test Report limitations/failures/open decisions | 11 | RC evidence and known limitations | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Harness incidents and ADR 0006 block disclosed; client result blank |
+| TST-025 | Test Report reproduction/evidence/runtime-non-change | 11 | RC evidence provenance | Document validation | rc.1 | rc.1 pre-client evidence | Automated/headless runtime passed | Source/run/artifact digests fixed; Project Runtime unchanged |
 | REL-001 | Human versions/tags/JAR names use uppercase V | 12, 15 | Workflows/process | Workflow tests | All | V0.0.1-alpha.1 | Implemented | Alpha.1 tag and release artifact naming verified |
 | REL-002 | Only V0.0.x versions accepted | 12, 15 | Workflow regex | Negative-path tests | All | N/A | Implemented | Dispatch not executed |
 | REL-003 | Gradle/plugin version strips leading V | 12 | Workflows | Workflow assertion | All | V0.0.1-alpha.1 | Implemented | Runtime plugin reported `0.0.1-alpha.1` |
@@ -228,33 +231,33 @@ In the table below, `alpha.1 runtime evidence` refers to
 | REL-009 | Release readiness `READY` required | 12, 13 | Stable workflow | Negative-path test | Stable | N/A | Implemented | Current marker BLOCKED |
 | REL-010 | Traceability/readiness are tracked fixed inputs | 12, 13 | Stable workflow | Path/tracking tests | Stable | N/A | Implemented | Release not executed |
 | REL-011 | Traceability/readiness copied, hashed, manifested | 12, 13 | Stable workflow | Packaging test | Stable | N/A | Implemented | Release not executed |
-| REL-012 | Runtime JAR and SHA-256 | 12 | Workflow | Packaging test | V0.0.1-alpha.1 / beta.1+ | alpha.1 runtime evidence | In progress | Alpha.1 release JAR identity verified; later candidates pending |
-| REL-013 | Release notes/config/migration metadata | 12 | Workflow/handoff | Packaging test | beta.1+ | N/A | Not started | Final content pending |
-| REL-014 | Sanitized config asset | 12 | Handoff skeleton | Packaging test | beta.1+ | N/A | Not started | Final asset pending |
-| REL-015 | Command/permission reference asset | 12 | Handoff skeleton | Packaging test | beta.1+ | N/A | Not started | Final asset pending |
+| REL-012 | Runtime JAR and SHA-256 | 12 | Workflow | Packaging test | V0.0.1-alpha.1 / beta.1+ | alpha.1 and rc.1 pre-client evidence | In progress | RC candidate JAR/hash verified; published release identity pending |
+| REL-013 | Release notes/config/migration metadata | 12 | Workflow/handoff | Packaging test | beta.1+ | N/A | In progress | Candidate source content complete; publication packaging pending |
+| REL-014 | Sanitized config asset | 12 | `sanitized-configuration.md` | Packaging test | beta.1+ | N/A | In progress | Candidate source complete; release asset pending |
+| REL-015 | Command/permission reference asset | 12 | `command-and-permission-reference.md` | Packaging test | beta.1+ | N/A | In progress | Candidate source complete; release asset pending |
 | REL-016 | Dependency list asset | 12 | Dependency/placement and third-party notice documents | Packaging test | beta.1+ | N/A | In progress | Candidate inventory complete; release asset pending |
 | REL-017 | Bundled/relocated library list asset | 12 | `third-party-notices.md`; Shadow configuration | Packaging test | beta.1+ | N/A | In progress | Candidate bundled inventory complete; release asset pending |
 | REL-018 | License/third-party notice assets | 12 | `LICENSE`; `third-party-notices.md` | Packaging test | beta.1+ | N/A | In progress | Source assets complete; release packaging pending |
-| REL-019 | Plugin Test Report asset | 12 | Report skeleton | Packaging test | rc.1 | N/A | Not started | Final report pending |
-| REL-020 | Known limitations asset | 12 | Handoff skeleton | Packaging test | rc.1 | N/A | Not started | Final content pending |
-| REL-021 | Rollback/removal asset | 12 | Handoff skeleton | Packaging test | rc.1 | N/A | Not started | Final content pending |
-| REL-022 | Artifact Matrix asset | 13.2 | Handoff skeleton | Packaging test | rc.1 | N/A | Not started | Final content pending |
-| REL-023 | Project acceptance input asset | 13.3 | Handoff skeleton | Packaging test | rc.1 | N/A | Not started | Final content pending |
+| REL-019 | Plugin Test Report asset | 12 | RC result/evidence plus client result form | Packaging test | rc.1 | N/A | In progress | Pre-client content complete; client/final release result pending |
+| REL-020 | Known limitations asset | 12 | `known-limitations.md` | Packaging test | rc.1 | N/A | In progress | Candidate content complete; release asset pending |
+| REL-021 | Rollback/removal asset | 12 | `upgrade-and-rollback.md` | Packaging test | rc.1 | N/A | In progress | Candidate content complete; Project-owned execution pending |
+| REL-022 | Artifact Matrix asset | 13.2 | `artifact-matrix.md` | Packaging test | rc.1 | N/A | In progress | Candidate matrix complete; final release identity pending |
+| REL-023 | Project acceptance input asset | 13.3 | `project-acceptance-input.md` | Packaging test | rc.1 | N/A | In progress | Pre-client inputs complete; placement/acceptance pending |
 | REL-024 | Release process performs no Project Runtime change | 6.5, 14 | Workflow/process | Boundary inspection | All | N/A | Implemented | No deployment action |
-| HND-001 | Release URL/tag/version/source commit | 13.1 | Handoff skeleton | Document validation | rc.1 | N/A | Not started | Values pending |
-| HND-002 | Artifact/JAR/hash/config/migration inventory | 13.1 | Handoff skeleton | Document validation | rc.1 | N/A | Not started | Values pending |
-| HND-003 | Sanitized config and environment variables | 13.1, 13.3 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-004 | Commands and permissions | 13.1 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-005 | Dependencies/placement/load order | 13.1, 13.3 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-006 | Test report/limitations/open decisions | 13.1 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-007 | Upgrade/rollback/removal/data compatibility | 13.1, 13.3 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-008 | Artifact Matrix | 13.2 | `artifact-matrix.md` | Document validation | rc.1 | N/A | In progress | Skeleton only |
-| HND-009 | Runtime/DB/Redis/external-plugin prerequisites | 13.3 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-010 | Migration/failure/health/smoke-test behavior | 13.3 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-011 | Backup/restore/removal/rollback/downgrade | 13.3 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
-| HND-012 | Test-server differences and Project acceptance input | 13.3 | Handoff skeleton | Document validation | rc.1 | Pending | Not started | Final content pending |
+| HND-001 | Release URL/tag/version/source commit | 13.1 | Handoff and RC evidence | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Tested source fixed; release URL/tag/final source pending |
+| HND-002 | Artifact/JAR/hash/config/migration inventory | 13.1 | Artifact and migration records | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Candidate JAR/hash, config 1, and V003 fixed; release identity pending |
+| HND-003 | Sanitized config and environment variables | 13.1, 13.3 | `sanitized-configuration.md` | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Candidate source complete; Project values/acceptance pending |
+| HND-004 | Commands and permissions | 13.1 | Command reference and client plan | Document validation | rc.1 | alpha.1 runtime evidence | In progress | Source complete; remaining player checkpoints blank |
+| HND-005 | Dependencies/placement/load order | 13.1, 13.3 | `dependency-and-placement.md` | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Candidate authority recorded; concrete provider/placement pending |
+| HND-006 | Test report/limitations/open decisions | 13.1 | RC result/evidence and known limitations | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Pre-client complete; client and ADR 0006 remain |
+| HND-007 | Upgrade/rollback/removal/data compatibility | 13.1, 13.3 | `upgrade-and-rollback.md`; migration record | Document validation | rc.1 | N/A | In progress | Source complete; Project-owned execution pending |
+| HND-008 | Artifact Matrix | 13.2 | `artifact-matrix.md` | Document validation | rc.1 | N/A | In progress | Candidate matrix complete; final release identity pending |
+| HND-009 | Runtime/DB/Redis/external-plugin prerequisites | 13.3 | Dependency, config, and provider records | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Headless prerequisites fixed; concrete provider/Project values pending |
+| HND-010 | Migration/failure/health/smoke-test behavior | 13.3 | RC plan/result/evidence | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Headless cases complete; client-only smoke pending |
+| HND-011 | Backup/restore/removal/rollback/downgrade | 13.3 | Upgrade/rollback and client plan | Document validation | rc.1 | N/A | In progress | Procedure complete; execution remains Project-owned |
+| HND-012 | Test-server differences and Project acceptance input | 13.3 | Project acceptance input and client plan | Document validation | rc.1 | rc.1 pre-client evidence | In progress | Headless/client difference fixed; Project acceptance pending |
 | HND-013 | Project acceptance and Roadmap remain pending | 9.3, 13 | Handoff skeleton | Document validation | Stable | N/A | Implemented | Runtime not changed |
 | OPS-001 | No force push/tag or asset overwrite | 15 | Workflow/policy | Git/release inspection | All | N/A | Implemented | Recheck every publication |
-| OPS-002 | Commit/Test Report/release provenance | 15 | Workflow/handoff | Provenance test | rc.1 | N/A | Not started | Release pending |
-| OPS-003 | Failed/skipped tests are disclosed | 11, 15 | Result/report skeleton | Document validation | All | N/A | In progress | No test source disclosed |
+| OPS-002 | Commit/Test Report/release provenance | 15 | Workflow/handoff | Provenance test | rc.1 | rc.1 pre-client evidence | In progress | Candidate source/run/artifact digests fixed; release provenance pending |
+| OPS-003 | Failed/skipped tests are disclosed | 11, 15 | Result and evidence records | Document validation | All | N/A | In progress | Successful run: 0 failed/0 skipped; unsuccessful harness/runtime-correction runs disclosed |
 | OPS-004 | Generated artifacts remain out of source history | 15 | `.gitignore`; policy | Git inspection | All | N/A | Implemented | No binary tracked |

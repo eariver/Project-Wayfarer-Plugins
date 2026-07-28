@@ -9,13 +9,13 @@ requires exact `CLEARED` and `READY` markers in addition to explicit owner clear
 
 | Area | Evidence commit/path | Status |
 |---|---|---|
-| Governance and scope | Pending immutable commit | In progress |
-| Core implementation | `6a5940023c46d0440de30e46edc2833c80076ecc` | alpha.1 implemented; later slices pending |
-| Automated verification | `docs/testing/results/V0.0.1-alpha.1.md` | alpha.1 automated test passed; later slices pending |
-| Runtime verification | Pending | Not started |
-| Packaging and provenance | Pending | Not started |
-| Handoff and acceptance input | Pending | In progress |
+| Governance and scope | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/traceability.md` | In progress; global gate BLOCKED |
+| Core implementation | `6d25105f516a76cc373e5259fcef9d34de414543` | Provider-independent Core pre-client candidate implemented |
+| Automated verification | `docs/testing/results/V0.0.1-beta.1.md` | 153 unit, 10 MariaDB, 6 Redis; green commit-pinned CI |
+| Runtime verification | `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md` | Automated/headless runtime passed; client pending |
+| Packaging and provenance | `docs/testing/results/V0.0.1-rc.1.md` | Candidate JAR/hash and workflow artifact fixed; publication pending |
+| Handoff and acceptance input | `docs/handoff/V0.0.1/`; `docs/testing/plans/V0.0.1-client-acceptance.md` | Pre-client package complete; Owner/Project acceptance pending |
 
-No row is marked passed without implementation and evidence commit references. Skeleton
-documents establish the documentation foundation only; they do not complete implementation,
-automated testing, runtime verification, release packaging, or Project acceptance.
+No pre-client result completes concrete provider authority, Minecraft client acceptance, release
+publication, Project placement/acceptance, or Owner clearance. The release gate remains
+`BLOCKED`.

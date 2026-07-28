@@ -17,13 +17,16 @@
   isolated `mariadb:11.8` migration tests. Persistence shutdown drain
   ordering is automated-test covered after the fix: intake closes independently, accepted work
   drains before Hikari close, and timeout/interruption remain non-clean. Isolated Paper runtime
-  evidence remains pending.
+  now covers empty migration, repeated startup, MariaDB fail-closed, migration-checksum
+  fail-closed, and clean disable. Paper in-flight drain timeout/interruption injection remains
+  pending and must not be inferred from the clean case.
   MariaDB and Migration health are `UP` only after pool connectivity and Flyway validation/
   migration succeed; failures are `DOWN` and stop service publication.
 - The alpha.2 PR B source implements additive V002, durable audit, player identity snapshots,
   common item identity, and required repositories. Local Docker was stopped, so PR B MariaDB
-  integration is not claimed locally and GitHub Actions is mandatory authority. Paper runtime
-  evidence remains pending.
+  integration is not claimed locally and GitHub Actions is mandatory authority. The rc.1 Paper
+  probe passed durable audit and item identity create/find/validate; real PlayerJoin identity
+  remains pending client acceptance.
 - PR B correction separates Identity `OPEN`/`CLOSING`/`CLOSED`, defers clean Identity health until
   database drain finalization, adds durable player-upsert failure audit, and makes the configured
   Core server ID the sole audit persistence authority. Paper shutdown/runtime evidence remains
@@ -41,9 +44,12 @@
   Downstream plugins receive no JDBC `Connection`, Hikari, or Flyway implementation.
 - The alpha.3 branch implements internal Redis cache/lock/message/idempotency assistance,
   explicit outage/reconnect health, main-thread rejection, and a bounded shutdown. Commit-pinned
-  isolated Redis CI passed; Paper runtime evidence remains pending.
+  isolated Redis CI passed. The rc.1 Paper run observed Redis health `DOWN` during outage and `UP`
+  after reconnect.
 - The executor now has an immediate-rejection bounded queue and the task bridge validates
-  immutable JDK-only data. Runtime queue-pressure/tick evidence remains pending.
+  immutable JDK-only data. The Paper probe verified worker and main-thread bridge boundaries and
+  recorded one 20 TPS / 13.2 ms tick observation. Runtime queue-pressure and shutdown-timeout
+  injection remain covered only by automated suites.
 - The alpha.4 provider-independent transaction engine, V003 repository/history, reconcile path,
   fixture SPI, and admin handlers are implemented. Concrete RedisEconomy/Vault invocation remains
   blocked by ADR 0006 because its safe thread/timeout/reference contract is not immutable authority.
@@ -57,6 +63,13 @@
 - Waymark operations cannot claim unconditional exactly-once across an external provider.
 - Concrete provider API/thread/timeout/reference behavior remains an open authority gate under
   ADR 0006; the provider-independent transaction engine does not relax it.
+- The successful rc.1 pre-client evidence is limited to client-independent scope. Harness
+  calibration and two corrected Paper classloader defects are indexed in
+  `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md`; unsuccessful runs are not evidence of
+  a pass.
+- Real PlayerJoin/reconnect identity, player-visible permissions/output/responsiveness, and any
+  authorized concrete Waymark balance/debit/refund behavior remain pending the client acceptance
+  package.
 - Hot reload/PlugMan-style reload is unsupported.
 - Project placement, migration execution, configuration, permission application, server restart,
   runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.

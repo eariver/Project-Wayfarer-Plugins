@@ -17,20 +17,32 @@
   ADR 0006
 - Build gates: `check`, `assemble`, configuration-cache variants, compiler warnings,
   packaging, and reproducibility passed
+- RC.1 pre-client headless gate: passed at
+  `6d25105f516a76cc373e5259fcef9d34de414543`; workflow
+  [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610)
+  and normal CI
+  [`30317207616`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207616)
+  passed with zero failed and zero skipped tests
+- RC.1 candidate Core SHA-256:
+  `f36fe57370b4d123b13b5bf328c029c03407338e83e781953db81547de8a334a`
 - Isolated test server: Alpha.1 `PASSED`;
   `docs/testing/evidence/V0.0.1-alpha.1-runtime-evidence.md`
+- Pre-client evidence:
+  `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md`;
+  result wording is `Automated/headless runtime passed`
 - User observations: Non-OP denial passed; OP health passed; internal-detail suppression passed
 - Known limitations/open decisions: See linked handoff records
 - `requirements_cleared`: Project Owner input remains required
 - Project Runtime placement/acceptance: Pending / pending
 
-Stable release remains blocked until later alpha slices, every applicable traceability and handoff
-gate, a stable final source commit, Project Runtime placement/acceptance, and explicit
-Project Owner requirements clearance are complete. The alpha.1 source commit is not the stable
-final source, and release readiness must remain `BLOCKED` after alpha.1 evidence alone.
+Stable release remains blocked until the stacked PRs are reviewed and merged, concrete Waymark
+provider authority is resolved, client acceptance and every applicable traceability/handoff gate
+are complete, a stable final source is fixed, Project Runtime placement/acceptance is recorded, and
+the Project Owner explicitly clears requirements. The alpha.1 source commit and the unmerged rc.1
+head are not stable final source.
 
 The beta feature-complete candidate adds automated API/module boundaries, Core packaging
 inspection, configuration-cache reuse, dependency/license inventory, and same-source JAR
-reproducibility evidence. Updated-head CI and the rc.1 headless runtime gate are still required;
-ADR 0006 also blocks a concrete Waymark provider. These additions do not change the `BLOCKED`
-marker.
+reproducibility evidence. The rc.1 pre-client workflow adds commit-pinned client-independent Paper
+evidence; Minecraft client acceptance is intentionally still blank. ADR 0006 blocks a concrete
+Waymark provider. These results do not change the `BLOCKED` marker.
