@@ -82,8 +82,14 @@ public final class TransactionCommandHandler {
                     + " | type=" + details.transactionType()
                     + " | subject=" + details.subjectType() + ":" + details.subjectId()
                     + " | amount=" + details.amountWaymark()
-                    + " | providerReference="
-                    + (details.providerReference() == null ? "none" : "present")
+                    + " | debitOperation="
+                    + presence(details.debitOperationId())
+                    + " | debitReference="
+                    + presence(details.debitProviderReference())
+                    + " | refundOperation="
+                    + presence(details.refundOperationId())
+                    + " | refundReference="
+                    + presence(details.refundProviderReference())
                     + " | failure="
                     + (details.failureCode() == null ? "none" : details.failureCode())
                     + " | version=" + details.lockVersion()
@@ -177,5 +183,9 @@ public final class TransactionCommandHandler {
         } catch (RuntimeException ignored) {
             // Command response remains available.
         }
+    }
+
+    private static String presence(String value) {
+        return value == null ? "none" : "present";
     }
 }

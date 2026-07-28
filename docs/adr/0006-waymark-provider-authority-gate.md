@@ -20,6 +20,23 @@ created. The engine never accesses RedisEconomy keys, Redis balances, or Vault i
 Enabling Waymark without an explicitly injected verified provider fails closed. Production config
 remains disabled. Redis remains coordination assistance and MariaDB remains transaction authority.
 
+Core now has a production-valid `WaymarkProviderSource` boundary. The Paper entry point discovers
+only a `WayfarerWaymarkProvider` registered under Core's shared, unshaded `wayfarer-api` class
+identity. Constructor/fixed sources use the same boundary in integration and headless fixture
+tests. Fixture code is test-only and excluded from the production Core candidate.
+
+No current authority proves a safe external plugin load order for registering that shared type
+before Core startup. A provider plugin that bundles its own API copy is rejected by class identity,
+while an ordinary hard dependency on Core enables after Core and is too late for startup recovery.
+Do not guess around this cycle. A future approved adapter may need an owner-defined load contract,
+late registration lifecycle, or Core-internal provider factory. Until then, production discovery
+returns absent and only provider-independent services are published.
+
+The unmerged alpha.4 SPI and operator detail records are intentionally revised before beta:
+resolution is now a structured result and debit/refund effect identities are separate. This is a
+source/binary change to an unpublished stacked-branch API with no accepted external consumer.
+Contract, boundary tests, beta API inventory, and downstream stacked branches must move together.
+
 ## Consequences
 
 alpha.4 provider-independent automated work may pass, but concrete provider completion and stable

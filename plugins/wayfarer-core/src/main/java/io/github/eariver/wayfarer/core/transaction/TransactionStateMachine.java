@@ -45,13 +45,13 @@ public final class TransactionStateMachine {
             EnumSet.of(
                 State.REFUNDED,
                 State.RECONCILED_REFUNDED,
-                State.UNKNOWN,
-                State.FAILED
+                State.UNKNOWN
             )
         );
         transitions.put(
             State.UNKNOWN,
             EnumSet.of(
+                State.UNKNOWN,
                 State.REFUND_PENDING,
                 State.RECONCILED_COMMITTED,
                 State.RECONCILED_REFUNDED,

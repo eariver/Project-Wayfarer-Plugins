@@ -29,6 +29,7 @@ import io.github.eariver.wayfarer.core.task.ManagedExecutor;
 import io.github.eariver.wayfarer.core.task.ShutdownResult;
 import io.github.eariver.wayfarer.core.transaction.DefaultWayfarerWaymark;
 import io.github.eariver.wayfarer.core.transaction.TransactionEngine;
+import io.github.eariver.wayfarer.core.transaction.WaymarkProviderSource;
 
 import java.time.Clock;
 import java.util.List;
@@ -46,7 +47,7 @@ public final class CoreRuntime {
     private final ThreadContext threadContext;
     private final Clock clock;
     private final PlayerIdentityListenerRegistrar identityListenerRegistrar;
-    private final WayfarerWaymarkProvider waymarkProvider;
+    private final WaymarkProviderSource waymarkProviderSource;
     private ManagedExecutor executor;
     private MariaDbPool mariaDbPool;
     private MigrationLifecycle migration;
@@ -73,7 +74,7 @@ public final class CoreRuntime {
             warningSink,
             () -> false,
             PlayerIdentityListenerRegistrar.unavailable(),
-            null
+            WaymarkProviderSource.unavailable()
         );
     }
 
@@ -93,7 +94,7 @@ public final class CoreRuntime {
             warningSink,
             threadContext,
             PlayerIdentityListenerRegistrar.unavailable(),
-            null
+            WaymarkProviderSource.unavailable()
         );
     }
 
@@ -114,7 +115,7 @@ public final class CoreRuntime {
             warningSink,
             threadContext,
             identityListenerRegistrar,
-            null
+            WaymarkProviderSource.unavailable()
         );
     }
 
@@ -128,6 +129,28 @@ public final class CoreRuntime {
         PlayerIdentityListenerRegistrar identityListenerRegistrar,
         WayfarerWaymarkProvider waymarkProvider
     ) {
+        this(
+            config,
+            publisher,
+            mainThread,
+            clock,
+            warningSink,
+            threadContext,
+            identityListenerRegistrar,
+            WaymarkProviderSource.fixed(waymarkProvider)
+        );
+    }
+
+    public CoreRuntime(
+        CoreConfig config,
+        ServicePublisher publisher,
+        MainThreadDispatcher mainThread,
+        Clock clock,
+        Consumer<String> warningSink,
+        ThreadContext threadContext,
+        PlayerIdentityListenerRegistrar identityListenerRegistrar,
+        WaymarkProviderSource waymarkProviderSource
+    ) {
         this.config = Objects.requireNonNull(config, "config");
         this.publisher = Objects.requireNonNull(publisher, "publisher");
         this.mainThread = Objects.requireNonNull(mainThread, "mainThread");
@@ -138,7 +161,10 @@ public final class CoreRuntime {
             identityListenerRegistrar,
             "identityListenerRegistrar"
         );
-        this.waymarkProvider = waymarkProvider;
+        this.waymarkProviderSource = Objects.requireNonNull(
+            waymarkProviderSource,
+            "waymarkProviderSource"
+        );
         this.lifecycle = new LifecycleCoordinator(warningSink);
         this.health = new HealthRegistry(clock, lifecycle::state);
     }
@@ -482,14 +508,20 @@ public final class CoreRuntime {
             health.update("Transaction", WayfarerHealth.Status.UNKNOWN, "Waymark disabled");
             return () -> {};
         }
+        WayfarerWaymarkProvider waymarkProvider;
+        try {
+            waymarkProvider = waymarkProviderSource.discover().orElse(null);
+        } catch (RuntimeException failure) {
+            waymarkProvider = null;
+        }
         if (waymarkProvider == null) {
             health.update("Waymark", WayfarerHealth.Status.DOWN, "Provider authority unavailable");
             health.update("Transaction", WayfarerHealth.Status.DOWN, "Provider unavailable");
-            throw new PersistenceException("Waymark provider authority is unavailable");
+            return () -> {};
         }
         if (mariaDbPool == null || mariaDbPool.isClosed() || audit == null) {
             health.update("Transaction", WayfarerHealth.Status.DOWN, "Durable dependency unavailable");
-            throw new PersistenceException("Transactions require migrated MariaDB and audit");
+            return () -> {};
         }
         try {
             WayfarerWaymarkProvider.ProbeResult probe = waymarkProvider.probe()
@@ -502,15 +534,31 @@ public final class CoreRuntime {
             if (!probe.available()) {
                 throw new IllegalStateException("Waymark provider probe failed");
             }
-            waymark = new DefaultWayfarerWaymark(waymarkProvider);
-            transactions = new TransactionEngine(
+            TransactionEngine candidate = new TransactionEngine(
                 mariaDbPool.createTransactionRepository(),
                 waymarkProvider,
                 audit,
                 config.serverId(),
                 config.waymark().operationTimeout(),
-                clock
+                clock,
+                warning -> {
+                    health.update(
+                        HealthRegistry.AUDIT,
+                        WayfarerHealth.Status.DOWN,
+                        "Transaction audit mirror failed"
+                    );
+                    warn(warning);
+                }
             );
+            candidate.recoverPending(100)
+                .toCompletableFuture()
+                .orTimeout(
+                    config.shutdownTimeout().toMillis(),
+                    java.util.concurrent.TimeUnit.MILLISECONDS
+                )
+                .join();
+            transactions = candidate;
+            waymark = new DefaultWayfarerWaymark(waymarkProvider);
             health.update("Waymark", WayfarerHealth.Status.UP, "Provider capability available");
             health.update("Transaction", WayfarerHealth.Status.UP, "Transaction engine available");
             return () -> {
@@ -522,7 +570,10 @@ public final class CoreRuntime {
         } catch (RuntimeException failure) {
             health.update("Waymark", WayfarerHealth.Status.DOWN, "Provider initialization failed");
             health.update("Transaction", WayfarerHealth.Status.DOWN, "Transaction initialization failed");
-            throw new PersistenceException("Waymark transaction initialization failed");
+            warn("Wayfarer transaction service remained unavailable after provider recovery");
+            transactions = null;
+            waymark = null;
+            return () -> {};
         }
     }
 

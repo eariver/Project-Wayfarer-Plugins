@@ -7,10 +7,13 @@ import io.github.eariver.wayfarer.api.WayfarerWaymarkProvider;
 import io.github.eariver.wayfarer.common.secret.SecretValue;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
 import io.github.eariver.wayfarer.core.lifecycle.LifecycleException;
+import io.github.eariver.wayfarer.core.identity.PlayerIdentityListenerRegistrar;
 import io.github.eariver.wayfarer.core.persistence.MariaDbPool;
 import io.github.eariver.wayfarer.core.persistence.MigrationLifecycle;
 import io.github.eariver.wayfarer.core.service.ServicePublisher;
 import io.github.eariver.wayfarer.core.transaction.TransactionEngine;
+import io.github.eariver.wayfarer.core.transaction.TransactionRepository;
+import io.github.eariver.wayfarer.core.transaction.TransactionUpdate;
 import io.github.eariver.wayfarer.testkit.MariaDbContainerFixture;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HexFormat;
@@ -31,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -81,6 +86,7 @@ class PersistenceFoundationIntegrationTest {
             assertTimestampPrecision(connection);
             assertCoreConstraints(connection);
             assertIdentitySchema(connection);
+            assertTransactionRecoverySchema(connection);
         }
     }
 
@@ -120,6 +126,22 @@ class PersistenceFoundationIntegrationTest {
                 assertEquals(transactionId, duplicate.transactionId());
                 assertEquals(WayfarerTransactions.State.COMMITTED, duplicate.state());
                 assertEquals(1, provider.debits.get());
+                WayfarerTransactions.TransactionRequest changedPayload =
+                    new WayfarerTransactions.TransactionRequest(
+                        request.idempotencyKey(),
+                        request.transactionType(),
+                        request.actorUuid(),
+                        request.subjectType(),
+                        request.subjectId(),
+                        request.amountWaymark(),
+                        "{\"case\":\"different\"}"
+                    );
+                assertThrows(
+                    CompletionException.class,
+                    () -> engine(runtime, provider).execute(changedPayload)
+                        .toCompletableFuture().join()
+                );
+                assertEquals(1, provider.debits.get());
                 runtime.disable();
             }
 
@@ -138,6 +160,234 @@ class PersistenceFoundationIntegrationTest {
                     "SELECT COUNT(*) FROM wf_core_transaction_event "
                         + "WHERE transaction_id = '" + transactionId + "'"
                 ));
+            }
+        }
+    }
+
+    @Test
+    void transactionStateAndHistoryEventRollbackAtomically() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start();
+             CoreConfig config = enabledConfig(fixture, List.of("db/migration/core"))) {
+            CoreRuntime runtime = runtime(config, new RecordingPublisher());
+            runtime.enable();
+            try {
+                TransactionRepository repository = repository(runtime);
+                UUID id = UUID.randomUUID();
+                WayfarerTransactions.TransactionRequest request =
+                    new WayfarerTransactions.TransactionRequest(
+                        "atomic-history",
+                        "SHOP",
+                        UUID.randomUUID(),
+                        "WAYMARK",
+                        "atomic",
+                        10,
+                        "{\"atomic\":true}"
+                    );
+                var prepared = repository.prepare(
+                    id,
+                    request,
+                    "debit-" + id,
+                    Instant.now()
+                ).toCompletableFuture().join();
+                try (Connection connection = DriverManager.getConnection(
+                    fixture.jdbcUrl(),
+                    fixture.username(),
+                    fixture.password()
+                ); Statement statement = connection.createStatement()) {
+                    statement.execute(
+                        "CREATE TRIGGER reject_transaction_event "
+                            + "BEFORE INSERT ON wf_core_transaction_event "
+                            + "FOR EACH ROW SIGNAL SQLSTATE '45000' "
+                            + "SET MESSAGE_TEXT = 'fixture event rejection'"
+                    );
+                }
+
+                assertThrows(
+                    CompletionException.class,
+                    () -> repository.transition(
+                        prepared,
+                        TransactionUpdate.to(
+                            WayfarerTransactions.State.DEBIT_PENDING,
+                            null
+                        ),
+                        Instant.now()
+                    ).toCompletableFuture().join()
+                );
+                try (Connection connection = DriverManager.getConnection(
+                    fixture.jdbcUrl(),
+                    fixture.username(),
+                    fixture.password()
+                )) {
+                    assertEquals(1, scalar(
+                        connection,
+                        "SELECT COUNT(*) FROM wf_core_transaction "
+                            + "WHERE idempotency_key = 'atomic-history' "
+                            + "AND state = 'PREPARED' AND lock_version = 0"
+                    ));
+                    assertEquals(1, scalar(
+                        connection,
+                        "SELECT COUNT(*) FROM wf_core_transaction_event "
+                            + "WHERE transaction_id = '" + id + "'"
+                    ));
+                }
+            } finally {
+                runtime.disable();
+            }
+        }
+    }
+
+    @Test
+    void restartRecoveryUsesPersistedDebitAndRefundOperations() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            CountingProvider provider = new CountingProvider();
+            UUID debitId = UUID.randomUUID();
+            UUID refundId = UUID.randomUUID();
+            String debitOperation = "debit-" + debitId;
+            String refundOperation = "refund-" + refundId;
+
+            try (CoreConfig config = enabledConfig(fixture, List.of("db/migration/core"))) {
+                CoreRuntime runtime = runtime(config, new RecordingPublisher());
+                runtime.enable();
+                TransactionRepository repository = repository(runtime);
+                var debitPrepared = repository.prepare(
+                    debitId,
+                    transactionRequest("recover-debit"),
+                    debitOperation,
+                    Instant.now()
+                ).toCompletableFuture().join();
+                repository.transition(
+                    debitPrepared,
+                    TransactionUpdate.to(
+                        WayfarerTransactions.State.DEBIT_PENDING,
+                        null
+                    ),
+                    Instant.now()
+                ).toCompletableFuture().join();
+
+                var refundPrepared = repository.prepare(
+                    refundId,
+                    transactionRequest("recover-refund"),
+                    "debit-" + refundId,
+                    Instant.now()
+                ).toCompletableFuture().join();
+                var refundDebitPending = repository.transition(
+                    refundPrepared,
+                    TransactionUpdate.to(
+                        WayfarerTransactions.State.DEBIT_PENDING,
+                        null
+                    ),
+                    Instant.now()
+                ).toCompletableFuture().join().orElseThrow();
+                var refundDebited = repository.transition(
+                    refundDebitPending,
+                    new TransactionUpdate(
+                        WayfarerTransactions.State.DEBITED,
+                        "original-debit-reference",
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
+                    Instant.now()
+                ).toCompletableFuture().join().orElseThrow();
+                repository.transition(
+                    refundDebited,
+                    new TransactionUpdate(
+                        WayfarerTransactions.State.REFUND_PENDING,
+                        null,
+                        refundOperation,
+                        null,
+                        WayfarerTransactions.State.RECONCILED_REFUNDED,
+                        null
+                    ),
+                    Instant.now()
+                ).toCompletableFuture().join();
+                runtime.disable();
+            }
+
+            try (CoreConfig config = enabledConfig(fixture, List.of("db/migration/core"))) {
+                CoreRuntime runtime = runtime(config, new RecordingPublisher());
+                runtime.enable();
+                TransactionEngine engine = engine(runtime, provider);
+
+                assertEquals(2, engine.recoverPending(100).toCompletableFuture().join());
+                assertEquals(
+                    WayfarerTransactions.State.COMMITTED,
+                    engine.inspect(debitId).toCompletableFuture().join().state()
+                );
+                WayfarerTransactions.TransactionDetails refund = engine.inspect(refundId)
+                    .toCompletableFuture().join();
+                assertEquals(
+                    WayfarerTransactions.State.RECONCILED_REFUNDED,
+                    refund.state()
+                );
+                assertEquals(refundOperation, refund.refundOperationId());
+                assertEquals(
+                    "resolved-refund-reference",
+                    refund.refundProviderReference()
+                );
+                assertEquals(0, provider.debits.get());
+                assertEquals(0, provider.refunds.get());
+                assertEquals(2, provider.resolutions.get());
+                runtime.disable();
+            }
+        }
+    }
+
+    @Test
+    void verifiedProviderRecoveryCompletesBeforeServicePublication() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            UUID id = UUID.randomUUID();
+            try (CoreConfig config = enabledConfig(
+                fixture,
+                List.of("db/migration/core")
+            )) {
+                CoreRuntime runtime = runtime(config, new RecordingPublisher());
+                runtime.enable();
+                TransactionRepository repository = repository(runtime);
+                var prepared = repository.prepare(
+                    id,
+                    transactionRequest("startup-recovery"),
+                    "debit-" + id,
+                    Instant.now()
+                ).toCompletableFuture().join();
+                repository.transition(
+                    prepared,
+                    TransactionUpdate.to(
+                        WayfarerTransactions.State.DEBIT_PENDING,
+                        null
+                    ),
+                    Instant.now()
+                ).toCompletableFuture().join();
+                runtime.disable();
+            }
+
+            CountingProvider provider = new CountingProvider();
+            RecordingPublisher publisher = new RecordingPublisher();
+            try (CoreConfig config = enabledConfig(
+                fixture,
+                List.of("db/migration/core"),
+                true
+            )) {
+                CoreRuntime runtime = runtime(config, publisher, provider);
+                runtime.enable();
+                try {
+                    assertEquals(1, publisher.publishCount);
+                    assertEquals(
+                        WayfarerTransactions.State.COMMITTED,
+                        runtime.services().transactions().inspect(id)
+                            .toCompletableFuture().join().state()
+                    );
+                    assertEquals(0, provider.debits.get());
+                    assertEquals(1, provider.resolutions.get());
+                    assertEquals(
+                        WayfarerHealth.Status.UP,
+                        runtime.health().snapshot().components()
+                            .get("Transaction").status()
+                    );
+                } finally {
+                    runtime.disable();
+                }
             }
         }
     }
@@ -268,9 +518,34 @@ class PersistenceFoundationIntegrationTest {
         );
     }
 
+    private static CoreRuntime runtime(
+        CoreConfig config,
+        RecordingPublisher publisher,
+        WayfarerWaymarkProvider provider
+    ) {
+        return new CoreRuntime(
+            config,
+            publisher,
+            Runnable::run,
+            Clock.systemUTC(),
+            ignored -> {},
+            () -> false,
+            PlayerIdentityListenerRegistrar.unavailable(),
+            provider
+        );
+    }
+
     private static CoreConfig enabledConfig(
         MariaDbContainerFixture fixture,
         List<String> locations
+    ) {
+        return enabledConfig(fixture, locations, false);
+    }
+
+    private static CoreConfig enabledConfig(
+        MariaDbContainerFixture fixture,
+        List<String> locations,
+        boolean waymarkEnabled
     ) {
         return new CoreConfig(
             1,
@@ -298,7 +573,11 @@ class PersistenceFoundationIntegrationTest {
                 null
             ),
             new CoreConfig.MigrationSettings(true, locations),
-            new CoreConfig.WaymarkSettings(false, "RedisEconomy", Duration.ofSeconds(1))
+            new CoreConfig.WaymarkSettings(
+                waymarkEnabled,
+                "RedisEconomy",
+                Duration.ofSeconds(1)
+            )
         );
     }
 
@@ -306,11 +585,8 @@ class PersistenceFoundationIntegrationTest {
         CoreRuntime runtime,
         WayfarerWaymarkProvider provider
     ) throws ReflectiveOperationException {
-        Field field = CoreRuntime.class.getDeclaredField("mariaDbPool");
-        field.setAccessible(true);
-        MariaDbPool pool = (MariaDbPool) field.get(runtime);
         return new TransactionEngine(
-            pool.createTransactionRepository(),
+            repository(runtime),
             provider,
             runtime.services().audit(),
             "alpha-2-integration",
@@ -319,8 +595,33 @@ class PersistenceFoundationIntegrationTest {
         );
     }
 
+    private static TransactionRepository repository(
+        CoreRuntime runtime
+    ) throws ReflectiveOperationException {
+        Field field = CoreRuntime.class.getDeclaredField("mariaDbPool");
+        field.setAccessible(true);
+        MariaDbPool pool = (MariaDbPool) field.get(runtime);
+        return pool.createTransactionRepository();
+    }
+
+    private static WayfarerTransactions.TransactionRequest transactionRequest(
+        String key
+    ) {
+        return new WayfarerTransactions.TransactionRequest(
+            key,
+            "SHOP",
+            UUID.fromString("11111111-1111-1111-1111-111111111111"),
+            "WAYMARK",
+            key,
+            25,
+            "{\"case\":\"recovery\"}"
+        );
+    }
+
     private static final class CountingProvider implements WayfarerWaymarkProvider {
         private final AtomicInteger debits = new AtomicInteger();
+        private final AtomicInteger refunds = new AtomicInteger();
+        private final AtomicInteger resolutions = new AtomicInteger();
 
         @Override
         public CompletionStage<ProbeResult> probe() {
@@ -353,17 +654,26 @@ class PersistenceFoundationIntegrationTest {
             String operationId,
             String debitProviderReference
         ) {
+            refunds.incrementAndGet();
             return CompletableFuture.completedFuture(
                 new EffectResult(EffectStatus.SUCCEEDED, "provider-refund-1", null)
             );
         }
 
         @Override
-        public CompletionStage<EffectResolution> resolve(
+        public CompletionStage<ResolutionResult> resolve(
+            EffectKind effectKind,
             String operationId,
             String providerReference
         ) {
-            return CompletableFuture.completedFuture(EffectResolution.APPLIED);
+            resolutions.incrementAndGet();
+            return CompletableFuture.completedFuture(new ResolutionResult(
+                ResolutionStatus.APPLIED,
+                effectKind == EffectKind.DEBIT
+                    ? "resolved-debit-reference"
+                    : "resolved-refund-reference",
+                null
+            ));
         }
     }
 
@@ -485,6 +795,7 @@ class PersistenceFoundationIntegrationTest {
         assertTrue(indexes.containsAll(Set.of(
             "uq_wf_core_transaction_idempotency",
             "ix_wf_core_transaction_state_updated",
+            "ix_wf_core_transaction_recovery",
             "ix_wf_core_transaction_event_transaction",
             "uq_wf_core_audit_event",
             "ix_wf_core_audit_subject",
@@ -558,8 +869,39 @@ class PersistenceFoundationIntegrationTest {
                      + "AND data_type = 'timestamp' AND datetime_precision = 3"
              )) {
             assertTrue(result.next());
-            assertEquals(9, result.getInt(1));
+            assertEquals(11, result.getInt(1));
         }
+    }
+
+    private static void assertTransactionRecoverySchema(
+        Connection connection
+    ) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(
+                 "SELECT COUNT(*) FROM information_schema.columns "
+                     + "WHERE table_schema = DATABASE() AND ("
+                     + "(table_name = 'wf_core_transaction' AND column_name IN ("
+                     + "'debit_operation_id', 'debit_provider_reference', "
+                     + "'refund_operation_id', 'refund_provider_reference', "
+                     + "'refund_terminal_state', 'recovery_claim_id', "
+                     + "'recovery_claim_until')) OR "
+                     + "(table_name = 'wf_core_transaction_event' AND column_name IN ("
+                     + "'debit_operation_id', 'debit_provider_reference', "
+                     + "'refund_operation_id', 'refund_provider_reference', "
+                     + "'refund_terminal_state', 'recovery_claim_id', "
+                     + "'recovery_claim_until', 'transaction_lock_version')))"
+             )) {
+            assertTrue(result.next());
+            assertEquals(15, result.getInt(1));
+        }
+        assertEquals(0, scalar(
+            connection,
+            "SELECT COUNT(*) FROM information_schema.columns "
+                + "WHERE table_schema = DATABASE() "
+                + "AND table_name IN "
+                + "('wf_core_transaction', 'wf_core_transaction_event') "
+                + "AND column_name IN ('provider_operation_id', 'provider_reference')"
+        ));
     }
 
     private static final class RecordingPublisher implements ServicePublisher {

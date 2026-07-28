@@ -44,7 +44,10 @@ public interface WayfarerTransactions {
         String subjectId,
         long amountWaymark,
         State state,
-        String providerReference,
+        String debitOperationId,
+        String debitProviderReference,
+        String refundOperationId,
+        String refundProviderReference,
         String failureCode,
         long lockVersion
     ) {}
