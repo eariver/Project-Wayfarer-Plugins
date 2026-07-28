@@ -17,6 +17,13 @@ dependencyResolutionManagement {
             name = "papermc"
             url = uri("https://repo.papermc.io/repository/maven-public/")
         }
+        maven {
+            name = "jitpack-vault-api"
+            url = uri("https://jitpack.io")
+            content {
+                includeGroup("com.github.MilkBowl")
+            }
+        }
     }
 }
 
@@ -28,6 +35,7 @@ include(
     "libraries:wayfarer-testkit",
     "testkit:headless-paper",
     "testkit:headless-waymark-fixture",
+    "testkit:concrete-waymark-probe",
     "integrations:wayfarer-leafgrapple-adapter",
     "plugins:wayfarer-core",
     "plugins:wayfarer-main",

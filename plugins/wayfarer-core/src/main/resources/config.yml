@@ -40,5 +40,6 @@ migration:
 
 waymark:
   enabled: false
+  provider-mode: vault
   expected-provider: RedisEconomy
   operation-timeout-ms: 5000

@@ -14,6 +14,7 @@ import io.github.eariver.wayfarer.core.command.TransactionCommandHandler;
 import io.github.eariver.wayfarer.core.config.CoreConfig;
 import io.github.eariver.wayfarer.core.config.CoreConfigException;
 import io.github.eariver.wayfarer.core.config.CoreConfigLoader;
+import io.github.eariver.wayfarer.core.task.MainThreadDispatcher;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -32,10 +33,12 @@ public final class WayfarerCorePlugin extends JavaPlugin {
                 new EnvironmentSecretResolver()
             );
             Clock clock = Clock.systemUTC();
+            MainThreadDispatcher mainThread =
+                operation -> getServer().getScheduler().runTask(this, operation);
             runtime = new CoreRuntime(
                 config,
                 new BukkitServicePublisher(getServer().getServicesManager(), this),
-                operation -> getServer().getScheduler().runTask(this, operation),
+                mainThread,
                 clock,
                 getLogger()::warning,
                 getServer()::isPrimaryThread,
@@ -45,7 +48,13 @@ public final class WayfarerCorePlugin extends JavaPlugin {
                     clock,
                     getLogger()::warning
                 ),
-                new BukkitWaymarkProviderSource(getServer().getServicesManager())
+                new BukkitWaymarkProviderSource(
+                    getServer().getServicesManager(),
+                    mainThread,
+                    getServer()::getOfflinePlayer,
+                    config.waymark().expectedProvider(),
+                    getLogger()::warning
+                )
             );
             runtime.enable();
 

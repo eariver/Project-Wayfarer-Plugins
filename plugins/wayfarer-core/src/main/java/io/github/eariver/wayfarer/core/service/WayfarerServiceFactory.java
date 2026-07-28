@@ -33,6 +33,30 @@ public final class WayfarerServiceFactory {
             health,
             audit,
             itemIdentity,
+            () -> transactions,
+            () -> waymark
+        );
+    }
+
+    public static WayfarerServices createDynamic(
+        String serverId,
+        int configVersion,
+        Supplier<WayfarerLifecycleState> lifecycle,
+        WayfarerTasks tasks,
+        WayfarerHealth health,
+        WayfarerAudit audit,
+        WayfarerItemIdentity itemIdentity,
+        Supplier<WayfarerTransactions> transactions,
+        Supplier<WayfarerWaymark> waymark
+    ) {
+        return new DefaultWayfarerServices(
+            serverId,
+            configVersion,
+            lifecycle,
+            tasks,
+            health,
+            audit,
+            itemIdentity,
             transactions,
             waymark
         );

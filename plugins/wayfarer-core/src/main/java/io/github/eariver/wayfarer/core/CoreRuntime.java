@@ -35,6 +35,9 @@ import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public final class CoreRuntime {
@@ -54,8 +57,8 @@ public final class CoreRuntime {
     private DurableAudit audit;
     private IdentityRuntime identity;
     private RedisRuntime redis;
-    private WayfarerTransactions transactions;
-    private WayfarerWaymark waymark;
+    private volatile WayfarerTransactions transactions;
+    private volatile WayfarerWaymark waymark;
     private PersistenceDrainResult persistenceDrainResult;
     private WayfarerServices services;
 
@@ -506,7 +509,7 @@ public final class CoreRuntime {
         if (!config.waymark().enabled()) {
             health.update("Waymark", WayfarerHealth.Status.UNKNOWN, "Disabled by configuration");
             health.update("Transaction", WayfarerHealth.Status.UNKNOWN, "Waymark disabled");
-            return () -> {};
+            return waymarkProviderSource::close;
         }
         WayfarerWaymarkProvider waymarkProvider;
         try {
@@ -517,26 +520,37 @@ public final class CoreRuntime {
         if (waymarkProvider == null) {
             health.update("Waymark", WayfarerHealth.Status.DOWN, "Provider authority unavailable");
             health.update("Transaction", WayfarerHealth.Status.DOWN, "Provider unavailable");
-            return () -> {};
+            return waymarkProviderSource::close;
         }
         if (mariaDbPool == null || mariaDbPool.isClosed() || audit == null) {
             health.update("Transaction", WayfarerHealth.Status.DOWN, "Durable dependency unavailable");
+            waymarkProviderSource.close();
             return () -> {};
         }
         WayfarerWaymarkProvider verifiedProvider = waymarkProvider;
-        try {
-            WayfarerWaymarkProvider.ProbeResult probe = executor.submit(
-                () -> verifiedProvider.probe()
-                    .toCompletableFuture()
-                    .orTimeout(
-                        config.waymark().operationTimeout().toMillis(),
-                        java.util.concurrent.TimeUnit.MILLISECONDS
-                    )
-                    .join()
-            ).join();
+        AtomicBoolean active = new AtomicBoolean(true);
+        health.update(
+            "Waymark",
+            WayfarerHealth.Status.UNKNOWN,
+            "Provider verification pending"
+        );
+        health.update(
+            "Transaction",
+            WayfarerHealth.Status.UNKNOWN,
+            "Startup recovery pending"
+        );
+        CompletableFuture<ProviderServices> initialization = executor.submit(() -> {
+            WayfarerWaymarkProvider.ProbeResult probe = verifiedProvider.probe()
+                .toCompletableFuture()
+                .orTimeout(
+                    config.waymark().operationTimeout().toMillis(),
+                    TimeUnit.MILLISECONDS
+                )
+                .join();
             if (!probe.available()) {
                 throw new IllegalStateException("Waymark provider probe failed");
             }
+            String providerId = requireSafeProviderId(probe.providerId());
             TransactionEngine candidate = new TransactionEngine(
                 mariaDbPool.createTransactionRepository(),
                 verifiedProvider,
@@ -557,31 +571,82 @@ public final class CoreRuntime {
                 .toCompletableFuture()
                 .orTimeout(
                     config.shutdownTimeout().toMillis(),
-                    java.util.concurrent.TimeUnit.MILLISECONDS
+                    TimeUnit.MILLISECONDS
                 )
                 .join();
-            transactions = candidate;
-            waymark = new DefaultWayfarerWaymark(
-                verifiedProvider,
-                executor,
-                config.waymark().operationTimeout()
+            return new ProviderServices(
+                candidate,
+                new DefaultWayfarerWaymark(
+                    verifiedProvider,
+                    executor,
+                    config.waymark().operationTimeout()
+                ),
+                providerId
             );
-            health.update("Waymark", WayfarerHealth.Status.UP, "Provider capability available");
-            health.update("Transaction", WayfarerHealth.Status.UP, "Transaction engine available");
-            return () -> {
-                transactions = null;
-                waymark = null;
-                health.update("Transaction", WayfarerHealth.Status.DISABLED, "Transaction intake stopped");
-                health.update("Waymark", WayfarerHealth.Status.DISABLED, "Provider boundary released");
-            };
-        } catch (RuntimeException failure) {
-            health.update("Waymark", WayfarerHealth.Status.DOWN, "Provider initialization failed");
-            health.update("Transaction", WayfarerHealth.Status.DOWN, "Transaction initialization failed");
-            warn("Wayfarer transaction service remained unavailable after provider recovery");
+        });
+        initialization.whenComplete((ready, failure) -> {
+            if (!active.get()) {
+                return;
+            }
+            if (failure != null || ready == null) {
+                health.update(
+                    "Waymark",
+                    WayfarerHealth.Status.DOWN,
+                    "Provider initialization failed"
+                );
+                health.update(
+                    "Transaction",
+                    WayfarerHealth.Status.DOWN,
+                    "Transaction initialization failed"
+                );
+                warn("Wayfarer transaction service remained unavailable after provider recovery");
+                waymarkProviderSource.close();
+                return;
+            }
+            transactions = ready.transactions();
+            waymark = ready.waymark();
+            health.update(
+                "Waymark",
+                WayfarerHealth.Status.UP,
+                "Provider " + ready.providerId() + " available"
+            );
+            health.update(
+                "Transaction",
+                WayfarerHealth.Status.UP,
+                "Transaction engine available"
+            );
+        });
+        return () -> {
+            active.set(false);
             transactions = null;
             waymark = null;
-            return () -> {};
+            waymarkProviderSource.close();
+            initialization.cancel(true);
+            health.update(
+                "Transaction",
+                WayfarerHealth.Status.DISABLED,
+                "Transaction intake stopped"
+            );
+            health.update(
+                "Waymark",
+                WayfarerHealth.Status.DISABLED,
+                "Provider boundary released"
+            );
+        };
+    }
+
+    private record ProviderServices(
+        WayfarerTransactions transactions,
+        WayfarerWaymark waymark,
+        String providerId
+    ) {}
+
+    private static String requireSafeProviderId(String providerId) {
+        if (providerId == null
+            || !providerId.matches("[A-Za-z0-9._/-]{1,96}")) {
+            throw new IllegalStateException("Waymark provider identity is invalid");
         }
+        return providerId;
     }
 
     void recordPersistenceDrainResult(PersistenceDrainResult result) {
@@ -653,7 +718,7 @@ public final class CoreRuntime {
             mainThread,
             lifecycle::acceptsCallbacks
         );
-        services = WayfarerServiceFactory.create(
+        services = WayfarerServiceFactory.createDynamic(
             config.serverId(),
             config.configVersion(),
             lifecycle::state,
@@ -661,8 +726,8 @@ public final class CoreRuntime {
             health,
             audit,
             identity == null ? null : identity.itemIdentity(),
-            transactions,
-            waymark
+            () -> transactions,
+            () -> waymark
         );
         publisher.publish(services, health);
         health.update(HealthRegistry.SERVICES, WayfarerHealth.Status.UP, "Services registered");

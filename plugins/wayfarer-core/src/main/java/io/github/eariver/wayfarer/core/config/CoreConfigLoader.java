@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 public final class CoreConfigLoader {
     public static final int SUPPORTED_CONFIG_VERSION = 1;
     private static final Pattern SERVER_ID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
+    private static final Pattern PROVIDER_ID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
     private static final Pattern REDIS_KEY_PREFIX = Pattern.compile("[a-z0-9][a-z0-9._-]{0,31}");
     private static final Set<String> RESERVED_SERVER_IDS = Set.of(
         "change_me",
@@ -84,7 +85,17 @@ public final class CoreConfigLoader {
             }
 
             boolean waymarkEnabled = requiredBoolean(source, "waymark.enabled");
+            String providerMode = optionalString(source, "waymark.provider-mode", "vault")
+                .toLowerCase(Locale.ROOT);
+            if (!providerMode.equals("vault")) {
+                throw new CoreConfigException("waymark.provider-mode must be vault");
+            }
             String expectedProvider = requiredString(source, "waymark.expected-provider");
+            if (!PROVIDER_ID.matcher(expectedProvider).matches()) {
+                throw new CoreConfigException(
+                    "waymark.expected-provider must match " + PROVIDER_ID.pattern()
+                );
+            }
             Duration waymarkTimeout = durationMillis(
                 rangedInt(source, "waymark.operation-timeout-ms", 100, 60_000)
             );
@@ -103,7 +114,12 @@ public final class CoreConfigLoader {
                 mariadb,
                 redis,
                 new CoreConfig.MigrationSettings(migrationEnabled, locations),
-                new CoreConfig.WaymarkSettings(waymarkEnabled, expectedProvider, waymarkTimeout)
+                new CoreConfig.WaymarkSettings(
+                    waymarkEnabled,
+                    providerMode,
+                    expectedProvider,
+                    waymarkTimeout
+                )
             );
         } catch (RuntimeException failure) {
             mariadb.close();

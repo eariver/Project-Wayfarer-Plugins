@@ -28,6 +28,7 @@ class CoreConfigLoaderTest {
             assertEquals(3_600, config.redis().cacheMaximumTtl().toSeconds());
             assertEquals(30, config.redis().lockMaximumLease().toSeconds());
             assertEquals("wayfarer", config.redis().keyPrefix());
+            assertEquals("vault", config.waymark().providerMode());
             assertEquals(
                 List.of("classpath:db/migration/core"),
                 config.migration().locations()
@@ -237,6 +238,26 @@ class CoreConfigLoaderTest {
         assertMessage(values, Map.of(), "Migration location is invalid");
     }
 
+    @Test
+    void waymarkProviderModeAndIdentityFailClosed() {
+        Map<String, Object> values = validValues();
+        values.put("waymark.provider-mode", "provider-specific");
+        assertMessage(values, Map.of(), "waymark.provider-mode");
+
+        values = validValues();
+        values.put("waymark.expected-provider", "redis://provider-secret");
+        assertMessage(values, Map.of(), "waymark.expected-provider");
+    }
+
+    @Test
+    void missingProviderModeUsesBackwardCompatibleVaultDefault() {
+        Map<String, Object> values = validValues();
+        values.remove("waymark.provider-mode");
+        try (CoreConfig config = load(values, Map.of())) {
+            assertEquals("vault", config.waymark().providerMode());
+        }
+    }
+
     private static CoreConfig load(
         Map<String, Object> values,
         Map<String, String> environment
@@ -281,6 +302,7 @@ class CoreConfigLoaderTest {
         values.put("migration.enabled", false);
         values.put("migration.locations", List.of("db/migration/core"));
         values.put("waymark.enabled", false);
+        values.put("waymark.provider-mode", "vault");
         values.put("waymark.expected-provider", "RedisEconomy");
         values.put("waymark.operation-timeout-ms", 5000);
         return values;
