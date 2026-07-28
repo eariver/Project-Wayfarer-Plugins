@@ -21,17 +21,19 @@ public final class MigrationLifecycle implements AutoCloseable {
         Objects.requireNonNull(pool, "pool");
         List<String> locations = MigrationLocations.canonicalize(configuredLocations);
         try {
-            Flyway.configure()
+            Flyway.configure(MigrationLifecycle.class.getClassLoader())
                 .dataSource(pool.dataSource())
                 .locations(locations.toArray(String[]::new))
                 .cleanDisabled(true)
+                .failOnMissingLocations(true)
                 .ignoreMigrationPatterns("*:pending")
                 .load()
                 .validate();
-            Flyway flyway = Flyway.configure()
+            Flyway flyway = Flyway.configure(MigrationLifecycle.class.getClassLoader())
                 .dataSource(pool.dataSource())
                 .locations(locations.toArray(String[]::new))
                 .cleanDisabled(true)
+                .failOnMissingLocations(true)
                 .load();
             flyway.migrate();
             flyway.validate();
