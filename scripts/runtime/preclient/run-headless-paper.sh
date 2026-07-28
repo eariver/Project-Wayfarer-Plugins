@@ -240,7 +240,7 @@ test "$latest_migration" = "003"
 docker exec \
   "$MARIADB_CONTAINER_ID" \
   mariadb -uroot "-p$MARIADB_ROOT_PASSWORD" \
-  -e "UPDATE wayfarer_preclient.flyway_schema_history SET checksum = checksum + 1 WHERE version = '1';"
+  -e "UPDATE wayfarer_preclient.flyway_schema_history SET checksum = checksum + 1 WHERE version = '001';"
 
 migration_failure_root="$runtime_root/migration-failure"
 migration_failure_log="$evidence_root/migration-failure.log"
