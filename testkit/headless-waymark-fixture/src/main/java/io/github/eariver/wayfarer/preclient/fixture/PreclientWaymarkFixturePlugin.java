@@ -27,6 +27,7 @@ public final class PreclientWaymarkFixturePlugin extends JavaPlugin
         "io.github.eariver.wayfarer.api.WayfarerWaymarkProvider";
     private static final Path MODE_FILE = Path.of("fixture-mode.txt");
     private static final Path EFFECT_FILE = Path.of("fixture-effects.properties");
+    private static final Path CRASH_MARKER_FILE = Path.of("fixture-crash-marker.txt");
     private ClassLoader apiLoader;
 
     @Override
@@ -91,6 +92,12 @@ public final class PreclientWaymarkFixturePlugin extends JavaPlugin
         persistEffect(operationId, kind, reference);
         if (("crash-after-debit".equals(mode) && "DEBIT".equals(kind))
             || ("crash-after-refund".equals(mode) && "REFUND".equals(kind))) {
+            Files.writeString(
+                CRASH_MARKER_FILE,
+                "HALT_AFTER_" + kind + System.lineSeparator(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING
+            );
             System.out.println(
                 "WAYFARER_FIXTURE: HALT_AFTER_" + kind + " operation=" + operationId
             );

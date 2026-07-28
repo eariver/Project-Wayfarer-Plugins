@@ -364,8 +364,8 @@ write_server_files \
   "$debit_root" "$(db_url "$debit_db")" yes yes debit-crash crash-after-debit 5 \
   wf-preclient-debit-recovery
 start_server "$debit_root" "$debit_crash_log"
-wait_for_log "$debit_crash_log" "WAYFARER_FIXTURE: HALT_AFTER_DEBIT" 180
 wait_for_injected_exit 73
+grep -Fq "HALT_AFTER_DEBIT" "$debit_root/fixture-crash-marker.txt"
 debit_transaction_id="$(
   query_database "$debit_db" \
     "SELECT transaction_id FROM wf_core_transaction WHERE state = 'DEBIT_PENDING' LIMIT 1;"
@@ -396,8 +396,8 @@ write_server_files \
   "$refund_root" "$(db_url "$refund_db")" yes yes refund-crash unknown-after-effect 5 \
   wf-preclient-refund-recovery
 start_server "$refund_root" "$refund_crash_log"
-wait_for_log "$refund_crash_log" "WAYFARER_FIXTURE: HALT_AFTER_REFUND" 180
 wait_for_injected_exit 74
+grep -Fq "HALT_AFTER_REFUND" "$refund_root/fixture-crash-marker.txt"
 refund_transaction_id="$(
   query_database "$refund_db" \
     "SELECT transaction_id FROM wf_core_transaction WHERE state = 'REFUND_PENDING' LIMIT 1;"
