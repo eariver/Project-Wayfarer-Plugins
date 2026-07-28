@@ -255,6 +255,13 @@ baseline_transaction_id="$(
   query_database "$baseline_db" \
     "SELECT transaction_id FROM wf_core_transaction ORDER BY created_at DESC LIMIT 1;"
 )"
+test "$(
+  query_database "$baseline_db" \
+    "SELECT COUNT(*) FROM wf_core_player_identity
+     WHERE player_uuid = '12345678-1234-5678-9234-567812345678'
+       AND last_known_name = 'PreclientProbe'
+       AND last_server_id = 'wayfarer-preclient';"
+)" -eq 1
 send_command "wayfarer admin health"
 send_command "wayfarer admin transaction inspect $baseline_transaction_id"
 send_command "wayfarer admin transaction reconcile $baseline_transaction_id fail"
@@ -279,6 +286,7 @@ grep -Fq "Migration: UP" "$baseline_first_log"
 grep -Fq "Redis: DOWN" "$baseline_first_log"
 grep -Fq "Redis: UP" "$baseline_first_log"
 grep -Fq "TRANSACTION_SUCCESS" "$baseline_first_log"
+grep -Fq "PLAYER_IDENTITY PASS" "$baseline_first_log"
 grep -Fq "MAIN_THREAD_GUARDS PASS jdbc=true redis=true" "$baseline_first_log"
 grep -Fq "REDIS_PRIMITIVES PASS cache=true lock=true message=true" \
   "$baseline_first_log"
@@ -508,6 +516,7 @@ config_version=1
 migration_latest=V003
 migration_count=3
 transaction_success=pass
+player_identity_repository_hook=pass
 redis_cache_lock_message=pass
 main_thread_jdbc_redis_rejection=pass
 timeout_before_effect=pass

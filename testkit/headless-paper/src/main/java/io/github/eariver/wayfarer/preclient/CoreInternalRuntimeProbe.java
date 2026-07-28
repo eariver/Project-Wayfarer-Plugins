@@ -49,6 +49,39 @@ final class CoreInternalRuntimeProbe {
         });
     }
 
+    static CompletionStage<Void> verifyPlayerIdentity(
+        JavaPlugin probe,
+        UUID playerUuid
+    ) {
+        Object runtime = coreRuntime(probe);
+        Object identity = field(runtime, "identity");
+        Class<?> observationType = loadClass(
+            runtime,
+            "io.github.eariver.wayfarer.core.identity.PlayerIdentityObservation"
+        );
+        Object observation = construct(
+            constructor(
+                observationType,
+                UUID.class,
+                String.class,
+                String.class,
+                Instant.class
+            ),
+            playerUuid,
+            "PreclientProbe",
+            "wayfarer-preclient",
+            Instant.now()
+        );
+        CompletionStage<?> persisted = stage(invoke(
+            declaredMethod(identity.getClass(), "observe", observationType),
+            identity,
+            observation
+        ));
+        return persisted.thenAccept(ignored -> probe.getLogger().info(
+            "WAYFARER_PRECLIENT_PROBE: PLAYER_IDENTITY PASS uuid=" + playerUuid
+        ));
+    }
+
     private static void verifyRedisMainThreadGuard(Object redis) {
         Method cacheGet = declaredMethod(
             redis.getClass(),

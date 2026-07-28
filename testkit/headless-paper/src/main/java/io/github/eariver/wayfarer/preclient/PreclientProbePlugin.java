@@ -133,7 +133,10 @@ public final class PreclientProbePlugin extends JavaPlugin {
     }
 
     private CompletionStage<Void> baseline(WayfarerServices services) {
-        return CoreInternalRuntimeProbe.verifyRedisPrimitives(this, services)
+        return CoreInternalRuntimeProbe.verifyPlayerIdentity(this, ACTOR_ID)
+            .thenCompose(ignored ->
+                CoreInternalRuntimeProbe.verifyRedisPrimitives(this, services)
+            )
             .thenCompose(ignored -> auditIdentityAndTaskProbe(services))
             .thenCompose(ignored -> services.waymark().balance(ACTOR_ID))
             .thenAccept(balance -> require(balance == 100_000L, "Waymark balance"))
