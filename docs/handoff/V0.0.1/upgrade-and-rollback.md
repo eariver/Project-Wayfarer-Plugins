@@ -14,3 +14,7 @@ Do not move tags or overwrite assets. Code rollback uses a previously verified i
 only when schema/config compatibility permits it. Flyway rollback is not automatic; applied
 migrations are not reversed or edited. Restore decisions and runtime removal are Project-owned and
 require backups and explicit approval.
+
+V003 is forward-only. Downgrading to code that understands only V001/V002 is unsupported unless a
+separately approved compatibility assessment proves it safe. Removal of the plugin does not remove
+`wf_core_*` data; schema deletion is a separate destructive Project-owned operation.

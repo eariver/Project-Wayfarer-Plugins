@@ -9,10 +9,10 @@
 - Redis: `enabled`, environment reference `WAYFARER_REDIS_URI`, connect/operation timeouts,
   cache maximum TTL (1–86400 seconds), lock maximum lease (1–300 seconds), and a lowercase
   namespaced key prefix. Defaults are 3000 ms, 3600 seconds, 30 seconds, and `wayfarer`.
-- Migration: `enabled` plus Core-only `db/migration/core`; alpha.2 applies immutable V001 and
-  additive V002, and enabling migration requires MariaDB.
-- Waymark: `enabled`, expected provider `RedisEconomy`, and operation timeout. Provider
-  capability/thread verification remains a later gate.
+- Migration: `enabled` plus Core-only `db/migration/core`; immutable V001/V002 plus additive V003,
+  and enabling migration requires MariaDB.
+- Waymark: `enabled`, expected provider `RedisEconomy`, and operation timeout. Enabling without an
+  explicitly injected, verified provider fails closed. Concrete provider authority is ADR 0006.
 - Executor: 1–64 threads, a thread prefix containing `Wayfarer`, and bounded queue capacity
   1–65536. A missing queue setting retains the backward-compatible capacity 256.
 - Audit: `enabled: true` activates durable MariaDB audit plus player/item identity and therefore
