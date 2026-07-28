@@ -380,6 +380,12 @@ class PersistenceFoundationIntegrationTest {
                     );
                     assertEquals(0, provider.debits.get());
                     assertEquals(1, provider.resolutions.get());
+                    assertTrue(provider.probeThread.startsWith(
+                        "Wayfarer-Persistence-Test"
+                    ));
+                    assertTrue(provider.resolutionThread.startsWith(
+                        "Wayfarer-Persistence-Test"
+                    ));
                     assertEquals(
                         WayfarerHealth.Status.UP,
                         runtime.health().snapshot().components()
@@ -622,9 +628,12 @@ class PersistenceFoundationIntegrationTest {
         private final AtomicInteger debits = new AtomicInteger();
         private final AtomicInteger refunds = new AtomicInteger();
         private final AtomicInteger resolutions = new AtomicInteger();
+        private volatile String probeThread = "";
+        private volatile String resolutionThread = "";
 
         @Override
         public CompletionStage<ProbeResult> probe() {
+            probeThread = Thread.currentThread().getName();
             return CompletableFuture.completedFuture(
                 new ProbeResult(true, "fixture", null)
             );
@@ -667,6 +676,7 @@ class PersistenceFoundationIntegrationTest {
             String providerReference
         ) {
             resolutions.incrementAndGet();
+            resolutionThread = Thread.currentThread().getName();
             return CompletableFuture.completedFuture(new ResolutionResult(
                 ResolutionStatus.APPLIED,
                 effectKind == EffectKind.DEBIT

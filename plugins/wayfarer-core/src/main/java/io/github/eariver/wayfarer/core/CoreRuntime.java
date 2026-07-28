@@ -523,20 +523,23 @@ public final class CoreRuntime {
             health.update("Transaction", WayfarerHealth.Status.DOWN, "Durable dependency unavailable");
             return () -> {};
         }
+        WayfarerWaymarkProvider verifiedProvider = waymarkProvider;
         try {
-            WayfarerWaymarkProvider.ProbeResult probe = waymarkProvider.probe()
-                .toCompletableFuture()
-                .orTimeout(
-                    config.waymark().operationTimeout().toMillis(),
-                    java.util.concurrent.TimeUnit.MILLISECONDS
-                )
-                .join();
+            WayfarerWaymarkProvider.ProbeResult probe = executor.submit(
+                () -> verifiedProvider.probe()
+                    .toCompletableFuture()
+                    .orTimeout(
+                        config.waymark().operationTimeout().toMillis(),
+                        java.util.concurrent.TimeUnit.MILLISECONDS
+                    )
+                    .join()
+            ).join();
             if (!probe.available()) {
                 throw new IllegalStateException("Waymark provider probe failed");
             }
             TransactionEngine candidate = new TransactionEngine(
                 mariaDbPool.createTransactionRepository(),
-                waymarkProvider,
+                verifiedProvider,
                 audit,
                 config.serverId(),
                 config.waymark().operationTimeout(),
@@ -558,7 +561,7 @@ public final class CoreRuntime {
                 )
                 .join();
             transactions = candidate;
-            waymark = new DefaultWayfarerWaymark(waymarkProvider);
+            waymark = new DefaultWayfarerWaymark(verifiedProvider);
             health.update("Waymark", WayfarerHealth.Status.UP, "Provider capability available");
             health.update("Transaction", WayfarerHealth.Status.UP, "Transaction engine available");
             return () -> {
