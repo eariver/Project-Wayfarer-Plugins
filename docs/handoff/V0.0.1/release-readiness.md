@@ -21,13 +21,13 @@
   migration hashes, and same-source reproducibility passed in CI `30355673880` at
   `b173ebfcff75b4fc4689155fc5b0d54960a04ab6`
 - RC.1 pre-client headless gate: passed at
-  `6d25105f516a76cc373e5259fcef9d34de414543`; workflow
-  [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610)
+  Candidate C `7557b1836b0fe943a07f06d8af5c05849c6c8941`; workflow
+  [`30360911544`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30360911544)
   and normal CI
-  [`30317207616`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207616)
-  passed with zero failed and zero skipped tests
+  [`30360911048`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30360911048)
+  passed with 173 unit, 14 MariaDB, and 6 Redis cases and zero failed/skipped tests
 - RC.1 candidate Core SHA-256:
-  `f36fe57370b4d123b13b5bf328c029c03407338e83e781953db81547de8a334a`
+  `5ab6200839baa02d637bdf214126d79a10e925884da92b491bc9dcc0f8ddec1a`
 - Isolated test server: Alpha.1 `PASSED`;
   `docs/testing/evidence/V0.0.1-alpha.1-runtime-evidence.md`
 - Pre-client evidence:

@@ -17,9 +17,9 @@
   isolated `mariadb:11.8` migration tests. Persistence shutdown drain
   ordering is automated-test covered after the fix: intake closes independently, accepted work
   drains before Hikari close, and timeout/interruption remain non-clean. Isolated Paper runtime
-  now covers empty migration, repeated startup, MariaDB fail-closed, migration-checksum
-  fail-closed, and clean disable. Paper in-flight drain timeout/interruption injection remains
-  pending and must not be inferred from the clean case.
+  covers empty migration, repeated startup, MariaDB fail-closed, migration-checksum fail-closed,
+  accepted-work drain, clean disable, and bounded non-clean shutdown. `INTERRUPTED` remains
+  automated-only and must not be inferred from the runtime timeout case.
   MariaDB and Migration health are `UP` only after pool connectivity and Flyway validation/
   migration succeed; failures are `DOWN` and stop service publication.
 - The alpha.2 PR B source implements additive V002, durable audit, player identity snapshots,
@@ -43,13 +43,12 @@
   governance decision. Any future opaque asynchronous contract requires a separate decision.
   Downstream plugins receive no JDBC `Connection`, Hikari, or Flyway implementation.
 - The alpha.3 branch implements internal Redis cache/lock/message/idempotency assistance,
-  explicit outage/reconnect health, main-thread rejection, and a bounded shutdown. Commit-pinned
-  isolated Redis CI passed. The rc.1 Paper run observed Redis health `DOWN` during outage and `UP`
-  after reconnect.
+  explicit outage/reconnect health, main-thread rejection, and a bounded shutdown. Candidate C
+  Paper evidence exercised cache, owner-token lock/release, external-origin message, direct
+  main-thread rejection, and Redis `DOWN`/`UP`.
 - The executor now has an immediate-rejection bounded queue and the task bridge validates
-  immutable JDK-only data. The Paper probe verified worker and main-thread bridge boundaries and
-  recorded one 20 TPS / 13.2 ms tick observation. Runtime queue-pressure and shutdown-timeout
-  injection remain covered only by automated suites.
+  immutable JDK-only data. The Paper probe verified queue rejection, worker/main-thread bridge,
+  accepted-work drain, non-clean shutdown timeout, and one 20 TPS / 15.8 ms tick observation.
 - The alpha.4 provider-independent transaction engine, V003 repository/history, reconcile path,
   fixture SPI, and admin handlers are implemented. Concrete RedisEconomy/Vault invocation remains
   blocked by ADR 0006 because its safe thread/timeout/reference contract is not immutable authority.
@@ -65,7 +64,8 @@
   tests. Concrete provider API/thread/timeout/crash-reference behavior remains an open authority
   gate; external plugin class identity/load order is not inferred.
 - The successful rc.1 pre-client evidence is limited to client-independent scope. Harness
-  calibration and two corrected Paper classloader defects are indexed in
+  calibration, corrected Paper classloader defects, the corrected main-thread provider-call
+  defect, and corrected harness assertions are indexed in
   `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md`; unsuccessful runs are not evidence of
   a pass.
 - Real PlayerJoin/reconnect identity, player-visible permissions/output/responsiveness, and any
