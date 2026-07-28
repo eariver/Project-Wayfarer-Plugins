@@ -12,6 +12,8 @@ import java.lang.reflect.WildcardType;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PublicApiBoundaryTest {
@@ -44,6 +46,42 @@ class PublicApiBoundaryTest {
                 inspect(nested);
             }
         }
+    }
+
+    @Test
+    void transactionInspectionKeepsDebitAndRefundIdentitySeparate() {
+        Set<String> components = java.util.Arrays.stream(
+            WayfarerTransactions.TransactionDetails.class.getRecordComponents()
+        ).map(RecordComponent::getName).collect(java.util.stream.Collectors.toUnmodifiableSet());
+
+        assertTrue(components.contains("debitOperationId"));
+        assertTrue(components.contains("debitProviderReference"));
+        assertTrue(components.contains("refundOperationId"));
+        assertTrue(components.contains("refundProviderReference"));
+        assertFalse(components.contains("providerReference"));
+        assertFalse(components.contains("payload"));
+    }
+
+    @Test
+    void providerResolutionIdentifiesTheEffectAndReturnsStructuredStatus() throws Exception {
+        Method resolve = WayfarerWaymarkProvider.class.getMethod(
+            "resolve",
+            WayfarerWaymarkProvider.EffectKind.class,
+            String.class,
+            String.class
+        );
+
+        assertEquals(
+            "java.util.concurrent.CompletionStage<"
+                + "io.github.eariver.wayfarer.api.WayfarerWaymarkProvider$ResolutionResult>",
+            resolve.getGenericReturnType().getTypeName()
+        );
+        assertEquals(
+            List.of("status", "providerReference", "failureCode"),
+            java.util.Arrays.stream(
+                WayfarerWaymarkProvider.ResolutionResult.class.getRecordComponents()
+            ).map(RecordComponent::getName).toList()
+        );
     }
 
     private static void inspect(Class<?> type) {

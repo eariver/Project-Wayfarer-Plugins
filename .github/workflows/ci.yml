@@ -21,11 +21,34 @@ jobs:
         with:
           gradle-version: "9.6.1"
       - name: Check
-        run: ./gradlew --no-daemon check
+        run: ./gradlew --no-daemon clean check
       - name: Assemble
-        run: ./gradlew --no-daemon assemble
-      - name: Reuse configuration cache
-        run: ./gradlew --no-daemon --configuration-cache check assemble
+        run: ./gradlew --no-daemon clean assemble
+      - name: Configuration-cache check
+        run: ./gradlew --no-daemon --configuration-cache check
+      - name: Configuration-cache assemble and reuse
+        run: ./gradlew --no-daemon --configuration-cache assemble
+      - name: Verify reproducible Core runtime JAR
+        shell: bash
+        run: |
+          first_jar="$(
+            find plugins/wayfarer-core/build/libs -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-javadoc.jar' \
+              -print -quit
+          )"
+          first_hash="$(sha256sum "$first_jar" | awk '{ print $1 }')"
+          ./gradlew --no-daemon clean :plugins:wayfarer-core:shadowJar
+          second_jar="$(
+            find plugins/wayfarer-core/build/libs -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-javadoc.jar' \
+              -print -quit
+          )"
+          second_hash="$(sha256sum "$second_jar" | awk '{ print $1 }')"
+          echo "First Core SHA-256:  $first_hash"
+          echo "Second Core SHA-256: $second_hash"
+          test "$first_hash" = "$second_hash"
       - name: Verify Core packaging
         shell: bash
         run: |
@@ -50,11 +73,21 @@ jobs:
             test "$migration_count" -eq 1
           done
 
+          v001_hash="$(unzip -p "$core_jar" db/migration/core/V001__core_schema.sql | sha256sum | awk '{ print $1 }')"
+          v002_hash="$(unzip -p "$core_jar" db/migration/core/V002__core_identity_schema.sql | sha256sum | awk '{ print $1 }')"
+          v003_hash="$(unzip -p "$core_jar" db/migration/core/V003__core_transaction_history.sql | sha256sum | awk '{ print $1 }')"
+          echo "V001 SHA-256: $v001_hash"
+          echo "V002 SHA-256: $v002_hash"
+          echo "V003 SHA-256: $v003_hash"
+          test "$v001_hash" = "59035d3bf0ee9f11e2a6756138fa55f331dc79546778c473bacbde887a894840"
+          test "$v002_hash" = "b45709e7740a4e720b05c26ed02e66e965784980898eab29445b1293b422f260"
+          test "$v003_hash" = "83483e0494b687ec4ff11af7872ae89e1406bb678ae2b000897fc66ff7a048b4"
+
           if grep -Eq \
-            '(^|/)(src/test|test-results|org/junit|org/testcontainers|com/github/dockerjava)(/|$)|^io/github/eariver/wayfarer/(main|frontier)/|(^|/)(application|runtime|server)\.(yml|yaml|properties)$' \
+            '(^|/)(src/test|test-results|org/junit|org/testcontainers|com/github/dockerjava|io/github/eariver/wayfarer/testkit|fixture)(/|$)|^io/github/eariver/wayfarer/(main|frontier)/|(^|/)(application|runtime|server)\.(yml|yaml|properties)$|(^|/)(\.env|secrets?[^/]*|worlds?|logs?|cache|runtime-data|database)(/|$)|\.(db|sqlite|sql\.dump|log)$' \
             core-jar-entries.txt
           then
-            echo "Forbidden test, Docker, sibling-plugin, or runtime configuration entry found"
+            echo "Forbidden fixture, test, Docker, sibling-plugin, secret, or runtime-data entry found"
             exit 1
           fi
 
