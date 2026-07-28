@@ -5,7 +5,7 @@ The table describes the required stable handoff state. Current readiness is trac
 
 | Artifact | Plugin-side implementation | Plugin-side test | Release | Project placement | Project acceptance | Roadmap Order |
 |---|---|---|---|---|---|---|
-| Wayfarer_Core | beta feature-complete candidate | implementation CI `30314769436` passed; rc.1 runtime pending | target V0.0.1 | Main + Frontier | pending | 9 |
+| Wayfarer_Core | beta feature-complete candidate | corrected implementation CI `30355673880` passed; rc.1 runtime pending | target V0.0.1 | Main + Frontier | pending | 9 |
 | Wayfarer_Main | not included | N/A | N/A | Main only | pending | 10 |
 | Wayfarer_Frontier | not included | N/A | N/A | Frontier only | pending | 11 |
 | Wayfarer_Frontier_EliteMobsMVI | not authorized / not included | N/A | N/A | Frontier only | pending | Decision Gate |
