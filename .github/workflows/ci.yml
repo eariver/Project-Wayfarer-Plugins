@@ -13,6 +13,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Test stable release input and document gates
+        shell: bash
+        env:
+          INPUT_VERSION: V0.0.1
+          RELEASE_SCOPE: core
+          STABLE_SOURCE_COMMIT: 49e00e21716c1c13a2dbb170fdad1b19c4275612
+          TEST_EVIDENCE: docs/testing/results/V0.0.1-stable-local-acceptance.md
+          MAIN_SERVER_INSTRUCTION: docs/requirements/main-server/Project-Wayfarer-V0.1.0/Project_Wayfarer_Plugin_Implementation_Test_Release_and_Mainline_Handoff_Requirements.md
+          REQUIREMENT_TRACEABILITY: docs/requirements/main-server/Project-Wayfarer-V0.1.0/traceability.md
+          RELEASE_READINESS: docs/handoff/V0.0.1/release-readiness.md
+          REQUIREMENTS_CLEARED: "true"
+        run: |
+          git fetch origin main --no-tags
+          bash scripts/release/test-stable-release-validation.sh
+      - name: Test stable release package scope and provenance
+        shell: bash
+        run: bash scripts/release/test-stable-release-package.sh
+      - name: Test stable publication partial-failure recovery
+        shell: bash
+        run: bash scripts/release/test-stable-publication-recovery.sh
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

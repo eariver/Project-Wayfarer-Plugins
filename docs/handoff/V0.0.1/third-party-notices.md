@@ -23,5 +23,6 @@ runtime prerequisites, not bundled libraries. Main, Frontier, and the concrete-p
 separate modules and are not included in the Core candidate.
 
 The repository `LICENSE`, dependency-provided license/notice resources, and merged service metadata
-are included according to the Shadow packaging configuration. This inventory is evidence for the
-candidate, not legal advice and not a release publication.
+are included according to the Shadow packaging configuration. This inventory applies to the fixed
+V0.0.1 stable product source and stable candidate. Publication remains pending until the approved
+stable workflow completes. This inventory is not legal advice.

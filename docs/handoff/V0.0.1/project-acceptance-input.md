@@ -2,19 +2,19 @@
 
 | Input | Value |
 |---|---|
-| Release URL / tag / version | RC.3 is an unpublished review candidate: prerelease workflow not dispatched; no RC.3 tag, release URL, pre-release, or published asset. Latest published approved pre-release remains `V0.0.1-alpha.1` |
-| Final source commit | Pending; rc.3 candidate source `95b2cf1ef159b4d16921ddb4c8698621b8134c3e` |
-| Artifact filenames / SHA-256 | Candidate `wayfarer-core-0.0.1-rc.3.jar` / `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F` |
+| Release URL / tag / version | Stable version `V0.0.1`; tag, URL, and published asset pending explicit stable workflow. `V0.0.1-alpha.1` is historical; no additional pre-release is required |
+| Final source commit | `49e00e21716c1c13a2dbb170fdad1b19c4275612` |
+| Artifact filenames / SHA-256 | Local stable candidate `wayfarer-core-0.0.1.jar` / `B045581D3984DDDBA10ED7B2ADA435926B8538BA9B29A1151550CE59588395A2`; release asset name `Wayfarer_Core-V0.0.1.jar` |
 | Config / migration version | `1` / `V003` |
 | Sanitized config and environment variables | `docs/handoff/V0.0.1/sanitized-configuration.md` |
 | Commands / permissions | `docs/handoff/V0.0.1/command-and-permission-reference.md` |
 | Dependencies / placement / load order | `docs/handoff/V0.0.1/dependency-and-placement.md` |
-| Test report / evidence commit | `docs/testing/results/V0.0.1-concrete-waymark-provider.md`; original evidence record `92e32db98758eddad46c5f18772c21ef83366057`; final balance probe `7f013b346d2cd97705c45dbbf8a18f51e9607525`; final corrected evidence record `75b66aa987833b20c93c0312781bd158af40f84d` |
+| Test report / evidence | `docs/testing/results/V0.0.1-stable-local-acceptance.md`; `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`; preparation evidence record `eabda6d2c83e7369dd9f4ba4725f80d601a51062` |
 | Known limitations / open decisions | See handoff files |
-| Test server vs Project Runtime differences | Concrete standalone: Paper 1.21.11 build 132, Java 25, task-only MariaDB 11.8/Redis 8, fixed VaultUnlocked/RedisEconomy, test-only probe; Project placement/config/other plugins not changed |
+| Test server vs Project Runtime differences | Local isolated: Paper 1.21.11 build 132, Java 25, task-only MariaDB 11.8/Redis 8, Owner-supplied 23-JAR inventory, fixed VaultUnlocked/RedisEconomy, test-only probe; Project Runtime/config not changed. Full-inventory external-plugin limitation is recorded in the stable result |
 | Project acceptance | Pending |
 | Roadmap Order 9 | Pending |
-| `requirements_cleared` | Owner decision required |
+| `requirements_cleared` | Explicit Owner authorization required for source-side stable publication after Plugin-side prerequisites are confirmed; not Project Runtime acceptance |
 
 Recommended Project smoke test: verify hashes, Vault → RedisEconomy → Core startup/migration,
 provider health, permission/redaction, shared fractional balance, one long debit/idempotent replay,
@@ -22,11 +22,12 @@ insufficient funds, and long refund only after all prerequisites/backups are app
 record backup/restore, removal, downgrade, and acceptance evidence in the Project repository; this
 Plugin repository performs no Runtime change.
 
-Open decisions are review/merge, stable release identity, Project placement/acceptance, explicit
-requirements clearance, and Project ownership of the shared Vault/RedisEconomy durability deferred
-item. That item should move to `docs/11-deferred-design-items.md` or equivalent; it must not become
-a Wayfarer-only side channel. The direct nonblocking Project reference is
+Open actions are Draft review/merge, explicit Owner source-side publication authorization and
+stable workflow approval/publication, Project placement/acceptance, and Project ownership of the shared
+Vault/RedisEconomy durability deferred item. That item should move to
+`docs/11-deferred-design-items.md` or equivalent; it must not become a Wayfarer-only side
+channel. The direct nonblocking Project reference is
 [`eariver/Project_Wayfarer#1`](https://github.com/eariver/Project_Wayfarer/issues/1).
 
-The isolated RC.3 candidate evidence is available for review, but it does not supply the stable
-final publication identity required by Project acceptance.
+The stable local candidate evidence is available for review. The stable GitHub tag, URL, and
+published asset remain future workflow outputs and must be recorded before Project placement.
