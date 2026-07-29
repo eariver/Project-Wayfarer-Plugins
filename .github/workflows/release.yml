@@ -148,6 +148,7 @@ jobs:
 
           SNAPSHOT_DIR="$SNAPSHOT_DIR" \
             HANDOFF_SOURCE_COMMIT="$HANDOFF_SOURCE_COMMIT" \
+            RELEASE_VERSION="$RELEASE_VERSION" \
             RELEASE_SCOPE="$RELEASE_SCOPE" \
             PLUGIN_TEST_REPORT="docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md" \
             bash "$RUNNER_TEMP/assemble-stable-release-package.sh" snapshot

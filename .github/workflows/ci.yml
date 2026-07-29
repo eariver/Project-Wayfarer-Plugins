@@ -37,6 +37,7 @@ jobs:
           bash scripts/release/test-scoped-stable-package.sh
           bash scripts/release/test-runtime-jar-manifest.sh
           bash scripts/release/test-node24-actions.sh
+          bash scripts/release/test-v002-handoff-mapping.sh
       - name: Test stable release package scope and provenance
         shell: bash
         run: bash scripts/release/test-stable-release-package.sh

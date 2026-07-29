@@ -27,28 +27,53 @@ Status vocabulary is restricted to the long-running execution instruction. `TODO
 | CI-001 | Upgrade official Actions to Node 24 majors | Exec. 8.2 | BASE-003 | DONE | checkout v7, setup-java v5, setup-gradle v6, artifact v7/v8 | Hosted runner compatibility |
 | ADR-009 | Decide module persistence boundary | Exec. 7 | BASE-001 | PLUGIN_REVIEW_REQUIRED | `blocking-register.md` | B-001 |
 | ADR-010 | Decide Core reuse/artifact release scope | Exec. 8.3 | ADR-009 | DONE | ADR 0010 | None |
-| REL-002 | Implement required scope-aware multi-artifact release/package path | Req. 16; Exec. 8.3 | ADR-010 | IN_PROGRESS | Pre-release scope collection and policy | Stable package path |
-| MAIN-001 | Main role/config/Core/lifecycle gate | Req. 8.1–8.4 | AUTH-002 | TODO | Pending | None |
-| MAIN-002 | Growth Tool pure domain and threshold engine | Req. 8.5, 8.10–8.13 | MAIN-001 | IN_PROGRESS | Domain, identity, session, delivery and focused tests | Bukkit event/GUI surface |
-| MAIN-003 | Growth Tool migration/repository/pending delivery | Req. 8.6–8.8 | ADR-009 | TODO | Pending | B-001 for concrete persistence |
-| MAIN-004 | PDC/owner/interaction guards | Req. 8.9 | MAIN-002 | TODO | Pending | External repair review |
-| MAIN-005 | Break/progress/evolution runtime | Req. 8.10–8.13 | MAIN-002, MAIN-004 | TODO | Pending | Client test |
-| MAIN-006 | Broken state/GUI/repair transaction | Req. 8.14–8.17 | MAIN-002, MAIN-003 | TODO | Pending | MAIN-D04/D05; client test |
-| MAIN-007 | Session/checkpoint/admin/reconcile | Req. 8.18–8.20 | MAIN-003 | TODO | Pending | Client test |
-| FRONT-001 | Frontier role/config/Core/exact-world gate | Req. 11.1–11.3 | AUTH-002 | TODO | Pending | FRONT-D01 |
-| FRONT-002 | Traversal/loadout/pending-delivery pure domain | Req. 11.4–11.8 | FRONT-001 | IN_PROGRESS | World/identity/delivery/shop domain and focused tests | Navigation approval/client test |
-| FRONT-003 | Frontier migration/repository | Req. 11.4, 13.2 | ADR-009 | TODO | Pending | B-001 for concrete persistence |
-| FRONT-004 | LeafGrapple version/capability boundary | Req. 12 | FRONT-001 | TODO | Pending | FRONT-D02; external artifact evidence |
-| FRONT-005 | Launchpad domain/runtime/protection/reconcile | Req. 13 | FRONT-003 | IN_PROGRESS | Launchpad and placement state machines; use coordinator | Persistence/protection/client test |
-| FRONT-006 | Frontier shop transaction/delivery | Req. 14 | FRONT-002, FRONT-003 | IN_PROGRESS | Fail-closed catalog and idempotent purchase coordinator | Persistence/client test |
+| REL-002 | Implement required scope-aware multi-artifact release/package path | Req. 16; Exec. 8.3 | ADR-010 | DONE | Scope collection, evidence-bound manifest, package and recovery tests | No dispatch |
+| MAIN-001 | Main role/config/Core/lifecycle gate | Req. 8.1–8.4 | AUTH-002 | DONE | Config parser and sanitized fail-closed capability gate | Runtime remains disabled by B-001 |
+| MAIN-002 | Growth Tool pure domain and threshold engine | Req. 8.5, 8.10–8.13 | MAIN-001 | DONE | Domain, identity, session, delivery and focused tests | None |
+| MAIN-003 | Growth Tool migration/repository/pending delivery | Req. 8.6–8.8 | ADR-009 | PLUGIN_REVIEW_REQUIRED | V001/V002 DDL, repository contracts and MariaDB tests | B-001 concrete lifecycle |
+| MAIN-004 | PDC/owner/interaction guards | Req. 8.9 | MAIN-002 | DONE | Canonical claim/epoch and delivery boundaries | External repair matrix remains MAIN-D08 |
+| MAIN-005 | Break/progress/evolution runtime | Req. 8.10–8.13 | MAIN-002, MAIN-004 | PLUGIN_REVIEW_REQUIRED | Pure domain complete | B-001 wiring, then client |
+| MAIN-006 | Broken state/GUI/repair transaction | Req. 8.14–8.17 | MAIN-002, MAIN-003 | PLUGIN_REVIEW_REQUIRED | Pricing/repair state, claims and ambiguity regressions | B-004; MAIN-D04/D05; client |
+| MAIN-007 | Session/checkpoint/admin/reconcile | Req. 8.18–8.20 | MAIN-003 | PLUGIN_REVIEW_REQUIRED | Session/checkpoint service and command proposal | B-001/B-004, then client |
+| FRONT-001 | Frontier role/config/Core/exact-world gate | Req. 11.1–11.3 | AUTH-002 | DONE | Config, service and exact-world fail-closed gates | FRONT-D01 stable approval |
+| FRONT-002 | Traversal/loadout/pending-delivery pure domain | Req. 11.4–11.8 | FRONT-001 | DONE | World/identity/delivery/shop domain and focused tests | FRONT-D05/client |
+| FRONT-003 | Frontier migration/repository | Req. 11.4, 13.2 | ADR-009 | PLUGIN_REVIEW_REQUIRED | V001/V002 DDL, contracts and MariaDB tests | B-001 concrete lifecycle |
+| FRONT-004 | LeafGrapple version/capability boundary | Req. 12 | FRONT-001 | EXTERNAL_BLOCKED | Public 1.0.2 probe, tests and artifact assessment | Safe tier plus client motion |
+| FRONT-005 | Launchpad domain/runtime/protection/reconcile | Req. 13 | FRONT-003 | PLUGIN_REVIEW_REQUIRED | State/placement/use/recovery tests | B-001 and FRONT-D03/D04 |
+| FRONT-006 | Frontier shop transaction/delivery | Req. 14 | FRONT-002, FRONT-003 | PLUGIN_REVIEW_REQUIRED | Fail-closed catalog; claimed, non-retrying purchase; pending delivery | B-001/B-004 and client |
+| MAIN-D01 | Block weights and ore multipliers | Req. 15; Exec. 18 | MAIN-002 | DONE | Requirement baseline in fixed-point config/domain | None |
+| MAIN-D02 | Threshold coefficients | Req. 15; Exec. 18 | MAIN-002 | DONE | Monotonic baseline and focused tests | None |
+| MAIN-D03 | Repair price | Req. 15; Exec. 18 | MAIN-006 | DONE | Fixed-point pricing domain and tests | None |
+| MAIN-D04 | Main GUI layout/language | Req. 15; Exec. 18–19 | MAIN-006 | OWNER_APPROVAL_REQUIRED | Japanese 27-slot proposal | Accept or revise proposal |
+| MAIN-D05 | Growth Tool name/lore | Req. 15; Exec. 18–19 | MAIN-004 | OWNER_APPROVAL_REQUIRED | Concise Japanese proposal without internal IDs | Accept or revise proposal |
+| MAIN-D06 | Pending-delivery text UI | Req. 15; Exec. 18–19 | MAIN-007 | PLUGIN_REVIEW_REQUIRED | Two-line sanitized Japanese proposal | Review copy/channel |
+| MAIN-D07 | Admin command/permission surface | Req. 15; Exec. 18 | MAIN-007 | PLUGIN_REVIEW_REQUIRED | Command/permission reference | Review exact nodes |
+| MAIN-D08 | External repair guards | Req. 15; Exec. 18 | MAIN-004 | PLUGIN_REVIEW_REQUIRED | Native-first fail-closed proposal | Review supported hook matrix |
+| MAIN-D09 | Netherite timing/price | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | Decision register | Later approved scope |
+| MAIN-D10 | Reset/preserve authority | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | Plugin performs no reset | Project Order 25 |
+| FRONT-D01 | Missing `frontier_iris` behavior | Req. 15; Exec. 18–19 | FRONT-001 | OWNER_APPROVAL_REQUIRED | Admin-health-only proposal | Accept or disable whole plugin |
+| FRONT-D02 | LeafGrapple 1.0.2 boundary | Req. 12, 15; Exec. 18 | FRONT-004 | EXTERNAL_BLOCKED | Public API probe; default unsafe | Supply/approve safe tier |
+| FRONT-D03 | Launchpad creation snapshot | Req. 13, 15; Exec. 18–19 | FRONT-005 | PLUGIN_REVIEW_REQUIRED | Immutable creation-default proposal | Review values |
+| FRONT-D04 | WorldGuard/WorldEdit/FAWE protection | Req. 13, 15; Exec. 18 | FRONT-005 | PLUGIN_REVIEW_REQUIRED | Native/public-hook proposal and limitation | Review coverage sufficiency |
+| FRONT-D05 | Navigation GUI layout/language | Req. 15; Exec. 18–19 | FRONT-002 | OWNER_APPROVAL_REQUIRED | Japanese 27-slot proposal; Waystone unavailable | Accept or revise proposal |
+| FRONT-D06 | Shop Pending Delivery representation | Req. 14–15; Exec. 18–19 | FRONT-006 | PLUGIN_REVIEW_REQUIRED | Typed durable record tied to Core transaction | Review representation |
+| FRONT-D07 | Seed/border/generation | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | Plugin never creates/changes worlds | Project-owned |
+| FRONT-D08 | Portal deny | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | No fallback portal path | Project follow-up |
+| FRONT-D09 | Gate coordinates/safe arrival | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | No guessed coordinates | Project follow-up |
+| FRONT-D10 | MVI Runtime config | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | MVI remains normal-inventory authority | Project-owned |
+| FRONT-D11 | Waystone template/palette | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | Production Waystone absent | Later Waystone scope |
+| FRONT-D12 | Waystone safe arrival/interaction | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | No teleport behavior | Later Waystone scope |
+| FRONT-D13 | Resource pack/model | Req. 15; Exec. 18 | None | NOT_APPLICABLE | Vanilla materials; no custom-model requirement | None |
+| FRONT-D14 | Ruined WM rewards | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | Reward domain excluded | Later scope |
+| FRONT-D15 | EliteMobs–MVI adapter | Req. 15; Exec. 18 | None | DEFERRED_BY_REQUIREMENT | Module/artifact absent | Order 13 `ADAPTER_REQUIRED` |
 | WAYSTONE-001 | Defer Waystone production/GUI/teleport/tool | Final instruction 2.4 | None | DEFERRED_BY_REQUIREMENT | Traceability and decision register | Later V0.0.x |
 | ADAPTER-001 | Keep EM–MVI adapter absent | Req. 15; Exec. 2.5 | None | DEFERRED_BY_REQUIREMENT | Existing module boundary | Project Order 13 |
 | MIG-001 | Empty/upgrade/repeat/failure/boundary migration tests | Req. 9 | MAIN-003, FRONT-003 | DONE | Main/Frontier isolated MariaDB suites; hashes in `source.md` | Runtime pool integration remains B-001 |
-| TEST-001 | Focused domain/unit/API tests and `check` | Req. 17–18 | Product work | TODO | Pending | None |
-| TEST-002 | Isolated MariaDB tests | Req. 19 | Persistence work | TODO | Pending | Docker |
-| TEST-003 | Headless Main/Frontier Paper wiring | Req. 20 | Runtime work | TODO | Pending | Paper harness |
-| TEST-004 | Prepare client acceptance steps | Req. 21 | Runtime work | TODO | Pending | CLIENT_TEST_REQUIRED |
-| HANDOFF-001 | Reports/handoff/artifact matrix/readiness | Req. 16, 24–26 | Tests | TODO | Pending | Review/owner/client outcomes |
+| TEST-001 | Focused domain/unit/API tests and `check` | Req. 17–18 | Product work | DONE | Gradle `check`; test report | None for implemented scope |
+| TEST-002 | Isolated MariaDB tests | Req. 19 | Persistence work | DONE | Main/Frontier empty/upgrade/repeat/failure Testcontainers | None |
+| TEST-003 | Headless Main/Frontier Paper wiring | Req. 20 | Runtime work | PLUGIN_REVIEW_REQUIRED | Bounded plan; no false PASS from disabled stubs | B-001/B-004 |
+| TEST-004 | Prepare client acceptance steps | Req. 21 | Runtime work | CLIENT_TEST_REQUIRED | `docs/testing/plans/V0.0.2-client-acceptance.md` | Reviewed fixed candidate |
+| HANDOFF-001 | Reports/handoff/artifact matrix/readiness | Req. 16, 24–26 | Tests | PLUGIN_REVIEW_REQUIRED | V0.0.2 handoff packet and test report | Review/owner/client outcomes |
 | GIT-001 | Create/push initial foundation and Draft PR | Exec. 3.2–3.4 | AUTH-002 | DONE | Commit `ae0f80237113fb96dffd6934d016b19d4e768f18`; Draft PR #14 | None |
 | RUNTIME-001 | Project Runtime operations | Req. 22; AGENTS | None | NOT_APPLICABLE | Repository boundary | Project-owned |
 | RELEASE-001 | Merge/tag/release publication | Final instruction | Review/handoff | OTHER_BLOCKED | No dispatch authorized | Explicit later approval |

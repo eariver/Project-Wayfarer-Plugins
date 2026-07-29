@@ -144,23 +144,43 @@ jobs:
             find release -maxdepth 1 -type f -name 'Wayfarer_*.jar' -printf '%f\n' | sort
           )
 
-          CONFIG_VERSION="$(
-            awk '$1 == "config-version:" { print $2; exit }' \
-              plugins/wayfarer-core/src/main/resources/config.yml
-          )"
-          if [[ -z "$CONFIG_VERSION" ]]; then
-            echo "::error::Core config.yml must declare config-version before release."
-            exit 1
+          component_metadata="$RUNNER_TEMP/prerelease-component-metadata.md"
+          : > "$component_metadata"
+          record_component() {
+            local component="$1"
+            local config_path="$2"
+            local migration_path="$3"
+            local config_version migration_version
+            config_version="$(
+              awk '$1 == "config-version:" { print $2; exit }' "$config_path"
+            )"
+            migration_version="$(
+              find "$migration_path" -maxdepth 1 -type f -name 'V*__*.sql' -printf '%f\n' \
+                | sed 's/__.*//' | sort -V | tail -n 1
+            )"
+            if [[ -z "$config_version" || -z "$migration_version" ]]; then
+              echo "::error::$component config or migration version is missing."
+              exit 1
+            fi
+            printf -- '- %s: config `%s`; migration `%s`\n' \
+              "$component" "$config_version" "$migration_version" \
+              >> "$component_metadata"
+          }
+          if scope_includes_core "$RELEASE_SCOPE"; then
+            record_component \
+              "Wayfarer_Core" \
+              plugins/wayfarer-core/src/main/resources/config.yml \
+              plugins/wayfarer-core/src/main/resources/db/migration/core
           fi
-
-          MIGRATION_VERSION="$(
-            find plugins/wayfarer-core/src/main/resources/db/migration/core \
-              -maxdepth 1 -type f -name 'V*__*.sql' -printf '%f\n' \
-              | sed 's/__.*//' | sort -V | tail -n 1
-          )"
-          if [[ -z "$MIGRATION_VERSION" ]]; then
-            echo "::error::No Core Flyway migration version was found."
-            exit 1
+          if scope_includes_main_frontier "$RELEASE_SCOPE"; then
+            record_component \
+              "Wayfarer_Main" \
+              plugins/wayfarer-main/src/main/resources/config.yml \
+              plugins/wayfarer-main/src/main/resources/db/migration/main
+            record_component \
+              "Wayfarer_Frontier" \
+              plugins/wayfarer-frontier/src/main/resources/config.yml \
+              plugins/wayfarer-frontier/src/main/resources/db/migration/frontier
           fi
 
           cp gradle/libs.versions.toml release/DEPENDENCY_VERSIONS.toml
@@ -178,8 +198,6 @@ jobs:
           - Tag: ${TAG}
           - Release scope: ${RELEASE_SCOPE}
           - Source commit: ${SOURCE_SHA}
-          - Config version: ${CONFIG_VERSION}
-          - Migration version: ${MIGRATION_VERSION}
           - Source branch: main
           - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           - Test instructions: ${TEST_INSTRUCTIONS:-Not specified}
@@ -196,6 +214,11 @@ jobs:
           while read -r hash file; do
             printf -- '- `%s`: `%s`\n' "$file" "$hash" >> release/RELEASE_MANIFEST.md
           done < release/SHA256SUMS.txt
+
+          {
+            printf '\n## Component compatibility\n\n'
+            cat "$component_metadata"
+          } >> release/RELEASE_MANIFEST.md
 
           cat >> release/RELEASE_MANIFEST.md <<EOF
 
