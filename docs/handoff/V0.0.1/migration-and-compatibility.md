@@ -18,6 +18,11 @@
   authority.
 - Core scope prohibition: do not create `wf_main_*` or `wf_frontier_*`
 - Downgrade: Not supported unless a later approved procedure proves schema compatibility
+- Public pre-release compatibility: rc.3 changes only Waymark balance reads from
+  `CompletionStage<Long>` to `CompletionStage<BigDecimal>`. This is source/binary incompatible
+  with an rc.2 consumer compiled against the unpublished API, so API consumers must compile
+  against the selected final Core artifact. Effect and database amounts remain `long`.
+- Config version remains 1 and V001–V003 are unchanged by the fractional-balance correction.
 
 Record the tested source/target migration versions, backup prerequisites, runtime result, and
 rollback limitations before handoff. Never edit an applied Flyway migration.

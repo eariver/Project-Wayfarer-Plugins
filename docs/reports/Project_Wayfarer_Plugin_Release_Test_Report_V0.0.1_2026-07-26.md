@@ -1,15 +1,15 @@
 # Project Wayfarer Plugin Release Test Report V0.0.1
 
-Status: RC.2 concrete-provider candidate complete; review, final release identity, and Project
+Status: RC.3 fractional-balance candidate complete; review, final release identity, and Project
 acceptance pending.
 
 ## Release identity
 
-- Tested plugin source: `5039e008659be1f7e23658aabba12cb95a8a600d`
+- Tested plugin source: `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`
 - Release tag / URL: Pending
 - Candidate artifact/version/filename/SHA-256:
-  `0.0.1-rc.2` / `wayfarer-core-0.0.1-rc.2.jar` /
-  `8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6`
+  `0.0.1-rc.3` / `wayfarer-core-0.0.1-rc.3.jar` /
+  `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F`
 - Config/migration version: `1` / `V003`
 - Java/Gradle/Paper: 25 / 9.6.1 / 1.21.11 build 132 (`c5eb079`)
 - MariaDB/Redis/Waymark configuration: MariaDB 11.8, Redis 8-alpine; fixed VaultUnlocked 2.20.2
@@ -34,14 +34,16 @@ acceptance pending.
 
 ## Build and automated verification
 
-- Commands/results/test counts: 176 unit, 14 MariaDB, and 6 Redis cases; 0 failed, 0 errors,
+- Commands/results/test counts: 192 unit (178 Core / 6 API / 8 Common), 14 MariaDB, and 6 Redis cases; 0 failed, 0 errors,
   0 skipped; `check assemble` passed
-- Local rc.2 verification: 176 unit, 14 MariaDB, and 6 Redis tests plus `check assemble` passed.
-  GitHub Actions `30378563840` passed check, assemble, cache reuse, reproducibility, and packaging.
+- Local rc.3 verification: focused fractional/API/transaction tests, 192 unit, 14 MariaDB, and
+  6 Redis tests plus `check assemble` passed. GitHub Actions
+  [`30413198551`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30413198551)
+  passed check, assemble, cache reuse, reproducibility, and packaging.
 - Unit/MariaDB/Redis/migration/concurrency/idempotency/failure/restart tests: Passed in
   commit-pinned CI; see phase results and traceability
-- Main-thread I/O and disable-callback tests: Automated suite passed; Paper probe verified worker
-  and main-thread bridge boundaries and clean disable
+- Main-thread I/O and disable-callback tests: Automated suite passed; the rc.3 Paper probe verified
+  37.5 → long debit 25 → 12.5 → long refund 25 → 37.5 and clean disable
 - API compatibility/class identity: Passed
 - Packaging/reproducibility/relocation/license/secret inspection: Passed for the candidate source;
   same-source Core JAR reproducibility and one-runtime-JAR package gate passed
@@ -71,8 +73,8 @@ acceptance pending.
   and Project scheduling of the shared economy durability deferred item
 - Evidence paths/commits: prior rc.1 workflow
   [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610);
-  rc.2 concrete result at `5039e008659be1f7e23658aabba12cb95a8a600d`; CI `30378563840`
-  passed
+  rc.2 concrete result and CI `30378563840` remain historical; rc.3 candidate source is
+  `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`; CI `30413198551` passed
 - Artifact matrix: `docs/handoff/V0.0.1/artifact-matrix.md`
 - Project acceptance input: `docs/handoff/V0.0.1/project-acceptance-input.md`
 - Project Runtime changed: No

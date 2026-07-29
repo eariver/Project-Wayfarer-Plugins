@@ -89,6 +89,12 @@
   interoperability, provider absence, safe health, and clean disable passed in the dedicated
   rc.2 runtime. Duplicate refund, provider exception/timeout, UNKNOWN, and no automatic replay are
   automated-test evidence rather than runtime failure injection.
+- RC.2 rejected a valid fractional Vault balance because the read contract required `Long`.
+  RC.3 candidate `95b2cf1ef159b4d16921ddb4c8698621b8134c3e` corrects the public API/SPI
+  balance type to JDK `BigDecimal`; focused tests and the dedicated task-only runtime preserved
+  37.5 → long debit 25 → 12.5 → long refund 25 → 37.5. NaN and infinities fail closed.
+  Debit/refund/transaction/database amounts remain `long`. The return-type change is source/binary
+  incompatible with consumers compiled against the unpublished rc.2 API.
 - The designated RedisEconomy source worktree is dirty: commit `581091a` does not itself contain
   the determinable two-file compatibility patch. The fixed JAR hash remains authority for V0.0.1;
   a future fixed artifact should have a clean immutable source commit.
@@ -96,6 +102,10 @@
   stronger guarantees become necessary, improve/replace Vault and/or RedisEconomy for all economy
   consumers; do not add a Wayfarer-only side channel. Transfer this deferred concern to a
   Project-side record such as `docs/11-deferred-design-items.md`.
+- Project deferred-design Issue
+  [`eariver/Project_Wayfarer#1`](https://github.com/eariver/Project_Wayfarer/issues/1)
+  tracks the shared durability/effect-lookup concern. It is nonblocking for rc.3 and distinct from
+  the corrected fractional-balance defect.
 - Hot reload/PlugMan-style reload is unsupported.
 - Project placement, migration execution, configuration, permission application, server restart,
   runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.

@@ -65,6 +65,11 @@ retry the effect and does not claim unconditional exactly-once behavior.
 Redis locks/idempotency hints may reduce contention but never authorize an effect. Provider balance
 remains provider authority, and transaction/reconcile history remains MariaDB authority.
 
+Balance reads cross the public API/SPI as JDK `BigDecimal` so a shared Vault balance such as 37.5
+is preserved. Transaction, debit, and refund amounts remain integral positive `long` values in
+Core and V003. This read-contract correction changes no state transition, repository column,
+migration, idempotency identity, or effect classification.
+
 The concrete adapter follows ADR 0007: Bukkit ServicesManager → Vault `Economy` → the selected
 RedisEconomy provider. UUID remains Core authority; `OfflinePlayer` exists only inside the
 main-thread Vault call. Explicit Vault success/failure is mapped from the fixed source, while a

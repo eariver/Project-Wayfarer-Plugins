@@ -19,4 +19,8 @@ Current review candidate (not a release asset):
 
 | Filename | SHA-256 | Source commit |
 |---|---|---|
-| `wayfarer-core-0.0.1-rc.2.jar` | `8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6` | `5039e008659be1f7e23658aabba12cb95a8a600d` |
+| `wayfarer-core-0.0.1-rc.3.jar` | `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F` | `95b2cf1ef159b4d16921ddb4c8698621b8134c3e` |
+
+Historical rc.2 remains fixed at source `5039e008659be1f7e23658aabba12cb95a8a600d`,
+JAR `wayfarer-core-0.0.1-rc.2.jar`, SHA-256
+`8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6`.

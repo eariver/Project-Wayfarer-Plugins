@@ -6,7 +6,8 @@
 - Alpha.1 source commit: `192cda35dce0dba855c2da4eb1ed71a0425f549a`
 - Stable final source commit: Pending
 - Requirement traceability: In progress; global gate remains `BLOCKED`
-- Latest local automated tests: Passed, 176 unit / 14 MariaDB / 6 Redis; 0 failed/errors/skipped
+- Latest local automated tests: Passed, 192 unit (178 Core / 6 API / 8 Common),
+  14 MariaDB, and 6 Redis; 0 failed/errors/skipped
 - Alpha.2 PR B correction: 131 local unit tests / 0 failed / 0 skipped; updated-head GitHub
   Actions `check` and `assemble` passed at
   `0d5bf928a489d7fcbac51e93244af2180b4a539c`
@@ -65,6 +66,16 @@
   Redis 8, fixed VaultUnlocked, and fixed RedisEconomy passed shared balance, debit, idempotent
   replay, insufficient funds, refund, representative direct Vault withdraw/deposit, safe health,
   provider-absent fail-closed, and clean disable. Test containers/volumes were removed.
+- RC.3 fractional-balance candidate:
+  `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`;
+  `wayfarer-core-0.0.1-rc.3.jar` SHA-256
+  `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F`.
+  Focused/API/transaction regressions and local `check assemble` passed. Dedicated Paper 1.21.11
+  build 132 / Java 25 acceptance preserved 37.5 → long debit 25 → 12.5 → long refund 25 → 37.5,
+  direct Vault interoperability, idempotent replay, insufficient funds, sanitized output, and
+  clean disable. GitHub Actions
+  [`30413198551`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30413198551)
+  passed check, assemble, cache reuse, same-source JAR reproducibility, and Core packaging.
 - ADR 0007 Owner Decision resolves Gate B/C/D for V0.0.1 by accepting common Vault semantics.
   Vault `SUCCESS` is not durable Redis proof; concrete resolve remains UNKNOWN and no provider
   reference or exactly-once guarantee is synthesized.
@@ -73,11 +84,12 @@
 
 Stable release remains blocked until Draft PR #12 is reviewed and approved/merged, every applicable
 traceability/handoff gate is complete, a stable final source is fixed, Project Runtime
-placement/acceptance is recorded, and the Project Owner explicitly clears requirements. RC.2 is a
+placement/acceptance is recorded, and the Project Owner explicitly clears requirements. RC.3 is a
 review candidate, not stable final source.
 
 The beta/rc.1 evidence and Candidate C client failure remain immutable history; the Client Fix
 Candidate retains its targeted correction. RC.2 adds the Owner-approved Vault concrete provider
-and dedicated standalone acceptance without overwriting those candidates. The accepted provider
+and remains immutable history. RC.3 corrects fractional balance compatibility without overwriting
+those candidates. The accepted provider
 limitation and Project-side future design item remain disclosed. These results do not change the
 stable-release `BLOCKED` marker.

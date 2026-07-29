@@ -98,10 +98,28 @@ Core still guarantees unique idempotency keys, one provider call per winning dur
 normal duplicate debit/refund prevention, `UNKNOWN` for unprovable outcomes, no automatic repeat
 from `UNKNOWN`, and manual reconcile/audit. Core does not claim exactly-once.
 
+## Fractional balance compatibility
+
+The fixed Vault surface represents balances as `double`, and existing consumers can produce a
+fractional shared balance. The original rc.2 adapter incorrectly required an exactly integral
+balance and therefore rejected valid values such as 37.5.
+
+Before stable publication, the public `WayfarerWaymark.balance(UUID)` and the JDK-only provider SPI
+are corrected from `CompletionStage<Long>` to `CompletionStage<BigDecimal>`. The concrete adapter
+accepts finite Vault balances and converts them with `BigDecimal.valueOf(double)` without rounding,
+integral coercion, or scale normalization. NaN and infinity fail closed with sanitized diagnostics.
+Transaction/debit/refund amounts and V003 persistence remain `long`.
+
+This is a source/binary contract correction to an unpublished review candidate. API, SPI, service
+delegate, test fixtures, runtime probes, and boundary tests move together; no production
+dependency, config version, migration, Provider Contract result mapping, or transaction guarantee
+changes.
+
 ## Consequences
 
-- Core may implement a private Vault adapter without changing the SPI, engine, repository, or
-  V001–V003.
+- Core may implement a private Vault adapter without exposing Vault types or changing the engine,
+  repository, or V001–V003. The pre-release balance return type correction above is the sole SPI
+  shape change.
 - Missing, disabled, unexpected, or failed provider discovery leaves Transaction and Waymark
   unavailable while provider-independent services remain available.
 - Startup provider verification/recovery is asynchronous so Paper's main thread remains available
@@ -119,7 +137,9 @@ affects every economy consumer, including EvenMoreFish and EconomyShopGUI.
 If stronger guarantees are required, improve or replace Vault, RedisEconomy, or both with an
 economy boundary all consumers can share. Do not add a Wayfarer-only RedisEconomy side channel.
 The Project owner should transfer this item to a Project-side deferred-design record such as
-`docs/11-deferred-design-items.md`.
+`docs/11-deferred-design-items.md`. The Owner-designated nonblocking Project reference is
+[`eariver/Project_Wayfarer#1`](https://github.com/eariver/Project_Wayfarer/issues/1); it is
+distinct from the corrected fractional-balance defect.
 
 ## Rollback
 

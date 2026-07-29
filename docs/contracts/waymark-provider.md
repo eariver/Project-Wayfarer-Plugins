@@ -3,7 +3,7 @@
 `WayfarerWaymarkProvider` is a JDK-only capability boundary:
 
 - `probe` reports availability and a safe provider identifier.
-- `balance` reads provider authority.
+- `balance` reads provider authority as JDK `BigDecimal`, including fractional balances.
 - `debit` and `refund` accept stable, separately persisted operation IDs.
 - `resolve` receives the effect kind and stable operation ID, then returns a structured resolution:
   `APPLIED`, `NOT_APPLIED`, or `UNKNOWN`, a safe bounded nullable provider reference, and a safe
@@ -14,6 +14,12 @@
 An adapter must never expose Vault, RedisEconomy, Bukkit, Redis, or provider implementation types.
 It must not access RedisEconomy internal keys. Unknown/timeout results must not be converted to
 known failure or success. Provider references must not be guessed or synthesized.
+
+The Vault adapter converts a finite Vault `double` with `BigDecimal.valueOf(double)`. It does not
+round or coerce a balance to an integer and does not impose a scale contract. Numerical consumers
+must compare by value unless they explicitly own a display-scale policy. NaN and either infinity
+fail closed through a sanitized exceptional completion. Effect amounts remain positive `long`
+values; fractional debit/refund is not part of V0.0.1.
 
 The alpha.4 fixture can reproduce success, insufficient funds, timeout before/after effect, known
 failure, unknown effect, outage, resolution outcomes, restart, and duplicate request. It uses the
