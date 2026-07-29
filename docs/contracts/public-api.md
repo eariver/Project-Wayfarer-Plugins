@@ -9,7 +9,7 @@ All contracts are loaded through the unshaded `wayfarer-api` identity published 
 | `WayfarerDatabase` | `services.database()` | marker only; no JDBC operations | deliberately unavailable under ADR 0005 |
 | `WayfarerAudit` | `services.audit()` | asynchronous durable completion | rejected after persistence intake closes; failure is exceptional |
 | `WayfarerTransactions` | `services.transactions()` | asynchronous; provider calls outside JDBC | explicit timeout/UNKNOWN; idempotent key; unavailable without provider |
-| `WayfarerWaymark` | `services.waymark()` | asynchronous provider boundary | provider-defined result; unavailable without verified provider |
+| `WayfarerWaymark` | `services.waymark()` | asynchronous provider boundary; balance is JDK `BigDecimal` | provider-defined result; unavailable without verified provider |
 | `WayfarerItemIdentity` | `services.itemIdentity()` | async immutable request/result | unknown/mismatch claims fail closed; disabled intake rejects |
 | `WayfarerTasks` | `services.tasks()` | bounded worker and main-thread bridge | overflow/late callback exceptional; stale revalidation is not applied |
 | `WayfarerHealth` | direct service and `services.health()` | immutable snapshot | reports component degradation/down/disabled without secrets |
@@ -22,6 +22,11 @@ into one ambiguous reference. Inspection is presence-safe at the command boundar
 stable, separate operation IDs. Resolution identifies the effect kind and returns structured
 `APPLIED`, `NOT_APPLIED`, or `UNKNOWN` status with a bounded nullable reference and failure code.
 Concrete provider availability remains governed by ADR 0006.
+
+`WayfarerWaymark.balance(UUID)` and the provider SPI preserve fractional provider authority as
+`CompletionStage<BigDecimal>`. Vault doubles are converted with `BigDecimal.valueOf`; no rounding,
+flooring, ceiling, integral cast, or scale normalization is performed. Debit, credit/refund,
+transaction requests, and persisted amounts remain positive `long` values in V0.0.1.
 
 Forbidden public types are covered by `PublicApiBoundaryTest`: Hikari, Flyway, Lettuce, JDBC,
 Paper/Bukkit, Redis authentication, provider implementation, Main/Frontier domain, and gameplay

@@ -9,6 +9,7 @@ import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -82,6 +83,25 @@ class PublicApiBoundaryTest {
                 WayfarerWaymarkProvider.ResolutionResult.class.getRecordComponents()
             ).map(RecordComponent::getName).toList()
         );
+    }
+
+    @Test
+    void waymarkBalanceUsesJdkDecimalForPublicApiAndProviderSpi() throws Exception {
+        String expected = "java.util.concurrent.CompletionStage<java.math.BigDecimal>";
+
+        assertEquals(
+            expected,
+            WayfarerWaymark.class.getMethod("balance", java.util.UUID.class)
+                .getGenericReturnType()
+                .getTypeName()
+        );
+        assertEquals(
+            expected,
+            WayfarerWaymarkProvider.class.getMethod("balance", java.util.UUID.class)
+                .getGenericReturnType()
+                .getTypeName()
+        );
+        assertTrue(BigDecimal.class.getName().startsWith("java."));
     }
 
     private static void inspect(Class<?> type) {

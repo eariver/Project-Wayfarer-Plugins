@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -37,6 +38,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -335,7 +337,7 @@ class PersistenceFoundationIntegrationTest {
     }
 
     @Test
-    void verifiedProviderRecoveryCompletesBeforeServicePublication() throws Exception {
+    void verifiedProviderRecoveryCompletesBeforeDependentCapabilityAvailability() throws Exception {
         try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
             UUID id = UUID.randomUUID();
             try (CoreConfig config = enabledConfig(
@@ -373,6 +375,7 @@ class PersistenceFoundationIntegrationTest {
                 runtime.enable();
                 try {
                     assertEquals(1, publisher.publishCount);
+                    awaitTransactionAvailable(runtime);
                     assertEquals(
                         WayfarerTransactions.State.COMMITTED,
                         runtime.services().transactions().inspect(id)
@@ -396,6 +399,21 @@ class PersistenceFoundationIntegrationTest {
                 }
             }
         }
+    }
+
+    private static void awaitTransactionAvailable(CoreRuntime runtime) throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            WayfarerHealth.ComponentHealth transaction = runtime.health()
+                .snapshot()
+                .components()
+                .get("Transaction");
+            if (transaction != null && transaction.status() == WayfarerHealth.Status.UP) {
+                return;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("Transaction capability did not become available");
     }
 
     @Test
@@ -640,8 +658,8 @@ class PersistenceFoundationIntegrationTest {
         }
 
         @Override
-        public CompletionStage<Long> balance(UUID playerUuid) {
-            return CompletableFuture.completedFuture(100L);
+        public CompletionStage<BigDecimal> balance(UUID playerUuid) {
+            return CompletableFuture.completedFuture(new BigDecimal("100"));
         }
 
         @Override

@@ -11,6 +11,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -139,7 +140,10 @@ public final class PreclientProbePlugin extends JavaPlugin {
             )
             .thenCompose(ignored -> auditIdentityAndTaskProbe(services))
             .thenCompose(ignored -> services.waymark().balance(ACTOR_ID))
-            .thenAccept(balance -> require(balance == 100_000L, "Waymark balance"))
+            .thenAccept(balance -> require(
+                balance.compareTo(new BigDecimal("100000")) == 0,
+                "Waymark balance"
+            ))
             .thenCompose(ignored -> execute(services, "baseline"))
             .thenCompose(result -> {
                 require(

@@ -5,8 +5,11 @@ import io.github.eariver.wayfarer.api.WayfarerWaymarkProvider;
 import java.util.Optional;
 
 @FunctionalInterface
-public interface WaymarkProviderSource {
+public interface WaymarkProviderSource extends AutoCloseable {
     Optional<WayfarerWaymarkProvider> discover();
+
+    @Override
+    default void close() {}
 
     static WaymarkProviderSource unavailable() {
         return Optional::empty;

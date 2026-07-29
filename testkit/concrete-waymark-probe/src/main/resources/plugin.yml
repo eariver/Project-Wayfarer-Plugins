@@ -1,0 +1,7 @@
+name: Wayfarer_Concrete_Waymark_Probe
+version: '${version}'
+main: io.github.eariver.wayfarer.concrete.ConcreteWaymarkProbePlugin
+api-version: '1.21.11'
+description: Test-only Vault/RedisEconomy concrete Waymark provider probe
+author: eariver
+depend: [Vault, RedisEconomy, Wayfarer_Core]

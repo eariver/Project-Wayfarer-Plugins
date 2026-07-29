@@ -17,9 +17,10 @@ are fixed by `gradle/libs.versions.toml` and the resolved `runtimeClasspath`.
 | Reactor Core | 3.6.6 | Apache-2.0 |
 | Reactive Streams | 1.0.4 | MIT-0 |
 
-Paper API is compile-only and is not bundled. JUnit, Mockito, Testcontainers, and Docker Java are
-test-only and are not bundled. Main and Frontier are separate modules and are not included in the
-Core candidate.
+Paper API and Vault API 1.7.1 are compile-only and are not bundled. JUnit, Mockito, Testcontainers,
+and Docker Java are test-only and are not bundled. VaultUnlocked and RedisEconomy are separate
+runtime prerequisites, not bundled libraries. Main, Frontier, and the concrete-provider probe are
+separate modules and are not included in the Core candidate.
 
 The repository `LICENSE`, dependency-provided license/notice resources, and merged service metadata
 are included according to the Shadow packaging configuration. This inventory is evidence for the

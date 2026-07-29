@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     compileOnly(libs.paper.api)
+    compileOnly(libs.vault.api)
     implementation(project(":libraries:wayfarer-api"))
     implementation(project(":libraries:wayfarer-common"))
     implementation(libs.hikari)
@@ -13,6 +14,7 @@ dependencies {
     implementation(libs.mariadb.client)
     implementation(libs.lettuce)
     testImplementation(libs.paper.api)
+    testImplementation(libs.vault.api)
 }
 
 val mariaDbIntegrationTestSourceSet = sourceSets.create("mariaDbIntegrationTest")

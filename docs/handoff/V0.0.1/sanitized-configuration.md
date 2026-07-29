@@ -11,8 +11,10 @@
   namespaced key prefix. Defaults are 3000 ms, 3600 seconds, 30 seconds, and `wayfarer`.
 - Migration: `enabled` plus Core-only `db/migration/core`; immutable V001/V002 plus additive V003,
   and enabling migration requires MariaDB.
-- Waymark: `enabled`, expected provider `RedisEconomy`, and operation timeout. Enabling without an
-  explicitly injected, verified provider fails closed. Concrete provider authority is ADR 0006.
+- Waymark: `enabled`, optional backward-compatible `provider-mode: vault`, expected provider
+  `RedisEconomy`, and operation timeout. Other provider modes fail validation. When enabled, Core
+  discovers Vault `Economy` through ServicesManager, verifies its safe name, and fails closed when
+  absent, disabled, or unexpected. Config version remains `1`.
 - Executor: 1–64 threads, a thread prefix containing `Wayfarer`, and bounded queue capacity
   1–65536. A missing queue setting retains the backward-compatible capacity 256.
 - Audit: `enabled: true` activates durable MariaDB audit plus player/item identity and therefore

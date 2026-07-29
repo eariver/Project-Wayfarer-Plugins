@@ -1,6 +1,6 @@
 # ADR 0006: Keep the Concrete Waymark Provider Behind an Authority Gate
 
-- Status: Accepted for the alpha.4 stacked branch
+- Status: Superseded for the V0.0.1 concrete provider by ADR 0007 Owner Decision
 - Date: 2026-07-28
 
 ## Context
@@ -42,3 +42,7 @@ Contract, boundary tests, beta API inventory, and downstream stacked branches mu
 alpha.4 provider-independent automated work may pass, but concrete provider completion and stable
 release remain `BLOCKED`. An owner-approved, version-pinned thread/failure/reference contract is
 required before a concrete adapter or runtime balance/debit/refund test can be added.
+
+ADR 0007 follows up with exact fixed-source/fixed-JAR evidence and records the later Owner Decision.
+The Owner explicitly accepts the shared Vault semantics for V0.0.1, so a Core-private Vault adapter
+may proceed under ADR 0007 without weakening this ADR's historical alpha.4 gate rationale.

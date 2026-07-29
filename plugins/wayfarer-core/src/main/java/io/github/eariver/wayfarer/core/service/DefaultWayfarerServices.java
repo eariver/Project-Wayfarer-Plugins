@@ -21,8 +21,8 @@ final class DefaultWayfarerServices implements WayfarerServices {
     private final WayfarerHealth health;
     private final WayfarerAudit audit;
     private final WayfarerItemIdentity itemIdentity;
-    private final WayfarerTransactions transactions;
-    private final WayfarerWaymark waymark;
+    private final Supplier<WayfarerTransactions> transactions;
+    private final Supplier<WayfarerWaymark> waymark;
 
     DefaultWayfarerServices(
         String serverId,
@@ -32,8 +32,8 @@ final class DefaultWayfarerServices implements WayfarerServices {
         WayfarerHealth health,
         WayfarerAudit audit,
         WayfarerItemIdentity itemIdentity,
-        WayfarerTransactions transactions,
-        WayfarerWaymark waymark
+        Supplier<WayfarerTransactions> transactions,
+        Supplier<WayfarerWaymark> waymark
     ) {
         this.serverId = Objects.requireNonNull(serverId, "serverId");
         this.configVersion = configVersion;
@@ -42,8 +42,8 @@ final class DefaultWayfarerServices implements WayfarerServices {
         this.health = Objects.requireNonNull(health, "health");
         this.audit = audit;
         this.itemIdentity = itemIdentity;
-        this.transactions = transactions;
-        this.waymark = waymark;
+        this.transactions = Objects.requireNonNull(transactions, "transactions");
+        this.waymark = Objects.requireNonNull(waymark, "waymark");
     }
 
     @Override
@@ -76,18 +76,20 @@ final class DefaultWayfarerServices implements WayfarerServices {
 
     @Override
     public WayfarerTransactions transactions() {
-        if (transactions == null) {
+        WayfarerTransactions current = transactions.get();
+        if (current == null) {
             throw unavailable("Transactions");
         }
-        return transactions;
+        return current;
     }
 
     @Override
     public WayfarerWaymark waymark() {
-        if (waymark == null) {
+        WayfarerWaymark current = waymark.get();
+        if (current == null) {
             throw unavailable("Waymark");
         }
-        return waymark;
+        return current;
     }
 
     @Override

@@ -38,9 +38,11 @@ payload string. JSON whitespace and field-order differences therefore fail close
 | `UNKNOWN` | Resolve the persisted refund operation when present, otherwise the persisted debit operation |
 
 Startup recovery runs only after migration and a successful verified-provider probe. It scans a
-bounded batch, uses a bounded overall startup timeout and per-provider timeout, and completes before
-transaction/Waymark service publication. A missing or failed provider leaves those services
-unavailable with `DOWN` health while provider-independent Core services remain published.
+bounded batch and uses bounded overall and per-provider timeouts. Core publishes its
+provider-independent services first, then performs provider verification and recovery on the
+bounded executor so Paper's main thread can service Vault calls. Transaction/Waymark capability
+getters remain unavailable and health remains `UNKNOWN` until recovery completes. A missing or
+failed provider leaves those capabilities unavailable with `DOWN` health.
 
 ## Durable event and general audit
 
@@ -63,5 +65,19 @@ retry the effect and does not claim unconditional exactly-once behavior.
 Redis locks/idempotency hints may reduce contention but never authorize an effect. Provider balance
 remains provider authority, and transaction/reconcile history remains MariaDB authority.
 
-Concrete RedisEconomy/Vault invocation is blocked by ADR 0006 until its immutable thread, timeout,
-error, and reference lookup contract is established.
+Balance reads cross the public API/SPI as JDK `BigDecimal` so a shared Vault balance such as 37.5
+is preserved. Transaction, debit, and refund amounts remain integral positive `long` values in
+Core and V003. This read-contract correction changes no state transition, repository column,
+migration, idempotency identity, or effect classification.
+
+The concrete adapter follows ADR 0007: Bukkit ServicesManager → Vault `Economy` → the selected
+RedisEconomy provider. UUID remains Core authority; `OfflinePlayer` exists only inside the
+main-thread Vault call. Explicit Vault success/failure is mapped from the fixed source, while a
+provider exception, timeout, null/ambiguous result, or uncertain disable race becomes `UNKNOWN`.
+Because Vault has no caller operation ID or effect lookup, concrete `resolve` remains `UNKNOWN` and
+no provider reference is synthesized.
+
+The Owner accepts that Vault `SUCCESS` means only that the common path accepted the operation; it
+does not prove durable Redis completion. The state machine still prevents normal duplicate effects
+and never automatically repeats an `UNKNOWN` debit/refund, but it does not claim external
+exactly-once.

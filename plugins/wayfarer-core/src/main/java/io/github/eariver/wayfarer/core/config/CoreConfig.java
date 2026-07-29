@@ -99,9 +99,18 @@ public record CoreConfig(
 
     public record WaymarkSettings(
         boolean enabled,
+        String providerMode,
         String expectedProvider,
         Duration operationTimeout
-    ) {}
+    ) {
+        public WaymarkSettings(
+            boolean enabled,
+            String expectedProvider,
+            Duration operationTimeout
+        ) {
+            this(enabled, "vault", expectedProvider, operationTimeout);
+        }
+    }
 
     private static void closeSecret(SecretValue value) {
         if (value != null) {
