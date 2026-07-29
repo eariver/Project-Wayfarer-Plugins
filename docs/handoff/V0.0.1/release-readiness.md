@@ -37,6 +37,13 @@
   [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
   passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`; historical/supporting only
 - Stable publication: Pending explicit, approved `release.yml` dispatch
+- Partial-publication recovery: Retry-safe only when the GitHub Release is absent and an existing
+  annotated `V0.0.1` tag dereferences to the exact Stable Product Source. Lightweight,
+  wrong-source, malformed, or completed-Release states fail closed; an existing Release is never
+  overwritten
+- Publish pre-tag package validation: `PASS`; Release Notes, exact 19-asset list, duplicate/safe
+  names, regular non-symlink assets, checksums, Manifest provenance, and Artifact Matrix identity
+  are all validated before a new tag push
 - Project Runtime placement/acceptance: Pending / Project-owned
 - Project Runtime changed during preparation: No
 - `requirements_cleared`: Must still be supplied explicitly by the Project Owner to confirm
@@ -63,6 +70,9 @@ commit built version `0.0.1` with Java 25.0.3 and Gradle 9.6.1.
 | SHA256SUMS coverage | Every attached asset except self-referential `SHA256SUMS.txt` and `RELEASE_MANIFEST.md` |
 | Product/Handoff provenance separation | PASS |
 | Publication-time Artifact Matrix | Deterministic V0.0.1 tag/URL/source/JAR/SHA generation |
+| Partial-publication state recovery | PASS: absent tag → `new`; exact annotated tag/no Release → `recover-existing-tag` |
+| Unsafe recovery states | PASS: lightweight, wrong-source, existing Release, malformed/missing/out-of-main source rejected |
+| Publish package verification placement | PASS: complete verifier runs before new tag creation |
 
 ## Local isolated acceptance
 

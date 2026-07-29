@@ -299,9 +299,13 @@ verify_package() {
 
   assets_dir="$PACKAGE_ROOT/assets"
   asset_list="$PACKAGE_ROOT/RELEASE_ASSET_FILENAMES.txt"
+  release_notes="$PACKAGE_ROOT/RELEASE_NOTES.md"
+  [[ -f "$release_notes" && ! -L "$release_notes" ]] \
+    || fail "Release Notes must be a regular non-symlink file."
   [[ -f "$asset_list" && ! -L "$asset_list" ]] \
     || fail "Release asset filename list is missing."
-  [[ -d "$assets_dir" ]] || fail "Release assets directory is missing."
+  [[ -d "$assets_dir" && ! -L "$assets_dir" ]] \
+    || fail "Release assets directory is missing or is a symlink."
 
   duplicate_name="$(
     sort "$asset_list" | uniq -d | head -n 1
@@ -313,6 +317,11 @@ verify_package() {
   mapfile -t listed_assets < "$asset_list"
   [[ "${#listed_assets[@]}" -eq "${#expected_assets[@]}" ]] \
     || fail "Release asset list count does not match the required set."
+
+  for filename in "${listed_assets[@]}"; do
+    [[ "$filename" =~ ^[-A-Za-z0-9_.]+$ ]] \
+      || fail "Unsafe release asset filename: $filename"
+  done
 
   for filename in "${expected_assets[@]}"; do
     [[ "$(grep -Fxc -- "$filename" "$asset_list")" -eq 1 ]] \

@@ -42,11 +42,6 @@ if ! git merge-base --is-ancestor "$STABLE_SOURCE_COMMIT" origin/main; then
   exit 1
 fi
 
-if git rev-parse -q --verify "refs/tags/$INPUT_VERSION" >/dev/null; then
-  echo "Stable tag $INPUT_VERSION already exists." >&2
-  exit 1
-fi
-
 validate_path() {
   local value="$1"
   local pattern="$2"

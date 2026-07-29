@@ -49,6 +49,15 @@ expect_verify_failure() {
 }
 
 expect_verify_failure \
+  "missing Release Notes" \
+  'rm -f -- "$PACKAGE_ROOT/RELEASE_NOTES.md"'
+expect_verify_failure \
+  "missing Asset Filename list" \
+  'rm -f -- "$PACKAGE_ROOT/RELEASE_ASSET_FILENAMES.txt"'
+expect_verify_failure \
+  "asset list count not 19" \
+  'sed -i "1d" "$PACKAGE_ROOT/RELEASE_ASSET_FILENAMES.txt"'
+expect_verify_failure \
   "missing Sanitized Config" \
   'rm -f -- "$PACKAGE_ROOT/assets/SANITIZED_CONFIGURATION.md"'
 expect_verify_failure \
@@ -79,6 +88,12 @@ expect_verify_failure \
   "duplicate release filename" \
   'printf "%s\n" "LICENSE" >> "$PACKAGE_ROOT/RELEASE_ASSET_FILENAMES.txt"'
 expect_verify_failure \
+  "unsafe release filename" \
+  'sed -i "1s|.*|../unsafe.jar|" "$PACKAGE_ROOT/RELEASE_ASSET_FILENAMES.txt"'
+expect_verify_failure \
+  "listed asset missing" \
+  'rm -f -- "$PACKAGE_ROOT/assets/Wayfarer_Core-V0.0.1.jar"'
+expect_verify_failure \
   "missing Handoff Source Commit" \
   'sed -i "/^- Handoff source commit:/d" "$PACKAGE_ROOT/assets/RELEASE_MANIFEST.md"'
 expect_verify_failure \
@@ -87,6 +102,9 @@ expect_verify_failure \
 expect_verify_failure \
   "missing SHA256SUMS coverage" \
   'sed -i "/  LICENSE$/d" "$PACKAGE_ROOT/assets/SHA256SUMS.txt"'
+expect_verify_failure \
+  "checksum mismatch" \
+  'printf "%s\n" "tampered" >> "$PACKAGE_ROOT/assets/LICENSE"'
 
 grep -Fq \
   'bash scripts/release/test-stable-release-package.sh' \

@@ -67,6 +67,7 @@ jobs:
       release_scope: ${{ steps.metadata.outputs.release_scope }}
       source_sha: ${{ steps.metadata.outputs.source_sha }}
       handoff_source_commit: ${{ steps.metadata.outputs.handoff_source_commit }}
+      publication_mode: ${{ steps.metadata.outputs.publication_mode }}
       artifact_name: ${{ steps.metadata.outputs.artifact_name }}
       expected_stable_sha256: ${{ steps.metadata.outputs.expected_stable_sha256 }}
       evidence_commit: ${{ steps.metadata.outputs.evidence_commit }}
@@ -111,17 +112,7 @@ jobs:
           TAG="$INPUT_VERSION"
           ARTIFACT_NAME="release-$RELEASE_VERSION-$RELEASE_SCOPE"
 
-          git fetch origin main --tags --force
-
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "::error::Stable release $TAG already exists."
-            exit 1
-          fi
-
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            echo "::error::Stable tag $TAG already exists."
-            exit 1
-          fi
+          git fetch origin main:refs/remotes/origin/main --tags --force
 
           EXPECTED_STABLE_SHA256="$(
             bash scripts/release/validate-stable-release-inputs.sh
@@ -132,6 +123,16 @@ jobs:
           cp \
             scripts/release/assemble-stable-release-package.sh \
             "$RUNNER_TEMP/assemble-stable-release-package.sh"
+          cp \
+            scripts/release/validate-stable-publication-state.sh \
+            "$RUNNER_TEMP/validate-stable-publication-state.sh"
+
+          PUBLICATION_MODE="$(
+            TAG="$TAG" \
+              STABLE_SOURCE_COMMIT="$STABLE_SOURCE_COMMIT" \
+              bash "$RUNNER_TEMP/validate-stable-publication-state.sh"
+          )"
+
           SNAPSHOT_DIR="$SNAPSHOT_DIR" \
             HANDOFF_SOURCE_COMMIT="$HANDOFF_SOURCE_COMMIT" \
             bash "$RUNNER_TEMP/assemble-stable-release-package.sh" snapshot
@@ -154,6 +155,7 @@ jobs:
             echo "release_scope=$RELEASE_SCOPE"
             echo "source_sha=$STABLE_SOURCE_COMMIT"
             echo "handoff_source_commit=$HANDOFF_SOURCE_COMMIT"
+            echo "publication_mode=$PUBLICATION_MODE"
             echo "artifact_name=$ARTIFACT_NAME"
             echo "expected_stable_sha256=$EXPECTED_STABLE_SHA256"
             echo "evidence_commit=$EVIDENCE_COMMIT"
@@ -265,6 +267,14 @@ jobs:
           PACKAGE_ROOT="$GITHUB_WORKSPACE/release" \
             bash "$RUNNER_TEMP/assemble-stable-release-package.sh" verify
 
+          mkdir -p "$GITHUB_WORKSPACE/release/helpers"
+          cp \
+            "$RUNNER_TEMP/assemble-stable-release-package.sh" \
+            "$GITHUB_WORKSPACE/release/helpers/assemble-stable-release-package.sh"
+          cp \
+            "$RUNNER_TEMP/validate-stable-publication-state.sh" \
+            "$GITHUB_WORKSPACE/release/helpers/validate-stable-publication-state.sh"
+
       - name: Generate build provenance
         uses: actions/attest@v4
         with:
@@ -305,33 +315,45 @@ jobs:
           path: release/
 
       - name: Verify release package
+        env:
+          RELEASE_VERSION: ${{ needs.build.outputs.release_version }}
+          TAG: ${{ needs.build.outputs.tag }}
+          PRODUCT_SOURCE_COMMIT: ${{ needs.build.outputs.source_sha }}
+          HANDOFF_SOURCE_COMMIT: ${{ needs.build.outputs.handoff_source_commit }}
+          EXPECTED_STABLE_SHA256: ${{ needs.build.outputs.expected_stable_sha256 }}
         run: |
           set -euo pipefail
-          (
-            cd release/assets
-            sha256sum --check SHA256SUMS.txt
-          )
+          PACKAGE_ROOT="$GITHUB_WORKSPACE/release" \
+            bash release/helpers/assemble-stable-release-package.sh verify
 
       - name: Create annotated stable tag
         env:
           TAG: ${{ needs.build.outputs.tag }}
           SOURCE_SHA: ${{ needs.build.outputs.source_sha }}
+          STABLE_SOURCE_COMMIT: ${{ needs.build.outputs.source_sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git fetch --tags --force
+          git fetch origin main:refs/remotes/origin/main --tags --force
 
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            TAG_SHA="$(git rev-list -n 1 "$TAG")"
-            if [[ "$TAG_SHA" != "$SOURCE_SHA" ]]; then
-              echo "::error::Existing tag $TAG points to $TAG_SHA, expected $SOURCE_SHA."
+          PUBLICATION_MODE="$(
+            bash release/helpers/validate-stable-publication-state.sh
+          )"
+          case "$PUBLICATION_MODE" in
+            new)
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git tag -a "$TAG" "$SOURCE_SHA" -m "Project Wayfarer Plugins $TAG main-server handoff"
+              git push origin "$TAG"
+              ;;
+            recover-existing-tag)
+              echo "Reusing existing annotated $TAG at exact stable source $SOURCE_SHA."
+              ;;
+            *)
+              echo "::error::Unexpected publication mode: $PUBLICATION_MODE"
               exit 1
-            fi
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git tag -a "$TAG" "$SOURCE_SHA" -m "Project Wayfarer Plugins $TAG main-server handoff"
-            git push origin "$TAG"
-          fi
+              ;;
+          esac
 
       - name: Publish GitHub release
         env:

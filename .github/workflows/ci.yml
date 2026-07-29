@@ -32,6 +32,9 @@ jobs:
       - name: Test stable release package scope and provenance
         shell: bash
         run: bash scripts/release/test-stable-release-package.sh
+      - name: Test stable publication partial-failure recovery
+        shell: bash
+        run: bash scripts/release/test-stable-publication-recovery.sh
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

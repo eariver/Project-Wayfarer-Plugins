@@ -102,7 +102,9 @@ The workflow rejects the request when:
 
 - the stable version is malformed;
 - `stable_source_commit` is malformed, missing, or not contained in `origin/main`;
-- the stable tag or GitHub release already exists;
+- the GitHub Release already exists;
+- an existing stable tag is lightweight, cannot dereference to a commit, or does not point to the
+  exact reviewed Stable Product Source;
 - the evidence/readiness files do not identify the stable source and expected stable JAR hash;
 - traceability does not contain exactly `- Release gate: CLEARED`;
 - release readiness does not contain exactly `- Release readiness: READY`;
@@ -117,6 +119,11 @@ The workflow rejects the request when:
   Plugin-side publication prerequisites are cleared;
 - the rebuilt stable Core JAR differs from the committed local stable candidate SHA-256.
 
+An absent tag selects `new` publication mode. A pre-existing annotated tag is accepted only as
+partial-publication recovery when it dereferences to the exact reviewed Stable Product Source and
+the GitHub Release is absent. The tag object is reused without recreation, movement, force push, or
+replacement. Existing Releases are never overwritten.
+
 After verification it checks out the reviewed stable source commit, rebuilds only the Core JAR
 with the internal stable version, records the local isolated test authority and main-server
 instruction in `RELEASE_MANIFEST.md`, creates build provenance, and publishes a stable GitHub
@@ -129,6 +136,13 @@ manifest.
 Stable publication has four independent gates: traceability `CLEARED`, readiness `READY`,
 operator-supplied `requirements_cleared=true`, and `main-server-release` Environment approval.
 The boolean input alone is insufficient and does not represent Project Runtime acceptance.
+
+Before any new annotated tag is pushed, the Publish Job reruns the same package verifier used by
+the Build Job. `RELEASE_NOTES.md` and `RELEASE_ASSET_FILENAMES.txt` must be regular non-symlink
+files; the attachment list must contain exactly 19 unique safe filenames; every listed asset must
+be a regular non-symlink file; SHA256SUMS must verify; and the Manifest and Artifact Matrix must
+match the Product Source, Handoff Source, Stable JAR SHA, tag, and deterministic Release URL.
+Failure stops publication before tag creation.
 
 A stable release means **ready for source-side handoff**. It does not itself authorize or execute
 runtime deployment. `CLEARED` and `READY` similarly exclude Project placement, Runtime migration,
@@ -169,6 +183,11 @@ ADR 0008 selects direct stable publication for V0.0.1 after commit-pinned local 
 replace an existing release asset or move an existing release tag. Human-facing versions, tags,
 release names, documentation directories, and JAR filenames use uppercase `V`; Gradle and
 `plugin.yml` omit it.
+
+If an annotated Stable Tag was pushed successfully but GitHub Release creation or asset upload
+failed, rerunning the approved workflow is safe only when the Release remains absent and the
+existing annotated tag still dereferences to the exact Stable Product Source. A lightweight tag,
+wrong-source tag, malformed tag, completed Release, or indeterminate GitHub lookup fails closed.
 
 ## 7. V0.0.1 artifact scope
 

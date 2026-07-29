@@ -24,6 +24,8 @@
 - Stable Release Package required asset set: `COMPLETE`
 - Handoff source model: workflow main HEAD is captured as an immutable tracked-file snapshot
   before checkout of the unchanged Stable Product Source
+- Partial-publication recovery: exact-source annotated Stable Tag with no GitHub Release only
+- Publish pre-tag package validation: complete Package verifier rerun before new tag push
 - Final code-bearing package-automation commit:
   `dd011717172e77ca8ba49f2ecde6096474476ceb`
 - Authoritative Stable Release Package CI: GitHub Actions
@@ -97,3 +99,14 @@ Project acceptance input, existing evidence/instruction/traceability/readiness f
 publication-time Artifact Matrix. `SHA256SUMS.txt` covers every attached asset except itself and
 `RELEASE_MANIFEST.md`; the Manifest explains those self-reference exclusions and records each
 snapshot source path, Release filename, and SHA-256.
+
+Temporary local Git repositories verified both publication modes without modifying a remote:
+no tag/no Release returns `new`, while an existing annotated tag at the exact Stable Product Source
+with no Release returns `recover-existing-tag`. Lightweight tags, wrong-source annotated tags,
+existing Releases, malformed or missing sources, and sources outside `origin/main` fail closed.
+
+The Publish boundary reruns the shared Package verifier before tag creation. Focused negative
+tests reject missing Release Notes, missing or non-19-entry asset lists, duplicate or unsafe names,
+missing listed assets, checksum mismatch, Manifest provenance loss, and Artifact Matrix URL loss.
+An existing GitHub Release is never overwritten; an accepted recovery tag is never recreated,
+moved, deleted, or force-pushed.
