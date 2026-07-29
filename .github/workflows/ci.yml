@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Dry-run stable release input and document gates
+      - name: Test stable release input and document gates
         shell: bash
         env:
           INPUT_VERSION: V0.0.1
@@ -28,7 +28,7 @@ jobs:
           REQUIREMENTS_CLEARED: "true"
         run: |
           git fetch origin main --no-tags
-          bash scripts/release/validate-stable-release-inputs.sh
+          bash scripts/release/test-stable-release-validation.sh
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

@@ -38,7 +38,7 @@ on:
         required: true
         type: string
       requirements_cleared:
-        description: "Confirm test completion and clearance of all main-server requirements"
+        description: "Authorize stable source-side publication after confirming Plugin-side publication prerequisites are cleared; Project Runtime acceptance remains pending"
         required: true
         type: boolean
 
@@ -323,8 +323,9 @@ jobs:
           - Release readiness SHA-256: ${READINESS_SHA256}
           - Release readiness: ${READINESS_GATE}
           - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
-          - Test-server verification: Confirmed complete by workflow operator
-          - Main-server requirements: Confirmed cleared by workflow operator
+          - Plugin-side publication prerequisites: Confirmed cleared by workflow operator
+          - Stable source-side publication: Explicitly authorized by workflow operator
+          - Project Runtime placement/acceptance: Pending / Project-owned
           - Runtime status: Ready for handoff; not automatically installed
 
           This release is the source-side handoff package for Project Wayfarer main-server
@@ -358,6 +359,9 @@ jobs:
           - Main-server instruction: ${MAIN_SERVER_INSTRUCTION}
           - Requirement traceability: \`${REQUIREMENT_TRACEABILITY}\` (${TRACEABILITY_GATE})
           - Release readiness: \`${RELEASE_READINESS}\` (${READINESS_GATE})
+          - Owner authorization: Plugin-side publication prerequisites confirmed cleared and
+            stable source-side publication explicitly authorized
+          - Project Runtime placement/acceptance: pending / Project-owned
 
           Runtime deployment, migration execution, configuration application, backups,
           restart operations, acceptance evidence, and rollback decisions remain owned by

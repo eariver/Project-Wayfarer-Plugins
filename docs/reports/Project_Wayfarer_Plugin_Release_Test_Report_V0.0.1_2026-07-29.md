@@ -10,9 +10,12 @@
 - Config / migration: `1` / `V003`
 - Release tag / URL: Planned `V0.0.1` / pending stable publication
 - Pre-release: Not required by ADR 0008; not created
-- Preparation CI: GitHub Actions
+- Authoritative final code-bearing preparation CI: GitHub Actions
+  [`30451364006`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451364006)
+  passed at `d9753420b658a8beb69915980f7994d5b8f3f274`
+- Earlier supporting preparation gate CI:
   [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
-  passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`
+  passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`; historical/supporting only
 - Stable Candidate Client Smoke: `PASS`; client-facing regression not observed
 - Stable Client Smoke evidence commit: `7d9a74c6d8a14a2d68d0f3b6e9cf48e1e72dcf06`
 
@@ -64,5 +67,7 @@ requires the generated stable JAR to equal the committed local candidate SHA bef
 
 Plugin-side traceability is `CLEARED` and release readiness is `READY` for publication. These
 markers do not claim Project placement, migration execution, Runtime acceptance, Roadmap Order 9,
-or `requirements_cleared=true`. Stable workflow dispatch, Tag/Release verification, and Project
-handoff remain pending explicit post-review actions. Project Runtime was unchanged.
+or set `requirements_cleared=true`. That input remains an explicit Owner authorization for
+source-side stable publication after Plugin-side prerequisites are cleared; it is not Project
+acceptance. Stable workflow dispatch, Tag/Release verification, and Project handoff remain pending
+explicit post-review actions. Project Runtime was unchanged.

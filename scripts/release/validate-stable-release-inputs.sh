@@ -11,7 +11,9 @@ set -euo pipefail
 : "${REQUIREMENTS_CLEARED:?REQUIREMENTS_CLEARED is required}"
 
 if [[ "$REQUIREMENTS_CLEARED" != "true" ]]; then
-  echo "Main-server requirements must be explicitly confirmed as cleared." >&2
+  echo \
+    "Stable source-side publication requires explicit Owner authorization that Plugin-side publication prerequisites are cleared." \
+    >&2
   exit 1
 fi
 
@@ -76,84 +78,4 @@ validate_path \
   '^docs/handoff/[A-Za-z0-9._/-]+\.md$' \
   'Release readiness'
 
-if ! grep -Fxq -- "- Release gate: CLEARED" "$REQUIREMENT_TRACEABILITY"; then
-  echo "Requirement traceability release gate is not CLEARED." >&2
-  exit 1
-fi
-
-if ! grep -Fxq -- "- Release readiness: READY" "$RELEASE_READINESS"; then
-  echo "Release readiness is not READY." >&2
-  exit 1
-fi
-
-if awk -F'|' '
-  BEGIN { rejected = 0 }
-  /^\|/ {
-    status = $9
-    gsub(/^[ \t]+|[ \t]+$/, "", status)
-    if (status == "Not started" || status == "Failed" || status == "Blocked") {
-      rejected = 1
-    }
-  }
-  END { exit rejected ? 0 : 1 }
-' "$REQUIREMENT_TRACEABILITY"; then
-  echo "Requirement traceability contains a rejected status." >&2
-  exit 1
-fi
-
-if awk -F'|' '
-  BEGIN { missing_reason = 0 }
-  /^\|/ {
-    status = $9
-    notes = $10
-    gsub(/^[ \t]+|[ \t]+$/, "", status)
-    gsub(/^[ \t]+|[ \t]+$/, "", notes)
-    if (status == "Not applicable" && notes == "") {
-      missing_reason = 1
-    }
-  }
-  END { exit missing_reason ? 0 : 1 }
-' "$REQUIREMENT_TRACEABILITY"; then
-  echo "Every Not applicable traceability row must include a reason in Notes." >&2
-  exit 1
-fi
-
-code_fixable_count="$(
-  awk -F'|' '
-    $2 ~ /`CODEX_FIXABLE`/ {
-      count = $3
-      gsub(/[^0-9]/, "", count)
-      print count
-      exit
-    }
-  ' "$REQUIREMENT_TRACEABILITY"
-)"
-if [[ -z "$code_fixable_count" || "$code_fixable_count" != "0" ]]; then
-  echo "CODEX_FIXABLE must be explicitly recorded as zero." >&2
-  exit 1
-fi
-
-if ! grep -Fq -- "$STABLE_SOURCE_COMMIT" "$TEST_EVIDENCE"; then
-  echo "Test evidence does not identify the stable source commit." >&2
-  exit 1
-fi
-if ! grep -Fq -- "$STABLE_SOURCE_COMMIT" "$RELEASE_READINESS"; then
-  echo "Release readiness does not identify the stable source commit." >&2
-  exit 1
-fi
-
-mapfile -t expected_sha_lines < <(
-  sed -nE 's/^- Stable candidate SHA-256: `([0-9A-Fa-f]{64})`$/\1/p' \
-    "$TEST_EVIDENCE"
-)
-if [[ "${#expected_sha_lines[@]}" -ne 1 ]]; then
-  echo "Test evidence does not contain one valid Stable candidate SHA-256 line." >&2
-  exit 1
-fi
-expected_sha="${expected_sha_lines[0]}"
-if ! grep -Fq -- "$expected_sha" "$RELEASE_READINESS"; then
-  echo "Release readiness does not identify the expected stable candidate SHA-256." >&2
-  exit 1
-fi
-
-printf '%s\n' "${expected_sha^^}"
+bash scripts/release/validate-stable-release-documents.sh

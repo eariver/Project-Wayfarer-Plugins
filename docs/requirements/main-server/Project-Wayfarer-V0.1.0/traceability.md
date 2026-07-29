@@ -34,9 +34,9 @@ placement and acceptance rows remain Project-owned follow-up and do not authoriz
 
 | Classification | Count | Scope |
 |---|---:|---|
-| `PLUGIN_COMPLETE` | 219 | All IDs except those explicitly listed below; implementation/evidence is sufficient for Plugin-side review |
+| `PLUGIN_COMPLETE` | 217 | All IDs except those explicitly listed below; implementation/evidence is sufficient for Plugin-side review |
 | `CODEX_FIXABLE` | 0 | The fractional balance/API/SPI gap was fixed in rc.3; no additional non-owner product gap was found |
-| `READY_FOR_PUBLICATION` | 13 | `REL-012`–`REL-020`, `REL-022`, `HND-001`, `HND-002`, `OPS-002` |
+| `READY_FOR_PUBLICATION` | 15 | `FND-020`, `TST-017`, `REL-012`–`REL-020`, `REL-022`, `HND-001`, `HND-002`, `OPS-002` |
 | `PROJECT_ACCEPTANCE_PENDING` | 13 | `REL-021`, `REL-023`, `HND-003`–`HND-013` |
 
 Release assets/tag/URL remain publication work. Project placement, configuration, migration

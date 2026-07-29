@@ -93,8 +93,10 @@ tag are produced from the exact reviewed `stable_source_commit`. Development may
   `docs/requirements/main-server/`;
 - `requirement_traceability`: committed Markdown under `docs/requirements/main-server/`;
 - `release_readiness`: committed Markdown under `docs/handoff/`;
-- `requirements_cleared`: explicit operator confirmation that test-server verification and all
-  main-server requirements are complete.
+- `requirements_cleared`: explicit Owner confirmation that Plugin-side stable publication
+  prerequisites are cleared and authorization to perform V0.0.1 source-side stable publication.
+  Project Runtime placement, migration execution, configuration, smoke/acceptance, and Roadmap
+  completion remain pending.
 
 The workflow rejects the request when:
 
@@ -104,11 +106,15 @@ The workflow rejects the request when:
 - the evidence/readiness files do not identify the stable source and expected stable JAR hash;
 - traceability does not contain exactly `- Release gate: CLEARED`;
 - release readiness does not contain exactly `- Release readiness: READY`;
-- traceability contains `Not started`, `Failed`, or `Blocked`, or records nonzero
-  `CODEX_FIXABLE`;
+- any requirement Status is empty or outside the explicit terminal allow-list;
+- `READY_FOR_PUBLICATION` or `PROJECT_ACCEPTANCE_PENDING` classification counts differ from their
+  corresponding requirement Status rows;
+- `CODEX_FIXABLE` is nonzero, or the remaining-work classification arithmetic differs from
+  `Acceptance units`;
 - a `Not applicable` traceability row lacks a reason;
 - the workflow is not run from `main`;
-- the operator does not explicitly confirm requirement clearance;
+- the Owner does not explicitly authorize stable source-side publication after confirming
+  Plugin-side publication prerequisites are cleared;
 - the rebuilt stable Core JAR differs from the committed local stable candidate SHA-256.
 
 After verification it checks out the reviewed stable source commit, rebuilds only the Core JAR
@@ -122,7 +128,7 @@ manifest.
 
 Stable publication has four independent gates: traceability `CLEARED`, readiness `READY`,
 operator-supplied `requirements_cleared=true`, and `main-server-release` Environment approval.
-The boolean input alone is insufficient.
+The boolean input alone is insufficient and does not represent Project Runtime acceptance.
 
 A stable release means **ready for source-side handoff**. It does not itself authorize or execute
 runtime deployment. `CLEARED` and `READY` similarly exclude Project placement, Runtime migration,
@@ -185,7 +191,9 @@ approval. Before stable release, display the reviewed stable source, committed l
 immutable mainline requirement reference, traceability result, readiness result, known
 limitations, open decisions, and the user-supplied `requirements_cleared` value.
 
-Codex does not infer `requirements_cleared=true`.
+Codex does not infer `requirements_cleared=true`. Its meaning is limited to explicit Owner
+authorization for source-side stable publication after Plugin-side publication prerequisites are
+cleared; Project Runtime placement/acceptance remains pending.
 
 The Project mainline requirement snapshot and Codex work order are separate authorities. The
 snapshot is stored under `docs/requirements/main-server/`; the derived execution instruction is

@@ -4,8 +4,9 @@ Authoritative detail is maintained in
 [`traceability.md`](../../requirements/main-server/Project-Wayfarer-V0.1.0/traceability.md).
 
 The Stable workflow treats traceability and release readiness as separate, tracked inputs. It
-requires exact `CLEARED` and `READY` markers in addition to explicit owner clearance and the
-`main-server-release` Environment approval. Plugin-side preparation is complete.
+requires exact `CLEARED` and `READY` markers in addition to explicit Owner authorization for
+source-side stable publication and the `main-server-release` Environment approval. Plugin-side
+preparation is complete; Project Runtime acceptance remains pending.
 
 | Area | Evidence commit/path | Status |
 |---|---|---|
@@ -20,5 +21,6 @@ Concrete provider authority, fractional compatibility, stable automated verifica
 isolated acceptance are complete. The additional Stable Candidate Client Smoke observed no
 client-facing regression; full-inventory status remains `LIMITED` for the existing external
 reasons. The stable release workflow remains ready for a separately approved dispatch. Project
-placement/acceptance and explicit Owner `requirements_cleared` input remain; no Project Runtime
-action is authorized by this result.
+placement/acceptance and explicit Owner `requirements_cleared` publication authorization remain;
+the input confirms Plugin-side publication prerequisites and does not clear Project acceptance.
+No Project Runtime action is authorized by this result.

@@ -19,14 +19,18 @@
 - Stable client smoke evidence commit: `7d9a74c6d8a14a2d68d0f3b6e9cf48e1e72dcf06`
 - Stable test report:
   `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`
-- Preparation CI:
+- Authoritative final code-bearing preparation CI:
+  [`30451364006`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451364006)
+  passed at `d9753420b658a8beb69915980f7994d5b8f3f274`
+- Earlier supporting preparation gate CI:
   [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
-  passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`
+  passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`; historical/supporting only
 - Stable publication: Pending explicit, approved `release.yml` dispatch
 - Project Runtime placement/acceptance: Pending / Project-owned
 - Project Runtime changed during preparation: No
-- `requirements_cleared`: Must still be supplied explicitly by the Project Owner at workflow
-  approval; this document does not infer or set that workflow input
+- `requirements_cleared`: Must still be supplied explicitly by the Project Owner to confirm
+  Plugin-side publication prerequisites and authorize source-side stable publication. It does not
+  clear Project Runtime placement/acceptance, and this document does not infer or set the input
 
 ## Stable candidate verification
 
@@ -97,12 +101,15 @@ there is no requirement to create another pre-release. The stable workflow must:
 2. validate that source against `origin/main`;
 3. require committed `CLEARED` traceability and `READY` readiness inputs;
 4. rebuild the stable JAR and reject a SHA mismatch;
-5. retain GitHub Environment approval and explicit `requirements_cleared=true`;
+5. retain GitHub Environment approval and explicit `requirements_cleared=true` Owner
+   authorization for source-side stable publication;
 6. publish only after the workflow input summary is displayed and separately approved.
 
 No stable tag, GitHub release, URL, or published stable asset exists yet. This readiness result
 does not authorize Project Runtime installation, migration, configuration, restart, deployment,
-tagging, or release publication.
+tagging, or release publication. Even after Owner publication authorization, Project Runtime
+placement, migration execution, configuration, smoke/acceptance, and Roadmap completion remain
+pending and Project-owned.
 
 ## Historical evidence retained
 
