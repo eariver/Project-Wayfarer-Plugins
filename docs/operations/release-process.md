@@ -2,11 +2,16 @@
 
 ## 1. Purpose
 
-Project Wayfarer Plugins uses three separate gates:
+Project Wayfarer Plugins uses separate gates:
 
 1. Continuous Integration verifies every change.
-2. A GitHub pre-release packages a candidate for step-by-step test-server verification.
-3. A stable GitHub release packages an approved source commit for handoff to the main-server integration process.
+2. Release-before validation fixes and tests a reviewed source commit.
+3. A stable GitHub release packages that approved source commit for handoff to the main-server
+   integration process.
+
+For V0.0.1, ADR 0008 authorizes a Codex-operated local isolated Paper acceptance instead of a new
+GitHub pre-release. The pre-release workflow remains available for other explicitly approved
+release lines; it is not an input to V0.0.1 stable publication.
 
 GitHub Actions never installs plugins, runs Flyway migrations, modifies runtime configuration,
 restarts a server, accepts a runtime result, or performs rollback.
@@ -69,20 +74,21 @@ performed incrementally.
 
 Use the **Create Main-Server Release** workflow only after:
 
-- the selected pre-release completed test-server verification;
+- the reviewed stable source completed automated and local isolated test-server verification;
 - the main-server project supplied its current requirements or work instruction as Markdown;
-- every applicable requirement was cleared;
-- the approved pre-release source commit remains contained in the current `main` history.
+- every Plugin-side publication prerequisite was cleared;
+- the stable source commit remains contained in the current `main` history.
 
-The stable release is rebuilt from the exact source commit referenced by the approved pre-release
-tag. Development may continue on `main` during test-server verification; later `main` commits are
-not included in the stable package unless they receive their own pre-release and verification cycle.
+The workflow and committed evidence are selected from `main`. The stable release JAR and stable
+tag are produced from the exact reviewed `stable_source_commit`. Development may continue on
+`main` during verification; later product commits are not silently included.
 
 ### Inputs
 
 - `version`: stable human-facing version with uppercase `V`, for example `V0.0.1`;
 - `release_scope`: artifact set; the V0.0.1 line permits only `core`;
-- `approved_prerelease_tag`: the verified candidate, for example `V0.0.1-alpha.4`;
+- `stable_source_commit`: exact 40-character reviewed product-source SHA contained in `main`;
+- `test_evidence`: committed local stable acceptance under `docs/testing/results/`;
 - `main_server_instruction`: committed Markdown snapshot under
   `docs/requirements/main-server/`;
 - `requirement_traceability`: committed Markdown under `docs/requirements/main-server/`;
@@ -93,21 +99,22 @@ not included in the stable package unless they receive their own pre-release and
 The workflow rejects the request when:
 
 - the stable version is malformed;
-- the approved tag is not an existing GitHub pre-release;
-- the approved pre-release does not belong to the requested stable version line;
-- the approved pre-release manifest scope differs from the stable release scope;
+- `stable_source_commit` is malformed, missing, or not contained in `origin/main`;
+- the stable tag or GitHub release already exists;
+- the evidence/readiness files do not identify the stable source and expected stable JAR hash;
 - traceability does not contain exactly `- Release gate: CLEARED`;
 - release readiness does not contain exactly `- Release readiness: READY`;
-- traceability contains an incomplete or failed applicable status;
+- traceability contains `Not started`, `Failed`, or `Blocked`, or records nonzero
+  `CODEX_FIXABLE`;
 - a `Not applicable` traceability row lacks a reason;
 - the workflow is not run from `main`;
-- the approved pre-release source commit is not contained in the current `main` history;
 - the operator does not explicitly confirm requirement clearance;
-- the target stable release already exists.
+- the rebuilt stable Core JAR differs from the committed local stable candidate SHA-256.
 
-After verification it checks out the approved pre-release source commit, rebuilds only the Core
-JAR with the internal stable version, records the approved pre-release and main-server instruction in
-`RELEASE_MANIFEST.md`, creates build provenance, and publishes a stable GitHub release.
+After verification it checks out the reviewed stable source commit, rebuilds only the Core JAR
+with the internal stable version, records the local isolated test authority and main-server
+instruction in `RELEASE_MANIFEST.md`, creates build provenance, and publishes a stable GitHub
+release.
 The stable package also includes commit-pinned `TEST_SERVER_EVIDENCE.md` and
 `MAIN_SERVER_INSTRUCTION.md` snapshots, plus fixed `REQUIREMENT_TRACEABILITY.md` and
 `RELEASE_READINESS.md` assets with original paths, source commit, SHA-256, and gate values in the
@@ -118,7 +125,8 @@ operator-supplied `requirements_cleared=true`, and `main-server-release` Environ
 The boolean input alone is insufficient.
 
 A stable release means **ready for source-side handoff**. It does not itself authorize or execute
-runtime deployment.
+runtime deployment. `CLEARED` and `READY` similarly exclude Project placement, Runtime migration,
+Project acceptance, and Roadmap completion.
 
 ## 5. Main-server handoff
 
@@ -150,9 +158,11 @@ V0.0.1-rc.1
 V0.0.1
 ```
 
-A new test-server candidate always receives a new pre-release version. Do not replace an existing
-release asset or move an existing release tag. Human-facing versions, tags, release names,
-documentation directories, and JAR filenames use uppercase `V`; Gradle and `plugin.yml` omit it.
+A new pre-release candidate receives a new pre-release version when the Owner selects that path.
+ADR 0008 selects direct stable publication for V0.0.1 after commit-pinned local acceptance. Do not
+replace an existing release asset or move an existing release tag. Human-facing versions, tags,
+release names, documentation directories, and JAR filenames use uppercase `V`; Gradle and
+`plugin.yml` omit it.
 
 ## 7. V0.0.1 artifact scope
 
@@ -162,17 +172,18 @@ skeletons but their JARs are not release assets. The conditional EliteMobs–MVI
 authorized nor included. `core-main`, `core-frontier`, and `all` are reserved inputs and fail
 closed throughout V0.0.1.
 
-Stable publication downloads the approved pre-release `RELEASE_MANIFEST.md` and verifies its
-scope before building. The manifest records the source commit, scope, config version, migration
-version, and SHA-256 values. A missing Core config or migration version blocks publication.
+Stable publication verifies `release_scope=core`, stable-source ancestry, committed local evidence,
+and the expected stable candidate hash before building. The manifest records the source commit,
+scope, config version, migration version, local test operator/method, and SHA-256 values. A missing
+Core config or migration version blocks publication.
 
 ## 8. Approval records
 
 Before a pre-release run, display the repository, workflow, selected ref, source commit, release
 version, scope, test instruction, expected assets, and Environment, then obtain explicit user
-approval. Before stable release, also display the approved pre-release and source, committed test
-evidence, immutable mainline requirement reference, traceability result, known limitations, open
-decisions, and the user-supplied `requirements_cleared` value.
+approval. Before stable release, display the reviewed stable source, committed local test evidence,
+immutable mainline requirement reference, traceability result, readiness result, known
+limitations, open decisions, and the user-supplied `requirements_cleared` value.
 
 Codex does not infer `requirements_cleared=true`.
 

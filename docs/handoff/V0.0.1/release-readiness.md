@@ -1,107 +1,98 @@
 # V0.0.1 Release Readiness
 
-- Release readiness: BLOCKED
-- Latest approved pre-release:
-  [`V0.0.1-alpha.1`](https://github.com/eariver/Project-Wayfarer-Plugins/releases/tag/V0.0.1-alpha.1)
-- Alpha.1 source commit: `192cda35dce0dba855c2da4eb1ed71a0425f549a`
-- Stable final source commit: Pending
-- RC.3 evidence record commit: `92e32db98758eddad46c5f18772c21ef83366057`
-- RC.3 final balance probe commit: `7f013b346d2cd97705c45dbbf8a18f51e9607525`
-- RC.3 final corrected evidence record: `75b66aa987833b20c93c0312781bd158af40f84d`
-- Requirement traceability: In progress; global gate remains `BLOCKED`
-- Latest local automated tests: Passed, 192 unit (178 Core / 6 API / 8 Common),
-  14 MariaDB, and 6 Redis; 0 failed/errors/skipped
-- Alpha.2 PR B correction: 131 local unit tests / 0 failed / 0 skipped; updated-head GitHub
-  Actions `check` and `assemble` passed at
-  `0d5bf928a489d7fcbac51e93244af2180b4a539c`
-- Alpha.3 automated gate: 140 unit, 9 MariaDB, and 6 Redis cases / 0 failed / 0 skipped;
-  commit-pinned CI `30290422624` passed
-- Corrected alpha.4 provider-independent gate: 167 unit, 14 MariaDB, and 6 Redis cases /
-  0 failed / 0 skipped; CI `30354268891` passed at
-  `38fc2b55cfa1c91f2ca04daab47d062aada8a42e`. Concrete Waymark provider authority remains
-  blocked by ADR 0006
-- Corrected beta.1 gate: 169 unit, 14 MariaDB, and 6 Redis cases / 0 failed / 0 skipped;
-  clean `check`, clean `assemble`, configuration-cache reuse, API/module boundaries, packaging,
-  migration hashes, and same-source reproducibility passed in CI `30355673880` at
-  `b173ebfcff75b4fc4689155fc5b0d54960a04ab6`
-- RC.1 pre-client headless gate: passed at
-  Candidate C `7557b1836b0fe943a07f06d8af5c05849c6c8941`; workflow
-  [`30360911544`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30360911544)
-  and normal CI
-  [`30360911048`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30360911048)
-  passed with 173 unit, 14 MariaDB, and 6 Redis cases and zero failed/skipped tests
-- RC.1 candidate Core SHA-256:
-  `5ab6200839baa02d637bdf214126d79a10e925884da92b491bc9dcc0f8ddec1a`
-- Candidate C client acceptance: `FAIL`; authorized transaction inspect leaked a synchronous
-  provider-absent service exception to the Paper command dispatcher. The successful Candidate C
-  headless evidence remains valid and immutable.
-- Client Fix Candidate:
-  `d8804c68e2f7501b83206c8d4afa5e31dfdc3eb7`;
-  `wayfarer-core-0.0.1-rc.1-client-fix.1.jar` SHA-256
-  `c58a550a5fc0811bf8bbdfc4e42e6cee4316fc2bc6ece9db83bbc1784550674f`.
-  Focused regression and local `check` passed. GitHub Actions CI
-  [`30367633302`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30367633302)
-  passed `check`, `assemble`, configuration-cache reuse, same-source JAR reproducibility, and Core
-  packaging at code-bearing PR head `586db6ddc49218ab06b2421de896148d75e27916`.
-  The targeted Paper/client rerun returned the sanitized unavailable response with no dispatcher
-  exception, secret, internal exception message, or provider reference.
-- Isolated test server: Alpha.1 `PASSED`;
-  `docs/testing/evidence/V0.0.1-alpha.1-runtime-evidence.md`
-- Pre-client evidence:
-  `docs/testing/evidence/V0.0.1-rc.1-preclient-headless.md`;
-  result wording is `Automated/headless runtime passed`
-- Client acceptance evidence:
-  `docs/testing/results/V0.0.1-client-acceptance.md` at
-  `f2deab28c307de460adffb3b8dfc8c7252c0ec7a`
-- User observations: Real-player reconnect/identity, non-OP denial, authorized health,
-  responsiveness, and corrected sanitized inspect passed
-- Known limitations/open decisions: See linked handoff records
-- RC.2 concrete-provider candidate:
-  `5039e008659be1f7e23658aabba12cb95a8a600d`;
-  `wayfarer-core-0.0.1-rc.2.jar` SHA-256
-  `8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6`.
-  Focused Vault/config tests, 176 unit, 14 MariaDB, and 6 Redis tests passed with zero
-  failed/errors/skipped; `check`, `assemble`, and configuration-cache reuse passed. GitHub Actions
-  [`30378563840`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30378563840)
-  passed check, assemble, cache reuse, same-source JAR reproducibility, and Core packaging at the
-  candidate source.
-- Concrete provider standalone: Paper 1.21.11 build 132 / Java 25 with task-only MariaDB 11.8,
-  Redis 8, fixed VaultUnlocked, and fixed RedisEconomy passed shared balance, debit, idempotent
-  replay, insufficient funds, refund, representative direct Vault withdraw/deposit, safe health,
-  provider-absent fail-closed, and clean disable. Test containers/volumes were removed.
-- RC.3 fractional-balance candidate:
-  `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`;
-  `wayfarer-core-0.0.1-rc.3.jar` SHA-256
-  `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F`.
-  Focused/API/transaction regressions and local `check assemble` passed. Dedicated Paper 1.21.11
-  build 132 / Java 25 acceptance preserved 37.5 → long debit 25 → 12.5 → long refund 25, with
-  final Vault 37.5 and final Wayfarer 37.5,
-  direct Vault interoperability, idempotent replay, insufficient funds, sanitized output, and
-  clean disable. GitHub Actions
-  [`30413198551`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30413198551)
-  passed check, assemble, cache reuse, same-source JAR reproducibility, and Core packaging. Final
-  probe-head CI
-  [`30445725741`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30445725741)
-  also passed.
-- RC.3 publication status: `UNPUBLISHED REVIEW CANDIDATE`. The prerelease workflow was not
-  dispatched; no RC.3 tag, GitHub pre-release/release, release URL, or published RC.3 asset exists.
-  The JAR above was built locally from the fixed product source and its standalone acceptance is
-  candidate evidence, not publication evidence. Release publication remains
-  `RELEASE_PUBLICATION_PENDING`; `V0.0.1-alpha.1` remains the latest published approved pre-release.
-- ADR 0007 Owner Decision resolves Gate B/C/D for V0.0.1 by accepting common Vault semantics.
-  Vault `SUCCESS` is not durable Redis proof; concrete resolve remains UNKNOWN and no provider
-  reference or exactly-once guarantee is synthesized.
-- `requirements_cleared`: Project Owner input remains required
-- Project Runtime placement/acceptance: Pending / pending
+- Release readiness: READY
+- Stable version: `V0.0.1`
+- Stable product source commit: `49e00e21716c1c13a2dbb170fdad1b19c4275612`
+- Stable candidate JAR: `wayfarer-core-0.0.1.jar`
+- Stable candidate SHA-256:
+  `B045581D3984DDDBA10ED7B2ADA435926B8538BA9B29A1151550CE59588395A2`
+- Requirement traceability:
+  `docs/requirements/main-server/Project-Wayfarer-V0.1.0/traceability.md`;
+  gate `CLEARED`
+- Stable local acceptance:
+  `docs/testing/results/V0.0.1-stable-local-acceptance.md`;
+  `PASS WITH DISCLOSED FULL-INVENTORY LIMITATION`
+- Stable test report:
+  `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`
+- Stable publication: Pending explicit, approved `release.yml` dispatch
+- Project Runtime placement/acceptance: Pending / Project-owned
+- Project Runtime changed during preparation: No
+- `requirements_cleared`: Must still be supplied explicitly by the Project Owner at workflow
+  approval; this document does not infer or set that workflow input
 
-Stable release remains blocked until Draft PR #12 is reviewed and approved/merged, every applicable
-traceability/handoff gate is complete, a stable final source is fixed, Project Runtime
-placement/acceptance is recorded, and the Project Owner explicitly clears requirements. RC.3 is a
-review candidate, not stable final source.
+## Stable candidate verification
 
-The beta/rc.1 evidence and Candidate C client failure remain immutable history; the Client Fix
-Candidate retains its targeted correction. RC.2 adds the Owner-approved Vault concrete provider
-and remains immutable history. RC.3 corrects fractional balance compatibility without overwriting
-those candidates. The accepted provider
-limitation and Project-side future design item remain disclosed. These results do not change the
-stable-release `BLOCKED` marker.
+The stable product source is the immutable merge commit above. A detached clean worktree at that
+commit built version `0.0.1` with Java 25.0.3 and Gradle 9.6.1.
+
+| Check | Result |
+|---|---|
+| Clean `check assemble` | PASS |
+| Unit tests | 192: 178 Core / 6 API / 8 Common; 0 failed/errors/skipped |
+| MariaDB integration | 14; 0 failed/errors/skipped |
+| Redis integration | 6; 0 failed/errors/skipped |
+| Stable JAR reproducibility | Two clean builds produced the same SHA-256 |
+| Runtime JAR count | 1 |
+| Core-only boundary | Main/Frontier classes absent |
+| Config / migrations | Config `1`; V001/V002/V003 each present once |
+| Generated artifacts tracked | No |
+
+## Local isolated acceptance
+
+Paper 1.21.11 build 132 on Java 25 started with fresh task-only MariaDB 11.8 and Redis 8.
+The Owner-supplied 23-JAR inventory was copied unchanged, with one Stable Core and a
+production-excluded test probe added separately.
+
+Core `0.0.1`, VaultUnlocked `2.20.2`, and RedisEconomy `4.5.12-wayfarer.1` enabled. Health was
+`UP`; V001–V003 were applied and then validated as up-to-date after restart. The representative
+transaction preserved the fractional balance path:
+
+- initial Vault/Wayfarer balance `37.5`;
+- debit `25` to `12.5`;
+- same-transaction replay caused no second debit;
+- insufficient funds was explicit and non-mutating;
+- representative direct Vault withdraw/deposit was visible through Wayfarer;
+- refund `25` restored both views to `37.5`;
+- both server runs stopped cleanly with exit 0.
+
+No raw generated secret, Wayfarer product failure marker, or Wayfarer classloader/API identity
+error was found. Task containers and volumes were removed.
+
+## Disclosed limitation
+
+Full-inventory startup is `LIMITED`, not an unqualified full-set PASS:
+
+- the supplied `VelocityScoreboardAPI.v2.1.0.jar` is a library JAR without a Paper plugin
+  descriptor, so Paper reports a load error for that file;
+- Iris reports Java 25 warning mode and a dynamic-agent warning;
+- EliteMobs emitted one task-registration exception during the first clean shutdown after the
+  acceptance marker.
+
+Paper initialized 24 actual plugins on both valid runs. The observations did not break a
+Wayfarer dependency, affect shared balances, produce a Wayfarer failure marker, or prevent clean
+exit. They are nonblocking for the Core-only publication gate and remain Project placement
+considerations.
+
+## Publication and authority boundary
+
+ADR 0008 records the Owner-approved direct-stable path. `V0.0.1-alpha.1` remains historical;
+there is no requirement to create another pre-release. The stable workflow must:
+
+1. receive the exact stable source commit and expected JAR SHA-256;
+2. validate that source against `origin/main`;
+3. require committed `CLEARED` traceability and `READY` readiness inputs;
+4. rebuild the stable JAR and reject a SHA mismatch;
+5. retain GitHub Environment approval and explicit `requirements_cleared=true`;
+6. publish only after the workflow input summary is displayed and separately approved.
+
+No stable tag, GitHub release, URL, or published stable asset exists yet. This readiness result
+does not authorize Project Runtime installation, migration, configuration, restart, deployment,
+tagging, or release publication.
+
+## Historical evidence retained
+
+Candidate C's client failure, the Client Fix Candidate, RC.2, and RC.3 remain immutable history.
+RC.3 corrected fractional balance compatibility and is the product basis merged into the stable
+source, but it was never published as a pre-release. ADR 0007's accepted Vault/RedisEconomy
+limitation remains: Vault `SUCCESS` is not durable Redis completion, automatic effect lookup is
+unavailable, and exactly-once is not claimed.

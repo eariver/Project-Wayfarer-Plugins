@@ -2,7 +2,7 @@
 
 | Filename | Purpose | SHA-256 | Source commit | Release asset |
 |---|---|---|---|---|
-| `Wayfarer_Core-V0.0.1.jar` | Runtime Plugin | Pending | Pending | Required |
+| `Wayfarer_Core-V0.0.1.jar` | Runtime Plugin | `B045581D3984DDDBA10ED7B2ADA435926B8538BA9B29A1151550CE59588395A2` | `49e00e21716c1c13a2dbb170fdad1b19c4275612` | Required; not yet published |
 | `SHA256SUMS.txt` | Hash manifest | Pending | Pending | Required |
 | `RELEASE_MANIFEST.md` | Scope/provenance | Pending | Pending | Required |
 | `DEPENDENCY_VERSIONS.toml` | Dependency evidence | Pending | Pending | Required |
@@ -11,16 +11,16 @@
 | `REQUIREMENT_TRACEABILITY.md` | Fixed traceability evidence | Pending | Pending | Required |
 | `RELEASE_READINESS.md` | Fixed readiness evidence | Pending | Pending | Required |
 
-Additional sanitized configuration, command/permission, dependency, license/notice, test report,
-limitations, and rollback documents must be included before stable publication. Binary assets are
-stored in GitHub Releases, not Git history.
+The workflow generates the remaining manifest/evidence asset hashes at publication from the
+reviewed source and committed inputs. Sanitized configuration, command/permission, dependency,
+license/notice, stable test report, limitations, and rollback documents are present in source.
+Binary assets are stored in GitHub Releases, not Git history.
 
-Current review candidate (not a release asset):
+Stable local candidate (not yet a release asset):
 
 | Filename | SHA-256 | Source commit |
 |---|---|---|
-| `wayfarer-core-0.0.1-rc.3.jar` | `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F` | `95b2cf1ef159b4d16921ddb4c8698621b8134c3e` |
+| `wayfarer-core-0.0.1.jar` | `B045581D3984DDDBA10ED7B2ADA435926B8538BA9B29A1151550CE59588395A2` | `49e00e21716c1c13a2dbb170fdad1b19c4275612` |
 
-Historical rc.2 remains fixed at source `5039e008659be1f7e23658aabba12cb95a8a600d`,
-JAR `wayfarer-core-0.0.1-rc.2.jar`, SHA-256
-`8C85F9C0D42EED631F3167DE5827C21139D07B71A63CE3E0AC90F746F9A651E6`.
+Historical rc.2 and rc.3 identities remain fixed and were not overwritten. No stable tag,
+release URL, or published stable asset exists yet.

@@ -5,17 +5,18 @@ Authoritative detail is maintained in
 
 The Stable workflow treats traceability and release readiness as separate, tracked inputs. It
 requires exact `CLEARED` and `READY` markers in addition to explicit owner clearance and the
-`main-server-release` Environment approval. The current preparation state is blocked.
+`main-server-release` Environment approval. Plugin-side preparation is complete.
 
 | Area | Evidence commit/path | Status |
 |---|---|---|
-| Governance and scope | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/traceability.md` | In progress; global gate BLOCKED |
-| Core implementation | `95b2cf1ef159b4d16921ddb4c8698621b8134c3e` | Owner-approved Vault provider plus rc.3 fractional balance correction |
-| Automated verification | `docs/testing/results/V0.0.1-concrete-waymark-provider.md` | 192 unit, 14 MariaDB, 6 Redis; candidate CI `30413198551` passed |
-| Runtime verification | `docs/testing/results/V0.0.1-concrete-waymark-provider.md` | Dedicated 37.5/debit/refund runtime passed with final Vault 37.5 and Wayfarer 37.5; prior provider-absent run retained |
-| Packaging and provenance | `docs/testing/results/V0.0.1-concrete-waymark-provider.md` | rc.3 candidate JAR/hash fixed; publication pending |
-| Handoff and acceptance input | `docs/handoff/V0.0.1/`; `docs/testing/plans/V0.0.1-client-acceptance.md` | Pre-client package complete; Owner/Project acceptance pending |
+| Governance and scope | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/traceability.md` | `CLEARED` for Plugin-side stable publication |
+| Core implementation | `49e00e21716c1c13a2dbb170fdad1b19c4275612` | Stable product source on `main` |
+| Automated verification | `docs/testing/results/V0.0.1-stable-local-acceptance.md` | 192 unit, 14 MariaDB, 6 Redis; all passed |
+| Runtime verification | `docs/testing/results/V0.0.1-stable-local-acceptance.md` | Stable startup, health, shared 37.5 balance, debit/replay/refund, stop/restart passed |
+| Packaging and provenance | `docs/testing/results/V0.0.1-stable-local-acceptance.md` | Stable JAR reproducibly fixed at `B045581D…95A2`; publication pending |
+| Handoff and acceptance input | `docs/handoff/V0.0.1/` | Stable handoff complete; Project placement/acceptance pending |
 
-Concrete provider authority, fractional compatibility, and dedicated standalone acceptance are
-complete. Draft review/merge, release publication, Project placement/acceptance, and explicit Owner requirements
-clearance remain. The stable release gate remains `BLOCKED`.
+Concrete provider authority, fractional compatibility, stable automated verification, and local
+isolated acceptance are complete. The stable release workflow is ready for a separately approved
+dispatch. Project placement/acceptance and explicit Owner `requirements_cleared` input remain;
+no Project Runtime action is authorized by this result.

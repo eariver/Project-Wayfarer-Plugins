@@ -105,16 +105,24 @@
   Project-side record such as `docs/11-deferred-design-items.md`.
 - Project deferred-design Issue
   [`eariver/Project_Wayfarer#1`](https://github.com/eariver/Project_Wayfarer/issues/1)
-  tracks the shared durability/effect-lookup concern. It is nonblocking for rc.3 and distinct from
+  tracks the shared durability/effect-lookup concern. It is nonblocking for V0.0.1 and distinct from
   the corrected fractional-balance defect.
+- Stable local full-inventory startup is `LIMITED`, not an unqualified full-set PASS. The
+  Owner-supplied `VelocityScoreboardAPI.v2.1.0.jar` is a library JAR without a Paper plugin
+  descriptor; Iris emitted Java 25/dynamic-agent warnings; and EliteMobs emitted one
+  task-registration exception during the first clean shutdown. Paper still initialized 24 actual
+  plugins, the required Wayfarer/Vault/RedisEconomy path passed, both valid runs exited 0, and no
+  Wayfarer failure or classloader identity marker was found. These external observations are a
+  Project placement consideration.
 - Hot reload/PlugMan-style reload is unsupported.
 - Project placement, migration execution, configuration, permission application, server restart,
   runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.
 
 ## Open decisions
 
-- Review and merge authority for Draft PR #12.
-- Stable final source, tag, release assets, and release workflow approval.
+- Review and merge authority for the stable-preparation Draft PR.
+- Stable tag, release assets, and release workflow approval. Stable product source is fixed at
+  `49e00e21716c1c13a2dbb170fdad1b19c4275612`.
 - Project Runtime placement/configuration/acceptance and explicit `requirements_cleared`.
 - Project-side ownership and scheduling of the shared economy durability/effect-lookup deferred
   design item.
