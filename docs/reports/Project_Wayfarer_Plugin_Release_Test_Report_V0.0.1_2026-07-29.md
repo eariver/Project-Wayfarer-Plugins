@@ -14,6 +14,7 @@
   [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
   passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`
 - Stable Candidate Client Smoke: `PASS`; client-facing regression not observed
+- Stable Client Smoke evidence commit: `7d9a74c6d8a14a2d68d0f3b6e9cf48e1e72dcf06`
 
 ## Verification
 

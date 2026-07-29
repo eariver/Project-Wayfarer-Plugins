@@ -16,6 +16,7 @@
 - Stable candidate client smoke:
   `PASS`; Java Edition 1.21.11 join, movement/chat, permission denial, authorized health,
   sanitized inspect, OP removal, disconnect/reconnect, and clean stop
+- Stable client smoke evidence commit: `7d9a74c6d8a14a2d68d0f3b6e9cf48e1e72dcf06`
 - Stable test report:
   `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`
 - Preparation CI:
