@@ -13,6 +13,9 @@
 - Stable local acceptance:
   `docs/testing/results/V0.0.1-stable-local-acceptance.md`;
   `PASS WITH DISCLOSED FULL-INVENTORY LIMITATION`
+- Stable candidate client smoke:
+  `PASS`; Java Edition 1.21.11 join, movement/chat, permission denial, authorized health,
+  sanitized inspect, OP removal, disconnect/reconnect, and clean stop
 - Stable test report:
   `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`
 - Preparation CI:
@@ -58,6 +61,13 @@ transaction preserved the fractional balance path:
 - representative direct Vault withdraw/deposit was visible through Wayfarer;
 - refund `25` restored both views to `37.5`;
 - both server runs stopped cleanly with exit 0.
+
+The subsequent Stable Candidate Client Smoke used the same fixed Stable JAR without a probe and
+without an economy mutation. Client join, movement/chat, non-OP denial, authorized health,
+sanitized inspect, OP removal, disconnect/reconnect, and final clean stop passed. Console health
+identified `Vault/RedisEconomy`; client health safely showed `overall=UP` and `Waymark: UP`
+without provider details. No client-facing regression was observed. Release readiness remains
+`READY`, while Project placement and acceptance remain pending.
 
 No raw generated secret, Wayfarer product failure marker, or Wayfarer classloader/API identity
 error was found. Task containers and volumes were removed.

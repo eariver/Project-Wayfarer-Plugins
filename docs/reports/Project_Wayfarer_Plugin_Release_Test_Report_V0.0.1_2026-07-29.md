@@ -13,6 +13,7 @@
 - Preparation CI: GitHub Actions
   [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
   passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`
+- Stable Candidate Client Smoke: `PASS`; client-facing regression not observed
 
 ## Verification
 
@@ -33,6 +34,25 @@ without a Paper plugin descriptor. Iris warnings and one EliteMobs shutdown task
 disclosed. Twenty-four actual plugins initialized; required Wayfarer dependencies and the Core
 representative path were unaffected. Details and harness corrections are in
 `docs/testing/results/V0.0.1-stable-local-acceptance.md`.
+
+## Stable Candidate Client Smoke
+
+Java Edition 1.21.11 joined the fixed Stable Candidate on Paper 1.21.11 build 132 / Java 25.0.3
+with fresh task-only MariaDB 11.8 and Redis 8-alpine. The probe was absent. Movement, repeated
+jump, view movement, chat, and a normal wait completed without freeze, kick, watchdog, significant
+lag warning, or Wayfarer failure.
+
+Non-OP admin health was denied safely. With temporary OP, client health showed `overall=UP` and
+`Waymark: UP`; Console identified `Vault/RedisEconomy`. A nonexistent transaction UUID returned
+the sanitized generic operation-failed response without Paper command error, synchronous exception
+escape, internal exception text, secret, raw provider object, or provider reference. OP was
+removed, same-account reconnect passed, and the final disconnect/stop saved all dimensions and
+exited 0.
+
+No debit, refund, reconcile, or other transaction mutation was performed. Full inventory remains
+`LIMITED` for the existing external-plugin reasons; the prior EliteMobs shutdown race did not
+recur. Stable product source and candidate SHA are unchanged. Release readiness remains `READY`,
+traceability remains `CLEARED`, and Project acceptance remains pending.
 
 ## Release and handoff
 
