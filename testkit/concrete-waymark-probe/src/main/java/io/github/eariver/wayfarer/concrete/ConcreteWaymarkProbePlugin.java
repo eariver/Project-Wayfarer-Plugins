@@ -233,11 +233,18 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
                         getServer().getOfflinePlayer(PLAYER_UUID)
                     );
                 });
-            }).thenAccept(finalBalance ->
+            }).thenCompose(finalBalance -> {
                 requireDecimal(
                     "37.5",
                     finalBalance,
                     "Vault observes Wayfarer refund"
+                );
+                return services.waymark().balance(PLAYER_UUID);
+            }).thenAccept(finalBalance ->
+                requireDecimal(
+                    "37.5",
+                    finalBalance,
+                    "Wayfarer observes final refunded balance"
                 )
             );
     }
