@@ -2,14 +2,14 @@
 
 | Input | Value |
 |---|---|
-| Release URL / tag / version | Pending |
+| Release URL / tag / version | RC.3 is an unpublished review candidate: prerelease workflow not dispatched; no RC.3 tag, release URL, pre-release, or published asset. Latest published approved pre-release remains `V0.0.1-alpha.1` |
 | Final source commit | Pending; rc.3 candidate source `95b2cf1ef159b4d16921ddb4c8698621b8134c3e` |
 | Artifact filenames / SHA-256 | Candidate `wayfarer-core-0.0.1-rc.3.jar` / `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F` |
 | Config / migration version | `1` / `V003` |
 | Sanitized config and environment variables | `docs/handoff/V0.0.1/sanitized-configuration.md` |
 | Commands / permissions | `docs/handoff/V0.0.1/command-and-permission-reference.md` |
 | Dependencies / placement / load order | `docs/handoff/V0.0.1/dependency-and-placement.md` |
-| Test report / evidence commit | `docs/testing/results/V0.0.1-concrete-waymark-provider.md` at evidence record `92e32db98758eddad46c5f18772c21ef83366057` |
+| Test report / evidence commit | `docs/testing/results/V0.0.1-concrete-waymark-provider.md`; original evidence record `92e32db98758eddad46c5f18772c21ef83366057`; final balance probe `7f013b346d2cd97705c45dbbf8a18f51e9607525` |
 | Known limitations / open decisions | See handoff files |
 | Test server vs Project Runtime differences | Concrete standalone: Paper 1.21.11 build 132, Java 25, task-only MariaDB 11.8/Redis 8, fixed VaultUnlocked/RedisEconomy, test-only probe; Project placement/config/other plugins not changed |
 | Project acceptance | Pending |
@@ -27,3 +27,6 @@ requirements clearance, and Project ownership of the shared Vault/RedisEconomy d
 item. That item should move to `docs/11-deferred-design-items.md` or equivalent; it must not become
 a Wayfarer-only side channel. The direct nonblocking Project reference is
 [`eariver/Project_Wayfarer#1`](https://github.com/eariver/Project_Wayfarer/issues/1).
+
+The isolated RC.3 candidate evidence is available for review, but it does not supply the stable
+final publication identity required by Project acceptance.

@@ -92,7 +92,8 @@
 - RC.2 rejected a valid fractional Vault balance because the read contract required `Long`.
   RC.3 candidate `95b2cf1ef159b4d16921ddb4c8698621b8134c3e` corrects the public API/SPI
   balance type to JDK `BigDecimal`; focused tests and the dedicated task-only runtime preserved
-  37.5 → long debit 25 → 12.5 → long refund 25 → 37.5. NaN and infinities fail closed.
+  37.5 → long debit 25 → 12.5 → long refund 25 → final Vault 37.5 and final Wayfarer 37.5.
+  NaN and infinities fail closed.
   Debit/refund/transaction/database amounts remain `long`. The return-type change is source/binary
   incompatible with consumers compiled against the unpublished rc.2 API.
 - The designated RedisEconomy source worktree is dirty: commit `581091a` does not itself contain

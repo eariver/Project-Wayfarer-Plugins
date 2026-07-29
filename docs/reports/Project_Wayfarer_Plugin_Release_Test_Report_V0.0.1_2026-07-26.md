@@ -6,7 +6,8 @@ acceptance pending.
 ## Release identity
 
 - Tested plugin source: `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`
-- Release tag / URL: Pending
+- Release tag / URL: Not created for RC.3
+- Pre-release workflow: Not dispatched for RC.3
 - Candidate artifact/version/filename/SHA-256:
   `0.0.1-rc.3` / `wayfarer-core-0.0.1-rc.3.jar` /
   `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F`
@@ -39,11 +40,14 @@ acceptance pending.
 - Local rc.3 verification: focused fractional/API/transaction tests, 192 unit, 14 MariaDB, and
   6 Redis tests plus `check assemble` passed. GitHub Actions
   [`30413198551`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30413198551)
-  passed check, assemble, cache reuse, reproducibility, and packaging.
+  passed check, assemble, cache reuse, reproducibility, and packaging. The test-only final balance
+  probe commit `7f013b346d2cd97705c45dbbf8a18f51e9607525` then passed normal CI
+  [`30445725741`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30445725741).
 - Unit/MariaDB/Redis/migration/concurrency/idempotency/failure/restart tests: Passed in
   commit-pinned CI; see phase results and traceability
 - Main-thread I/O and disable-callback tests: Automated suite passed; the rc.3 Paper probe verified
-  37.5 → long debit 25 → 12.5 → long refund 25 → 37.5 and clean disable
+  37.5 → long debit 25 → 12.5 → long refund 25, final Vault 37.5, final Wayfarer 37.5, and clean
+  disable with process exit 0
 - API compatibility/class identity: Passed
 - Packaging/reproducibility/relocation/license/secret inspection: Passed for the candidate source;
   same-source Core JAR reproducibility and one-runtime-JAR package gate passed
@@ -74,10 +78,17 @@ acceptance pending.
 - Evidence paths/commits: prior rc.1 workflow
   [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610);
   rc.2 concrete result and CI `30378563840` remain historical; rc.3 candidate source is
-  `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`; CI `30413198551` passed
+  `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`; CI `30413198551` passed; final balance probe is
+  `7f013b346d2cd97705c45dbbf8a18f51e9607525` and CI `30445725741` passed
 - Artifact matrix: `docs/handoff/V0.0.1/artifact-matrix.md`
 - Project acceptance input: `docs/handoff/V0.0.1/project-acceptance-input.md`
 - Project Runtime changed: No
 
 The valid status phrase is `Automated/headless runtime passed`. This report does not claim
 `RC passed`, `Runtime test passed`, `CLEARED`, `READY`, or `requirements_cleared=true`.
+
+RC.3 was validated as a commit-pinned locally built candidate so an unnecessary intermediate
+publication was not created before review. No RC.3 tag, GitHub pre-release/release URL, or
+published asset exists; this keeps release/handoff identity pending. The standalone evidence is
+valid candidate test evidence but is not release publication evidence. `V0.0.1-alpha.1` remains
+the latest published approved pre-release.

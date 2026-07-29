@@ -6,6 +6,7 @@
 - Alpha.1 source commit: `192cda35dce0dba855c2da4eb1ed71a0425f549a`
 - Stable final source commit: Pending
 - RC.3 evidence record commit: `92e32db98758eddad46c5f18772c21ef83366057`
+- RC.3 final balance probe commit: `7f013b346d2cd97705c45dbbf8a18f51e9607525`
 - Requirement traceability: In progress; global gate remains `BLOCKED`
 - Latest local automated tests: Passed, 192 unit (178 Core / 6 API / 8 Common),
   14 MariaDB, and 6 Redis; 0 failed/errors/skipped
@@ -72,11 +73,20 @@
   `wayfarer-core-0.0.1-rc.3.jar` SHA-256
   `6E58B501EF0B58AA19C9DD1A39D41ABE13173EDE32BE70E3DB0979CE10A3278F`.
   Focused/API/transaction regressions and local `check assemble` passed. Dedicated Paper 1.21.11
-  build 132 / Java 25 acceptance preserved 37.5 → long debit 25 → 12.5 → long refund 25 → 37.5,
+  build 132 / Java 25 acceptance preserved 37.5 → long debit 25 → 12.5 → long refund 25, with
+  final Vault 37.5 and final Wayfarer 37.5,
   direct Vault interoperability, idempotent replay, insufficient funds, sanitized output, and
   clean disable. GitHub Actions
   [`30413198551`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30413198551)
-  passed check, assemble, cache reuse, same-source JAR reproducibility, and Core packaging.
+  passed check, assemble, cache reuse, same-source JAR reproducibility, and Core packaging. Final
+  probe-head CI
+  [`30445725741`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30445725741)
+  also passed.
+- RC.3 publication status: `UNPUBLISHED REVIEW CANDIDATE`. The prerelease workflow was not
+  dispatched; no RC.3 tag, GitHub pre-release/release, release URL, or published RC.3 asset exists.
+  The JAR above was built locally from the fixed product source and its standalone acceptance is
+  candidate evidence, not publication evidence. Release publication remains
+  `RELEASE_PUBLICATION_PENDING`; `V0.0.1-alpha.1` remains the latest published approved pre-release.
 - ADR 0007 Owner Decision resolves Gate B/C/D for V0.0.1 by accepting common Vault semantics.
   Vault `SUCCESS` is not durable Redis proof; concrete resolve remains UNKNOWN and no provider
   reference or exactly-once guarantee is synthesized.
