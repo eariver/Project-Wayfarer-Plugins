@@ -10,9 +10,9 @@
 - Config / migration: `1` / `V003`
 - Release tag / URL: Planned `V0.0.1` / pending stable publication
 - Pre-release: Not required by ADR 0008; not created
-- Authoritative final code-bearing preparation CI: GitHub Actions
+- Earlier supporting release-gate correction CI:
   [`30455335160`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30455335160)
-  passed at `d16e92cd47267b749803623a3cf1b58850ac8ce4`
+  passed at `d16e92cd47267b749803623a3cf1b58850ac8ce4`; historical/supporting only
 - Earlier supporting preparation CI:
   [`30451364006`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451364006)
   passed at `d9753420b658a8beb69915980f7994d5b8f3f274`; historical/supporting only
@@ -24,6 +24,11 @@
 - Stable Release Package required asset set: `COMPLETE`
 - Handoff source model: workflow main HEAD is captured as an immutable tracked-file snapshot
   before checkout of the unchanged Stable Product Source
+- Final code-bearing package-automation commit:
+  `dd011717172e77ca8ba49f2ecde6096474476ceb`
+- Authoritative Stable Release Package CI: GitHub Actions
+  [`30457194983`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30457194983)
+  passed at `dd011717172e77ca8ba49f2ecde6096474476ceb`
 
 ## Verification
 
