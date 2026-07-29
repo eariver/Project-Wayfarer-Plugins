@@ -10,6 +10,9 @@
 - Config / migration: `1` / `V003`
 - Release tag / URL: Planned `V0.0.1` / pending stable publication
 - Pre-release: Not required by ADR 0008; not created
+- Preparation CI: GitHub Actions
+  [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
+  passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`
 
 ## Verification
 

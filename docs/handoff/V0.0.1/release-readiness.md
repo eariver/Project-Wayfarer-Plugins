@@ -15,6 +15,9 @@
   `PASS WITH DISCLOSED FULL-INVENTORY LIMITATION`
 - Stable test report:
   `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`
+- Preparation CI:
+  [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
+  passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`
 - Stable publication: Pending explicit, approved `release.yml` dispatch
 - Project Runtime placement/acceptance: Pending / Project-owned
 - Project Runtime changed during preparation: No
