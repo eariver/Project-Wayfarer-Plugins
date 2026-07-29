@@ -115,15 +115,20 @@
   Wayfarer failure or classloader identity marker was found. These external observations are a
   Project placement consideration.
 - Hot reload/PlugMan-style reload is unsupported.
-- Project placement, migration execution, configuration, permission application, server restart,
-  runtime acceptance, Roadmap Order completion, and stable requirements clearance remain pending.
+- Plugin-side publication prerequisites are `CLEARED`, and release readiness is `READY`.
+  Owner source-side publication authorization remains pending explicit
+  `requirements_cleared=true`. Project placement, migration execution, configuration, permission
+  application, server restart, Runtime acceptance, and Roadmap Order completion remain pending
+  and Project-owned.
 
 ## Open decisions
 
 - Review and merge authority for the stable-preparation Draft PR.
 - Stable tag, release assets, and release workflow approval. Stable product source is fixed at
   `49e00e21716c1c13a2dbb170fdad1b19c4275612`.
-- Project Runtime placement/configuration/acceptance and explicit `requirements_cleared`.
+- Explicit Owner `requirements_cleared=true` authorization for source-side publication.
+- Project Runtime placement/configuration/acceptance, which remains separate from publication
+  authorization.
 - Project-side ownership and scheduling of the shared economy durability/effect-lookup deferred
   design item.
 

@@ -29,6 +29,9 @@ jobs:
         run: |
           git fetch origin main --no-tags
           bash scripts/release/test-stable-release-validation.sh
+      - name: Test stable release package scope and provenance
+        shell: bash
+        run: bash scripts/release/test-stable-release-package.sh
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

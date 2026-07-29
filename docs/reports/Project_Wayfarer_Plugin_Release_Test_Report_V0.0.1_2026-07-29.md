@@ -21,6 +21,9 @@
   passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`; historical/supporting only
 - Stable Candidate Client Smoke: `PASS`; client-facing regression not observed
 - Stable Client Smoke evidence commit: `7d9a74c6d8a14a2d68d0f3b6e9cf48e1e72dcf06`
+- Stable Release Package required asset set: `COMPLETE`
+- Handoff source model: workflow main HEAD is captured as an immutable tracked-file snapshot
+  before checkout of the unchanged Stable Product Source
 
 ## Verification
 
@@ -74,3 +77,18 @@ or set `requirements_cleared=true`. That input remains an explicit Owner authori
 source-side stable publication after Plugin-side prerequisites are cleared; it is not Project
 acceptance. Stable workflow dispatch, Tag/Release verification, and Project handoff remain pending
 explicit post-review actions. Project Runtime was unchanged.
+
+The Stable workflow now assembles the required Release/Handoff package from two explicit
+provenance authorities:
+
+- Product build source: immutable `49e00e21716c1c13a2dbb170fdad1b19c4275612`;
+- Handoff source: the workflow main revision recorded as `HANDOFF_SOURCE_COMMIT`.
+
+Before Product Source checkout, all required Handoff inputs are validated as tracked regular
+non-symlink files and copied to a fixed runner snapshot. Package assembly then attaches the
+sanitized configuration, command/permission reference, dependency/placement record, third-party
+notices, license, Plugin Test Report, known limitations, rollback procedure, artifact inventory,
+Project acceptance input, existing evidence/instruction/traceability/readiness files, and a
+publication-time Artifact Matrix. `SHA256SUMS.txt` covers every attached asset except itself and
+`RELEASE_MANIFEST.md`; the Manifest explains those self-reference exclusions and records each
+snapshot source path, Release filename, and SHA-256.

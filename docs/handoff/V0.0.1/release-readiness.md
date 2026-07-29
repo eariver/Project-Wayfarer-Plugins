@@ -19,6 +19,10 @@
 - Stable client smoke evidence commit: `7d9a74c6d8a14a2d68d0f3b6e9cf48e1e72dcf06`
 - Stable test report:
   `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`
+- Stable Release Package required asset set: `COMPLETE`
+- Handoff snapshot source: the `release.yml` main revision, captured before Product Source
+  checkout and recorded as `HANDOFF_SOURCE_COMMIT`; the final package-automation commit and CI
+  authority are pinned below
 - Authoritative final code-bearing preparation CI:
   [`30455335160`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30455335160)
   passed at `d16e92cd47267b749803623a3cf1b58850ac8ce4`
@@ -51,6 +55,10 @@ commit built version `0.0.1` with Java 25.0.3 and Gradle 9.6.1.
 | Core-only boundary | Main/Frontier classes absent |
 | Config / migrations | Config `1`; V001/V002/V003 each present once |
 | Generated artifacts tracked | No |
+| Required Release/Handoff attachment set | COMPLETE; 19 attached assets |
+| SHA256SUMS coverage | Every attached asset except self-referential `SHA256SUMS.txt` and `RELEASE_MANIFEST.md` |
+| Product/Handoff provenance separation | PASS |
+| Publication-time Artifact Matrix | Deterministic V0.0.1 tag/URL/source/JAR/SHA generation |
 
 ## Local isolated acceptance
 
@@ -106,7 +114,11 @@ there is no requirement to create another pre-release. The stable workflow must:
 4. rebuild the stable JAR and reject a SHA mismatch;
 5. retain GitHub Environment approval and explicit `requirements_cleared=true` Owner
    authorization for source-side stable publication;
-6. publish only after the workflow input summary is displayed and separately approved.
+6. snapshot all required tracked regular Handoff files from the workflow main revision before
+   checking out the immutable Product Source;
+7. attach the complete required Handoff set, publication-time Artifact Matrix, and complete
+   non-self-referential SHA256SUMS coverage;
+8. publish only after the workflow input summary is displayed and separately approved.
 
 No stable tag, GitHub release, URL, or published stable asset exists yet. This readiness result
 does not authorize Project Runtime installation, migration, configuration, restart, deployment,

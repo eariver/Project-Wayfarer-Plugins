@@ -14,7 +14,7 @@
 | Test server vs Project Runtime differences | Local isolated: Paper 1.21.11 build 132, Java 25, task-only MariaDB 11.8/Redis 8, Owner-supplied 23-JAR inventory, fixed VaultUnlocked/RedisEconomy, test-only probe; Project Runtime/config not changed. Full-inventory external-plugin limitation is recorded in the stable result |
 | Project acceptance | Pending |
 | Roadmap Order 9 | Pending |
-| `requirements_cleared` | Owner decision required |
+| `requirements_cleared` | Explicit Owner authorization required for source-side stable publication after Plugin-side prerequisites are confirmed; not Project Runtime acceptance |
 
 Recommended Project smoke test: verify hashes, Vault → RedisEconomy → Core startup/migration,
 provider health, permission/redaction, shared fractional balance, one long debit/idempotent replay,
@@ -22,8 +22,8 @@ insufficient funds, and long refund only after all prerequisites/backups are app
 record backup/restore, removal, downgrade, and acceptance evidence in the Project repository; this
 Plugin repository performs no Runtime change.
 
-Open actions are Draft review/merge, explicit stable workflow approval/publication, Project
-placement/acceptance, explicit requirements clearance, and Project ownership of the shared
+Open actions are Draft review/merge, explicit Owner source-side publication authorization and
+stable workflow approval/publication, Project placement/acceptance, and Project ownership of the shared
 Vault/RedisEconomy durability deferred item. That item should move to
 `docs/11-deferred-design-items.md` or equivalent; it must not become a Wayfarer-only side
 channel. The direct nonblocking Project reference is
