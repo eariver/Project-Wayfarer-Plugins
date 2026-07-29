@@ -11,8 +11,11 @@
 - Release tag / URL: Planned `V0.0.1` / pending stable publication
 - Pre-release: Not required by ADR 0008; not created
 - Authoritative final code-bearing preparation CI: GitHub Actions
+  [`30455335160`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30455335160)
+  passed at `d16e92cd47267b749803623a3cf1b58850ac8ce4`
+- Earlier supporting preparation CI:
   [`30451364006`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451364006)
-  passed at `d9753420b658a8beb69915980f7994d5b8f3f274`
+  passed at `d9753420b658a8beb69915980f7994d5b8f3f274`; historical/supporting only
 - Earlier supporting preparation gate CI:
   [`30451214126`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30451214126)
   passed at `8f4b353d8d8a815fd2d7781671250ed180f37294`; historical/supporting only
