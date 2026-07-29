@@ -17,6 +17,7 @@ import io.github.eariver.wayfarer.api.WayfarerWaymarkProvider.ResolutionStatus;
 import io.github.eariver.wayfarer.core.transaction.TransactionEngine.FailureInjector;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -653,8 +654,8 @@ class TransactionEngineTest {
         }
 
         @Override
-        public CompletionStage<Long> balance(UUID playerUuid) {
-            return CompletableFuture.completedFuture(100L);
+        public CompletionStage<BigDecimal> balance(UUID playerUuid) {
+            return CompletableFuture.completedFuture(new BigDecimal("100"));
         }
 
         @Override

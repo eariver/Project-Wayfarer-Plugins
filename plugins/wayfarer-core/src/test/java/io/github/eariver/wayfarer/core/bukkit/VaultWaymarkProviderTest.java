@@ -7,6 +7,7 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.OfflinePlayer;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +94,7 @@ class VaultWaymarkProviderTest {
         when(economy.isEnabled()).thenReturn(true);
         when(economy.getBalance(player)).thenReturn(125D);
 
-        assertEquals(125L, provider.balance(PLAYER_UUID).toCompletableFuture().join());
+        assertDecimal("125.0", provider.balance(PLAYER_UUID).toCompletableFuture().join());
         assertEquals(PLAYER_UUID, resolvedUuid.get());
     }
 
@@ -255,15 +256,76 @@ class VaultWaymarkProviderTest {
     }
 
     @Test
-    void fractionalBalanceFailsClosedInsteadOfRoundingAuthority() {
+    void fractionalBalancePreservesVaultAuthority() {
         Fixture fixture = fixture(Runnable::run);
         when(fixture.economy().isEnabled()).thenReturn(true);
         when(fixture.economy().getBalance(fixture.player())).thenReturn(12.5D);
 
-        assertThrows(
-            CompletionException.class,
-            () -> fixture.provider().balance(PLAYER_UUID).toCompletableFuture().join()
+        assertDecimal(
+            "12.5",
+            fixture.provider().balance(PLAYER_UUID).toCompletableFuture().join()
         );
+    }
+
+    @Test
+    void fractionalBalanceRemainsAfterIntegerDebitAndRefund() {
+        Fixture fixture = fixture(Runnable::run);
+        when(fixture.economy().isEnabled()).thenReturn(true);
+        when(fixture.economy().getBalance(fixture.player()))
+            .thenReturn(37.5D, 12.5D, 37.5D);
+        when(fixture.economy().withdrawPlayer(fixture.player(), 25D))
+            .thenReturn(response(EconomyResponse.ResponseType.SUCCESS, null));
+        when(fixture.economy().depositPlayer(fixture.player(), 25D))
+            .thenReturn(response(EconomyResponse.ResponseType.SUCCESS, null));
+
+        assertDecimal(
+            "37.5",
+            fixture.provider().balance(PLAYER_UUID).toCompletableFuture().join()
+        );
+        assertEquals(
+            SUCCEEDED,
+            fixture.provider().debit(PLAYER_UUID, 25L, "debit-operation")
+                .toCompletableFuture()
+                .join()
+                .status()
+        );
+        assertDecimal(
+            "12.5",
+            fixture.provider().balance(PLAYER_UUID).toCompletableFuture().join()
+        );
+        assertEquals(
+            SUCCEEDED,
+            fixture.provider().refund(
+                PLAYER_UUID,
+                25L,
+                "refund-operation",
+                null
+            ).toCompletableFuture().join().status()
+        );
+        assertDecimal(
+            "37.5",
+            fixture.provider().balance(PLAYER_UUID).toCompletableFuture().join()
+        );
+    }
+
+    @Test
+    void nonFiniteBalancesFailClosedWithoutLeakingRawValues() {
+        for (double invalid : List.of(
+            Double.NaN,
+            Double.POSITIVE_INFINITY,
+            Double.NEGATIVE_INFINITY
+        )) {
+            Fixture fixture = fixture(Runnable::run);
+            when(fixture.economy().isEnabled()).thenReturn(true);
+            when(fixture.economy().getBalance(fixture.player())).thenReturn(invalid);
+
+            CompletionException failure = assertThrows(
+                CompletionException.class,
+                () -> fixture.provider().balance(PLAYER_UUID).toCompletableFuture().join()
+            );
+            assertEquals("Vault economy operation failed", failure.getCause().getMessage());
+            assertFalse(failure.toString().contains(Double.toString(invalid)));
+        }
     }
 
     private static Fixture fixture(MainThreadDispatcher dispatcher) {
@@ -285,6 +347,10 @@ class VaultWaymarkProviderTest {
         String error
     ) {
         return new EconomyResponse(0D, 0D, type, error);
+    }
+
+    private static void assertDecimal(String expected, BigDecimal actual) {
+        assertEquals(0, new BigDecimal(expected).compareTo(actual));
     }
 
     private record Fixture(

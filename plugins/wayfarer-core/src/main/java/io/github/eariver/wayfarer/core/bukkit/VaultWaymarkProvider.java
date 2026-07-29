@@ -6,6 +6,7 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.OfflinePlayer;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
@@ -75,12 +76,12 @@ final class VaultWaymarkProvider implements WayfarerWaymarkProvider, AutoCloseab
     }
 
     @Override
-    public CompletionStage<Long> balance(UUID playerUuid) {
+    public CompletionStage<BigDecimal> balance(UUID playerUuid) {
         UUID checkedUuid = Objects.requireNonNull(playerUuid, "playerUuid");
         return onMainThread(() -> {
             requireEnabled();
             OfflinePlayer player = resolve(checkedUuid);
-            return exactWaymarkBalance(economy.getBalance(player));
+            return waymarkBalance(economy.getBalance(player));
         });
     }
 
@@ -227,13 +228,11 @@ final class VaultWaymarkProvider implements WayfarerWaymarkProvider, AutoCloseab
         }
     }
 
-    private static long exactWaymarkBalance(double balance) {
-        if (!Double.isFinite(balance)
-            || Math.rint(balance) != balance
-            || Math.abs(balance) > MAX_EXACT_LONG_AS_DOUBLE) {
-            throw new IllegalStateException("Vault balance is outside the Waymark range");
+    private static BigDecimal waymarkBalance(double balance) {
+        if (!Double.isFinite(balance)) {
+            throw new IllegalStateException("Vault balance is unavailable");
         }
-        return (long) balance;
+        return BigDecimal.valueOf(balance);
     }
 
     private static double exactVaultAmount(long amount) {

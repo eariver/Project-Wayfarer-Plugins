@@ -1,5 +1,6 @@
 package io.github.eariver.wayfarer.api;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
@@ -8,7 +9,10 @@ import java.util.concurrent.CompletionStage;
  */
 public interface WayfarerWaymarkProvider {
     CompletionStage<ProbeResult> probe();
-    CompletionStage<Long> balance(UUID playerUuid);
+    /**
+     * Reads the provider-authoritative balance without integer normalization.
+     */
+    CompletionStage<BigDecimal> balance(UUID playerUuid);
     CompletionStage<EffectResult> debit(
         UUID playerUuid,
         long amount,

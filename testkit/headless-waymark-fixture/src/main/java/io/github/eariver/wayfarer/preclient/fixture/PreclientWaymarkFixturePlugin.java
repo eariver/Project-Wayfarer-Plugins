@@ -11,6 +11,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -71,7 +72,7 @@ public final class PreclientWaymarkFixturePlugin extends JavaPlugin
                 "preclient-fixture",
                 "outage".equals(mode) ? "FIXTURE_OUTAGE" : null
             ));
-            case "balance" -> completed(100_000L);
+            case "balance" -> completed(new BigDecimal("100000"));
             case "debit" -> effect("DEBIT", (String) arguments[2], mode);
             case "refund" -> effect("REFUND", (String) arguments[2], mode);
             case "resolve" -> resolve((String) arguments[1], mode);

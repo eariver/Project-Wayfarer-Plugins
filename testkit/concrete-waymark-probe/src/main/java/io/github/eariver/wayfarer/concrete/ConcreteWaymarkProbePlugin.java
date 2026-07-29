@@ -10,6 +10,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -19,7 +20,7 @@ import java.util.function.Supplier;
 public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
     private static final UUID PLAYER_UUID =
         UUID.fromString("731ceb9e-0a86-4bab-a9a1-9289bfce5156");
-    private static final long SEED_BALANCE = 200L;
+    private static final double SEED_BALANCE = 37.5D;
     private static final long DEBIT_AMOUNT = 25L;
     private static final long INTEROPERABILITY_AMOUNT = 10L;
     private static final int MAX_READINESS_POLLS = 100;
@@ -118,10 +119,10 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
             );
             return economy.getBalance(player);
         }).thenCompose(vaultBalance -> {
-            require(vaultBalance == SEED_BALANCE, "Vault initial balance");
+            requireDecimal("37.5", vaultBalance, "Vault initial balance");
             return services.waymark().balance(PLAYER_UUID);
         }).thenCompose(wayfarerBalance -> {
-            require(wayfarerBalance == SEED_BALANCE, "Wayfarer initial balance");
+            requireDecimal("37.5", wayfarerBalance, "Wayfarer initial balance");
             WayfarerTransactions.TransactionRequest request =
                 new WayfarerTransactions.TransactionRequest(
                     "concrete-vault-idempotency",
@@ -154,14 +155,15 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
         }).thenCompose(ignored -> services.waymark().balance(PLAYER_UUID))
             .thenCompose(balanceAfterDebit -> {
                 require(
-                    balanceAfterDebit == SEED_BALANCE - DEBIT_AMOUNT,
+                    balanceAfterDebit.compareTo(new BigDecimal("12.5")) == 0,
                     "single Wayfarer debit"
                 );
                 return vault(() -> {
                     Economy selected = requireEconomy();
                     OfflinePlayer player = getServer().getOfflinePlayer(PLAYER_UUID);
                     require(
-                        selected.getBalance(player) == balanceAfterDebit,
+                        BigDecimal.valueOf(selected.getBalance(player))
+                            .compareTo(balanceAfterDebit) == 0,
                         "Vault observes Wayfarer debit"
                     );
                     requireSuccess(
@@ -172,14 +174,14 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
                 });
             }).thenCompose(vaultBalance -> {
                 require(
-                    vaultBalance == SEED_BALANCE - DEBIT_AMOUNT - INTEROPERABILITY_AMOUNT,
+                    BigDecimal.valueOf(vaultBalance)
+                        .compareTo(new BigDecimal("2.5")) == 0,
                     "Vault withdraw balance"
                 );
                 return services.waymark().balance(PLAYER_UUID);
             }).thenCompose(wayfarerBalance -> {
                 require(
-                    wayfarerBalance
-                        == SEED_BALANCE - DEBIT_AMOUNT - INTEROPERABILITY_AMOUNT,
+                    wayfarerBalance.compareTo(new BigDecimal("2.5")) == 0,
                     "Wayfarer observes Vault withdraw"
                 );
                 return vault(() -> {
@@ -194,7 +196,7 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
             }).thenCompose(ignored -> services.waymark().balance(PLAYER_UUID))
             .thenCompose(restoredInteroperability -> {
                 require(
-                    restoredInteroperability == SEED_BALANCE - DEBIT_AMOUNT,
+                    restoredInteroperability.compareTo(new BigDecimal("12.5")) == 0,
                     "shared balance restored after Vault deposit"
                 );
                 WayfarerTransactions.TransactionRequest insufficient =
@@ -204,7 +206,7 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
                         PLAYER_UUID,
                         "RUNTIME_PROBE",
                         "insufficient",
-                        SEED_BALANCE * 10,
+                        375L,
                         "{\"test\":\"insufficient\"}"
                     );
                 return services.transactions().execute(insufficient);
@@ -232,7 +234,11 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
                     );
                 });
             }).thenAccept(finalBalance ->
-                require(finalBalance == SEED_BALANCE, "Vault observes Wayfarer refund")
+                requireDecimal(
+                    "37.5",
+                    finalBalance,
+                    "Vault observes Wayfarer refund"
+                )
             );
     }
 
@@ -277,6 +283,22 @@ public final class ConcreteWaymarkProbePlugin extends JavaPlugin {
 
     private static void requireSuccess(EconomyResponse response, String checkpoint) {
         require(response != null && response.transactionSuccess(), checkpoint);
+    }
+
+    private static void requireDecimal(
+        String expected,
+        BigDecimal actual,
+        String checkpoint
+    ) {
+        require(new BigDecimal(expected).compareTo(actual) == 0, checkpoint);
+    }
+
+    private static void requireDecimal(
+        String expected,
+        double actual,
+        String checkpoint
+    ) {
+        requireDecimal(expected, BigDecimal.valueOf(actual), checkpoint);
     }
 
     private void fail(String code) {

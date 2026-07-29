@@ -4,6 +4,7 @@ import io.github.eariver.wayfarer.api.WayfarerWaymark;
 import io.github.eariver.wayfarer.api.WayfarerWaymarkProvider;
 import io.github.eariver.wayfarer.core.task.ManagedExecutor;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
@@ -29,7 +30,7 @@ public final class DefaultWayfarerWaymark implements WayfarerWaymark {
     }
 
     @Override
-    public CompletionStage<Long> balance(UUID playerUuid) {
+    public CompletionStage<BigDecimal> balance(UUID playerUuid) {
         UUID checkedPlayerUuid = Objects.requireNonNull(playerUuid, "playerUuid");
         return submit(() -> provider.balance(checkedPlayerUuid));
     }

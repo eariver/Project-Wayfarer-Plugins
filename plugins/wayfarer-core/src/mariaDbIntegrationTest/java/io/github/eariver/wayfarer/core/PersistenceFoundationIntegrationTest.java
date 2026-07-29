@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -657,8 +658,8 @@ class PersistenceFoundationIntegrationTest {
         }
 
         @Override
-        public CompletionStage<Long> balance(UUID playerUuid) {
-            return CompletableFuture.completedFuture(100L);
+        public CompletionStage<BigDecimal> balance(UUID playerUuid) {
+            return CompletableFuture.completedFuture(new BigDecimal("100"));
         }
 
         @Override

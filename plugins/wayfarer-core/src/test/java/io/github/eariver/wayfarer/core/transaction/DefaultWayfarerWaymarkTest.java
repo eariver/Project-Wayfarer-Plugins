@@ -4,6 +4,7 @@ import io.github.eariver.wayfarer.api.WayfarerWaymarkProvider;
 import io.github.eariver.wayfarer.core.task.ManagedExecutor;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +27,12 @@ class DefaultWayfarerWaymarkTest {
             );
             UUID playerUuid = UUID.randomUUID();
 
-            assertEquals(250L, waymark.balance(playerUuid).toCompletableFuture().join());
+            assertEquals(
+                0,
+                new BigDecimal("250").compareTo(
+                    waymark.balance(playerUuid).toCompletableFuture().join()
+                )
+            );
             assertTrue(
                 waymark.debit(playerUuid, 25L, "debit-1")
                     .toCompletableFuture()
@@ -77,7 +83,8 @@ class DefaultWayfarerWaymarkTest {
 
     private static final class RecordingProvider implements WayfarerWaymarkProvider {
         private final AtomicReference<String> threadName = new AtomicReference<>();
-        private CompletionStage<Long> balance = CompletableFuture.completedFuture(250L);
+        private CompletionStage<BigDecimal> balance =
+            CompletableFuture.completedFuture(new BigDecimal("250"));
 
         @Override
         public CompletionStage<ProbeResult> probe() {
@@ -87,7 +94,7 @@ class DefaultWayfarerWaymarkTest {
         }
 
         @Override
-        public CompletionStage<Long> balance(UUID playerUuid) {
+        public CompletionStage<BigDecimal> balance(UUID playerUuid) {
             recordThread();
             return balance;
         }
