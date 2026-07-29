@@ -59,6 +59,24 @@ final class FrontierPurchaseCoordinatorTest {
         assertEquals(1, transactions.executeCalls);
     }
 
+    @Test
+    void ambiguousTransactionFailureIsUnknownAndIsNotRetried() {
+        FakeTransactions transactions = new FakeTransactions();
+        transactions.failSynchronously = true;
+        FrontierPurchaseCoordinator coordinator = coordinator(transactions);
+        FrontierPurchaseCoordinator.Request request = request("frontier_iris", "launchpad");
+
+        assertEquals(
+            FrontierPurchaseCoordinator.Status.UNKNOWN,
+            coordinator.purchase(request).toCompletableFuture().join().status()
+        );
+        assertEquals(
+            FrontierPurchaseCoordinator.Status.UNKNOWN,
+            coordinator.purchase(request).toCompletableFuture().join().status()
+        );
+        assertEquals(1, transactions.executeCalls);
+    }
+
     private static FrontierPurchaseCoordinator coordinator(FakeTransactions transactions) {
         return new FrontierPurchaseCoordinator(
             FrontierWorldGate.worldsBeyondDefault(),
@@ -101,6 +119,22 @@ final class FrontierPurchaseCoordinatorTest {
         }
 
         @Override
+        public Optional<Purchase> claimPayment(
+            UUID purchaseId,
+            long expectedLockVersion,
+            Instant now
+        ) {
+            Purchase current = find(purchaseId).orElseThrow();
+            if (current.state() != State.PREPARED
+                || current.lockVersion() != expectedLockVersion) {
+                return Optional.empty();
+            }
+            Purchase claimed = transition(current, State.PAYMENT_PENDING, null);
+            purchases.put(claimed.idempotencyKey(), claimed);
+            return Optional.of(claimed);
+        }
+
+        @Override
         public boolean markPaymentCommitted(
             UUID purchaseId,
             UUID transactionId,
@@ -111,16 +145,37 @@ final class FrontierPurchaseCoordinatorTest {
                 .filter(value -> value.purchaseId().equals(purchaseId))
                 .findFirst()
                 .orElseThrow();
-            purchases.put(current.idempotencyKey(), new Purchase(
-                current.purchaseId(),
+            purchases.put(
                 current.idempotencyKey(),
-                current.playerUuid(),
-                current.offer(),
-                State.PAYMENT_COMMITTED,
-                transactionId,
-                1
-            ));
+                transition(current, State.PAYMENT_COMMITTED, transactionId)
+            );
             return true;
+        }
+
+        @Override
+        public boolean markFailed(
+            UUID purchaseId,
+            long expectedLockVersion,
+            String failureCode,
+            Instant now
+        ) {
+            Purchase current = find(purchaseId).orElseThrow();
+            if (current.lockVersion() != expectedLockVersion) {
+                return false;
+            }
+            purchases.put(current.idempotencyKey(), transition(current, State.FAILED, null));
+            return true;
+        }
+
+        @Override
+        public void markUnknown(
+            UUID purchaseId,
+            long expectedLockVersion,
+            String failureCode,
+            Instant now
+        ) {
+            Purchase current = find(purchaseId).orElseThrow();
+            purchases.put(current.idempotencyKey(), transition(current, State.UNKNOWN, null));
         }
 
         @Override
@@ -129,14 +184,34 @@ final class FrontierPurchaseCoordinatorTest {
                 .filter(value -> value.purchaseId().equals(purchaseId))
                 .findFirst();
         }
+
+        private static Purchase transition(
+            Purchase current,
+            State state,
+            UUID transactionId
+        ) {
+            return new Purchase(
+                current.purchaseId(),
+                current.idempotencyKey(),
+                current.playerUuid(),
+                current.offer(),
+                state,
+                transactionId,
+                current.lockVersion() + 1
+            );
+        }
     }
 
     private static final class FakeTransactions implements WayfarerTransactions {
         private int executeCalls;
+        private boolean failSynchronously;
 
         @Override
         public CompletionStage<TransactionResult> execute(TransactionRequest request) {
             executeCalls++;
+            if (failSynchronously) {
+                throw new IllegalStateException("synthetic ambiguous failure");
+            }
             return CompletableFuture.completedFuture(new TransactionResult(
                 UUID.fromString("00000000-0000-0000-0000-000000000042"),
                 State.COMMITTED,

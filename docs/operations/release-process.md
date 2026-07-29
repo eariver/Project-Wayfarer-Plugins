@@ -41,7 +41,7 @@ are complete and the remaining work is step-by-step verification on the test ser
 ### Inputs
 
 - `version`: human-facing pre-release with uppercase `V`, for example `V0.0.1-alpha.1`;
-- `release_scope`: artifact set; the V0.0.1 line permits only `core`;
+- `release_scope`: `core`, `main-frontier`, or `all` as defined by ADR 0010;
 - `test_instructions`: optional Markdown path or commit-pinned URL describing the current
   test-server procedure.
 
@@ -50,17 +50,19 @@ The workflow must be run from `main`. It:
 1. validates the pre-release version and selected source ref;
 2. strips the leading `V` only when passing the version to Gradle and `plugin.yml`;
 3. runs `clean check assemble` with that internal version;
-4. collects exactly one Core runtime JAR and rejects every non-Core scope;
+4. collects exactly the runtime JARs selected by the scope;
 5. produces SHA-256 checksums, a release manifest, and dependency version evidence;
 6. records release scope, source commit, configuration version, migration version, and hashes;
 7. produces GitHub artifact attestations;
 8. creates the uppercase-`V` annotated tag on the selected source commit;
 9. publishes a GitHub pre-release marked as a test-server candidate.
 
-Expected assets:
+Expected runtime assets depend on scope:
 
 ```text
-Wayfarer_Core-<V-version>.jar
+core: Wayfarer_Core-<V-version>.jar
+main-frontier: Wayfarer_Main-<V-version>.jar and Wayfarer_Frontier-<V-version>.jar
+all: all three runtime JARs
 SHA256SUMS.txt
 RELEASE_MANIFEST.md
 DEPENDENCY_VERSIONS.toml
@@ -86,7 +88,7 @@ tag are produced from the exact reviewed `stable_source_commit`. Development may
 ### Inputs
 
 - `version`: stable human-facing version with uppercase `V`, for example `V0.0.1`;
-- `release_scope`: artifact set; the V0.0.1 line permits only `core`;
+- `release_scope`: `core`, `main-frontier`, or `all`; partial combinations are rejected;
 - `stable_source_commit`: exact 40-character reviewed product-source SHA contained in `main`;
 - `test_evidence`: committed local stable acceptance under `docs/testing/results/`;
 - `main_server_instruction`: committed Markdown snapshot under
@@ -117,17 +119,18 @@ The workflow rejects the request when:
 - the workflow is not run from `main`;
 - the Owner does not explicitly authorize stable source-side publication after confirming
   Plugin-side publication prerequisites are cleared;
-- the rebuilt stable Core JAR differs from the committed local stable candidate SHA-256.
+- any rebuilt scoped runtime JAR differs from its committed stable candidate SHA-256.
 
 An absent tag selects `new` publication mode. A pre-existing annotated tag is accepted only as
 partial-publication recovery when it dereferences to the exact reviewed Stable Product Source and
 the GitHub Release is absent. The tag object is reused without recreation, movement, force push, or
 replacement. Existing Releases are never overwritten.
 
-After verification it checks out the reviewed stable source commit, rebuilds only the Core JAR
-with the internal stable version, records the local isolated test authority and main-server
+After verification it checks out the reviewed stable source commit, rebuilds the exact scoped
+runtime JAR set with the internal stable version, records the test authority and main-server
 instruction in `RELEASE_MANIFEST.md`, creates build provenance, and publishes a stable GitHub
-release.
+release. A `main-frontier` package references the immutable V0.0.1 Core and does not rename or
+reattach it.
 The stable package also includes commit-pinned `TEST_SERVER_EVIDENCE.md` and
 `MAIN_SERVER_INSTRUCTION.md` snapshots, plus fixed `REQUIREMENT_TRACEABILITY.md` and
 `RELEASE_READINESS.md` assets with original paths, source commit, SHA-256, and gate values in the
@@ -166,7 +169,14 @@ The Project Wayfarer main-server integration process owns:
 ## 6. Version progression
 
 Project Wayfarer remains on V0.1.0 while Plugin releases are technically restricted to
-`V0.0.<positive integer>` and matching pre-releases. The initial progression is:
+`V0.0.<positive integer>`, optional lowercase stable correction suffixes, and matching
+pre-releases. Stable ordering is:
+
+```text
+V0.0.1 < V0.0.1a < V0.0.1b < V0.0.2
+```
+
+A suffix such as `V0.0.1a` is a stable correction, not a pre-release. The initial progression was:
 
 ```text
 V0.0.1-alpha.1
@@ -189,18 +199,21 @@ failed, rerunning the approved workflow is safe only when the Release remains ab
 existing annotated tag still dereferences to the exact Stable Product Source. A lightweight tag,
 wrong-source tag, malformed tag, completed Release, or indeterminate GitHub lookup fails closed.
 
-## 7. V0.0.1 artifact scope
+## 7. Artifact scopes
 
-The initial release series requires `release_scope=core` and includes only `Wayfarer_Core`.
-Main and Frontier may remain buildable
-skeletons but their JARs are not release assets. The conditional EliteMobs–MVI adapter is neither
-authorized nor included. `core-main`, `core-frontier`, and `all` are reserved inputs and fail
-closed throughout V0.0.1.
+V0.0.1 used `release_scope=core` and included only `Wayfarer_Core`. V0.0.2 adds:
 
-Stable publication verifies `release_scope=core`, stable-source ancestry, committed local evidence,
-and the expected stable candidate hash before building. The manifest records the source commit,
-scope, config version, migration version, local test operator/method, and SHA-256 values. A missing
-Core config or migration version blocks publication.
+- `core`: a V0.0.1-compatible Core correction;
+- `main-frontier`: Main and Frontier while immutable V0.0.1 Core is reused;
+- `all`: Core, Main, and Frontier after an intentional reviewed Core change.
+
+`core-main`, `core-frontier`, single gameplay-module scopes, and arbitrary combinations fail
+closed. The conditional EliteMobs–MVI adapter and deferred Waystone gameplay are not release
+artifacts.
+
+Stable publication verifies the exact scope, stable-source ancestry, committed evidence, and every
+expected candidate hash before packaging. The manifest records the source commits, scope,
+compatibility, and SHA-256 values.
 
 ## 8. Approval records
 

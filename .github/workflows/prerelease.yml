@@ -135,41 +135,14 @@ jobs:
           set -euo pipefail
           mkdir -p release
 
-          copy_plugin_jar() {
-            local module_path="$1"
-            local artifact_name="$2"
-
-            mapfile -t jars < <(
-              find "$module_path/build/libs" -maxdepth 1 -type f \
-                -name "*.jar" \
-                ! -name "*-sources.jar" \
-                ! -name "*-javadoc.jar" \
-                | sort
-            )
-
-            if [[ "${#jars[@]}" -ne 1 ]]; then
-              echo "::error::Expected exactly one runtime JAR in $module_path/build/libs, found ${#jars[@]}."
-              printf '%s\n' "${jars[@]}"
-              exit 1
-            fi
-
-            cp "${jars[0]}" "release/${artifact_name}-${RELEASE_VERSION}.jar"
-          }
-
           source scripts/release/release-policy.sh
-          release_jars=()
-          if scope_includes_core "$RELEASE_SCOPE"; then
-            copy_plugin_jar "plugins/wayfarer-core" "Wayfarer_Core"
-            release_jars+=("Wayfarer_Core-${RELEASE_VERSION}.jar")
-          fi
-          if scope_includes_main_frontier "$RELEASE_SCOPE"; then
-            copy_plugin_jar "plugins/wayfarer-main" "Wayfarer_Main"
-            copy_plugin_jar "plugins/wayfarer-frontier" "Wayfarer_Frontier"
-            release_jars+=(
-              "Wayfarer_Main-${RELEASE_VERSION}.jar"
-              "Wayfarer_Frontier-${RELEASE_VERSION}.jar"
-            )
-          fi
+          RELEASE_VERSION="$RELEASE_VERSION" \
+            RELEASE_SCOPE="$RELEASE_SCOPE" \
+            OUTPUT_DIR=release \
+            bash scripts/release/collect-scoped-runtime-jars.sh >/dev/null
+          mapfile -t release_jars < <(
+            find release -maxdepth 1 -type f -name 'Wayfarer_*.jar' -printf '%f\n' | sort
+          )
 
           CONFIG_VERSION="$(
             awk '$1 == "config-version:" { print $2; exit }' \

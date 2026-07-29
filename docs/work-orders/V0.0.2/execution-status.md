@@ -43,7 +43,7 @@ Status vocabulary is restricted to the long-running execution instruction. `TODO
 | FRONT-006 | Frontier shop transaction/delivery | Req. 14 | FRONT-002, FRONT-003 | IN_PROGRESS | Fail-closed catalog and idempotent purchase coordinator | Persistence/client test |
 | WAYSTONE-001 | Defer Waystone production/GUI/teleport/tool | Final instruction 2.4 | None | DEFERRED_BY_REQUIREMENT | Traceability and decision register | Later V0.0.x |
 | ADAPTER-001 | Keep EM–MVI adapter absent | Req. 15; Exec. 2.5 | None | DEFERRED_BY_REQUIREMENT | Existing module boundary | Project Order 13 |
-| MIG-001 | Empty/upgrade/repeat/failure/boundary migration tests | Req. 9 | MAIN-003, FRONT-003 | TODO | Pending | Docker |
+| MIG-001 | Empty/upgrade/repeat/failure/boundary migration tests | Req. 9 | MAIN-003, FRONT-003 | DONE | Main/Frontier isolated MariaDB suites; hashes in `source.md` | Runtime pool integration remains B-001 |
 | TEST-001 | Focused domain/unit/API tests and `check` | Req. 17–18 | Product work | TODO | Pending | None |
 | TEST-002 | Isolated MariaDB tests | Req. 19 | Persistence work | TODO | Pending | Docker |
 | TEST-003 | Headless Main/Frontier Paper wiring | Req. 20 | Runtime work | TODO | Pending | Paper harness |

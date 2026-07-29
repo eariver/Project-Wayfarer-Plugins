@@ -10,6 +10,10 @@ public interface LeafGrappleBridge {
     ItemStack createHook(UUID ownerUuid, long instanceEpoch);
 
     enum Capability {
-        AVAILABLE, MISSING_PLUGIN, UNSUPPORTED_VERSION, MISSING_API
+        AVAILABLE,
+        MISSING_PLUGIN,
+        UNSUPPORTED_VERSION,
+        MISSING_API,
+        UNSAFE_CONFIGURATION
     }
 }

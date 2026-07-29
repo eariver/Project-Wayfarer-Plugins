@@ -113,9 +113,14 @@ jobs:
 
           git fetch origin main:refs/remotes/origin/main --tags --force
 
-          EXPECTED_STABLE_SHA256="$(
-            bash scripts/release/validate-stable-release-inputs.sh
-          )"
+          if [[ "$RELEASE_SCOPE" == "core" ]]; then
+            EXPECTED_STABLE_SHA256="$(
+              bash scripts/release/validate-stable-release-inputs.sh
+            )"
+          else
+            bash scripts/release/validate-stable-release-inputs.sh >/dev/null
+            EXPECTED_STABLE_SHA256=""
+          fi
 
           HANDOFF_SOURCE_COMMIT="$(git rev-parse HEAD)"
           SNAPSHOT_DIR="$RUNNER_TEMP/stable-release-handoff-snapshot"
@@ -125,6 +130,15 @@ jobs:
           cp \
             scripts/release/validate-stable-publication-state.sh \
             "$RUNNER_TEMP/validate-stable-publication-state.sh"
+          cp \
+            scripts/release/release-policy.sh \
+            "$RUNNER_TEMP/release-policy.sh"
+          cp \
+            scripts/release/assemble-scoped-stable-package.sh \
+            "$RUNNER_TEMP/assemble-scoped-stable-package.sh"
+          cp \
+            scripts/release/create-runtime-jar-manifest.sh \
+            "$RUNNER_TEMP/create-runtime-jar-manifest.sh"
 
           PUBLICATION_MODE="$(
             TAG="$TAG" \
@@ -134,6 +148,8 @@ jobs:
 
           SNAPSHOT_DIR="$SNAPSHOT_DIR" \
             HANDOFF_SOURCE_COMMIT="$HANDOFF_SOURCE_COMMIT" \
+            RELEASE_SCOPE="$RELEASE_SCOPE" \
+            PLUGIN_TEST_REPORT="docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md" \
             bash "$RUNNER_TEMP/assemble-stable-release-package.sh" snapshot
 
           EVIDENCE_COMMIT="$HANDOFF_SOURCE_COMMIT"
@@ -193,6 +209,7 @@ jobs:
             -PwayfarerVersion="$VERSION"
 
       - name: Verify stable candidate SHA-256
+        if: steps.metadata.outputs.release_scope == 'core'
         env:
           EXPECTED_STABLE_SHA256: ${{ steps.metadata.outputs.expected_stable_sha256 }}
         run: |
@@ -214,6 +231,15 @@ jobs:
             exit 1
           fi
 
+      - name: Bind scoped runtime JARs to accepted evidence
+        if: steps.metadata.outputs.release_scope != 'core'
+        env:
+          RELEASE_VERSION: ${{ steps.metadata.outputs.release_version }}
+          RELEASE_SCOPE: ${{ steps.metadata.outputs.release_scope }}
+          TEST_EVIDENCE: ${{ runner.temp }}/stable-release-handoff-snapshot/assets/TEST_SERVER_EVIDENCE.md
+          OUTPUT_MANIFEST: ${{ runner.temp }}/runtime-jars.tsv
+        run: bash "$RUNNER_TEMP/create-runtime-jar-manifest.sh"
+
       - name: Collect release assets
         env:
           RELEASE_VERSION: ${{ steps.metadata.outputs.release_version }}
@@ -224,6 +250,29 @@ jobs:
           EXPECTED_STABLE_SHA256: ${{ steps.metadata.outputs.expected_stable_sha256 }}
         run: |
           set -euo pipefail
+          if [[ "$RELEASE_SCOPE" != "core" ]]; then
+            SNAPSHOT_DIR="$RUNNER_TEMP/stable-release-handoff-snapshot" \
+              PACKAGE_ROOT="$GITHUB_WORKSPACE/release" \
+              RUNTIME_JAR_MANIFEST="$RUNNER_TEMP/runtime-jars.tsv" \
+              DEPENDENCY_VERSIONS_SOURCE="gradle/libs.versions.toml" \
+              bash "$RUNNER_TEMP/assemble-scoped-stable-package.sh" assemble
+            PACKAGE_ROOT="$GITHUB_WORKSPACE/release" \
+              SNAPSHOT_DIR="$RUNNER_TEMP/stable-release-handoff-snapshot" \
+              RUNTIME_JAR_MANIFEST="$RUNNER_TEMP/runtime-jars.tsv" \
+              DEPENDENCY_VERSIONS_SOURCE="gradle/libs.versions.toml" \
+              bash "$RUNNER_TEMP/assemble-scoped-stable-package.sh" verify
+            mkdir -p "$GITHUB_WORKSPACE/release/helpers"
+            cp "$RUNNER_TEMP/assemble-scoped-stable-package.sh" \
+              "$GITHUB_WORKSPACE/release/helpers/assemble-scoped-stable-package.sh"
+            cp "$RUNNER_TEMP/release-policy.sh" \
+              "$GITHUB_WORKSPACE/release/helpers/release-policy.sh"
+            cp "$RUNNER_TEMP/validate-stable-publication-state.sh" \
+              "$GITHUB_WORKSPACE/release/helpers/validate-stable-publication-state.sh"
+            cp "$RUNNER_TEMP/runtime-jars.tsv" \
+              "$GITHUB_WORKSPACE/release/RUNTIME_JAR_MANIFEST.tsv"
+            exit 0
+          fi
+
           mapfile -t jars < <(
             find plugins/wayfarer-core/build/libs -maxdepth 1 -type f \
               -name "*.jar" \
@@ -273,11 +322,14 @@ jobs:
           cp \
             "$RUNNER_TEMP/validate-stable-publication-state.sh" \
             "$GITHUB_WORKSPACE/release/helpers/validate-stable-publication-state.sh"
+          cp \
+            "$RUNNER_TEMP/release-policy.sh" \
+            "$GITHUB_WORKSPACE/release/helpers/release-policy.sh"
 
       - name: Generate build provenance
         uses: actions/attest@v4
         with:
-          subject-path: "release/assets/Wayfarer_Core-${{ steps.metadata.outputs.release_version }}.jar"
+          subject-path: "release/assets/Wayfarer_*.jar"
 
       - name: Store release package for approval
         uses: actions/upload-artifact@v7
@@ -322,8 +374,16 @@ jobs:
           EXPECTED_STABLE_SHA256: ${{ needs.build.outputs.expected_stable_sha256 }}
         run: |
           set -euo pipefail
-          PACKAGE_ROOT="$GITHUB_WORKSPACE/release" \
-            bash release/helpers/assemble-stable-release-package.sh verify
+          if [[ "${{ needs.build.outputs.release_scope }}" == "core" ]]; then
+            PACKAGE_ROOT="$GITHUB_WORKSPACE/release" \
+              bash release/helpers/assemble-stable-release-package.sh verify
+          else
+            PACKAGE_ROOT="$GITHUB_WORKSPACE/release" \
+              SNAPSHOT_DIR="$GITHUB_WORKSPACE/release" \
+              RUNTIME_JAR_MANIFEST="$GITHUB_WORKSPACE/release/RUNTIME_JAR_MANIFEST.tsv" \
+              DEPENDENCY_VERSIONS_SOURCE="$GITHUB_WORKSPACE/release/assets/DEPENDENCY_VERSIONS.toml" \
+              bash release/helpers/assemble-scoped-stable-package.sh verify
+          fi
 
       - name: Create annotated stable tag
         env:

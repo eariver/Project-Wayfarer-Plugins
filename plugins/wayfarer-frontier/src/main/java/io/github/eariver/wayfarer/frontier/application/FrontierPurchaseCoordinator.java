@@ -59,14 +59,36 @@ public final class FrontierPurchaseCoordinator {
                     new Result(Status.ACCEPTED, order.purchaseId(), order.transactionId(), null)
                 );
             }
+            if (order.state() == FrontierPurchaseRepository.State.FAILED) {
+                return CompletableFuture.completedFuture(
+                    new Result(Status.FAILED, order.purchaseId(), order.transactionId(),
+                        "PURCHASE_FAILED")
+                );
+            }
             if (order.state() != FrontierPurchaseRepository.State.PREPARED) {
                 return CompletableFuture.completedFuture(
                     new Result(Status.UNKNOWN, order.purchaseId(), order.transactionId(),
                         "PURCHASE_REQUIRES_RECONCILE")
                 );
             }
-            return executePayment(order);
+            return claimAndExecutePayment(order);
         }).exceptionally(ignored -> Result.failed("PURCHASE_UNAVAILABLE"));
+    }
+
+    private CompletionStage<Result> claimAndExecutePayment(
+        FrontierPurchaseRepository.Purchase order
+    ) {
+        return tasks.database(() -> repository.claimPayment(
+            order.purchaseId(),
+            order.lockVersion(),
+            clock.instant()
+        )).thenCompose(claimed -> claimed
+            .map(this::executePayment)
+            .orElseGet(() -> CompletableFuture.completedFuture(
+                new Result(Status.UNKNOWN, order.purchaseId(), order.transactionId(),
+                    "PAYMENT_ALREADY_CLAIMED")
+            ))
+        );
     }
 
     private CompletionStage<Result> executePayment(FrontierPurchaseRepository.Purchase order) {
@@ -84,9 +106,7 @@ public final class FrontierPurchaseCoordinator {
         try {
             stage = transactions.execute(payment);
         } catch (RuntimeException failure) {
-            return CompletableFuture.completedFuture(
-                new Result(Status.UNAVAILABLE, order.purchaseId(), null, "TRANSACTION_UNAVAILABLE")
-            );
+            return markUnknown(order, "TRANSACTION_UNKNOWN");
         }
         return stage.handle((result, failure) -> failure == null ? result : null)
             .thenCompose(result -> finishPayment(order, result));
@@ -97,21 +117,24 @@ public final class FrontierPurchaseCoordinator {
         WayfarerTransactions.TransactionResult transaction
     ) {
         if (transaction == null) {
-            return CompletableFuture.completedFuture(
-                new Result(Status.UNKNOWN, order.purchaseId(), null, "TRANSACTION_UNKNOWN")
-            );
+            return markUnknown(order, "TRANSACTION_UNKNOWN");
         }
         if (transaction.state() == WayfarerTransactions.State.UNKNOWN) {
-            return CompletableFuture.completedFuture(
-                new Result(Status.UNKNOWN, order.purchaseId(), transaction.transactionId(),
-                    "TRANSACTION_UNKNOWN")
-            );
+            return markUnknown(order, "TRANSACTION_UNKNOWN");
         }
         if (transaction.state() != WayfarerTransactions.State.COMMITTED
             && transaction.state() != WayfarerTransactions.State.RECONCILED_COMMITTED) {
-            return CompletableFuture.completedFuture(
-                new Result(Status.FAILED, order.purchaseId(), transaction.transactionId(),
-                    safeFailure(transaction.failureCode()))
+            String failureCode = safeFailure(transaction.failureCode());
+            return tasks.database(() -> repository.markFailed(
+                order.purchaseId(),
+                order.lockVersion(),
+                failureCode,
+                clock.instant()
+            )).thenApply(saved -> saved
+                ? new Result(Status.FAILED, order.purchaseId(), transaction.transactionId(),
+                    failureCode)
+                : new Result(Status.UNKNOWN, order.purchaseId(), transaction.transactionId(),
+                    "PURCHASE_COMMIT_UNKNOWN")
             );
         }
         return tasks.database(() -> repository.markPaymentCommitted(
@@ -124,6 +147,31 @@ public final class FrontierPurchaseCoordinator {
             : new Result(Status.UNKNOWN, order.purchaseId(), transaction.transactionId(),
                 "PURCHASE_COMMIT_UNKNOWN")
         );
+    }
+
+    private CompletionStage<Result> markUnknown(
+        FrontierPurchaseRepository.Purchase order,
+        String failureCode
+    ) {
+        return tasks.database(() -> {
+            repository.markUnknown(
+                order.purchaseId(),
+                order.lockVersion(),
+                failureCode,
+                clock.instant()
+            );
+            return new Result(
+                Status.UNKNOWN,
+                order.purchaseId(),
+                order.transactionId(),
+                failureCode
+            );
+        }).exceptionally(ignored -> new Result(
+            Status.UNKNOWN,
+            order.purchaseId(),
+            order.transactionId(),
+            failureCode
+        ));
     }
 
     private static String safeFailure(String code) {

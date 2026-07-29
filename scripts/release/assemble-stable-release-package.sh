@@ -17,6 +17,29 @@ handoff_mappings() {
   require_value REQUIREMENT_TRACEABILITY
   require_value RELEASE_READINESS
 
+  if [[ "${RELEASE_SCOPE:-core}" != "core" ]]; then
+    require_value PLUGIN_TEST_REPORT
+    cat <<EOF
+docs/handoff/V0.0.2/sanitized-configuration.md|SANITIZED_CONFIGURATION.md
+docs/handoff/V0.0.2/command-and-permission-reference.md|COMMAND_AND_PERMISSION_REFERENCE.md
+docs/handoff/V0.0.2/dependency-and-placement.md|DEPENDENCY_AND_PLACEMENT.md
+docs/handoff/V0.0.2/third-party-notices.md|THIRD_PARTY_NOTICES.md
+docs/handoff/V0.0.2/known-limitations.md|KNOWN_LIMITATIONS.md
+docs/handoff/V0.0.2/upgrade-and-rollback.md|UPGRADE_AND_ROLLBACK.md
+docs/handoff/V0.0.2/project-acceptance-input.md|PROJECT_ACCEPTANCE_INPUT.md
+docs/handoff/V0.0.2/artifact-inventory.md|ARTIFACT_INVENTORY.md
+docs/handoff/V0.0.2/migration-and-compatibility.md|MIGRATION_AND_COMPATIBILITY.md
+docs/handoff/V0.0.2/open-decisions.md|OPEN_DECISIONS.md
+${PLUGIN_TEST_REPORT}|PLUGIN_TEST_REPORT.md
+LICENSE|LICENSE
+${TEST_EVIDENCE}|TEST_SERVER_EVIDENCE.md
+${MAIN_SERVER_INSTRUCTION}|MAIN_SERVER_INSTRUCTION.md
+${REQUIREMENT_TRACEABILITY}|REQUIREMENT_TRACEABILITY.md
+${RELEASE_READINESS}|RELEASE_READINESS.md
+EOF
+    return
+  fi
+
   cat <<EOF
 docs/handoff/V0.0.1/sanitized-configuration.md|SANITIZED_CONFIGURATION.md
 docs/handoff/V0.0.1/command-and-permission-reference.md|COMMAND_AND_PERMISSION_REFERENCE.md
@@ -206,7 +229,7 @@ EOF
     while IFS= read -r filename; do
       [[ -f "$filename" && ! -L "$filename" ]] \
         || fail "Required checksum asset is missing or not regular: $filename"
-      sha256sum "$filename"
+      sha256sum --text "$filename"
     done < "$checksum_targets"
   ) > "$assets_dir/SHA256SUMS.txt"
 
@@ -332,7 +355,10 @@ verify_package() {
 
   checksum_file="$assets_dir/SHA256SUMS.txt"
   checksum_names="$(mktemp)"
-  awk '{ print $2 }' "$checksum_file" > "$checksum_names"
+  # GNU coreutils on Windows emits the binary-mode marker (`*filename`) while
+  # Linux emits the text-mode separator (` filename`). Normalize either form
+  # before comparing the covered asset names.
+  awk '{ sub(/^\*/, "", $2); print $2 }' "$checksum_file" > "$checksum_names"
 
   expected_checksum_count=0
   for filename in "${expected_assets[@]}"; do

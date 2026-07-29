@@ -31,7 +31,12 @@ jobs:
           bash scripts/release/test-stable-release-validation.sh
       - name: Test V0.0.x release policy
         shell: bash
-        run: bash scripts/release/test-release-policy.sh
+        run: |
+          bash scripts/release/test-release-policy.sh
+          bash scripts/release/test-scoped-runtime-jars.sh
+          bash scripts/release/test-scoped-stable-package.sh
+          bash scripts/release/test-runtime-jar-manifest.sh
+          bash scripts/release/test-node24-actions.sh
       - name: Test stable release package scope and provenance
         shell: bash
         run: bash scripts/release/test-stable-release-package.sh
@@ -49,6 +54,9 @@ jobs:
         run: ./gradlew --no-daemon clean check
       - name: Assemble
         run: ./gradlew --no-daemon clean assemble
+      - name: Verify V0.0.2 gameplay plugin packaging
+        shell: bash
+        run: bash scripts/release/verify-v002-plugin-packaging.sh
       - name: Configuration-cache check and reuse
         run: |
           ./gradlew --no-daemon --configuration-cache check

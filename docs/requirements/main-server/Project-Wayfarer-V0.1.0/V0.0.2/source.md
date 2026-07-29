@@ -75,3 +75,15 @@ The Project Repository was read-only during this task.
 | Core V002 | `3a8ce1c4df384497d335493f9117020b678dea5b` | `B45709E7740A4E720B05C26ED02E66E965784980898EAB29445B1293B422F260` |
 | Core V003 | `f4f0b195318fa79518f331c0f519272c96c40ff3` | `83483E0494B687EC4FF11AF7872AE89E1406BB678AE2B000897FC66FF7A048B4` |
 
+## Module migration baselines fixed during V0.0.2
+
+| Migration | SHA-256 |
+|---|---|
+| Main V001 | `845738E92E7629F53F088C73CCDF6165E4A87FAC4C50EFB1690A365E8E7B1668` |
+| Main V002 | `695F2169556925C8CE3CFD256352F5CC4B70C3AFD5D393AEC80095BF44B05B87` |
+| Frontier V001 | `E63A9A3D2C6DAAC52E0E7A43374755A8D11908AD4DA1494F711A8D1A1EB182D1` |
+| Frontier V002 | `D3656098FD22C1E93BE8722C2F35B0F811E34796EE70BA196D7A1F1CEB31ACF7` |
+
+The V001 files were inherited unchanged from `origin/main`. V002 files are additive drafts in
+this branch. Isolated MariaDB tests cover empty schema, V001 upgrade, repeat validation, failure,
+and Core/Main/Frontier location boundaries. Concrete runtime ownership remains gated by ADR 0009.

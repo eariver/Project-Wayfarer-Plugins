@@ -17,10 +17,30 @@ public interface FrontierPurchaseRepository {
         Instant now
     );
 
+    Optional<Purchase> claimPayment(
+        UUID purchaseId,
+        long expectedLockVersion,
+        Instant now
+    );
+
     boolean markPaymentCommitted(
         UUID purchaseId,
         UUID transactionId,
         long expectedLockVersion,
+        Instant now
+    );
+
+    boolean markFailed(
+        UUID purchaseId,
+        long expectedLockVersion,
+        String failureCode,
+        Instant now
+    );
+
+    void markUnknown(
+        UUID purchaseId,
+        long expectedLockVersion,
+        String failureCode,
         Instant now
     );
 
@@ -38,6 +58,7 @@ public interface FrontierPurchaseRepository {
 
     enum State {
         PREPARED,
+        PAYMENT_PENDING,
         PAYMENT_COMMITTED,
         DELIVERED,
         UNKNOWN,
