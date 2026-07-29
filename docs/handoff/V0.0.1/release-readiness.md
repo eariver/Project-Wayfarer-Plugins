@@ -5,6 +5,7 @@
   [`V0.0.1-alpha.1`](https://github.com/eariver/Project-Wayfarer-Plugins/releases/tag/V0.0.1-alpha.1)
 - Alpha.1 source commit: `192cda35dce0dba855c2da4eb1ed71a0425f549a`
 - Stable final source commit: Pending
+- RC.3 evidence record commit: `92e32db98758eddad46c5f18772c21ef83366057`
 - Requirement traceability: In progress; global gate remains `BLOCKED`
 - Latest local automated tests: Passed, 192 unit (178 Core / 6 API / 8 Common),
   14 MariaDB, and 6 Redis; 0 failed/errors/skipped
