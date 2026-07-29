@@ -7,6 +7,8 @@ dependencies {
     compileOnly(libs.paper.api)
     compileOnly(project(":libraries:wayfarer-api"))
     implementation(project(":libraries:wayfarer-common"))
+    testImplementation(project(":libraries:wayfarer-api"))
+    testImplementation(libs.paper.api)
 }
 
 

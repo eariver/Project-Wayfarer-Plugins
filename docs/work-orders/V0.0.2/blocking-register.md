@@ -77,3 +77,23 @@ tooling and documentation continue.
 - Security impact: verify sanitized messages and permission denial
 - Rollback: discard task-only data and candidate runtime
 
+## B-004 — Core transaction/domain fulfillment boundary
+
+- Category: `PLUGIN_REVIEW_REQUIRED`
+- Affected requirement: Req. 8.14, 9.15; execution instruction section 7
+- Observed fact: V0.0.1 `WayfarerTransactions.execute` durably handles the provider debit and its
+  own transaction state, but exposes no module domain-commit callback. It reaches `COMMITTED`
+  before a Main repair or Frontier delivery has been persisted or applied.
+- Safe provisional pattern: persist an idempotent module order before Core Transactions; after
+  Core `COMMITTED`, record payment and retain fulfillment as durable pending delivery. The
+  Frontier coordinator uses this pattern and does not claim cross-store atomicity.
+- Exact review needed: confirm whether Main repair may use a durable module recovery record plus a
+  separately idempotent Core Waymark refund, or whether an additive JDK-only Core
+  transaction-participant/recovery contract is required.
+- Tasks directly blocked: final Main repair integration and final release scope if a Core addition
+  is required
+- Tasks not blocked: pure pricing, module repair state machine, GUI proposal, Frontier pending
+  delivery, and all non-transaction runtime work
+- Compatibility impact: a Core API addition changes ADR 0010 from `main-frontier` to `all`
+- Security impact: no provider reference or exception message may become player-facing
+- Rollback: retain V0.0.1 Core and leave Main repair fail-closed until the reviewed path exists

@@ -1,3 +1,6 @@
+config-version: 1
+runtime-role: FRONTIER
+
 themes:
   worlds-beyond:
     enabled: true
@@ -19,7 +22,6 @@ themes:
     shop:
       launchpad: { price-wm: 30, amount: 1 }
       firework-rocket: { price-wm: 200, amount: 1, flight-duration: 3 }
-      waystone-placement-tool: { price-wm: 600, amount: 1 }
 
     launchpad:
       material: LIGHT_WEIGHTED_PRESSURE_PLATE
@@ -35,21 +37,16 @@ themes:
       drop-on-player-break: false
       max-active-per-player: 0
 
-    waystone:
-      minimum-horizontal-distance: 1000
-      discovery-search-radius: 3000
-      lifecycle:
-        protected-days: 14
-        contestable-days: 14
-        dormant-before-ruin-days: 180
-      costs:
-        maintain-wm: 200
-        contest-wm: 300
-        reactivate-wm: 150
-      teleport:
-        cost-wm: 0
-        cooldown-seconds: 30
-        warmup-seconds: 3
-        cancel-on-move: true
-        cancel-on-damage: true
-        allow-cross-dimension: false
+    navigation:
+      waystone: DEFERRED_BY_REQUIREMENT
+
+persistence:
+  # ADR 0009 remains PLUGIN_REVIEW_REQUIRED. These are secret references, never credentials.
+  jdbc-url-ref: WAYFARER_DB_URL
+  username-ref: WAYFARER_DB_USERNAME
+  password-ref: WAYFARER_DB_PASSWORD
+  maximum-pool-size: 3
+  connection-timeout-millis: 5000
+
+checkpoint:
+  disable-timeout-seconds: 15

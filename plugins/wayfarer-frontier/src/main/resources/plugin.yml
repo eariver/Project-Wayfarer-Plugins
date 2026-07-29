@@ -6,3 +6,15 @@ description: Project Wayfarer Frontier gameplay
 author: eariver
 depend: [Wayfarer_Core]
 softdepend: [Multiverse-Inventories, LeafGrapple, WorldGuard, WorldEdit]
+commands:
+  wayfarer-frontier:
+    description: Wayfarer Frontier navigation and administration
+    usage: /wayfarer-frontier <open|status|loadout|delivery|launchpad|transaction|audit>
+    aliases: [wffrontier]
+permissions:
+  wayfarer.frontier.use:
+    description: Use Wayfarer Frontier traversal and shop features
+    default: true
+  wayfarer.frontier.admin:
+    description: Manage Wayfarer Frontier delivery and launchpads
+    default: op

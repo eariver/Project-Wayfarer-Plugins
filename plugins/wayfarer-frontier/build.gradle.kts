@@ -8,6 +8,8 @@ dependencies {
     compileOnly(project(":libraries:wayfarer-api"))
     implementation(project(":libraries:wayfarer-common"))
     implementation(project(":integrations:wayfarer-leafgrapple-adapter"))
+    testImplementation(project(":libraries:wayfarer-api"))
+    testImplementation(libs.paper.api)
 }
 
 

@@ -10,6 +10,10 @@ set -euo pipefail
 : "${RELEASE_READINESS:?RELEASE_READINESS is required}"
 : "${REQUIREMENTS_CLEARED:?REQUIREMENTS_CLEARED is required}"
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=release-policy.sh
+source "$script_dir/release-policy.sh"
+
 if [[ "$REQUIREMENTS_CLEARED" != "true" ]]; then
   echo \
     "Stable source-side publication requires explicit Owner authorization that Plugin-side publication prerequisites are cleared." \
@@ -17,13 +21,13 @@ if [[ "$REQUIREMENTS_CLEARED" != "true" ]]; then
   exit 1
 fi
 
-if [[ ! "$INPUT_VERSION" =~ ^V0\.0\.[1-9][0-9]*$ ]]; then
-  echo "Stable release version must resemble V0.0.1." >&2
+if ! is_stable_version "$INPUT_VERSION"; then
+  echo "Stable release version must resemble V0.0.1 or correction V0.0.1a." >&2
   exit 1
 fi
 
-if [[ "$RELEASE_SCOPE" != "core" ]]; then
-  echo "The current V0.0.x release policy permits only release_scope=core." >&2
+if ! is_release_scope "$RELEASE_SCOPE"; then
+  echo "Release scope must be core, main-frontier, or all." >&2
   exit 1
 fi
 

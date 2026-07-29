@@ -12,7 +12,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Test stable release input and document gates
@@ -29,17 +29,20 @@ jobs:
         run: |
           git fetch origin main --no-tags
           bash scripts/release/test-stable-release-validation.sh
+      - name: Test V0.0.x release policy
+        shell: bash
+        run: bash scripts/release/test-release-policy.sh
       - name: Test stable release package scope and provenance
         shell: bash
         run: bash scripts/release/test-stable-release-package.sh
       - name: Test stable publication partial-failure recovery
         shell: bash
         run: bash scripts/release/test-stable-publication-recovery.sh
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "9.6.1"
       - name: Check

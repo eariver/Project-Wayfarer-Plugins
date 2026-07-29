@@ -5,3 +5,18 @@ api-version: '1.21.11'
 description: Project Wayfarer Main gameplay
 author: eariver
 depend: [Wayfarer_Core]
+commands:
+  wayfarer-main:
+    description: Wayfarer Main administration and tool status
+    usage: /wayfarer-main <status|inspect|grant|reissue|repair|branch|revoke|reconcile|delivery>
+    aliases: [wfmain]
+permissions:
+  wayfarer.main.use:
+    description: Use the bound Growth Tool interface
+    default: true
+  wayfarer.main.admin:
+    description: Manage Wayfarer Main tools and recovery
+    default: op
+  wayfarer.main.debug:
+    description: Use explicitly enabled Wayfarer Main debug commands
+    default: op

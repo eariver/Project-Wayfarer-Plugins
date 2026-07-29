@@ -13,10 +13,9 @@ on:
         type: choice
         options:
           - core
-          - core-main
-          - core-frontier
+          - main-frontier
           - all
-        default: core
+        default: main-frontier
       stable_source_commit:
         description: "Exact 40-character commit SHA containing the reviewed stable product source"
         required: true
@@ -83,7 +82,7 @@ jobs:
 
     steps:
       - name: Check out release automation and evidence
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -178,13 +177,13 @@ jobs:
           git checkout --detach "$SOURCE_SHA"
 
       - name: Set up Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "25"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Verify and build release artifacts
         env:
@@ -281,7 +280,7 @@ jobs:
           subject-path: "release/assets/Wayfarer_Core-${{ steps.metadata.outputs.release_version }}.jar"
 
       - name: Store release package for approval
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.metadata.outputs.artifact_name }}
           path: release/
@@ -303,13 +302,13 @@ jobs:
 
     steps:
       - name: Check out reviewed stable source commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.build.outputs.source_sha }}
           fetch-depth: 0
 
       - name: Download approved release package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: release/

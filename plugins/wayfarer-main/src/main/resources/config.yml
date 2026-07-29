@@ -1,3 +1,6 @@
+config-version: 1
+runtime-role: MAIN
+
 worlds:
   progress-allowlist: [resource, resource_nether, resource_end]
 
@@ -48,6 +51,15 @@ repair:
 
 checkpoint:
   interval-seconds: 300
+  disable-timeout-seconds: 15
+
+persistence:
+  # ADR 0009 remains PLUGIN_REVIEW_REQUIRED. These are secret references, never credentials.
+  jdbc-url-ref: WAYFARER_DB_URL
+  username-ref: WAYFARER_DB_USERNAME
+  password-ref: WAYFARER_DB_PASSWORD
+  maximum-pool-size: 3
+  connection-timeout-millis: 5000
 
 debug-commands:
   enabled: false
