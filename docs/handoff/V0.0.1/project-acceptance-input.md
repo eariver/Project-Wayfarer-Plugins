@@ -9,7 +9,7 @@
 | Sanitized config and environment variables | `docs/handoff/V0.0.1/sanitized-configuration.md` |
 | Commands / permissions | `docs/handoff/V0.0.1/command-and-permission-reference.md` |
 | Dependencies / placement / load order | `docs/handoff/V0.0.1/dependency-and-placement.md` |
-| Test report / evidence commit | `docs/testing/results/V0.0.1-concrete-waymark-provider.md`; original evidence record `92e32db98758eddad46c5f18772c21ef83366057`; final balance probe `7f013b346d2cd97705c45dbbf8a18f51e9607525` |
+| Test report / evidence commit | `docs/testing/results/V0.0.1-concrete-waymark-provider.md`; original evidence record `92e32db98758eddad46c5f18772c21ef83366057`; final balance probe `7f013b346d2cd97705c45dbbf8a18f51e9607525`; final corrected evidence record `75b66aa987833b20c93c0312781bd158af40f84d` |
 | Known limitations / open decisions | See handoff files |
 | Test server vs Project Runtime differences | Concrete standalone: Paper 1.21.11 build 132, Java 25, task-only MariaDB 11.8/Redis 8, fixed VaultUnlocked/RedisEconomy, test-only probe; Project placement/config/other plugins not changed |
 | Project acceptance | Pending |

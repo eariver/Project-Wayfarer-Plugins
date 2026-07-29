@@ -7,6 +7,7 @@
 - Stable final source commit: Pending
 - RC.3 evidence record commit: `92e32db98758eddad46c5f18772c21ef83366057`
 - RC.3 final balance probe commit: `7f013b346d2cd97705c45dbbf8a18f51e9607525`
+- RC.3 final corrected evidence record: `75b66aa987833b20c93c0312781bd158af40f84d`
 - Requirement traceability: In progress; global gate remains `BLOCKED`
 - Latest local automated tests: Passed, 192 unit (178 Core / 6 API / 8 Common),
   14 MariaDB, and 6 Redis; 0 failed/errors/skipped

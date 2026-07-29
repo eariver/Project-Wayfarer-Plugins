@@ -79,7 +79,8 @@ acceptance pending.
   [`30317207610`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30317207610);
   rc.2 concrete result and CI `30378563840` remain historical; rc.3 candidate source is
   `95b2cf1ef159b4d16921ddb4c8698621b8134c3e`; CI `30413198551` passed; final balance probe is
-  `7f013b346d2cd97705c45dbbf8a18f51e9607525` and CI `30445725741` passed
+  `7f013b346d2cd97705c45dbbf8a18f51e9607525`, CI `30445725741` passed, and final corrected
+  evidence record is `75b66aa987833b20c93c0312781bd158af40f84d`
 - Artifact matrix: `docs/handoff/V0.0.1/artifact-matrix.md`
 - Project acceptance input: `docs/handoff/V0.0.1/project-acceptance-input.md`
 - Project Runtime changed: No
