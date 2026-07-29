@@ -3,6 +3,7 @@
 - Release readiness: READY
 - Stable version: `V0.0.1`
 - Stable product source commit: `49e00e21716c1c13a2dbb170fdad1b19c4275612`
+- Stable preparation evidence record: `eabda6d2c83e7369dd9f4ba4725f80d601a51062`
 - Stable candidate JAR: `wayfarer-core-0.0.1.jar`
 - Stable candidate SHA-256:
   `B045581D3984DDDBA10ED7B2ADA435926B8538BA9B29A1151550CE59588395A2`

@@ -9,7 +9,7 @@
 | Sanitized config and environment variables | `docs/handoff/V0.0.1/sanitized-configuration.md` |
 | Commands / permissions | `docs/handoff/V0.0.1/command-and-permission-reference.md` |
 | Dependencies / placement / load order | `docs/handoff/V0.0.1/dependency-and-placement.md` |
-| Test report / evidence | `docs/testing/results/V0.0.1-stable-local-acceptance.md`; `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md` |
+| Test report / evidence | `docs/testing/results/V0.0.1-stable-local-acceptance.md`; `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.1_2026-07-29.md`; preparation evidence record `eabda6d2c83e7369dd9f4ba4725f80d601a51062` |
 | Known limitations / open decisions | See handoff files |
 | Test server vs Project Runtime differences | Local isolated: Paper 1.21.11 build 132, Java 25, task-only MariaDB 11.8/Redis 8, Owner-supplied 23-JAR inventory, fixed VaultUnlocked/RedisEconomy, test-only probe; Project Runtime/config not changed. Full-inventory external-plugin limitation is recorded in the stable result |
 | Project acceptance | Pending |
