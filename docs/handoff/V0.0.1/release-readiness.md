@@ -22,11 +22,14 @@
 - Stable Release Package required asset set: `COMPLETE`
 - Handoff snapshot source: the `release.yml` main revision, captured before Product Source
   checkout and recorded as `HANDOFF_SOURCE_COMMIT`
-- Final code-bearing package-automation commit:
-  `dd011717172e77ca8ba49f2ecde6096474476ceb`
+- Final code-bearing publication-recovery commit:
+  `a4873c9ef02aa0cff5c4cffdbfc32108a7155da9`
 - Authoritative final code-bearing preparation CI:
+  [`30458785102`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30458785102)
+  passed at `a4873c9ef02aa0cff5c4cffdbfc32108a7155da9`
+- Earlier supporting package-completeness CI:
   [`30457194983`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30457194983)
-  passed at `dd011717172e77ca8ba49f2ecde6096474476ceb`
+  passed at `dd011717172e77ca8ba49f2ecde6096474476ceb`; historical/supporting only
 - Earlier supporting release-gate correction CI:
   [`30455335160`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30455335160)
   passed at `d16e92cd47267b749803623a3cf1b58850ac8ce4`; historical/supporting only

@@ -26,11 +26,14 @@
   before checkout of the unchanged Stable Product Source
 - Partial-publication recovery: exact-source annotated Stable Tag with no GitHub Release only
 - Publish pre-tag package validation: complete Package verifier rerun before new tag push
-- Final code-bearing package-automation commit:
-  `dd011717172e77ca8ba49f2ecde6096474476ceb`
-- Authoritative Stable Release Package CI: GitHub Actions
+- Final code-bearing publication-recovery commit:
+  `a4873c9ef02aa0cff5c4cffdbfc32108a7155da9`
+- Authoritative Stable Publication Recovery CI: GitHub Actions
+  [`30458785102`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30458785102)
+  passed at `a4873c9ef02aa0cff5c4cffdbfc32108a7155da9`
+- Earlier supporting package-completeness CI:
   [`30457194983`](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30457194983)
-  passed at `dd011717172e77ca8ba49f2ecde6096474476ceb`
+  passed at `dd011717172e77ca8ba49f2ecde6096474476ceb`; historical/supporting only
 
 ## Verification
 
