@@ -1,8 +1,8 @@
 package io.github.eariver.wayfarer.preclient.fixture;
 
 import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.plugin.ServicePriority;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -30,17 +30,28 @@ public final class PreclientWaymarkFixturePlugin extends JavaPlugin
             getLogger().info("WAYFARER_FIXTURE_VAULT: API_ONLY provider=unavailable");
             return;
         }
-        Economy economy = (Economy) Proxy.newProxyInstance(
-            getClass().getClassLoader(),
-            new Class<?>[]{Economy.class},
-            this
-        );
-        getServer().getServicesManager().register(
-            Economy.class,
-            economy,
-            this,
-            ServicePriority.Normal
-        );
+        register(Economy.class);
+        Plugin core = getServer().getPluginManager().getPlugin("Wayfarer_Core");
+        if (core != null) {
+            try {
+                Class<?> coreEconomy = Class.forName(
+                    Economy.class.getName(),
+                    false,
+                    core.getClass().getClassLoader()
+                );
+                if (coreEconomy != Economy.class) {
+                    register(coreEconomy);
+                }
+                getLogger().info(
+                    "WAYFARER_FIXTURE_VAULT: API_IDENTITY shared="
+                        + (coreEconomy == Economy.class)
+                );
+            } catch (ClassNotFoundException failure) {
+                throw new IllegalStateException(
+                    "Core Vault API identity is unavailable"
+                );
+            }
+        }
         getLogger().info(
             "WAYFARER_FIXTURE_VAULT: REGISTERED provider=" + PROVIDER_NAME
         );
@@ -75,52 +86,86 @@ public final class PreclientWaymarkFixturePlugin extends JavaPlugin
             case "hasAccount", "createPlayerAccount" -> true;
             case "getBalance" -> balance;
             case "has" -> balance >= lastNumber(arguments);
-            case "withdrawPlayer" -> withdraw(lastNumber(arguments));
-            case "depositPlayer" -> deposit(lastNumber(arguments));
+            case "withdrawPlayer" ->
+                withdraw(method.getReturnType(), lastNumber(arguments));
+            case "depositPlayer" ->
+                deposit(method.getReturnType(), lastNumber(arguments));
             case "getBanks" -> List.of();
             case "createBank", "deleteBank", "bankBalance", "bankHas",
                  "bankWithdraw", "bankDeposit", "isBankOwner", "isBankMember" ->
-                failure(0D, "Bank operations are unavailable");
+                response(
+                    method.getReturnType(),
+                    0D,
+                    false,
+                    "Bank operations are unavailable"
+                );
             default -> throw new UnsupportedOperationException(
                 "Unsupported Vault fixture method: " + name
             );
         };
     }
 
-    private EconomyResponse withdraw(double amount) {
+    private Object withdraw(Class<?> responseType, double amount) {
         if (!Double.isFinite(amount) || amount <= 0D) {
-            return failure(amount, "Invalid amount");
+            return response(responseType, amount, false, "Invalid amount");
         }
         if (balance < amount) {
-            return failure(amount, "Insufficient funds");
+            return response(responseType, amount, false, "Insufficient funds");
         }
         balance -= amount;
-        return success(amount);
+        return response(responseType, amount, true, null);
     }
 
-    private EconomyResponse deposit(double amount) {
+    private Object deposit(Class<?> responseType, double amount) {
         if (!Double.isFinite(amount) || amount <= 0D) {
-            return failure(amount, "Invalid amount");
+            return response(responseType, amount, false, "Invalid amount");
         }
         balance += amount;
-        return success(amount);
+        return response(responseType, amount, true, null);
     }
 
-    private EconomyResponse success(double amount) {
-        return new EconomyResponse(
-            amount,
-            balance,
-            EconomyResponse.ResponseType.SUCCESS,
-            null
+    private Object response(
+        Class<?> responseType,
+        double amount,
+        boolean success,
+        String message
+    ) {
+        try {
+            Class<?> responseKind = Class.forName(
+                responseType.getName() + "$ResponseType",
+                true,
+                responseType.getClassLoader()
+            );
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            Object kind = Enum.valueOf(
+                (Class<? extends Enum>) responseKind.asSubclass(Enum.class),
+                success ? "SUCCESS" : "FAILURE"
+            );
+            return responseType.getConstructor(
+                double.class,
+                double.class,
+                responseKind,
+                String.class
+            ).newInstance(amount, balance, kind, message);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException(
+                "Vault fixture response construction failed"
+            );
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void register(Class<?> economyType) {
+        Object economy = Proxy.newProxyInstance(
+            economyType.getClassLoader(),
+            new Class<?>[]{economyType},
+            this
         );
-    }
-
-    private EconomyResponse failure(double amount, String message) {
-        return new EconomyResponse(
-            amount,
-            balance,
-            EconomyResponse.ResponseType.FAILURE,
-            message
+        getServer().getServicesManager().register(
+            (Class) economyType,
+            economy,
+            this,
+            ServicePriority.Normal
         );
     }
 

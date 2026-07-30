@@ -58,6 +58,23 @@ probe_jar="${probe_jars[0]}"
 main_jar="${main_jars[0]}"
 frontier_jar="${frontier_jars[0]}"
 fixture_jar="${fixture_jars[0]}"
+
+assert_unique_entries() {
+  local plugin_jar="$1"
+  local duplicates
+  duplicates="$(unzip -Z1 "$plugin_jar" | LC_ALL=C sort | uniq -d)"
+  if [[ -n "$duplicates" ]]; then
+    printf 'Duplicate JAR entries in %s:\n%s\n' "$plugin_jar" "$duplicates" >&2
+    return 1
+  fi
+}
+
+assert_unique_entries "$core_jar"
+assert_unique_entries "$main_jar"
+assert_unique_entries "$frontier_jar"
+assert_unique_entries "$probe_jar"
+assert_unique_entries "$fixture_jar"
+
 core_sha256="$(sha256sum "$core_jar" | awk '{print $1}')"
 probe_sha256="$(sha256sum "$probe_jar" | awk '{print $1}')"
 main_sha256="$(sha256sum "$main_jar" | awk '{print $1}')"

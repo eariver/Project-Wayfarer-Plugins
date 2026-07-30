@@ -38,6 +38,10 @@ public final class PreclientProbePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        getServer().getScheduler().runTask(this, () -> startWhenReady(0));
+    }
+
+    private void startWhenReady(int attempt) {
         RegisteredServiceProvider<WayfarerServices> registration =
             getServer().getServicesManager().getRegistration(WayfarerServices.class);
         if (registration == null) {
@@ -48,6 +52,19 @@ public final class PreclientProbePlugin extends JavaPlugin {
         WayfarerServices services = registration.getProvider();
         try {
             String scenario = read(SCENARIO_FILE, "baseline");
+            if (!"provider-outage".equals(scenario)
+                && !providerServicesReady(services)) {
+                if (attempt >= 200) {
+                    fail("PROVIDER_STARTUP_TIMEOUT");
+                    return;
+                }
+                getServer().getScheduler().runTaskLater(
+                    this,
+                    () -> startWhenReady(attempt + 1),
+                    1L
+                );
+                return;
+            }
             verifySynchronousBoundaries(services, scenario);
             getLogger().info("WAYFARER_PRECLIENT_PROBE: SERVICE_LOOKUP PASS");
             runScenario(services, scenario).whenComplete((ignored, failure) ->
@@ -63,6 +80,14 @@ public final class PreclientProbePlugin extends JavaPlugin {
             );
         } catch (RuntimeException failure) {
             fail(rootCause(failure).getClass().getSimpleName());
+        }
+    }
+
+    private static boolean providerServicesReady(WayfarerServices services) {
+        try {
+            return services.transactions() != null && services.waymark() != null;
+        } catch (RuntimeException failure) {
+            return false;
         }
     }
 

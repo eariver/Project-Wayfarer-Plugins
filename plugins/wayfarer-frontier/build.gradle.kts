@@ -76,6 +76,9 @@ tasks.shadowJar {
     archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
+    append("META-INF/LICENSE")
+    append("META-INF/LICENSE.txt")
+    append("META-INF/NOTICE")
 }
 
 tasks.jar {
