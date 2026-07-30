@@ -5,25 +5,141 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.eariver.wayfarer.testkit.MariaDbContainerFixture;
+import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseRepository;
+import io.github.eariver.wayfarer.frontier.domain.FrontierShopCatalog;
+import io.github.eariver.wayfarer.frontier.domain.PendingDelivery;
+import io.github.eariver.wayfarer.frontier.persistence.JdbcFrontierPurchaseRepository;
+import io.github.eariver.wayfarer.frontier.persistence.JdbcLaunchpadRepository;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+import java.time.Instant;
+import java.time.Duration;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 
 final class FrontierMigrationIntegrationTest {
     @Test
-    void migratesEmptySchemaAndRecoveryFoundation() throws Exception {
+    void purchaseDeliveryAndLaunchClaimRepositoriesUseDurableCas() throws Exception {
         try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            coreFlyway(fixture).migrate();
+            flyway(fixture).migrate();
+            var dataSource = new org.mariadb.jdbc.MariaDbDataSource(
+                fixture.jdbcUrl()
+            );
+            dataSource.setUser(fixture.username());
+            dataSource.setPassword(fixture.password());
+            JdbcFrontierPurchaseRepository purchases =
+                new JdbcFrontierPurchaseRepository(dataSource);
+            Instant now = Instant.now();
+            UUID player = UUID.randomUUID();
+            FrontierPurchaseRepository.Purchase prepared = purchases.prepare(
+                "purchase:integration:1",
+                player,
+                new FrontierShopCatalog().findV002("launchpad").orElseThrow(),
+                now
+            );
+            FrontierPurchaseRepository.Purchase claimed = purchases.claimPayment(
+                prepared.purchaseId(),
+                prepared.lockVersion(),
+                now
+            ).orElseThrow();
+            UUID transaction = UUID.randomUUID();
+            assertTrue(purchases.markPaymentCommitted(
+                claimed.purchaseId(),
+                transaction,
+                claimed.lockVersion(),
+                now
+            ));
+            FrontierPurchaseRepository.Purchase paid = purchases.find(
+                claimed.purchaseId()
+            ).orElseThrow();
+            UUID deliveryId = UUID.randomUUID();
+            PendingDelivery delivery = new PendingDelivery(
+                deliveryId,
+                player,
+                "worlds-beyond",
+                PendingDelivery.ItemType.LAUNCHPAD,
+                1,
+                "delivery:integration:1",
+                PendingDelivery.State.PENDING,
+                0,
+                now
+            );
+            FrontierPurchaseRepository.Purchase pending =
+                purchases.attachPendingDelivery(
+                    paid.purchaseId(),
+                    paid.lockVersion(),
+                    delivery,
+                    now
+                ).orElseThrow();
+            assertTrue(purchases.markDelivered(
+                pending.purchaseId(),
+                deliveryId,
+                pending.lockVersion(),
+                now
+            ));
+            assertEquals(
+                FrontierPurchaseRepository.State.DELIVERED,
+                purchases.find(pending.purchaseId()).orElseThrow().state()
+            );
+
+            UUID launchpadId = UUID.randomUUID();
+            try (Connection connection = connection(fixture);
+                 PreparedStatement insert = connection.prepareStatement(
+                     "INSERT INTO wf_frontier_launchpad "
+                         + "(launchpad_id,world_id,x,y,z,yaw,placer_uuid,"
+                         + "max_uses_at_creation,created_at,expires_at,definition_id,"
+                         + "state,schema_version) VALUES "
+                         + "(?,'frontier_iris',1,64,1,0,?,3,?,?,"
+                         + "'default','ACTIVE',1)"
+                 )) {
+                insert.setString(1, launchpadId.toString());
+                insert.setString(2, player.toString());
+                insert.setTimestamp(3, java.sql.Timestamp.from(now));
+                insert.setTimestamp(4, java.sql.Timestamp.from(
+                    now.plus(Duration.ofDays(30))
+                ));
+                insert.executeUpdate();
+            }
+            JdbcLaunchpadRepository launchpads =
+                new JdbcLaunchpadRepository(dataSource);
+            var firstClaim = launchpads.claimForUse(
+                launchpadId,
+                now.plusSeconds(5),
+                now
+            ).orElseThrow();
+            assertTrue(launchpads.releaseUseClaim(
+                launchpadId,
+                firstClaim.lockVersion(),
+                now
+            ));
+            assertTrue(launchpads.claimForUse(
+                launchpadId,
+                now.plusSeconds(5),
+                now
+            ).isPresent());
+        }
+    }
+    @Test
+    void migratesCoreThenFrontierInSameEmptySchemaAndRepeats() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            assertEquals(3, coreFlyway(fixture).migrate().migrationsExecuted);
             Flyway flyway = flyway(fixture);
             assertEquals(2, flyway.migrate().migrationsExecuted);
             assertEquals(0, flyway.migrate().migrationsExecuted);
+            assertEquals(0, coreFlyway(fixture).migrate().migrationsExecuted);
             try (Connection connection = connection(fixture)) {
                 Set<String> tables = tables(connection);
                 assertTrue(tables.containsAll(Set.of(
+                    "flyway_schema_history",
+                    "wf_frontier_flyway_schema_history",
+                    "wf_core_transaction",
                     "wf_frontier_theme_player_state",
                     "wf_frontier_item_instance",
                     "wf_frontier_pending_delivery",
@@ -32,17 +148,30 @@ final class FrontierMigrationIntegrationTest {
                     "wf_frontier_purchase",
                     "wf_frontier_placement_transaction"
                 )));
-                assertEquals(2, successfulMigrations(connection));
+                assertTrue(tables.stream().noneMatch(name ->
+                    name.startsWith("wf_main_")));
+                assertEquals(3, successfulMigrations(
+                    connection,
+                    "flyway_schema_history"
+                ));
+                assertEquals(3, successfulMigrations(
+                    connection,
+                    "wf_frontier_flyway_schema_history"
+                ));
             }
         }
     }
 
     @Test
-    void upgradesV001SchemaAndKeepsLocationIsolatedFromCoreAndMain() throws Exception {
+    void upgradesV001SchemaAndKeepsOwnershipIsolatedFromMain() throws Exception {
         try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            assertEquals(3, coreFlyway(fixture).migrate().migrationsExecuted);
             Flyway first = Flyway.configure()
                 .dataSource(fixture.jdbcUrl(), fixture.username(), fixture.password())
                 .locations("classpath:db/migration/frontier")
+                .table("wf_frontier_flyway_schema_history")
+                .baselineOnMigrate(true)
+                .baselineVersion("0")
                 .target("1")
                 .load();
             assertEquals(1, first.migrate().migrationsExecuted);
@@ -50,7 +179,7 @@ final class FrontierMigrationIntegrationTest {
             try (Connection connection = connection(fixture)) {
                 Set<String> tables = tables(connection);
                 assertTrue(tables.contains("wf_frontier_purchase"));
-                assertTrue(tables.stream().noneMatch(name -> name.startsWith("wf_core_")));
+                assertTrue(tables.contains("wf_core_transaction"));
                 assertTrue(tables.stream().noneMatch(name -> name.startsWith("wf_main_")));
             }
         }
@@ -65,10 +194,18 @@ final class FrontierMigrationIntegrationTest {
                     "classpath:db/migration/frontier",
                     "classpath:db/migration/frontier-failure"
                 )
+                .table("wf_frontier_flyway_schema_history")
+                .baselineOnMigrate(true)
+                .baselineVersion("0")
                 .load();
+            coreFlyway(fixture).migrate();
+            flyway(fixture).migrate();
             assertThrows(RuntimeException.class, broken::migrate);
             try (Connection connection = connection(fixture)) {
-                assertEquals(2, successfulMigrations(connection));
+                assertEquals(3, successfulMigrations(
+                    connection,
+                    "wf_frontier_flyway_schema_history"
+                ));
             }
         }
     }
@@ -77,6 +214,16 @@ final class FrontierMigrationIntegrationTest {
         return Flyway.configure()
             .dataSource(fixture.jdbcUrl(), fixture.username(), fixture.password())
             .locations("classpath:db/migration/frontier")
+            .table("wf_frontier_flyway_schema_history")
+            .baselineOnMigrate(true)
+            .baselineVersion("0")
+            .load();
+    }
+
+    private static Flyway coreFlyway(MariaDbContainerFixture fixture) {
+        return Flyway.configure()
+            .dataSource(fixture.jdbcUrl(), fixture.username(), fixture.password())
+            .locations("classpath:db/migration/core")
             .load();
     }
 
@@ -100,10 +247,16 @@ final class FrontierMigrationIntegrationTest {
         return tables;
     }
 
-    private static int successfulMigrations(Connection connection) throws Exception {
+    private static int successfulMigrations(
+        Connection connection,
+        String historyTable
+    ) throws Exception {
+        if (!historyTable.matches("[a-z_]{3,64}")) {
+            throw new IllegalArgumentException("Invalid history table");
+        }
         try (Statement statement = connection.createStatement();
              ResultSet result = statement.executeQuery(
-                 "SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1"
+                 "SELECT COUNT(*) FROM " + historyTable + " WHERE success = 1"
              )) {
             result.next();
             return result.getInt(1);

@@ -7,6 +7,10 @@ dependencies {
     compileOnly(libs.paper.api)
     compileOnly(project(":libraries:wayfarer-api"))
     implementation(project(":libraries:wayfarer-common"))
+    implementation(libs.hikari)
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.mysql)
+    implementation(libs.mariadb.client)
     testImplementation(project(":libraries:wayfarer-api"))
     testImplementation(libs.paper.api)
 }
@@ -28,6 +32,10 @@ dependencies {
     add(
         mariaDbIntegrationTestSourceSet.implementationConfigurationName,
         project(":libraries:wayfarer-testkit")
+    )
+    add(
+        mariaDbIntegrationTestSourceSet.implementationConfigurationName,
+        project(":plugins:wayfarer-core")
     )
     add(mariaDbIntegrationTestSourceSet.implementationConfigurationName, libs.flyway.core)
     add(mariaDbIntegrationTestSourceSet.implementationConfigurationName, libs.flyway.mysql)
@@ -64,6 +72,7 @@ tasks.processResources {
 
 tasks.shadowJar {
     archiveClassifier.set("")
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
 }
 

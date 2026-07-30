@@ -16,5 +16,9 @@ public interface GrowthToolRepository {
 
     boolean markDelivered(UUID toolId, long expectedLockVersion, Instant now);
 
-    boolean checkpoint(GrowthTool tool, long expectedLockVersion, Instant now);
+    Optional<GrowthTool> checkpoint(
+        GrowthTool tool,
+        long expectedLockVersion,
+        Instant now
+    );
 }

@@ -54,10 +54,11 @@ public final class GrowthCheckpointService {
         return tasks.database(() ->
             repository.checkpoint(tool, tool.lockVersion(), clock.instant())
         ).handle((saved, failure) -> {
-            if (failure != null || !saved) {
+            if (failure != null || saved.isEmpty()) {
                 sessions.restoreDirty(tool);
                 return false;
             }
+            sessions.acceptCheckpoint(tool, saved.orElseThrow());
             return true;
         });
     }

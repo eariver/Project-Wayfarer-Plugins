@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
 
 public final class GrowthSessionStore {
     private final ConcurrentHashMap<UUID, Session> sessions = new ConcurrentHashMap<>();
@@ -29,6 +31,22 @@ public final class GrowthSessionStore {
             session.dirty = true;
             return session.tool;
         }
+    }
+
+    public GrowthTool update(UUID ownerUuid, UnaryOperator<GrowthTool> update) {
+        Session session = require(ownerUuid);
+        synchronized (session) {
+            session.tool = Objects.requireNonNull(
+                update.apply(session.tool),
+                "updated tool"
+            );
+            session.dirty = true;
+            return session.tool;
+        }
+    }
+
+    public Set<UUID> ownerUuids() {
+        return Set.copyOf(sessions.keySet());
     }
 
     public Optional<GrowthTool> takeDirty(UUID ownerUuid) {
@@ -60,6 +78,20 @@ public final class GrowthSessionStore {
             if (session.tool.toolId().equals(tool.toolId())
                 && session.tool.instanceEpoch() == tool.instanceEpoch()) {
                 session.dirty = true;
+            }
+        }
+    }
+
+    public void acceptCheckpoint(GrowthTool submitted, GrowthTool persisted) {
+        Objects.requireNonNull(submitted, "submitted");
+        Objects.requireNonNull(persisted, "persisted");
+        Session session = sessions.get(submitted.ownerUuid());
+        if (session == null) {
+            return;
+        }
+        synchronized (session) {
+            if (session.tool.equals(submitted)) {
+                session.tool = persisted;
             }
         }
     }

@@ -125,8 +125,12 @@ final class GrowthToolDeliveryCoordinatorTest {
         }
 
         @Override
-        public boolean checkpoint(GrowthTool updated, long expectedLockVersion, Instant now) {
-            return true;
+        public Optional<GrowthTool> checkpoint(
+            GrowthTool updated,
+            long expectedLockVersion,
+            Instant now
+        ) {
+            return Optional.of(updated);
         }
     }
 
