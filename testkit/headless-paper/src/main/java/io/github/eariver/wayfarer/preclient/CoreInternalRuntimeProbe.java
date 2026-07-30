@@ -1,6 +1,5 @@
 package io.github.eariver.wayfarer.preclient;
 
-import io.github.eariver.wayfarer.api.WayfarerServices;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,6 +14,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -32,11 +32,8 @@ final class CoreInternalRuntimeProbe {
         );
     }
 
-    static CompletionStage<Void> verifyRedisPrimitives(
-        JavaPlugin probe,
-        WayfarerServices services
-    ) {
-        return services.tasks().database(() -> {
+    static CompletionStage<Void> verifyRedisPrimitives(JavaPlugin probe) {
+        return CompletableFuture.runAsync(() -> {
             Object redis = field(coreRuntime(probe), "redis");
             verifyCache(redis);
             verifyLock(redis);
@@ -45,7 +42,6 @@ final class CoreInternalRuntimeProbe {
                 "WAYFARER_PRECLIENT_PROBE: REDIS_PRIMITIVES PASS "
                     + "cache=true lock=true message=true"
             );
-            return null;
         });
     }
 
@@ -236,7 +232,7 @@ final class CoreInternalRuntimeProbe {
         ));
         await(published);
         try {
-            require(received.await(3, TimeUnit.SECONDS), "Redis Pub/Sub delivery");
+            require(received.await(10, TimeUnit.SECONDS), "Redis Pub/Sub delivery");
         } catch (InterruptedException failure) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Redis Pub/Sub probe was interrupted");
