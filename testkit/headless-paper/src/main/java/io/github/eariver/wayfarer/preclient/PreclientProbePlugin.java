@@ -155,8 +155,8 @@ public final class PreclientProbePlugin extends JavaPlugin {
             .thenAccept(details -> {
                 require(details.debitOperationId() != null, "debit operation ID");
                 require(
-                    details.debitProviderReference() != null,
-                    "debit provider reference"
+                    details.debitProviderReference() == null,
+                    "Vault must not synthesize a provider reference"
                 );
                 require(details.refundOperationId() == null, "refund operation absent");
                 require(
