@@ -32,6 +32,34 @@ final class LaunchpadPlacementPolicyTest {
                 false, true, false, false
             ))
         );
+        assertEquals(
+            LaunchpadPlacementPolicy.Result.INVALID_SUPPORT,
+            policy.validate(new LaunchpadPlacementPolicy.Snapshot(
+                "frontier_iris", true, true, false, false, true,
+                false, false, false, false
+            ))
+        );
+        assertEquals(
+            LaunchpadPlacementPolicy.Result.LIQUID,
+            policy.validate(new LaunchpadPlacementPolicy.Snapshot(
+                "frontier_iris", true, true, true, true, true,
+                false, false, false, false
+            ))
+        );
+        assertEquals(
+            LaunchpadPlacementPolicy.Result.OUTSIDE_BORDER,
+            policy.validate(new LaunchpadPlacementPolicy.Snapshot(
+                "frontier_iris", true, true, true, false, false,
+                false, false, false, false
+            ))
+        );
+        assertEquals(
+            LaunchpadPlacementPolicy.Result.LAUNCHPAD_OVERLAP,
+            policy.validate(new LaunchpadPlacementPolicy.Snapshot(
+                "frontier_iris", true, true, true, false, true,
+                false, false, false, true
+            ))
+        );
     }
 
     private static LaunchpadPlacementPolicy.Snapshot valid() {

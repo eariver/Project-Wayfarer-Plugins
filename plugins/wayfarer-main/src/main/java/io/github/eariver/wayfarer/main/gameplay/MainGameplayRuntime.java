@@ -1009,23 +1009,30 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
             return;
         }
         if (holder.mode() == GuiMode.MAIN) {
-            if (rawSlot == 14) {
-                openRepairPreview(player);
-            } else if (rawSlot == 16) {
-                player.sendMessage(
+            switch (GrowthToolGuiAction.main(rawSlot)) {
+                case OPEN_REPAIR_PREVIEW -> openRepairPreview(player);
+                case HELP -> player.sendMessage(
                     "Progress evolves the bound tool; repair requires "
                         + "preview and confirmation."
                 );
+                default -> {
+                    // Display-only slot.
+                }
             }
             return;
         }
-        if (rawSlot == 15) {
-            repairGuiSessions.remove(player.getUniqueId());
-            player.closeInventory();
-            return;
-        }
-        if (rawSlot != 11) {
-            return;
+        switch (GrowthToolGuiAction.repairPreview(rawSlot)) {
+            case CANCEL -> {
+                repairGuiSessions.remove(player.getUniqueId());
+                player.closeInventory();
+                return;
+            }
+            case CONFIRM_REPAIR -> {
+                // Continue through the authoritative session checks below.
+            }
+            default -> {
+                return;
+            }
         }
         RepairGuiSession session = repairGuiSessions.get(
             player.getUniqueId()

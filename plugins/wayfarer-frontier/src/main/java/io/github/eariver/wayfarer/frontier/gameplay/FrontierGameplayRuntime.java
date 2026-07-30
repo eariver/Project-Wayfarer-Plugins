@@ -1755,37 +1755,45 @@ public final class FrontierGameplayRuntime implements Listener {
         }
         switch (holder.mode()) {
             case MAIN -> {
-                if (rawSlot == 10) {
-                    openShop(player);
-                } else if (rawSlot == 13) {
-                    openLoadout(player);
-                } else if (rawSlot == 16) {
-                    player.sendMessage(
+                switch (NavigationGuiAction.main(rawSlot)) {
+                    case OPEN_SHOP -> openShop(player);
+                    case OPEN_LOADOUT -> openLoadout(player);
+                    case HELP -> player.sendMessage(
                         "Use the navigation item for Shop, Loadout and Help. "
                             + "Waystones are unavailable in V0.0.2."
                     );
-                } else if (rawSlot == 22) {
-                    player.sendMessage(
+                    case WAYSTONE_UNAVAILABLE -> player.sendMessage(
                         "Waystone is unavailable in V0.0.2."
                     );
+                    default -> {
+                        // Display-only slot.
+                    }
                 }
             }
             case SHOP -> {
-                if (rawSlot == 11) {
-                    openPurchaseConfirm(player, "launchpad");
-                } else if (rawSlot == 15) {
-                    openPurchaseConfirm(player, "firework_rocket");
+                switch (NavigationGuiAction.shop(rawSlot)) {
+                    case SELECT_LAUNCHPAD ->
+                        openPurchaseConfirm(player, "launchpad");
+                    case SELECT_ROCKET ->
+                        openPurchaseConfirm(player, "firework_rocket");
+                    default -> {
+                        // Display-only slot.
+                    }
                 }
             }
             case LOADOUT, PURCHASE_RESULT -> {
                 // Display-only surfaces.
             }
             case PURCHASE_CONFIRM -> {
-                if (rawSlot == 11) {
-                    confirmPurchase(player, holder);
-                } else if (rawSlot == 15) {
-                    navigationSessions.remove(player.getUniqueId());
-                    player.closeInventory();
+                switch (NavigationGuiAction.purchaseConfirm(rawSlot)) {
+                    case CONFIRM_PURCHASE -> confirmPurchase(player, holder);
+                    case CANCEL -> {
+                        navigationSessions.remove(player.getUniqueId());
+                        player.closeInventory();
+                    }
+                    default -> {
+                        // Display-only slot.
+                    }
                 }
             }
         }
