@@ -481,7 +481,7 @@ test "$latest_migration" = "003"
 test "$(
   query_database "$baseline_db" \
     "SELECT COUNT(*) FROM wf_main_flyway_schema_history WHERE success = 1;"
-)" -eq 3
+)" -eq 4
 test "$(
   query_database "$baseline_db" \
     "SELECT COUNT(*) FROM wf_frontier_flyway_schema_history WHERE success = 1;"
