@@ -2,7 +2,7 @@
 
 Report date: 2026-07-30
 
-Corrected implementation commit: `ddc6711e358067414d180d0780eac490faf00dff`
+Second-review implementation/evidence commit: `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`
 
 Release candidate: not fixed
 
@@ -13,8 +13,8 @@ Readiness: `PLUGIN_REVIEW_REQUIRED`
 - Normal Gradle `check`, including Core Redis/MariaDB, Main MariaDB and Frontier MariaDB
   Testcontainers suites.
 - V0.0.1 public API executable compatibility and immutable migration hashes.
-- Main/Frontier empty schema, V001→V002, repeated migration and intentionally broken migration
-  failure behavior.
+- Main/Frontier empty schema, prior-version upgrade, repeated migration and intentionally broken
+  migration failure behavior. Main V003 physical-instance authority is included.
 - Main repair and Frontier shop idempotency; ambiguous effect becomes `UNKNOWN`, is not
   automatically retried, and a repair whose physical effect may exist is not refunded.
 - LeafGrapple missing/version/public-API/capability probes.
@@ -22,20 +22,46 @@ Readiness: `PLUGIN_REVIEW_REQUIRED`
   manifest, V0.0.1 package compatibility and publication recovery.
 - Official Node 24 action-major static gate.
 - `assemble` and Main/Frontier shaded-JAR boundary verification.
-- Corrected Main and Frontier focused unit tests.
+- Main physical-claim/reissue and shared owner-bound container/drag guard tests.
+- Main functional repair GUI session, single-use confirmation, evolution-only durability restore,
+  and config remaining-ratio tests.
+- Frontier permanent-item metadata/guard, unbreakable Elytra, flight-duration-3 rocket,
+  navigation action, launchpad identity/replay/policy/active-index/public-break tests.
 - Core+Main and Core+Frontier same-schema migration histories, repeat-zero behavior, ownership
   boundaries, and JDBC saga CAS integration tests.
-- Local Docker-independent `clean check assemble` after the correction: PASS. Testcontainers
-  execution is intentionally taken from GitHub CI because no local Docker daemon was available.
+- Local `clean check assemble` after the second-review correction: PASS, including available
+  MariaDB and Redis integration tasks. A timed-out wrapper invocation left Windows file locks;
+  after stopping only those residual Gradle workers, the complete task graph finished and
+  `check assemble --no-build-cache` confirmed all 79 tasks successful/up-to-date.
 - Corrected normal CI:
   [30509795935](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509795935),
   commit `ddc6711e358067414d180d0780eac490faf00dff`: PASS.
 - Corrected isolated Headless Paper:
   [30509795942](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509795942),
   commit `ddc6711e358067414d180d0780eac490faf00dff`: PASS.
+- Second-review normal CI:
+  [30546252168](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252168),
+  commit `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`: PASS.
+- Second-review isolated Headless Paper:
+  [30546252420](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252420),
+  commit `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`: PASS.
 
 ## Failed then fixed
 
+- Second-review Headless run
+  [30544431524](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30544431524)
+  passed all isolated build and startup cases but failed the final history-count assertion because
+  the harness still expected Main `V001–V002 + baseline = 3` after additive Main V003 made the
+  correct count 4. Run
+  [30545124212](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30545124212)
+  was cancelled as superseded once the identical stale assertion was known. Commit `c6542ca`
+  updates only the Main count; Frontier remains 3.
+- Headless run
+  [30545484393](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30545484393)
+  exposed a test-only self-starvation race: the Redis Pub/Sub probe blocked one Core executor
+  thread while Main/Frontier migrations occupied the other, so the handler queued to that same
+  executor missed its three-second wait. Commit `2114e3c` runs the blocking reflection probe on
+  an independent test background thread and retains a bounded ten-second delivery wait.
 - Pre-client Headless run
   [30476250410](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30476250410)
   failed because Vault API was absent from every Paper plugin classloader; Core raised
@@ -85,6 +111,11 @@ Readiness: `PLUGIN_REVIEW_REQUIRED`
   enchant thresholds used n=0, Silk branch activation was delayed, threshold caching was absent,
   clear repair failures were not terminal, purchase fulfillment stopped at payment, and
   non-launch claims were not released.
+- Second-review defects fixed in code: physical item authority was incomplete, owner-bound items
+  could enter containers, Main GUI repair was a display stub, durability could be restored outside
+  evolution, permanent traversal items and rocket metadata were incomplete, launchpad identity and
+  placement revalidation were partial, arbitrary-player removal/protection scope were misaligned,
+  and navigation actions were not connected.
 
 ## Not run / not claimed
 

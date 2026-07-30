@@ -14,9 +14,18 @@
 | Module driver correction | commit `f50c0a3`; failed run `30509207888` retained | corrected |
 | Module migration classloader correction | commit `faf4866`; failed run `30509460990` retained | corrected |
 | Sanitized provider-reference assertion correction | commit `ddc6711`; superseded runs `30509752581`, `30509752604` retained as cancelled | corrected |
-| Corrected implementation anchor | commit `ddc6711e358067414d180d0780eac490faf00dff` | reviewable |
+| Second-review implementation/evidence anchor | commit `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072` | reviewable |
+| Main physical authority and repair flow | commits `3d3f4cb`, `4717ae6` | representative tests pass |
+| Frontier traversal/navigation correction | commit `5733db3` | representative tests pass |
+| Launchpad authority/protection correction | commit `78c327d` | representative tests pass |
+| Shared bound-item transfer guard | commit `194f3c9` | representative tests pass |
+| GUI action and placement-policy coverage | commit `03047cc` | representative tests pass |
+| Main V003 Headless count correction | commit `c6542ca`; failed run `30544431524` and superseded run `30545124212` retained | corrected |
+| Headless probe executor-starvation correction | commit `2114e3c`; failed run `30545484393` retained | corrected |
 | Corrected normal CI | [run 30509795935](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509795935) at `ddc6711e` | pass |
 | Corrected isolated Headless Paper | [run 30509795942](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509795942) at `ddc6711e` | pass |
+| Second-review normal CI | [run 30546252168](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252168) at `2114e3cd` | pass |
+| Second-review isolated Headless Paper | [run 30546252420](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252420) at `2114e3cd`; artifact `preclient-headless-evidence`, digest `sha256:ee736e69e5fad4225fc63512b4c7a756405e5863e55c5d526199117456bb26e8` | pass |
 | Requirement snapshot | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/Project_Wayfarer_Plugin_V0.0.2_Main_Frontier_Requirements_REGENERATED.md` | SHA-256 fixed |
 | Traceability | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/traceability.md` | terminal classifications |
 | Test report | `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md` | automated scope pass |

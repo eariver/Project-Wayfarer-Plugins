@@ -81,9 +81,11 @@ The Project Repository was read-only during this task.
 |---|---|
 | Main V001 | `845738E92E7629F53F088C73CCDF6165E4A87FAC4C50EFB1690A365E8E7B1668` |
 | Main V002 | `695F2169556925C8CE3CFD256352F5CC4B70C3AFD5D393AEC80095BF44B05B87` |
+| Main V003 | `90935B57C0F4485675B064E393448ADE95538E66FB7800D97AF086526C061021` |
 | Frontier V001 | `E63A9A3D2C6DAAC52E0E7A43374755A8D11908AD4DA1494F711A8D1A1EB182D1` |
 | Frontier V002 | `D3656098FD22C1E93BE8722C2F35B0F811E34796EE70BA196D7A1F1CEB31ACF7` |
 
-The V001 files were inherited unchanged from `origin/main`. V002 files are additive drafts in
-this branch. Isolated MariaDB tests cover empty schema, V001 upgrade, repeat validation, failure,
-and Core/Main/Frontier location boundaries. Concrete runtime ownership remains gated by ADR 0009.
+The V001 files were inherited unchanged from `origin/main`. V002 and Main V003 are additive
+drafts in this branch. Isolated MariaDB tests cover empty schema, prior-version upgrade, repeat
+validation, failure, and Core/Main/Frontier location boundaries. ADR 0009 fixes module-local
+runtime ownership; Project deployment remains unauthorized.

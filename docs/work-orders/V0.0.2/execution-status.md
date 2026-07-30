@@ -30,15 +30,15 @@ Status vocabulary follows the long-running execution instruction.
 | MAIN-001 | Main role/config/Core/lifecycle gate | Req. 8.1–8.4 | AUTH-002 | DONE | Typed config, Core gate, async module lifecycle | Client |
 | MAIN-002 | Growth Tool pure domain and threshold engine | Req. 8.5, 8.10–8.13 | MAIN-001 | DONE | Domain, identity, session, delivery and focused tests | None |
 | MAIN-003 | Growth Tool migration/repository/pending delivery | Req. 8.6–8.8 | ADR-009 | DONE | Module pool, separate history, JDBC repository and combined migration tests | Client |
-| MAIN-004 | PDC/owner/interaction guards | Req. 8.9 | MAIN-002 | IN_PROGRESS | Logical/physical identity and full soulbound guard correction | Second-review gameplay coverage |
-| MAIN-005 | Break/progress/evolution runtime | Req. 8.10–8.13 | MAIN-002, MAIN-004 | IN_PROGRESS | Evolution-only repair and durability-ratio reconcile correction | Second-review gameplay coverage |
-| MAIN-006 | Broken state/GUI/repair transaction | Req. 8.14–8.17 | MAIN-002, MAIN-003 | IN_PROGRESS | Functional repair preview/confirm session flow | MAIN-D04/D05; second-review coverage |
+| MAIN-004 | PDC/owner/interaction guards | Req. 8.9 | MAIN-002 | DONE | Physical-instance PDC authority, reissue rotation, shared validation and representative soulbound transfer tests at `03047cca` | Client interaction |
+| MAIN-005 | Break/progress/evolution runtime | Req. 8.10–8.13 | MAIN-002, MAIN-004 | DONE | Evolution-only durability restore, remaining-ratio config reconcile and recalculation wiring at `03047cca` | Client mining feel |
+| MAIN-006 | Broken state/GUI/repair transaction | Req. 8.14–8.17 | MAIN-002, MAIN-003 | DONE | Holder-bound preview/confirm/cancel, quote revalidation, action mapping and single-use acceptance at `03047cca` | MAIN-D04/D05; client presentation |
 | MAIN-007 | Session/checkpoint/admin/reconcile | Req. 8.18–8.20 | MAIN-003 | DONE | Session/checkpoint, authority mutation, delivery retry, inspect/reconcile and audit wiring | Client; command copy review |
 | FRONT-001 | Frontier role/config/Core/exact-world gate | Req. 11.1–11.3 | AUTH-002 | DONE | Config, service and exact-world fail-closed gates | FRONT-D01 stable approval |
-| FRONT-002 | Traversal/loadout/pending-delivery pure domain | Req. 11.4–11.8 | FRONT-001 | IN_PROGRESS | Permanent-item metadata, soulbound guards and navigation action correction | FRONT-D05; second-review coverage |
+| FRONT-002 | Traversal/loadout/pending-delivery pure domain | Req. 11.4–11.8 | FRONT-001 | DONE | Complete permanent-item metadata, owner-bound transfer/death guards, power-3 rockets and tested navigation actions at `03047cca` | FRONT-D05; client presentation |
 | FRONT-003 | Frontier migration/repository | Req. 11.4, 13.2 | ADR-009 | DONE | Module pool, separate history, JDBC repositories and combined migration tests | Client |
 | FRONT-004 | LeafGrapple version/capability boundary | Req. 12 | FRONT-001 | EXTERNAL_BLOCKED | Public 1.0.2 probe, tests and artifact assessment | Safe tier plus client motion |
-| FRONT-005 | Launchpad domain/runtime/protection/reconcile | Req. 13 | FRONT-003 | IN_PROGRESS | Physical item authority, placement policy, public break and active-coordinate protection correction | FRONT-D04; second-review coverage |
+| FRONT-005 | Launchpad domain/runtime/protection/reconcile | Req. 13 | FRONT-003 | DONE | Per-item delivery identity, replay guard, tested placement rejection/revalidation, public break and active-coordinate native/WorldGuard/WorldEdit protection at `03047cca` | FRONT-D04; client placement |
 | FRONT-006 | Frontier shop transaction/delivery | Req. 14 | FRONT-002, FRONT-003 | DONE | Durable payment, pending/delivered fulfillment and replay tests | Client |
 | MAIN-D01 | Block weights and ore multipliers | Req. 15; Exec. 18 | MAIN-002 | DONE | Requirement baseline in fixed-point config/domain | None |
 | MAIN-D02 | Threshold coefficients | Req. 15; Exec. 18 | MAIN-002 | DONE | Monotonic baseline and focused tests | None |
@@ -70,7 +70,7 @@ Status vocabulary follows the long-running execution instruction.
 | MIG-001 | Empty/upgrade/repeat/failure/boundary migration tests | Req. 9 | MAIN-003, FRONT-003 | DONE | Core+Main/Core+Frontier same-schema histories and repository CAS tests | None |
 | TEST-001 | Focused domain/unit/API tests and `check` | Req. 17–18 | Product work | DONE | Gradle `check`; test report | None for implemented scope |
 | TEST-002 | Isolated MariaDB tests | Req. 19 | Persistence work | DONE | Main/Frontier empty/upgrade/repeat/failure Testcontainers | None |
-| TEST-003 | Headless Main/Frontier Paper wiring | Req. 20 | Runtime work | IN_PROGRESS | Startup/migration wiring PASS (`30510222552`, `30510222544`); representative gameplay acceptance not yet PASS | Second-review gameplay coverage |
+| TEST-003 | Headless Main/Frontier Paper wiring | Req. 20 | Runtime work | DONE | Startup/migration Headless PASS `30546252420`; representative gameplay unit/integration coverage and normal CI PASS `30546252168`, both at `2114e3cd` | Visual/motion client checks remain TEST-004 |
 | TEST-004 | Prepare client acceptance steps | Req. 21 | Runtime work | CLIENT_TEST_REQUIRED | `docs/testing/plans/V0.0.2-client-acceptance.md` | Reviewed fixed candidate |
 | HANDOFF-001 | Reports/handoff/artifact matrix/readiness | Req. 16, 24–26 | Tests | PLUGIN_REVIEW_REQUIRED | V0.0.2 handoff packet and test report | Review/owner/client outcomes |
 | GIT-001 | Create/push initial foundation and Draft PR | Exec. 3.2–3.4 | AUTH-002 | DONE | Commit `ae0f80237113fb96dffd6934d016b19d4e768f18`; Draft PR #14 | None |

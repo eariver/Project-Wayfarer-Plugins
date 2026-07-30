@@ -8,9 +8,11 @@
   inspection remains required for UNKNOWN outcomes; unconditional exactly-once is not claimed.
 - The examined LeafGrapple 1.0.2 artifact's default `wood` tier enables durability and entity
   hooking. The adapter reports `UNSAFE_CONFIGURATION`; it does not synthesize or fork a hook.
-- Native explosion, piston, fluid, fire, physics, growth, and entity-change launchpad guards are
-  implemented. Public WorldGuard/WorldEdit/FAWE bulk-edit coverage remains an external review
-  gate; unsupported bulk edits may require reconcile.
+- Native explosion, piston, fluid, fire, physics, growth, and entity-change launchpad guards apply
+  only to the active-location index. Public WorldGuard RegionQuery placement checks and the public
+  WorldEdit EditSession extent hook are implemented. FRONT-D04 remains a review gate because
+  external tools that bypass Bukkit and the public WorldEdit edit-session API are not claimed
+  covered; reconcile remains the bounded recovery path.
 
 ## Accepted/deferred product limitations
 
@@ -28,6 +30,8 @@
 - Vault/RedisEconomy `SUCCESS` means the shared provider path accepted an operation, not durable
   Redis completion. There is no provider effect lookup or unconditional exactly-once guarantee.
 - `UNKNOWN` effects are not automatically debited or refunded again.
+- Project-owned Frontier gate coordinates, safe arrival, seed/border and structure generation
+  remain unavailable. The plugin does not guess them or create the world.
 
 No secret, raw provider object/reference, internal exception message, or stack trace is intended
 for player-facing output.

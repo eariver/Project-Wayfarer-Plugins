@@ -1,7 +1,7 @@
 # V0.0.2 Requirement Traceability
 
 Status: terminal Codex classification for Draft PR #14. A blocked row is not a PASS claim;
-implementation evidence is fixed at `ddc6711e358067414d180d0780eac490faf00dff`.
+implementation evidence is fixed at `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`.
 
 | Requirement ID | Source section | Implementation path | Automated / integration evidence | Headless / client need | Decision / release asset | Status | Notes |
 |---|---|---|---|---|---|---|---|
@@ -12,14 +12,14 @@ implementation evidence is fixed at `ddc6711e358067414d180d0780eac490faf00dff`.
 | PERSIST-001 | Req. 6.5–6.6, 8.6, 11.4; Exec. 7 | ADR 0009 and module persistence implementation | MariaDB/Testcontainers, combined-history and migration failure tests | Headless startup | ADR 0009 | DONE | Bounded module pools; no public JDBC/API leakage |
 | REL-002 | Req. 16; Exec. 8.3 | Scope-aware release/package scripts and workflows | Package/recovery/reproducibility tests | None | ADR 0010 and artifact manifest | DONE | Required scopes only: core, main-frontier, all; no dispatch |
 | MAIN-001 | Req. 8.1–8.4 | Main lifecycle, config, role and Core gates | Config, capability, migration and headless tests | Client commands/UX | Main config | DONE | Failed initialization disables only Main |
-| MAIN-002 | Req. 8.5–8.9 | Growth Tool model, repository, delivery and PDC/owner guard | Domain, identity and migration tests | Client item interaction | Main JAR | DONE | Normal inventory is never persisted by Wayfarer |
-| MAIN-003 | Req. 8.10–8.13 | Progress, threshold/evolution and config reconciliation | Domain, config, revision-cache and boundary tests | Client mining | Main JAR | DONE | Fixed-point config-derived runtime wiring |
-| MAIN-004 | Req. 8.14–8.18 | Broken state, GUI, repair transaction, sessions/checkpoint | Repair ambiguity/idempotency and persistence tests | Client GUI/repair | MAIN-D04/D05; B-004 | DONE | UNKNOWN is not refunded/retried; presentation needs Owner approval |
+| MAIN-002 | Req. 8.5–8.9 | Growth Tool model, repository, delivery and physical PDC/owner guard | Domain, physical-claim, soulbound-transfer and migration tests | Client item interaction | Main JAR | DONE | DB current physical instance is authoritative; normal inventory is not persisted |
+| MAIN-003 | Req. 8.10–8.13 | Progress, threshold/evolution and config reconciliation | Domain, evolution restore, remaining-ratio, revision-cache and boundary tests | Client mining | Main JAR | DONE | Evolution alone restores durability; config reconcile preserves progress and remaining ratio |
+| MAIN-004 | Req. 8.14–8.18 | Broken state, holder-bound GUI, repair transaction, sessions/checkpoint | Repair ambiguity/idempotency, single-use gate and persistence tests | Client GUI/repair | MAIN-D04/D05; B-004 | DONE | Confirm revalidates quote and physical identity; UNKNOWN is not refunded/retried |
 | MAIN-005 | Req. 8.19–8.20 | Admin, inspect, reissue, reconcile, audit | Authority epoch, permission and sanitized-boundary tests | Client admin flow | Command reference | DONE | Mutation confirmation and audit are wired |
 | FRONT-001 | Req. 11.1–11.4 | Frontier lifecycle, config, exact-world and persistence foundation | Config, exact-world, MariaDB and headless tests | Client entry/UX | Frontier config | DONE | Failed initialization disables only Frontier |
-| FRONT-002 | Req. 11.5–11.8 | Traversal identity/loadout/Pending Delivery/Navigation runtime | Domain, individual epoch reissue and delivery tests | Client item/GUI | FRONT-D01/D05 | OWNER_APPROVAL_REQUIRED | Provisional navigation UI is wired; final presentation remains Owner-owned |
+| FRONT-002 | Req. 11.5–11.8 | Traversal physical identity/loadout/Pending Delivery/Navigation runtime | Domain, permanent-item guard, metadata, rocket and navigation-action tests | Client item/GUI | FRONT-D01/D05 | OWNER_APPROVAL_REQUIRED | Functional provisional UI is wired; final presentation remains Owner-owned |
 | FRONT-003 | Req. 12 | LeafGrapple adapter boundary | Version/public-API/capability fail-closed tests | Client hook | FRONT-D02 | EXTERNAL_BLOCKED | Examined default tier is unsafe; no fallback/fork |
-| FRONT-004 | Req. 13 | Launchpad state, persistence, placement/use/protection/expiration/reconcile | Domain, claim release, max-active and MariaDB tests | Client placement/use | FRONT-D03/D04 | DONE | External bulk-edit coverage requires review |
+| FRONT-004 | Req. 13 | Launchpad item authority, placement/use/protection/expiration/reconcile | Identity/replay, placement policy, active-index, public-break and MariaDB tests | Client placement/use | FRONT-D03/D04 | DONE | Native and public WorldGuard/WorldEdit paths are covered; bypassing tools remain review-limited |
 | FRONT-005 | Req. 14 | Frontier WM shop and Pending Delivery | Transaction ambiguity/idempotency/delivery tests | Client shop | FRONT-D06 | DONE | Launchpad/rocket only; ambiguous payment not retried |
 | WAYSTONE-001 | Exec. 2.4 and final scope | No production Waystone, discovery or teleport registration | Absence/config/package tests | N/A | Known limitation | DEFERRED_BY_REQUIREMENT | Placement tool must not be sold or granted |
 | ADAPTER-001 | Req. 11, 15; Exec. 2.5 | No EM–MVI module/artifact | Module/package absence tests | N/A | FRONT-D15 | DEFERRED_BY_REQUIREMENT | Await Project Order 13 `ADAPTER_REQUIRED` |
