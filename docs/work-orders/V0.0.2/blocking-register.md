@@ -3,25 +3,24 @@
 Only tasks directly named in a blocker are stopped. Independent domain, config, tests, release
 tooling and documentation continue.
 
-## B-001 — Module persistence architecture review
+## B-001 — Module persistence architecture review (resolved)
 
-- Category: `PLUGIN_REVIEW_REQUIRED`
+- Category: `DONE`
 - Affected requirement: Req. 6.5–6.6, 8.6, 11.4; execution instruction section 7
 - Observed fact: Main and Frontier require authoritative `wf_main_*` and `wf_frontier_*`
   persistence and module-local Flyway locations. V0.0.1 intentionally publishes no JDBC or opaque
   database operations, while Core owns only its private Core pool and migrations.
 - Evidence: ADR 0005, `WayfarerDatabase`, Core persistence architecture, current module scaffolds
-- Why Codex cannot safely decide: every viable connection path changes a review-controlled
-  architecture boundary: public Core API, internal extension registration, or multiple pools.
-- Tasks directly blocked: final concrete module pool/migration/repository lifecycle; runtime
-  publication of persistence-backed gameplay
+- Resolution: the Plugin owner approved option B. Main and Frontier own bounded module-local
+  pools and separate history tables without changing the Core API.
+- Tasks directly blocked: none after resolution
 - Tasks not blocked: pure domains, config, DDL draft, repository interfaces, PDC/item logic,
   threshold/cost/state machines, command/GUI proposals, world guards, release tooling and tests
   that do not pretend to prove real MariaDB persistence
-- Safe provisional work completed: option comparison, module-only DDL and repository contracts,
-  empty/upgrade/repeat/failure migration tests, sanitized configuration, and deliberately disabled
-  plugin entry points
-- Exact approval needed: approve or revise ADR 0009 before concrete persistence integration
+- Implemented result: bounded module pools, separate Flyway histories, combined-schema
+  empty/upgrade/repeat/failure tests, sanitized configuration, and fail-closed production entry
+  points
+- Approval: recorded in ADR 0009 and implemented.
 - Options:
   - A: additive JDK-only public Core persistence API
   - B: Main and Frontier own bounded module-local Hikari/Flyway lifecycles, sharing only a private
@@ -80,9 +79,9 @@ tooling and documentation continue.
 - Security impact: verify sanitized messages and permission denial
 - Rollback: discard task-only data and candidate runtime
 
-## B-004 — Core transaction/domain fulfillment boundary
+## B-004 — Core transaction/domain fulfillment boundary (resolved)
 
-- Category: `PLUGIN_REVIEW_REQUIRED`
+- Category: `DONE`
 - Affected requirement: Req. 8.14, 9.15; execution instruction section 7
 - Observed fact: V0.0.1 `WayfarerTransactions.execute` durably handles the provider debit and its
   own transaction state, but exposes no module domain-commit callback. It reaches `COMMITTED`
@@ -91,16 +90,14 @@ tooling and documentation continue.
   Core `COMMITTED`, record payment and retain fulfillment as durable pending delivery. Ambiguous
   effects become module `UNKNOWN` and are not automatically retried. Main never refunds when a
   physical repair effect may have occurred. Neither coordinator claims cross-store atomicity.
-- Exact review needed: confirm whether Main repair may use a durable module recovery record plus a
-  separately idempotent Core Waymark refund, or whether an additive JDK-only Core
-  transaction-participant/recovery contract is required.
-- Tasks directly blocked: final Main repair integration and final release scope if a Core addition
-  is required
+- Resolution: the Plugin owner approved durable module recovery with V0.0.1 Core reuse,
+  UNKNOWN-no-retry, known-no-effect-only refund, and no cross-store atomicity claim.
+- Tasks directly blocked: none after resolution; review and client gates remain separate
 - Tasks not blocked: pure pricing, module repair state machine, GUI proposal, Frontier pending
   delivery, and all non-transaction runtime work
 - Compatibility impact: a Core API addition changes ADR 0010 from `main-frontier` to `all`
 - Security impact: no provider reference or exception message may become player-facing
-- Rollback: retain V0.0.1 Core and leave Main repair fail-closed until the reviewed path exists
+- Rollback: disable Main/Frontier independently while retaining the unchanged V0.0.1 Core
 
 ## B-005 — External gameplay integration boundaries
 
@@ -112,10 +109,11 @@ tooling and documentation continue.
 - Evidence:
   `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md` and the public capability probe
 - Tasks directly blocked: canonical client hook motion; final Launchpad external-protection claim
-- Tasks not blocked: fail-closed adapter, pure Launchpad state/use/placement, migration, package,
-  configuration and bounded client plan
-- Safe provisional work completed: exact-version public-method adapter, unsafe-tier rejection,
-  no fallback physics/fork/private-field access, placement policy and known limitation
+- Tasks not blocked: fail-closed adapter, Launchpad state/use/placement/protection/reconcile,
+  migration, package, configuration and bounded client plan
+- Safe work completed: exact-version public-method adapter, unsafe-tier rejection, no fallback
+  physics/fork/private-field access, native event protection, placement policy and known
+  limitation
 - Exact resolution needed: provide/approve a LeafGrapple tier with durability and entity hooking
   disabled; Plugin review must approve the supported public protection-hook matrix
 - Security/compatibility impact: raw plugin objects and internal exceptions remain hidden; an

@@ -2,16 +2,16 @@
 
 Authority snapshot SHA-256:
 `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
-Implementation evidence: `981e425a4af619340b64b2060c0cb9ac7219cdd2`.
+Implementation evidence: `ddc6711e358067414d180d0780eac490faf00dff`.
 
 | Workstream | Compliance state | Evidence / gate |
 |---|---|---|
 | Governance and immutable V0.0.1 | `DONE` | source ledger, API compatibility and migration hash tests |
 | Version/release/Node 24 foundations | `DONE` | policy, scope, package and workflow static tests |
-| Module persistence runtime | `PLUGIN_REVIEW_REQUIRED` | ADR 0009; isolated DDL/migration evidence is complete |
-| Main domain/recovery proposal | `PLUGIN_REVIEW_REQUIRED` | pure domain and coordinator tests; B-004 before wiring |
+| Module persistence runtime | `DONE` | ADR 0009; bounded pools, distinct histories and combined-schema tests |
+| Main domain/recovery implementation | `DONE` | production wiring, durable repair recovery, focused tests |
 | Main player UI | `OWNER_APPROVAL_REQUIRED` | MAIN-D04/D05 proposals |
-| Frontier domain/recovery proposal | `PLUGIN_REVIEW_REQUIRED` | exact-world, delivery, shop and Launchpad tests |
+| Frontier domain/recovery implementation | `DONE` | exact-world, identity, delivery, shop, Launchpad and admin wiring |
 | LeafGrapple runtime motion | `EXTERNAL_BLOCKED` / `CLIENT_TEST_REQUIRED` | examined default is unsafe; no fallback |
 | Protection coverage | `PLUGIN_REVIEW_REQUIRED` | FRONT-D04 |
 | Waystone | `DEFERRED_BY_REQUIREMENT` | no sale, creation, discovery, teleport, or production listener |

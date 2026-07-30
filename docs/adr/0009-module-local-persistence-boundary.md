@@ -1,6 +1,6 @@
 # ADR 0009: Module-local opaque persistence boundary
 
-- Status: Proposed — `PLUGIN_REVIEW_REQUIRED`
+- Status: Accepted — Plugin owner decision 2026-07-30
 - Date: 2026-07-30
 - Scope: Wayfarer_Main and Wayfarer_Frontier V0.0.2
 
@@ -25,12 +25,15 @@ database boundary or multiple pools.
    be brittle or become an undeclared cross-module API.
 4. JDBC/Hikari objects through `WayfarerDatabase`: rejected by ADR 0005 and the V0.0.2 authority.
 
-## Proposed decision
+## Decision
 
-Use option 2 after Plugin review:
+Use option 2:
 
 - Main and Frontier independently resolve sanitized secret references from their own config.
 - Each uses a small, bounded pool and its own Flyway location.
+- Defaults are maximum pool size 3, minimum idle 0, and 5000 ms connection timeout.
+- Core retains `flyway_schema_history`; Main uses `wf_main_flyway_schema_history`; Frontier
+  uses `wf_frontier_flyway_schema_history`.
 - All database work runs through `WayfarerTasks.database`; no main-thread database I/O.
 - Each module owns enable migration, work admission, bounded disable drain, and fail-closed health.
 - Repository/domain types remain private to their module.
@@ -44,11 +47,8 @@ Use option 2 after Plugin review:
   normally places Main and Frontier on different backends, but the pool count is still a material
   operational choice.
 - Pool sizing and aggregate MariaDB connection budget require reviewer confirmation.
-- Concrete migration/repository runtime integration is blocked until this ADR is reviewed.
+- Module migration failure disables only the affected module.
 - Pure domain logic, repository contracts, config validation, tests, packaging, and other
   independent work may proceed.
 
-## Review request
-
-Approve or replace option 2, including the per-module pool budget. Until that happens the status
-remains `PLUGIN_REVIEW_REQUIRED`; no public Core database capability will be inferred.
+The decision was implemented without changing the Core public API or Core V001–V003.

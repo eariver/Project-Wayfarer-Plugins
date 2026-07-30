@@ -1,16 +1,14 @@
 # V0.0.2 Mainline Handoff
 
 Draft PR #14 is review-only. The implementation packet is anchored by
-`981e425a4af619340b64b2060c0cb9ac7219cdd2`; later documentation commits do not change that
-runtime proposal.
+`ddc6711e358067414d180d0780eac490faf00dff`.
 
 ## Review order
 
-1. Decide ADR 0009 module-local pool/Flyway ownership.
-2. Decide B-004 gameplay-domain completion versus Core transaction completion.
-3. Review LeafGrapple safe capability and supported protection hooks.
-4. Resolve Owner presentation decisions.
-5. Complete production wiring, headless evidence, candidate fixation, then bounded client tests.
+1. Review corrected CI/headless evidence.
+2. Review LeafGrapple safe capability and supported protection hooks.
+3. Resolve Owner presentation decisions.
+4. Fix a candidate only after review, then run bounded client tests.
 
 ## Project-owned follow-up
 

@@ -1,12 +1,18 @@
 # V0.0.2 Command and Permission Reference
 
-These command surfaces are proposed and declared in plugin descriptors. Mutation handlers are not
-registered while ADR 0009 keeps the plugins fail-closed.
+These command surfaces are registered only after Core capability, module migration, and
+persistence initialization succeed. A failed module remains fail-closed.
 
 ## Main
 
 - `/wayfarer-main status`
-- `/wayfarer-main inspect|grant|reissue|repair|branch|revoke|reconcile|delivery`
+- `/wayfarer-main inspect tool <player-uuid>`
+- `/wayfarer-main inspect repair <repair-uuid>`
+- `/wayfarer-main grant|delivery <player-uuid>`
+- `/wayfarer-main reissue|revoke <player-uuid> confirm`
+- `/wayfarer-main reconcile <repair-uuid>`
+- `/wayfarer-main repair|branch ...` (player workflow)
+- `/wayfarer-main debug <progress-next|durability-one|repair-free>`
 - alias: `/wfmain`
 - `wayfarer.main.use`: default true
 - `wayfarer.main.admin`: default operator
@@ -14,8 +20,13 @@ registered while ADR 0009 keeps the plugins fail-closed.
 
 ## Frontier
 
-- `/wayfarer-frontier open|status`
-- `/wayfarer-frontier loadout|delivery|launchpad|transaction|audit`
+- `/wayfarer-frontier open|status|shop <offer>`
+- `/wayfarer-frontier loadout inspect <player-uuid>`
+- `/wayfarer-frontier loadout reissue <player-uuid> <elytra|grappling_hook|navigation> confirm`
+- `/wayfarer-frontier delivery <inspect|retry> <player-uuid>`
+- `/wayfarer-frontier launchpad inspect <launchpad-uuid>`
+- `/wayfarer-frontier launchpad <remove|reconcile> <launchpad-uuid> confirm`
+- `/wayfarer-frontier transaction|audit inspect <purchase-uuid>`
 - alias: `/wffrontier`
 - `wayfarer.frontier.use`: default true
 - `wayfarer.frontier.admin`: default operator
