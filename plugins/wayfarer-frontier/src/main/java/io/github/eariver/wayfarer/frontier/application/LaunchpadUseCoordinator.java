@@ -16,6 +16,7 @@ public final class LaunchpadUseCoordinator {
     private final Clock clock;
     private final Duration claimDuration;
     private final Duration expiryAfterUse;
+    private final boolean extendExpiration;
 
     public LaunchpadUseCoordinator(
         LaunchpadRepository repository,
@@ -25,12 +26,33 @@ public final class LaunchpadUseCoordinator {
         Duration claimDuration,
         Duration expiryAfterUse
     ) {
+        this(
+            repository,
+            tasks,
+            gateway,
+            clock,
+            claimDuration,
+            expiryAfterUse,
+            true
+        );
+    }
+
+    public LaunchpadUseCoordinator(
+        LaunchpadRepository repository,
+        WayfarerTasks tasks,
+        LaunchGateway gateway,
+        Clock clock,
+        Duration claimDuration,
+        Duration expiryAfterUse,
+        boolean extendExpiration
+    ) {
         this.repository = Objects.requireNonNull(repository, "repository");
         this.tasks = Objects.requireNonNull(tasks, "tasks");
         this.gateway = Objects.requireNonNull(gateway, "gateway");
         this.clock = Objects.requireNonNull(clock, "clock");
         this.claimDuration = positive(claimDuration);
         this.expiryAfterUse = positive(expiryAfterUse);
+        this.extendExpiration = extendExpiration;
     }
 
     public CompletionStage<Result> use(Request request) {
@@ -58,7 +80,8 @@ public final class LaunchpadUseCoordinator {
                     request.cooldownUntil(),
                     request.sneaking(),
                     safe,
-                    expiryAfterUse
+                    expiryAfterUse,
+                    extendExpiration
                 );
                 capture.updated = use.launchpad();
                 capture.outcome = use.outcome();
@@ -92,7 +115,13 @@ public final class LaunchpadUseCoordinator {
             clock.instant()
         )).thenCompose(saved -> {
             if (saved) {
-                return CompletableFuture.completedFuture(Result.of(Launchpad.Outcome.LAUNCHED));
+                return tasks.mainThread(() ->
+                    gateway.afterPersisted(capture.updated)
+                ).thenApply(ignored ->
+                    Result.of(Launchpad.Outcome.LAUNCHED)
+                ).exceptionally(ignored ->
+                    Result.reconcile(Launchpad.Outcome.LAUNCHED)
+                );
             }
             return markUnknown(capture.original.launchpadId());
         }).exceptionallyCompose(ignored -> markUnknown(capture.original.launchpadId()));
@@ -128,6 +157,8 @@ public final class LaunchpadUseCoordinator {
         boolean safeToLaunch(UUID playerUuid, Launchpad launchpad);
 
         void launch(UUID playerUuid, Launchpad launchpad);
+
+        default void afterPersisted(Launchpad launchpad) {}
     }
 
     public record Request(

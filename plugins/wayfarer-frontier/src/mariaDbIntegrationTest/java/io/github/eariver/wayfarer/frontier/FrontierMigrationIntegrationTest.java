@@ -1,6 +1,7 @@
 package io.github.eariver.wayfarer.frontier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -8,8 +9,12 @@ import io.github.eariver.wayfarer.testkit.MariaDbContainerFixture;
 import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseRepository;
 import io.github.eariver.wayfarer.frontier.domain.FrontierShopCatalog;
 import io.github.eariver.wayfarer.frontier.domain.PendingDelivery;
+import io.github.eariver.wayfarer.frontier.domain.TraversalIdentity;
+import io.github.eariver.wayfarer.frontier.domain.Launchpad;
 import io.github.eariver.wayfarer.frontier.persistence.JdbcFrontierPurchaseRepository;
 import io.github.eariver.wayfarer.frontier.persistence.JdbcLaunchpadRepository;
+import io.github.eariver.wayfarer.frontier.persistence.JdbcTraversalLoadoutRepository;
+import io.github.eariver.wayfarer.frontier.config.FrontierModuleConfig;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -38,6 +43,40 @@ final class FrontierMigrationIntegrationTest {
                 new JdbcFrontierPurchaseRepository(dataSource);
             Instant now = Instant.now();
             UUID player = UUID.randomUUID();
+            JdbcTraversalLoadoutRepository loadouts =
+                new JdbcTraversalLoadoutRepository(
+                    dataSource,
+                    new FrontierModuleConfig.LoadoutDefinition(2, true, false)
+                );
+            var loadout = loadouts.findOrCreate(player, now);
+            var initial = loadouts.ensureInitialDeliveries(loadout, now);
+            assertEquals(4, initial.size());
+            assertEquals(3, initial.stream()
+                .filter(value -> value.identity() != null)
+                .count());
+            assertTrue(loadouts.reissuePermanent(
+                player,
+                TraversalIdentity.ItemType.ELYTRA,
+                now.plusSeconds(1)
+            ));
+            var reissued = loadouts.pending(player);
+            assertEquals(4, reissued.size());
+            assertEquals(1, reissued.stream()
+                .filter(value -> value.identity() != null)
+                .filter(value ->
+                    value.identity().itemType()
+                        == TraversalIdentity.ItemType.ELYTRA
+                        && value.identity().instanceEpoch() == 2
+                ).count());
+            assertTrue(reissued.stream()
+                .filter(value -> value.identity() != null)
+                .filter(value ->
+                    value.identity().itemType()
+                        != TraversalIdentity.ItemType.ELYTRA
+                ).allMatch(value ->
+                    value.identity().instanceEpoch() == 1
+                ));
+
             FrontierPurchaseRepository.Purchase prepared = purchases.prepare(
                 "purchase:integration:1",
                 player,
@@ -63,7 +102,7 @@ final class FrontierMigrationIntegrationTest {
             PendingDelivery delivery = new PendingDelivery(
                 deliveryId,
                 player,
-                "worlds-beyond",
+                "worlds_beyond",
                 PendingDelivery.ItemType.LAUNCHPAD,
                 1,
                 "delivery:integration:1",
@@ -109,6 +148,26 @@ final class FrontierMigrationIntegrationTest {
             }
             JdbcLaunchpadRepository launchpads =
                 new JdbcLaunchpadRepository(dataSource);
+            assertEquals(1, launchpads.countActive(player, now));
+            assertFalse(launchpads.create(
+                new Launchpad(
+                    UUID.randomUUID(),
+                    new Launchpad.Location("frontier_iris", 2, 64, 2),
+                    0,
+                    player,
+                    0,
+                    3,
+                    now,
+                    null,
+                    now.plus(Duration.ofDays(30)),
+                    "default",
+                    Launchpad.State.ACTIVE,
+                    1,
+                    0
+                ),
+                1,
+                now
+            ));
             var firstClaim = launchpads.claimForUse(
                 launchpadId,
                 now.plusSeconds(5),

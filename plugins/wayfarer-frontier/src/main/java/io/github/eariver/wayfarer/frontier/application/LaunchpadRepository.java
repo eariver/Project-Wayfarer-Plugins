@@ -11,7 +11,23 @@ import java.util.UUID;
  * {@code WayfarerTasks.database}.
  */
 public interface LaunchpadRepository {
+    Optional<Launchpad> find(UUID launchpadId);
+
+    int countActive(UUID placerUuid, Instant now);
+
     boolean create(Launchpad launchpad, Instant now);
+
+    default boolean create(
+        Launchpad launchpad,
+        int maximumActive,
+        Instant now
+    ) {
+        if (maximumActive > 0
+            && countActive(launchpad.placerUuid(), now) >= maximumActive) {
+            return false;
+        }
+        return create(launchpad, now);
+    }
 
     Optional<Launchpad> findAt(Launchpad.Location location);
 

@@ -41,7 +41,7 @@ themes:
       waystone: DEFERRED_BY_REQUIREMENT
 
 persistence:
-  # ADR 0009 remains PLUGIN_REVIEW_REQUIRED. These are secret references, never credentials.
+  # ADR 0009 approved: these are secret references, never credentials.
   jdbc-url-ref: WAYFARER_DB_URL
   username-ref: WAYFARER_DB_USERNAME
   password-ref: WAYFARER_DB_PASSWORD

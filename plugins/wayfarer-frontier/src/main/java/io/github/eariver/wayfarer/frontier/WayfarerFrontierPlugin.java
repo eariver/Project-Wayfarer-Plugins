@@ -11,12 +11,9 @@ import io.github.eariver.wayfarer.frontier.gameplay.FrontierGameplayRuntime;
 import io.github.eariver.wayfarer.integration.leafgrapple.ReflectiveLeafGrappleBridge;
 import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseCoordinator;
 import io.github.eariver.wayfarer.frontier.domain.FrontierWorldGate;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import io.github.eariver.wayfarer.frontier.domain.TraversalIdentity;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.time.Clock;
 import java.util.UUID;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class WayfarerFrontierPlugin extends JavaPlugin {
@@ -95,11 +93,15 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
     public void onDisable() {
         accepting.set(false);
         runtimeState = "DISABLED";
+        FrontierGameplayRuntime activeGameplay = gameplay;
+        gameplay = null;
+        if (activeGameplay != null) {
+            activeGameplay.stop();
+        }
         FrontierModulePersistence opened = persistence;
         persistence = null;
         purchaseRepository = null;
         launchpadRepository = null;
-        gameplay = null;
         purchases = null;
         purchaseRequests.clear();
         if (opened != null) {
@@ -175,19 +177,21 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             );
             return true;
         }
+        if (adminCommand(arguments[0])) {
+            return handleAdminCommand(sender, arguments, services);
+        }
         if (!(sender instanceof Player player)
             || !player.hasPermission("wayfarer.frontier.use")) {
             sender.sendMessage("Wayfarer Frontier operation is unavailable.");
             return true;
         }
         if ("open".equalsIgnoreCase(arguments[0])) {
-            var inventory = Bukkit.createInventory(
-                null,
-                27,
-                Component.text("Wayfarer Navigation")
-            );
-            inventory.setItem(13, new ItemStack(Material.COMPASS));
-            player.openInventory(inventory);
+            FrontierGameplayRuntime active = gameplay;
+            if (active == null) {
+                player.sendMessage("Wayfarer Frontier navigation is unavailable.");
+                return true;
+            }
+            active.openNavigation(player);
             return true;
         }
         if (!"shop".equalsIgnoreCase(arguments[0]) || arguments.length != 2) {
@@ -223,6 +227,274 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             }
         }));
         return true;
+    }
+
+    private boolean handleAdminCommand(
+        CommandSender sender,
+        String[] arguments,
+        WayfarerServices services
+    ) {
+        if (!sender.hasPermission("wayfarer.frontier.admin")) {
+            sender.sendMessage("Wayfarer Frontier administration is unavailable.");
+            return true;
+        }
+        FrontierGameplayRuntime active = gameplay;
+        if (active == null) {
+            sender.sendMessage("Wayfarer Frontier administration is unavailable.");
+            return true;
+        }
+        try {
+            return switch (arguments[0].toLowerCase(java.util.Locale.ROOT)) {
+                case "loadout" ->
+                    handleLoadout(sender, arguments, active, services);
+                case "delivery" ->
+                    handleDelivery(sender, arguments, active, services);
+                case "launchpad" ->
+                    handleLaunchpad(sender, arguments, active, services);
+                case "transaction", "audit" ->
+                    handleTransaction(sender, arguments, services);
+                default -> false;
+            };
+        } catch (RuntimeException failure) {
+            sender.sendMessage("Wayfarer Frontier administration is unavailable.");
+            return true;
+        }
+    }
+
+    private boolean handleLoadout(
+        CommandSender sender,
+        String[] arguments,
+        FrontierGameplayRuntime active,
+        WayfarerServices services
+    ) {
+        UUID playerUuid = arguments.length == 3
+            ? parseUuid(arguments[2])
+            : null;
+        if (playerUuid != null
+            && "inspect".equalsIgnoreCase(arguments[1])) {
+            active.inspectLoadout(playerUuid).whenComplete((found, failure) -> {
+                String message = failure == null
+                    ? found.map(loadout ->
+                        "Frontier loadout: permanent="
+                            + loadout.permanentItems().size()
+                            + " initial-launchpads="
+                            + loadout.initialLaunchpadsGranted()
+                    ).orElse("Frontier loadout: NOT_FOUND")
+                    : "Frontier loadout inspection is unavailable.";
+                sendOnMain(services, sender, message);
+            });
+            return true;
+        }
+        UUID reissuePlayer = arguments.length == 5
+            && "reissue".equalsIgnoreCase(arguments[1])
+            && "confirm".equalsIgnoreCase(arguments[4])
+            ? parseUuid(arguments[2])
+            : null;
+        TraversalIdentity.ItemType itemType = arguments.length == 5
+            ? parseItemType(arguments[3])
+            : null;
+        if (reissuePlayer != null && itemType != null) {
+            UUID actorUuid = sender instanceof Player player
+                ? player.getUniqueId()
+                : null;
+            active.reissueLoadout(reissuePlayer, itemType, actorUuid)
+                .whenComplete((result, failure) -> sendOnMain(
+                    services,
+                    sender,
+                    failure == null
+                        ? "Frontier loadout reissue: " + result
+                        : "Frontier loadout reissue is unavailable."
+                ));
+            return true;
+        }
+        sender.sendMessage(
+            "Usage: /wayfarer-frontier loadout "
+                + "<inspect <player-uuid>|reissue <player-uuid> "
+                + "<elytra|grappling_hook|navigation> confirm>"
+        );
+        return true;
+    }
+
+    private boolean handleDelivery(
+        CommandSender sender,
+        String[] arguments,
+        FrontierGameplayRuntime active,
+        WayfarerServices services
+    ) {
+        UUID playerUuid = arguments.length == 3
+            ? parseUuid(arguments[2])
+            : null;
+        if (playerUuid == null) {
+            sender.sendMessage(
+                "Usage: /wayfarer-frontier delivery <inspect|retry> <player-uuid>"
+            );
+            return true;
+        }
+        if ("inspect".equalsIgnoreCase(arguments[1])) {
+            active.inspectDeliveries(playerUuid).whenComplete((pending, failure) ->
+                sendOnMain(
+                    services,
+                    sender,
+                    failure == null
+                        ? "Frontier deliveries: pending=" + pending.size()
+                        : "Frontier delivery inspection is unavailable."
+                )
+            );
+            return true;
+        }
+        if ("retry".equalsIgnoreCase(arguments[1])) {
+            active.retryDelivery(playerUuid).whenComplete((result, failure) ->
+                sendOnMain(
+                    services,
+                    sender,
+                    failure == null
+                        ? "Frontier delivery retry: " + result
+                        : "Frontier delivery retry is unavailable."
+                )
+            );
+            return true;
+        }
+        sender.sendMessage(
+            "Usage: /wayfarer-frontier delivery <inspect|retry> <player-uuid>"
+        );
+        return true;
+    }
+
+    private boolean handleLaunchpad(
+        CommandSender sender,
+        String[] arguments,
+        FrontierGameplayRuntime active,
+        WayfarerServices services
+    ) {
+        UUID launchpadId = arguments.length >= 3
+            ? parseUuid(arguments[2])
+            : null;
+        if (launchpadId == null) {
+            sender.sendMessage(
+                "Usage: /wayfarer-frontier launchpad "
+                    + "<inspect|remove|reconcile> <launchpad-uuid> [confirm]"
+            );
+            return true;
+        }
+        if ("inspect".equalsIgnoreCase(arguments[1])
+            && arguments.length == 3) {
+            active.inspectLaunchpad(launchpadId)
+                .whenComplete((inspection, failure) ->
+                    sendOnMain(
+                        services,
+                        sender,
+                        failure == null
+                            ? "Launchpad: state="
+                                + Optional.ofNullable(inspection.state())
+                                    .map(Enum::name)
+                                    .orElse("NONE")
+                                + " classification="
+                                + inspection.classification()
+                            : "Launchpad inspection is unavailable."
+                    )
+                );
+            return true;
+        }
+        boolean confirmed = arguments.length == 4
+            && "confirm".equalsIgnoreCase(arguments[3]);
+        UUID actorUuid = sender instanceof Player player
+            ? player.getUniqueId()
+            : null;
+        if ("remove".equalsIgnoreCase(arguments[1]) && confirmed) {
+            active.removeLaunchpad(launchpadId, actorUuid)
+                .whenComplete((result, failure) -> sendOnMain(
+                    services,
+                    sender,
+                    failure == null
+                        ? "Launchpad removal: " + result
+                        : "Launchpad removal is unavailable."
+                ));
+            return true;
+        }
+        if ("reconcile".equalsIgnoreCase(arguments[1])) {
+            active.reconcileLaunchpad(
+                launchpadId,
+                actorUuid,
+                confirmed
+            ).whenComplete((result, failure) -> sendOnMain(
+                services,
+                sender,
+                failure == null
+                    ? "Launchpad reconcile: " + result
+                    : "Launchpad reconcile is unavailable."
+            ));
+            return true;
+        }
+        sender.sendMessage(
+            "Mutation requires: <launchpad-uuid> confirm"
+        );
+        return true;
+    }
+
+    private boolean handleTransaction(
+        CommandSender sender,
+        String[] arguments,
+        WayfarerServices services
+    ) {
+        UUID purchaseId = arguments.length == 3
+            && "inspect".equalsIgnoreCase(arguments[1])
+            ? parseUuid(arguments[2])
+            : null;
+        JdbcFrontierPurchaseRepository repository = purchaseRepository;
+        if (purchaseId == null || repository == null) {
+            sender.sendMessage(
+                "Usage: /wayfarer-frontier transaction inspect <purchase-uuid>"
+            );
+            return true;
+        }
+        services.tasks().database(() -> repository.find(purchaseId))
+            .whenComplete((found, failure) -> {
+                String message = failure == null
+                    ? found.map(purchase ->
+                        "Frontier purchase: state=" + purchase.state()
+                            + " transaction="
+                            + Optional.ofNullable(purchase.transactionId())
+                                .map(UUID::toString)
+                                .orElse("NONE")
+                    ).orElse("Frontier purchase: NOT_FOUND")
+                    : "Frontier purchase inspection is unavailable.";
+                sendOnMain(services, sender, message);
+            });
+        return true;
+    }
+
+    private static boolean adminCommand(String command) {
+        return switch (command.toLowerCase(java.util.Locale.ROOT)) {
+            case "loadout", "delivery", "launchpad", "transaction", "audit" ->
+                true;
+            default -> false;
+        };
+    }
+
+    private static UUID parseUuid(String value) {
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException failure) {
+            return null;
+        }
+    }
+
+    private static TraversalIdentity.ItemType parseItemType(String value) {
+        try {
+            return TraversalIdentity.ItemType.valueOf(
+                value.toUpperCase(java.util.Locale.ROOT)
+            );
+        } catch (IllegalArgumentException failure) {
+            return null;
+        }
+    }
+
+    private static void sendOnMain(
+        WayfarerServices services,
+        CommandSender sender,
+        String message
+    ) {
+        services.tasks().mainThread(() -> sender.sendMessage(message));
     }
 
     private void failClosed(String message) {

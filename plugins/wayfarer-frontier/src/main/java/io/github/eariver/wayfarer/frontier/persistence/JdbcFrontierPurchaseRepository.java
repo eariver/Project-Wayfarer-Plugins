@@ -35,7 +35,7 @@ public final class JdbcFrontierPurchaseRepository
                  "INSERT INTO wf_frontier_purchase "
                      + "(purchase_id,idempotency_key,player_uuid,theme_id,offer_id,"
                      + "item_type,quantity,price_waymark,state,created_at,updated_at) "
-                     + "VALUES (?,?,?,'worlds-beyond',?,?,?,?, 'PREPARED',?,?) "
+                     + "VALUES (?,?,?,'worlds_beyond',?,?,?,?, 'PREPARED',?,?) "
                      + "ON DUPLICATE KEY UPDATE idempotency_key=idempotency_key"
              )) {
             insert.setString(1, purchaseId.toString());

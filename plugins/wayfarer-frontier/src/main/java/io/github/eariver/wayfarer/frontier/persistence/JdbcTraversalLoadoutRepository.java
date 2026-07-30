@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class JdbcTraversalLoadoutRepository
@@ -30,6 +31,17 @@ public final class JdbcTraversalLoadoutRepository
     ) {
         this.dataSource = java.util.Objects.requireNonNull(dataSource, "dataSource");
         this.definition = java.util.Objects.requireNonNull(definition, "definition");
+    }
+
+    @Override
+    public Optional<TraversalLoadout> find(UUID playerUuid) {
+        try (Connection connection = dataSource.getConnection()) {
+            return exists(connection, playerUuid)
+                ? Optional.of(load(connection, playerUuid))
+                : Optional.empty();
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
     }
 
     @Override
@@ -63,13 +75,25 @@ public final class JdbcTraversalLoadoutRepository
                 for (TraversalIdentity.ItemType type
                     : TraversalIdentity.ItemType.values()) {
                     ensurePermanent(connection, loadout.playerUuid(), type, now);
+                    long epoch = currentEpoch(
+                        connection,
+                        loadout.playerUuid(),
+                        type
+                    );
+                    TraversalIdentity identity = identity(
+                        loadout.playerUuid(),
+                        type,
+                        epoch
+                    );
                     ensureDelivery(
                         connection,
                         loadout.playerUuid(),
                         deliveryType(type),
                         1,
-                        "frontier-permanent:" + loadout.playerUuid() + ":" + type,
-                        now
+                        "frontier-permanent:" + loadout.playerUuid() + ":"
+                            + type + ":" + epoch,
+                        now,
+                        identity
                     );
                 }
                 if (!loadout.initialLaunchpadsGranted()) {
@@ -107,6 +131,77 @@ public final class JdbcTraversalLoadoutRepository
     }
 
     @Override
+    public List<PendingDelivery> pending(UUID playerUuid) {
+        try (Connection connection = dataSource.getConnection()) {
+            return pending(connection, playerUuid);
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public boolean reissuePermanent(
+        UUID playerUuid,
+        TraversalIdentity.ItemType itemType,
+        Instant now
+    ) {
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                if (!lockPlayer(connection, playerUuid)) {
+                    connection.rollback();
+                    return false;
+                }
+                try (PreparedStatement cancel = connection.prepareStatement(
+                    "UPDATE wf_frontier_pending_delivery SET state='CANCELLED',"
+                        + "updated_at=? WHERE player_uuid=? AND theme_id=? "
+                        + "AND item_type=? AND state='PENDING'"
+                )) {
+                    cancel.setTimestamp(1, Timestamp.from(now));
+                    cancel.setString(2, playerUuid.toString());
+                    cancel.setString(3, THEME);
+                    cancel.setString(4, deliveryType(itemType).name());
+                    cancel.executeUpdate();
+                }
+                try (PreparedStatement update = connection.prepareStatement(
+                    "UPDATE wf_frontier_item_instance SET "
+                        + "instance_epoch=instance_epoch+1,state='ACTIVE',"
+                        + "invalidated_at=NULL,lock_version=lock_version+1,"
+                        + "updated_at=? WHERE player_uuid=? AND theme_id=? "
+                        + "AND item_type=?"
+                )) {
+                    update.setTimestamp(1, Timestamp.from(now));
+                    update.setString(2, playerUuid.toString());
+                    update.setString(3, THEME);
+                    update.setString(4, itemType.name());
+                    if (update.executeUpdate() != 1) {
+                        connection.rollback();
+                        return false;
+                    }
+                }
+                long epoch = currentEpoch(connection, playerUuid, itemType);
+                ensureDelivery(
+                    connection,
+                    playerUuid,
+                    deliveryType(itemType),
+                    1,
+                    "frontier-permanent:" + playerUuid + ":" + itemType
+                        + ":" + epoch,
+                    now,
+                    identity(playerUuid, itemType, epoch)
+                );
+                connection.commit();
+                return true;
+            } catch (SQLException failure) {
+                connection.rollback();
+                throw failure;
+            }
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
     public boolean markDelivered(UUID deliveryId, Instant now) {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement update = connection.prepareStatement(
@@ -119,6 +214,38 @@ public final class JdbcTraversalLoadoutRepository
             return update.executeUpdate() == 1;
         } catch (SQLException failure) {
             throw unavailable();
+        }
+    }
+
+    private static boolean exists(
+        Connection connection,
+        UUID playerUuid
+    ) throws SQLException {
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT 1 FROM wf_frontier_theme_player_state "
+                + "WHERE player_uuid=? AND theme_id=?"
+        )) {
+            query.setString(1, playerUuid.toString());
+            query.setString(2, THEME);
+            try (ResultSet result = query.executeQuery()) {
+                return result.next();
+            }
+        }
+    }
+
+    private static boolean lockPlayer(
+        Connection connection,
+        UUID playerUuid
+    ) throws SQLException {
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT lock_version FROM wf_frontier_theme_player_state "
+                + "WHERE player_uuid=? AND theme_id=? FOR UPDATE"
+        )) {
+            query.setString(1, playerUuid.toString());
+            query.setString(2, THEME);
+            try (ResultSet result = query.executeQuery()) {
+                return result.next();
+            }
         }
     }
 
@@ -209,14 +336,34 @@ public final class JdbcTraversalLoadoutRepository
         String idempotencyKey,
         Instant now
     ) throws SQLException {
+        ensureDelivery(
+            connection,
+            playerUuid,
+            type,
+            quantity,
+            idempotencyKey,
+            now,
+            null
+        );
+    }
+
+    private static void ensureDelivery(
+        Connection connection,
+        UUID playerUuid,
+        PendingDelivery.ItemType type,
+        int quantity,
+        String idempotencyKey,
+        Instant now,
+        TraversalIdentity identity
+    ) throws SQLException {
         UUID deliveryId = UUID.nameUUIDFromBytes(
             idempotencyKey.getBytes(StandardCharsets.UTF_8)
         );
         try (PreparedStatement insert = connection.prepareStatement(
             "INSERT INTO wf_frontier_pending_delivery "
                 + "(delivery_id,player_uuid,theme_id,item_type,quantity,"
-                + "idempotency_key,state,attempts,created_at,updated_at) "
-                + "VALUES (?,?,?,?,?,?,'PENDING',0,?,?) "
+                + "idempotency_key,payload_json,state,attempts,created_at,updated_at) "
+                + "VALUES (?,?,?,?,?,?,?,'PENDING',0,?,?) "
                 + "ON DUPLICATE KEY UPDATE idempotency_key=idempotency_key"
         )) {
             insert.setString(1, deliveryId.toString());
@@ -225,8 +372,9 @@ public final class JdbcTraversalLoadoutRepository
             insert.setString(4, type.name());
             insert.setInt(5, quantity);
             insert.setString(6, idempotencyKey);
-            insert.setTimestamp(7, Timestamp.from(now));
+            insert.setString(7, payload(identity));
             insert.setTimestamp(8, Timestamp.from(now));
+            insert.setTimestamp(9, Timestamp.from(now));
             insert.executeUpdate();
         }
     }
@@ -256,7 +404,14 @@ public final class JdbcTraversalLoadoutRepository
                         result.getString("idempotency_key"),
                         PendingDelivery.State.PENDING,
                         result.getInt("attempts"),
-                        result.getTimestamp("created_at").toInstant()
+                        result.getTimestamp("created_at").toInstant(),
+                        parseIdentity(
+                            result.getString("payload_json"),
+                            playerUuid,
+                            PendingDelivery.ItemType.valueOf(
+                                result.getString("item_type")
+                            )
+                        )
                     ));
                 }
                 return List.copyOf(values);
@@ -283,6 +438,113 @@ public final class JdbcTraversalLoadoutRepository
             (playerUuid + ":" + type + ":" + epoch)
                 .getBytes(StandardCharsets.UTF_8)
         );
+    }
+
+    private static long currentEpoch(
+        Connection connection,
+        UUID playerUuid,
+        TraversalIdentity.ItemType type
+    ) throws SQLException {
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT instance_epoch FROM wf_frontier_item_instance "
+                + "WHERE player_uuid=? AND theme_id=? AND item_type=?"
+        )) {
+            query.setString(1, playerUuid.toString());
+            query.setString(2, THEME);
+            query.setString(3, type.name());
+            try (ResultSet result = query.executeQuery()) {
+                if (!result.next()) {
+                    throw unavailable();
+                }
+                return result.getLong(1);
+            }
+        }
+    }
+
+    private static TraversalIdentity identity(
+        UUID playerUuid,
+        TraversalIdentity.ItemType type,
+        long epoch
+    ) {
+        return new TraversalIdentity(
+            stableItemId(playerUuid, type, epoch),
+            type,
+            playerUuid,
+            THEME,
+            epoch,
+            1
+        );
+    }
+
+    private static String payload(TraversalIdentity identity) {
+        if (identity == null) {
+            return null;
+        }
+        return "{\"item_instance_id\":\"" + identity.itemInstanceId()
+            + "\",\"instance_epoch\":" + identity.instanceEpoch()
+            + ",\"schema_version\":" + identity.schemaVersion() + "}";
+    }
+
+    private static TraversalIdentity parseIdentity(
+        String payload,
+        UUID playerUuid,
+        PendingDelivery.ItemType deliveryType
+    ) {
+        if (payload == null || payload.isBlank()) {
+            return null;
+        }
+        try {
+            String id = jsonString(payload, "item_instance_id");
+            long epoch = jsonLong(payload, "instance_epoch");
+            int schema = Math.toIntExact(jsonLong(payload, "schema_version"));
+            TraversalIdentity.ItemType type = switch (deliveryType) {
+                case ELYTRA -> TraversalIdentity.ItemType.ELYTRA;
+                case GRAPPLING_HOOK ->
+                    TraversalIdentity.ItemType.GRAPPLING_HOOK;
+                case NAVIGATION -> TraversalIdentity.ItemType.NAVIGATION;
+                default -> throw new IllegalArgumentException(
+                    "Consumable delivery cannot contain permanent identity"
+                );
+            };
+            return new TraversalIdentity(
+                UUID.fromString(id),
+                type,
+                playerUuid,
+                THEME,
+                epoch,
+                schema
+            );
+        } catch (RuntimeException failure) {
+            throw unavailable();
+        }
+    }
+
+    private static String jsonString(String json, String key) {
+        String prefix = "\"" + key + "\":\"";
+        int start = json.indexOf(prefix);
+        if (start < 0) {
+            throw new IllegalArgumentException("Missing delivery identity");
+        }
+        start += prefix.length();
+        int end = json.indexOf('"', start);
+        if (end < 0) {
+            throw new IllegalArgumentException("Invalid delivery identity");
+        }
+        return json.substring(start, end);
+    }
+
+    private static long jsonLong(String json, String key) {
+        String prefix = "\"" + key + "\":";
+        int start = json.indexOf(prefix);
+        if (start < 0) {
+            throw new IllegalArgumentException("Missing delivery identity");
+        }
+        start += prefix.length();
+        int end = start;
+        while (end < json.length() && Character.isDigit(json.charAt(end))) {
+            end++;
+        }
+        return Long.parseLong(json.substring(start, end));
     }
 
     private static IllegalStateException unavailable() {

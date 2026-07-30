@@ -23,37 +23,73 @@ public final class JdbcLaunchpadRepository implements LaunchpadRepository {
     }
 
     @Override
-    public boolean create(Launchpad launchpad, Instant now) {
+    public Optional<Launchpad> find(UUID launchpadId) {
+        try (Connection connection = dataSource.getConnection()) {
+            return find(connection, launchpadId);
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public int countActive(UUID placerUuid, Instant now) {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement insert = connection.prepareStatement(
-                 "INSERT INTO wf_frontier_launchpad "
-                     + "(launchpad_id,world_id,x,y,z,yaw,placer_uuid,"
-                     + "successful_use_count,max_uses_at_creation,created_at,"
-                     + "last_used_at,expires_at,definition_id,state,schema_version,"
-                     + "lock_version,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+             PreparedStatement query = connection.prepareStatement(
+                 "SELECT COUNT(*) FROM wf_frontier_launchpad "
+                     + "WHERE placer_uuid=? AND state='ACTIVE' AND expires_at>?"
              )) {
-            insert.setString(1, launchpad.launchpadId().toString());
-            insert.setString(2, launchpad.location().worldId());
-            insert.setInt(3, launchpad.location().x());
-            insert.setInt(4, launchpad.location().y());
-            insert.setInt(5, launchpad.location().z());
-            insert.setFloat(6, launchpad.yaw());
-            insert.setString(7, launchpad.placerUuid().toString());
-            insert.setInt(8, launchpad.successfulUseCount());
-            insert.setInt(9, launchpad.maxUsesAtCreation());
-            insert.setTimestamp(10, Timestamp.from(launchpad.createdAt()));
-            insert.setTimestamp(11, nullable(launchpad.lastUsedAt()));
-            insert.setTimestamp(12, Timestamp.from(launchpad.expiresAt()));
-            insert.setString(13, launchpad.definitionId());
-            insert.setString(14, launchpad.state().name());
-            insert.setInt(15, launchpad.schemaVersion());
-            insert.setLong(16, launchpad.lockVersion());
-            insert.setTimestamp(17, Timestamp.from(now));
-            return insert.executeUpdate() == 1;
+            query.setString(1, placerUuid.toString());
+            query.setTimestamp(2, Timestamp.from(now));
+            try (ResultSet result = query.executeQuery()) {
+                result.next();
+                return result.getInt(1);
+            }
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public boolean create(Launchpad launchpad, Instant now) {
+        try (Connection connection = dataSource.getConnection()) {
+            return insert(connection, launchpad, now);
         } catch (SQLException failure) {
             if ("23000".equals(failure.getSQLState())) {
                 return false;
             }
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public boolean create(
+        Launchpad launchpad,
+        int maximumActive,
+        Instant now
+    ) {
+        if (maximumActive <= 0) {
+            return create(launchpad, now);
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                if (!lockPlayer(connection, launchpad.placerUuid())
+                    || countActive(connection, launchpad.placerUuid(), now)
+                    >= maximumActive) {
+                    connection.rollback();
+                    return false;
+                }
+                boolean created = insert(connection, launchpad, now);
+                connection.commit();
+                return created;
+            } catch (SQLException failure) {
+                connection.rollback();
+                if ("23000".equals(failure.getSQLState())) {
+                    return false;
+                }
+                throw failure;
+            }
+        } catch (SQLException failure) {
             throw unavailable();
         }
     }
@@ -179,6 +215,7 @@ public final class JdbcLaunchpadRepository implements LaunchpadRepository {
         Instant now
     ) {
         if (removalState != Launchpad.State.PLAYER_BROKEN
+            && removalState != Launchpad.State.EXPIRED
             && removalState != Launchpad.State.ADMIN_REMOVED
             && removalState != Launchpad.State.RECONCILED_REMOVED) {
             throw new IllegalArgumentException("Invalid launchpad removal state");
@@ -236,6 +273,72 @@ public final class JdbcLaunchpadRepository implements LaunchpadRepository {
             try (ResultSet result = query.executeQuery()) {
                 return result.next() ? Optional.of(map(result)) : Optional.empty();
             }
+        }
+    }
+
+    private static boolean lockPlayer(
+        Connection connection,
+        UUID placerUuid
+    ) throws SQLException {
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT lock_version FROM wf_frontier_theme_player_state "
+                + "WHERE player_uuid=? AND theme_id='worlds_beyond' FOR UPDATE"
+        )) {
+            query.setString(1, placerUuid.toString());
+            try (ResultSet result = query.executeQuery()) {
+                return result.next();
+            }
+        }
+    }
+
+    private static int countActive(
+        Connection connection,
+        UUID placerUuid,
+        Instant now
+    ) throws SQLException {
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT COUNT(*) FROM wf_frontier_launchpad "
+                + "WHERE placer_uuid=? AND state='ACTIVE' AND expires_at>?"
+        )) {
+            query.setString(1, placerUuid.toString());
+            query.setTimestamp(2, Timestamp.from(now));
+            try (ResultSet result = query.executeQuery()) {
+                result.next();
+                return result.getInt(1);
+            }
+        }
+    }
+
+    private static boolean insert(
+        Connection connection,
+        Launchpad launchpad,
+        Instant now
+    ) throws SQLException {
+        try (PreparedStatement insert = connection.prepareStatement(
+            "INSERT INTO wf_frontier_launchpad "
+                + "(launchpad_id,world_id,x,y,z,yaw,placer_uuid,"
+                + "successful_use_count,max_uses_at_creation,created_at,"
+                + "last_used_at,expires_at,definition_id,state,schema_version,"
+                + "lock_version,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+        )) {
+            insert.setString(1, launchpad.launchpadId().toString());
+            insert.setString(2, launchpad.location().worldId());
+            insert.setInt(3, launchpad.location().x());
+            insert.setInt(4, launchpad.location().y());
+            insert.setInt(5, launchpad.location().z());
+            insert.setFloat(6, launchpad.yaw());
+            insert.setString(7, launchpad.placerUuid().toString());
+            insert.setInt(8, launchpad.successfulUseCount());
+            insert.setInt(9, launchpad.maxUsesAtCreation());
+            insert.setTimestamp(10, Timestamp.from(launchpad.createdAt()));
+            insert.setTimestamp(11, nullable(launchpad.lastUsedAt()));
+            insert.setTimestamp(12, Timestamp.from(launchpad.expiresAt()));
+            insert.setString(13, launchpad.definitionId());
+            insert.setString(14, launchpad.state().name());
+            insert.setInt(15, launchpad.schemaVersion());
+            insert.setLong(16, launchpad.lockVersion());
+            insert.setTimestamp(17, Timestamp.from(now));
+            return insert.executeUpdate() == 1;
         }
     }
 

@@ -72,6 +72,43 @@ final class LaunchpadUseCoordinatorTest {
         assertEquals(1, repository.unknownCalls);
     }
 
+    @Test
+    void successfulEffectRunsPostPersistenceCleanupExactlyOnce() {
+        FakeRepository repository = new FakeRepository();
+        int[] persisted = {0};
+        LaunchpadUseCoordinator coordinator = new LaunchpadUseCoordinator(
+            repository,
+            new DirectTasks(),
+            new LaunchpadUseCoordinator.LaunchGateway() {
+                @Override
+                public boolean safeToLaunch(
+                    UUID playerUuid,
+                    Launchpad launchpad
+                ) {
+                    return true;
+                }
+
+                @Override
+                public void launch(UUID playerUuid, Launchpad launchpad) {}
+
+                @Override
+                public void afterPersisted(Launchpad launchpad) {
+                    persisted[0]++;
+                }
+            },
+            Clock.fixed(NOW, ZoneOffset.UTC),
+            Duration.ofSeconds(5),
+            Duration.ofDays(30)
+        );
+
+        LaunchpadUseCoordinator.Result result = coordinator.use(request(false))
+            .toCompletableFuture().join();
+
+        assertEquals(Launchpad.Outcome.LAUNCHED, result.outcome());
+        assertFalse(result.reconciliationRequired());
+        assertEquals(1, persisted[0]);
+    }
+
     private static LaunchpadUseCoordinator coordinator(
         FakeRepository repository,
         boolean safe,
@@ -135,6 +172,19 @@ final class LaunchpadUseCoordinatorTest {
         private int releaseCalls;
         private int saveCalls;
         private int unknownCalls;
+
+        @Override
+        public Optional<Launchpad> find(UUID launchpadId) {
+            Launchpad current = launchpad();
+            return current.launchpadId().equals(launchpadId)
+                ? Optional.of(current)
+                : Optional.empty();
+        }
+
+        @Override
+        public int countActive(UUID placerUuid, Instant now) {
+            return 1;
+        }
 
         @Override
         public boolean create(Launchpad launchpad, Instant now) {

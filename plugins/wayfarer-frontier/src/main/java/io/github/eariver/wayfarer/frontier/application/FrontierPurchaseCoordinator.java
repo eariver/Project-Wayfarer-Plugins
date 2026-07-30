@@ -184,7 +184,7 @@ public final class FrontierPurchaseCoordinator {
             PendingDelivery delivery = new PendingDelivery(
                 deliveryId,
                 purchase.playerUuid(),
-                "worlds-beyond",
+                io.github.eariver.wayfarer.frontier.domain.TraversalIdentity.WORLDS_BEYOND,
                 purchase.offer().itemType(),
                 purchase.offer().quantity(),
                 "frontier-shop-delivery:" + purchase.purchaseId(),

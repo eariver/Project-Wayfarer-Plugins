@@ -31,6 +31,24 @@ final class LaunchpadTest {
     }
 
     @Test
+    void preservesExpiryWhenExtensionIsDisabled() {
+        Instant originalExpiry = START.plus(Duration.ofDays(30));
+        Launchpad initial = launchpad(0, 3, originalExpiry);
+
+        Launchpad.UseResult launched = initial.use(
+            START.plusSeconds(1),
+            null,
+            false,
+            true,
+            Duration.ofDays(30),
+            false
+        );
+
+        assertEquals(Launchpad.Outcome.LAUNCHED, launched.outcome());
+        assertEquals(originalExpiry, launched.launchpad().expiresAt());
+    }
+
+    @Test
     void exhaustsAtConfiguredSuccessfulUseLimit() {
         Launchpad beforeLast = launchpad(2, 3, START.plus(Duration.ofDays(30)));
         Launchpad.UseResult result =

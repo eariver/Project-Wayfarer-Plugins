@@ -42,6 +42,24 @@ public record Launchpad(
         boolean safeLaunch,
         Duration expiryAfterUse
     ) {
+        return use(
+            now,
+            playerCooldownUntil,
+            sneaking,
+            safeLaunch,
+            expiryAfterUse,
+            true
+        );
+    }
+
+    public UseResult use(
+        Instant now,
+        Instant playerCooldownUntil,
+        boolean sneaking,
+        boolean safeLaunch,
+        Duration expiryAfterUse,
+        boolean extendExpiration
+    ) {
         Objects.requireNonNull(now, "now");
         Objects.requireNonNull(expiryAfterUse, "expiryAfterUse");
         if (state != State.ACTIVE || !now.isBefore(expiresAt)) {
@@ -68,7 +86,7 @@ public record Launchpad(
             maxUsesAtCreation,
             createdAt,
             now,
-            now.plus(expiryAfterUse),
+            extendExpiration ? now.plus(expiryAfterUse) : expiresAt,
             definitionId,
             nextState,
             schemaVersion,
