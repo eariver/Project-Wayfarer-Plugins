@@ -23,16 +23,18 @@ public final class JdbcGrowthToolRepository implements GrowthToolRepository {
     @Override
     public GrowthTool findOrCreate(UUID ownerUuid, Instant now) {
         UUID toolId = UUID.randomUUID();
+        UUID itemInstanceId = UUID.randomUUID();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement insert = connection.prepareStatement(
                  "INSERT INTO wf_main_growth_tool "
-                     + "(tool_id,owner_uuid,tool_type,updated_at) "
-                     + "VALUES (?,?,'PICKAXE',?) "
+                     + "(tool_id,current_item_instance_id,owner_uuid,tool_type,"
+                     + "updated_at) VALUES (?,?,?,'PICKAXE',?) "
                      + "ON DUPLICATE KEY UPDATE owner_uuid=owner_uuid"
              )) {
             insert.setString(1, toolId.toString());
-            insert.setString(2, ownerUuid.toString());
-            insert.setTimestamp(3, Timestamp.from(now));
+            insert.setString(2, itemInstanceId.toString());
+            insert.setString(3, ownerUuid.toString());
+            insert.setTimestamp(4, Timestamp.from(now));
             insert.executeUpdate();
             return findByOwner(connection, ownerUuid).orElseThrow();
         } catch (SQLException failure) {
@@ -113,23 +115,25 @@ public final class JdbcGrowthToolRepository implements GrowthToolRepository {
     ) {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement update = connection.prepareStatement(
-                 "UPDATE wf_main_growth_tool SET instance_epoch=?,"
-                     + "cumulative_progress_units=?,active_branch=?,tool_status=?,"
+                "UPDATE wf_main_growth_tool SET instance_epoch=?,"
+                    + "current_item_instance_id=?,"
+                    + "cumulative_progress_units=?,active_branch=?,tool_status=?,"
                      + "delivery_status=?,stored_damage=?,schema_version=?,"
                      + "display_revision=?,lock_version=lock_version+1,updated_at=? "
                      + "WHERE tool_id=? AND lock_version=?"
              )) {
             update.setLong(1, tool.instanceEpoch());
-            update.setLong(2, tool.cumulativeProgressUnits());
-            update.setString(3, tool.branch().name());
-            update.setString(4, tool.status().name());
-            update.setString(5, tool.deliveryStatus().name());
-            update.setInt(6, tool.storedDamage());
-            update.setInt(7, tool.schemaVersion());
-            update.setLong(8, tool.displayRevision());
-            update.setTimestamp(9, Timestamp.from(now));
-            update.setString(10, tool.toolId().toString());
-            update.setLong(11, expectedLockVersion);
+            update.setString(2, tool.itemInstanceId().toString());
+            update.setLong(3, tool.cumulativeProgressUnits());
+            update.setString(4, tool.branch().name());
+            update.setString(5, tool.status().name());
+            update.setString(6, tool.deliveryStatus().name());
+            update.setInt(7, tool.storedDamage());
+            update.setInt(8, tool.schemaVersion());
+            update.setLong(9, tool.displayRevision());
+            update.setTimestamp(10, Timestamp.from(now));
+            update.setString(11, tool.toolId().toString());
+            update.setLong(12, expectedLockVersion);
             if (update.executeUpdate() != 1) {
                 return Optional.empty();
             }
@@ -153,6 +157,9 @@ public final class JdbcGrowthToolRepository implements GrowthToolRepository {
                 }
                 return Optional.of(new GrowthTool(
                     UUID.fromString(result.getString("tool_id")),
+                    UUID.fromString(
+                        result.getString("current_item_instance_id")
+                    ),
                     UUID.fromString(result.getString("owner_uuid")),
                     result.getLong("instance_epoch"),
                     result.getLong("cumulative_progress_units"),

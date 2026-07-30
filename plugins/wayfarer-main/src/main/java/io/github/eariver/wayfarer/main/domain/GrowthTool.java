@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record GrowthTool(
     UUID toolId,
+    UUID itemInstanceId,
     UUID ownerUuid,
     long instanceEpoch,
     long cumulativeProgressUnits,
@@ -22,6 +23,7 @@ public record GrowthTool(
 
     public GrowthTool {
         Objects.requireNonNull(toolId, "toolId");
+        Objects.requireNonNull(itemInstanceId, "itemInstanceId");
         Objects.requireNonNull(ownerUuid, "ownerUuid");
         Objects.requireNonNull(branch, "branch");
         Objects.requireNonNull(status, "status");
@@ -33,12 +35,44 @@ public record GrowthTool(
         }
     }
 
+    public GrowthTool(
+        UUID toolId,
+        UUID ownerUuid,
+        long instanceEpoch,
+        long cumulativeProgressUnits,
+        Branch branch,
+        Status status,
+        DeliveryStatus deliveryStatus,
+        int storedDamage,
+        int schemaVersion,
+        long displayRevision,
+        long lockVersion,
+        Instant updatedAt
+    ) {
+        this(
+            toolId,
+            physicalId(toolId, instanceEpoch),
+            ownerUuid,
+            instanceEpoch,
+            cumulativeProgressUnits,
+            branch,
+            status,
+            deliveryStatus,
+            storedDamage,
+            schemaVersion,
+            displayRevision,
+            lockVersion,
+            updatedAt
+        );
+    }
+
     public GrowthTool addProgress(long units, Instant now) {
         if (status != Status.ACTIVE || units <= 0) {
             throw new IllegalStateException("Progress requires an active tool and positive units");
         }
         return new GrowthTool(
             toolId,
+            itemInstanceId,
             ownerUuid,
             instanceEpoch,
             Math.addExact(cumulativeProgressUnits, units),
@@ -59,6 +93,7 @@ public record GrowthTool(
         }
         return new GrowthTool(
             toolId,
+            itemInstanceId,
             ownerUuid,
             instanceEpoch,
             cumulativeProgressUnits,
@@ -79,6 +114,7 @@ public record GrowthTool(
         }
         return new GrowthTool(
             toolId,
+            itemInstanceId,
             ownerUuid,
             instanceEpoch,
             cumulativeProgressUnits,
@@ -100,6 +136,7 @@ public record GrowthTool(
         }
         return new GrowthTool(
             toolId,
+            itemInstanceId,
             ownerUuid,
             instanceEpoch,
             cumulativeProgressUnits,
@@ -121,6 +158,7 @@ public record GrowthTool(
         }
         return new GrowthTool(
             toolId,
+            itemInstanceId,
             ownerUuid,
             instanceEpoch,
             cumulativeProgressUnits,
@@ -139,6 +177,7 @@ public record GrowthTool(
         Objects.requireNonNull(now, "now");
         return new GrowthTool(
             toolId,
+            UUID.randomUUID(),
             ownerUuid,
             Math.addExact(instanceEpoch, 1),
             cumulativeProgressUnits,
@@ -150,6 +189,13 @@ public record GrowthTool(
             Math.addExact(displayRevision, 1),
             lockVersion,
             now
+        );
+    }
+
+    private static UUID physicalId(UUID toolId, long instanceEpoch) {
+        return UUID.nameUUIDFromBytes(
+            (toolId + ":" + instanceEpoch)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8)
         );
     }
 

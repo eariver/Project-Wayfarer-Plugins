@@ -32,10 +32,12 @@ final class MainMigrationIntegrationTest {
             try (Connection connection = connection(fixture);
                  PreparedStatement insert = connection.prepareStatement(
                      "INSERT INTO wf_main_growth_tool "
-                         + "(tool_id,owner_uuid,tool_type) VALUES (?,?,'PICKAXE')"
+                         + "(tool_id,current_item_instance_id,owner_uuid,"
+                         + "tool_type) VALUES (?,?,?,'PICKAXE')"
                  )) {
                 insert.setString(1, tool.toString());
-                insert.setString(2, player.toString());
+                insert.setString(2, UUID.randomUUID().toString());
+                insert.setString(3, player.toString());
                 insert.executeUpdate();
             }
             var dataSource = new org.mariadb.jdbc.MariaDbDataSource(
@@ -88,6 +90,9 @@ final class MainMigrationIntegrationTest {
                 Instant.now()
             ).orElseThrow();
             assertEquals(revoked.instanceEpoch() + 1, reissued.instanceEpoch());
+            assertTrue(!revoked.itemInstanceId().equals(
+                reissued.itemInstanceId()
+            ));
             assertTrue(growth.replaceAuthority(
                 reissued.reissued(Instant.now()),
                 revoked.lockVersion(),
@@ -100,7 +105,7 @@ final class MainMigrationIntegrationTest {
         try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
             assertEquals(3, coreFlyway(fixture).migrate().migrationsExecuted);
             Flyway flyway = flyway(fixture);
-            assertEquals(2, flyway.migrate().migrationsExecuted);
+            assertEquals(3, flyway.migrate().migrationsExecuted);
             assertEquals(0, flyway.migrate().migrationsExecuted);
             assertEquals(0, coreFlyway(fixture).migrate().migrationsExecuted);
             try (Connection connection = connection(fixture)) {
@@ -118,7 +123,7 @@ final class MainMigrationIntegrationTest {
                     connection,
                     "flyway_schema_history"
                 ));
-                assertEquals(3, successfulMigrations(
+                assertEquals(4, successfulMigrations(
                     connection,
                     "wf_main_flyway_schema_history"
                 ));
@@ -139,9 +144,12 @@ final class MainMigrationIntegrationTest {
                 .target("1")
                 .load();
             assertEquals(1, first.migrate().migrationsExecuted);
-            assertEquals(1, flyway(fixture).migrate().migrationsExecuted);
+            assertEquals(2, flyway(fixture).migrate().migrationsExecuted);
             try (Connection connection = connection(fixture)) {
                 assertTrue(tables(connection).contains("wf_main_repair_operation"));
+                assertTrue(columns(connection, "wf_main_growth_tool").contains(
+                    "current_item_instance_id"
+                ));
             }
         }
     }
@@ -163,7 +171,7 @@ final class MainMigrationIntegrationTest {
             flyway(fixture).migrate();
             assertThrows(RuntimeException.class, broken::migrate);
             try (Connection connection = connection(fixture)) {
-                assertEquals(3, successfulMigrations(
+                assertEquals(4, successfulMigrations(
                     connection,
                     "wf_main_flyway_schema_history"
                 ));
@@ -222,5 +230,24 @@ final class MainMigrationIntegrationTest {
             result.next();
             return result.getInt(1);
         }
+    }
+
+    private static Set<String> columns(
+        Connection connection,
+        String tableName
+    ) throws Exception {
+        Set<String> columns = new HashSet<>();
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT column_name FROM information_schema.columns "
+                + "WHERE table_schema=DATABASE() AND table_name=?"
+        )) {
+            query.setString(1, tableName);
+            try (ResultSet result = query.executeQuery()) {
+                while (result.next()) {
+                    columns.add(result.getString(1));
+                }
+            }
+        }
+        return columns;
     }
 }

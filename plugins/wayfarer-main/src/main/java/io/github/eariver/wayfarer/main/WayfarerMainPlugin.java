@@ -170,6 +170,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             gameplay::applyFullRepair,
             Clock.systemUTC()
         );
+        gameplay.bindRepairCoordinator(repairCoordinator);
         PluginCommand command = getCommand("wayfarer-main");
         if (command != null) {
             command.setExecutor((sender, ignored, label, arguments) ->
