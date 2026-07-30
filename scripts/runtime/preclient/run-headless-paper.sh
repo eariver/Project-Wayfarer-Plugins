@@ -337,7 +337,7 @@ grep -Fq "PLAYER_IDENTITY PASS" "$baseline_first_log"
 grep -Fq "MAIN_THREAD_GUARDS PASS jdbc=true redis=true" "$baseline_first_log"
 grep -Fq "REDIS_PRIMITIVES PASS cache=true lock=true message=true" \
   "$baseline_first_log"
-grep -Fq "debitReference=absent" "$baseline_first_log"
+grep -Fq "debitReference=none" "$baseline_first_log"
 grep -Fq "Reconciliation requires an explicit trailing 'confirm'." "$baseline_first_log"
 grep -Fq "reconciliation result=COMMITTED" "$baseline_first_log"
 grep -Fq "Full thread dump" "$baseline_first_log"
