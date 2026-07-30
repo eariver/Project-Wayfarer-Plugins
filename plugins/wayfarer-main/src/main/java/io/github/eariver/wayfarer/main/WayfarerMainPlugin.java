@@ -61,12 +61,6 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             failClosed("Required Wayfarer_Core capabilities are unavailable.");
             return;
         }
-        PluginCommand command = getCommand("wayfarer-main");
-        if (command != null) {
-            command.setExecutor((sender, ignored, label, arguments) ->
-                handleCommand(sender, arguments, moduleConfig, services)
-            );
-        }
         accepting.set(true);
         services.tasks().database(() -> MainModulePersistence.open(
             moduleConfig.database(),
@@ -81,6 +75,9 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             )
                 .exceptionally(ignored -> {
                     opened.close();
+                    scheduleFailClosed(
+                        "Wayfarer_Main runtime initialization failed."
+                    );
                     return null;
                 });
         });
@@ -142,6 +139,12 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             gameplay::applyFullRepair,
             Clock.systemUTC()
         );
+        PluginCommand command = getCommand("wayfarer-main");
+        if (command != null) {
+            command.setExecutor((sender, ignored, label, arguments) ->
+                handleCommand(sender, arguments, config, services)
+            );
+        }
         runtimeState = "ENABLED";
         getLogger().info(
             "Wayfarer_Main runtime enabled; module migration and persistence are UP."

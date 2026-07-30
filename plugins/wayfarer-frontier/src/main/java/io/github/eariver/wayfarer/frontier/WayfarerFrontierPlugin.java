@@ -69,12 +69,6 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             failClosed("Required Wayfarer_Core capabilities are unavailable.");
             return;
         }
-        PluginCommand command = getCommand("wayfarer-frontier");
-        if (command != null) {
-            command.setExecutor((sender, ignored, label, arguments) ->
-                handleCommand(sender, arguments, moduleConfig, services)
-            );
-        }
         accepting.set(true);
         services.tasks().database(() -> FrontierModulePersistence.open(
             moduleConfig.database(),
@@ -89,6 +83,9 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             )
                 .exceptionally(ignored -> {
                     opened.close();
+                    scheduleFailClosed(
+                        "Wayfarer_Frontier runtime initialization failed."
+                    );
                     return null;
                 });
         });
@@ -148,6 +145,12 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             gameplay::deliverPurchase,
             Clock.systemUTC()
         );
+        PluginCommand command = getCommand("wayfarer-frontier");
+        if (command != null) {
+            command.setExecutor((sender, ignored, label, arguments) ->
+                handleCommand(sender, arguments, config, services)
+            );
+        }
         runtimeState = "ENABLED";
         getLogger().info(
             "Wayfarer_Frontier runtime enabled; module migration and persistence are UP."
