@@ -41,29 +41,58 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             failClosed("Wayfarer_Main configuration is invalid.");
             return;
         }
+        accepting.set(true);
+        runtimeState = "WAITING_FOR_CORE";
+        startWhenCoreReady(moduleConfig, 0);
+    }
+
+    private void startWhenCoreReady(
+        MainModuleConfig moduleConfig,
+        int attempt
+    ) {
+        if (!accepting.get() || !isEnabled()) {
+            return;
+        }
         RegisteredServiceProvider<WayfarerServices> registration =
             getServer().getServicesManager().getRegistration(WayfarerServices.class);
-        if (registration == null) {
-            failClosed("Wayfarer_Core services are unavailable.");
-            return;
-        }
-        WayfarerServices services;
+        WayfarerServices services = null;
         try {
-            services = registration.getProvider();
-            if (services.lifecycleState() != WayfarerLifecycleState.ENABLED) {
-                failClosed("Wayfarer_Core is not enabled.");
+            if (registration != null) {
+                services = registration.getProvider();
+            }
+            if (services != null
+                && services.lifecycleState() == WayfarerLifecycleState.ENABLED) {
+                services.tasks();
+                services.audit();
+                services.transactions();
+                services.waymark();
+                services.itemIdentity();
+            } else {
+                services = null;
+            }
+        } catch (RuntimeException failure) {
+            services = null;
+        }
+        if (services == null) {
+            if (attempt >= 200) {
+                failClosed("Required Wayfarer_Core capabilities are unavailable.");
                 return;
             }
-            services.tasks();
-            services.audit();
-            services.transactions();
-            services.waymark();
-            services.itemIdentity();
-        } catch (RuntimeException failure) {
-            failClosed("Required Wayfarer_Core capabilities are unavailable.");
+            getServer().getScheduler().runTaskLater(
+                this,
+                () -> startWhenCoreReady(moduleConfig, attempt + 1),
+                1L
+            );
             return;
         }
-        accepting.set(true);
+        openPersistence(moduleConfig, services);
+    }
+
+    private void openPersistence(
+        MainModuleConfig moduleConfig,
+        WayfarerServices services
+    ) {
+        runtimeState = "INITIALIZING";
         services.tasks().database(() -> MainModulePersistence.open(
             moduleConfig.database(),
             System::getenv
