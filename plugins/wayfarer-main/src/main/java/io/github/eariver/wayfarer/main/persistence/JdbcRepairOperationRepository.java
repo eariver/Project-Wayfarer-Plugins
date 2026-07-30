@@ -22,6 +22,15 @@ public final class JdbcRepairOperationRepository
     }
 
     @Override
+    public Optional<RepairOperation> find(UUID repairId) {
+        try (Connection connection = dataSource.getConnection()) {
+            return find(connection, repairId);
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
     public RepairOperation prepare(
         String idempotencyKey,
         UUID playerUuid,

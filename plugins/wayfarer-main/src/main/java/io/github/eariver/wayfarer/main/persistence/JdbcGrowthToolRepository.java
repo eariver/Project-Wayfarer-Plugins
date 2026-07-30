@@ -105,6 +105,40 @@ public final class JdbcGrowthToolRepository implements GrowthToolRepository {
         }
     }
 
+    @Override
+    public Optional<GrowthTool> replaceAuthority(
+        GrowthTool tool,
+        long expectedLockVersion,
+        Instant now
+    ) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement update = connection.prepareStatement(
+                 "UPDATE wf_main_growth_tool SET instance_epoch=?,"
+                     + "cumulative_progress_units=?,active_branch=?,tool_status=?,"
+                     + "delivery_status=?,stored_damage=?,schema_version=?,"
+                     + "display_revision=?,lock_version=lock_version+1,updated_at=? "
+                     + "WHERE tool_id=? AND lock_version=?"
+             )) {
+            update.setLong(1, tool.instanceEpoch());
+            update.setLong(2, tool.cumulativeProgressUnits());
+            update.setString(3, tool.branch().name());
+            update.setString(4, tool.status().name());
+            update.setString(5, tool.deliveryStatus().name());
+            update.setInt(6, tool.storedDamage());
+            update.setInt(7, tool.schemaVersion());
+            update.setLong(8, tool.displayRevision());
+            update.setTimestamp(9, Timestamp.from(now));
+            update.setString(10, tool.toolId().toString());
+            update.setLong(11, expectedLockVersion);
+            if (update.executeUpdate() != 1) {
+                return Optional.empty();
+            }
+            return findByOwner(connection, tool.ownerUuid());
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
     private static Optional<GrowthTool> findByOwner(
         Connection connection,
         UUID ownerUuid

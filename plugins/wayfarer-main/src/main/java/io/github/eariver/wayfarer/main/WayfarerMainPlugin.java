@@ -18,6 +18,8 @@ import org.bukkit.entity.Player;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class WayfarerMainPlugin extends JavaPlugin {
@@ -168,6 +170,30 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             );
             return true;
         }
+        if ("debug".equalsIgnoreCase(arguments[0])) {
+            if (!config.debugCommandsEnabled()
+                || !sender.hasPermission("wayfarer.main.debug")
+                || !(sender instanceof Player player)
+                || arguments.length != 2) {
+                sender.sendMessage("Wayfarer Main debug is unavailable.");
+                return true;
+            }
+            MainGameplayRuntime active = gameplay;
+            boolean applied = active != null
+                && active.debug(
+                    player,
+                    arguments[1].toLowerCase(java.util.Locale.ROOT)
+                );
+            sender.sendMessage(
+                applied
+                    ? "Wayfarer Main debug mutation applied."
+                    : "Wayfarer Main debug mutation is unavailable."
+            );
+            return true;
+        }
+        if (adminCommand(arguments[0])) {
+            return handleAdminCommand(sender, arguments, services);
+        }
         if ("branch".equalsIgnoreCase(arguments[0])) {
             if (!(sender instanceof Player player)
                 || !player.hasPermission("wayfarer.main.admin")
@@ -243,6 +269,213 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             sender.sendMessage("Wayfarer Main repair: " + result.status())
         ));
         return true;
+    }
+
+    private boolean handleAdminCommand(
+        CommandSender sender,
+        String[] arguments,
+        WayfarerServices services
+    ) {
+        if (!sender.hasPermission("wayfarer.main.admin")) {
+            sender.sendMessage("Wayfarer Main administration is unavailable.");
+            return true;
+        }
+        MainGameplayRuntime active = gameplay;
+        if (active == null) {
+            sender.sendMessage("Wayfarer Main administration is unavailable.");
+            return true;
+        }
+        try {
+            return switch (arguments[0].toLowerCase(java.util.Locale.ROOT)) {
+                case "inspect" -> inspect(sender, arguments, active, services);
+                case "grant", "delivery" ->
+                    retryDelivery(sender, arguments, active, services);
+                case "revoke" ->
+                    mutateAuthority(sender, arguments, active, services, false);
+                case "reissue" ->
+                    mutateAuthority(sender, arguments, active, services, true);
+                case "reconcile" ->
+                    reconcileRepair(sender, arguments, services);
+                default -> false;
+            };
+        } catch (RuntimeException failure) {
+            sender.sendMessage("Wayfarer Main administration is unavailable.");
+            return true;
+        }
+    }
+
+    private boolean inspect(
+        CommandSender sender,
+        String[] arguments,
+        MainGameplayRuntime active,
+        WayfarerServices services
+    ) {
+        if (arguments.length != 3) {
+            sender.sendMessage(
+                "Usage: /wayfarer-main inspect <tool|repair> <uuid>"
+            );
+            return true;
+        }
+        UUID id = parseUuid(arguments[2]);
+        if (id == null) {
+            sender.sendMessage("A canonical UUID is required.");
+            return true;
+        }
+        if ("tool".equalsIgnoreCase(arguments[1])) {
+            active.inspect(id).whenComplete((found, failure) -> {
+                String message = failure == null
+                    ? found.map(tool ->
+                        "Growth Tool: status=" + tool.status()
+                            + " delivery=" + tool.deliveryStatus()
+                            + " epoch=" + tool.instanceEpoch()
+                    ).orElse("Growth Tool: NOT_FOUND")
+                    : "Wayfarer Main inspection is unavailable.";
+                sendOnMain(services, sender, message);
+            });
+            return true;
+        }
+        if ("repair".equalsIgnoreCase(arguments[1])) {
+            JdbcRepairOperationRepository repository = repairRepository;
+            if (repository == null) {
+                sender.sendMessage("Wayfarer Main inspection is unavailable.");
+                return true;
+            }
+            services.tasks().database(() -> repository.find(id))
+                .whenComplete((found, failure) -> {
+                    String message = failure == null
+                        ? found.map(operation ->
+                            "Repair: state=" + operation.state()
+                                + " transaction="
+                                + Optional.ofNullable(operation.transactionId())
+                                    .map(UUID::toString)
+                                    .orElse("NONE")
+                        ).orElse("Repair: NOT_FOUND")
+                        : "Wayfarer Main inspection is unavailable.";
+                    sendOnMain(services, sender, message);
+                });
+            return true;
+        }
+        sender.sendMessage("Use tool or repair.");
+        return true;
+    }
+
+    private boolean retryDelivery(
+        CommandSender sender,
+        String[] arguments,
+        MainGameplayRuntime active,
+        WayfarerServices services
+    ) {
+        UUID playerUuid = arguments.length == 2
+            ? parseUuid(arguments[1])
+            : null;
+        if (playerUuid == null) {
+            sender.sendMessage(
+                "Usage: /wayfarer-main delivery <player-uuid>"
+            );
+            return true;
+        }
+        active.retryDelivery(playerUuid).whenComplete((outcome, failure) ->
+            sendOnMain(
+                services,
+                sender,
+                failure == null
+                    ? "Growth Tool delivery: " + outcome
+                    : "Growth Tool delivery is unavailable."
+            )
+        );
+        return true;
+    }
+
+    private boolean mutateAuthority(
+        CommandSender sender,
+        String[] arguments,
+        MainGameplayRuntime active,
+        WayfarerServices services,
+        boolean reissue
+    ) {
+        UUID playerUuid = arguments.length == 3
+            && "confirm".equalsIgnoreCase(arguments[2])
+            ? parseUuid(arguments[1])
+            : null;
+        if (playerUuid == null) {
+            sender.sendMessage(
+                "Usage: /wayfarer-main "
+                    + (reissue ? "reissue" : "revoke")
+                    + " <player-uuid> confirm"
+            );
+            return true;
+        }
+        var stage = reissue
+            ? active.reissue(playerUuid)
+            : active.revoke(playerUuid);
+        stage.whenComplete((result, failure) -> sendOnMain(
+            services,
+            sender,
+            failure == null
+                ? "Growth Tool authority: " + result
+                : "Growth Tool authority update is unavailable."
+        ));
+        return true;
+    }
+
+    private boolean reconcileRepair(
+        CommandSender sender,
+        String[] arguments,
+        WayfarerServices services
+    ) {
+        UUID repairId = arguments.length == 2
+            ? parseUuid(arguments[1])
+            : null;
+        JdbcRepairOperationRepository repository = repairRepository;
+        if (repairId == null || repository == null) {
+            sender.sendMessage(
+                "Usage: /wayfarer-main reconcile <repair-uuid>"
+            );
+            return true;
+        }
+        services.tasks().database(() -> repository.find(repairId))
+            .thenCompose(found -> {
+                if (found.isEmpty() || found.orElseThrow().transactionId() == null) {
+                    return java.util.concurrent.CompletableFuture.completedFuture(
+                        "Repair reconcile: MANUAL_REVIEW_REQUIRED"
+                    );
+                }
+                return services.transactions().reconcile(
+                    found.orElseThrow().transactionId()
+                ).handle((result, failure) ->
+                    failure == null
+                        ? "Repair reconcile: core=" + result.state()
+                            + " module=" + found.orElseThrow().state()
+                        : "Repair reconcile is unavailable."
+                );
+            }).exceptionally(ignored ->
+                "Repair reconcile is unavailable."
+            ).thenAccept(message -> sendOnMain(services, sender, message));
+        return true;
+    }
+
+    private static boolean adminCommand(String command) {
+        return switch (command.toLowerCase(java.util.Locale.ROOT)) {
+            case "inspect", "grant", "delivery", "revoke", "reissue",
+                 "reconcile" -> true;
+            default -> false;
+        };
+    }
+
+    private static UUID parseUuid(String value) {
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException failure) {
+            return null;
+        }
+    }
+
+    private static void sendOnMain(
+        WayfarerServices services,
+        CommandSender sender,
+        String message
+    ) {
+        services.tasks().mainThread(() -> sender.sendMessage(message));
     }
 
     private void failClosed(String message) {

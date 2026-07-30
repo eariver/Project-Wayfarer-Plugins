@@ -132,6 +132,15 @@ final class GrowthToolDeliveryCoordinatorTest {
         ) {
             return Optional.of(updated);
         }
+
+        @Override
+        public Optional<GrowthTool> replaceAuthority(
+            GrowthTool updated,
+            long expectedLockVersion,
+            Instant now
+        ) {
+            return Optional.of(updated);
+        }
     }
 
     private static final class DirectTasks implements WayfarerTasks {

@@ -114,6 +114,45 @@ public record GrowthTool(
         );
     }
 
+    public GrowthTool revoked(Instant now) {
+        Objects.requireNonNull(now, "now");
+        if (status == Status.REVOKED) {
+            return this;
+        }
+        return new GrowthTool(
+            toolId,
+            ownerUuid,
+            instanceEpoch,
+            cumulativeProgressUnits,
+            branch,
+            Status.REVOKED,
+            deliveryStatus,
+            storedDamage,
+            schemaVersion,
+            Math.addExact(displayRevision, 1),
+            lockVersion,
+            now
+        );
+    }
+
+    public GrowthTool reissued(Instant now) {
+        Objects.requireNonNull(now, "now");
+        return new GrowthTool(
+            toolId,
+            ownerUuid,
+            Math.addExact(instanceEpoch, 1),
+            cumulativeProgressUnits,
+            branch,
+            Status.ACTIVE,
+            DeliveryStatus.PENDING,
+            0,
+            schemaVersion,
+            Math.addExact(displayRevision, 1),
+            lockVersion,
+            now
+        );
+    }
+
     public enum Branch {
         FORTUNE,
         SILK_TOUCH

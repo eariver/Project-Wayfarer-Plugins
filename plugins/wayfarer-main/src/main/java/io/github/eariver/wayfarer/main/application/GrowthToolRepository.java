@@ -21,4 +21,10 @@ public interface GrowthToolRepository {
         long expectedLockVersion,
         Instant now
     );
+
+    Optional<GrowthTool> replaceAuthority(
+        GrowthTool tool,
+        long expectedLockVersion,
+        Instant now
+    );
 }

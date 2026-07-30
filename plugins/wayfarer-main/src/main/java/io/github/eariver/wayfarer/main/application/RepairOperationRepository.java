@@ -10,6 +10,8 @@ import java.util.UUID;
  * transactionally committed compare-and-set and must run through {@code WayfarerTasks.database}.
  */
 public interface RepairOperationRepository {
+    Optional<RepairOperation> find(UUID repairId);
+
     RepairOperation prepare(
         String idempotencyKey,
         UUID playerUuid,

@@ -178,6 +178,13 @@ final class RepairCoordinatorTest {
         private boolean rejectDomainCommit;
 
         @Override
+        public Optional<RepairOperation> find(UUID repairId) {
+            return operation == null || !operation.repairId().equals(repairId)
+                ? Optional.empty()
+                : Optional.of(operation);
+        }
+
+        @Override
         public RepairOperation prepare(
             String idempotencyKey,
             UUID playerUuid,

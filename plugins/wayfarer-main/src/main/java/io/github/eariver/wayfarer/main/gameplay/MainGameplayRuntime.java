@@ -1,6 +1,7 @@
 package io.github.eariver.wayfarer.main.gameplay;
 
 import io.github.eariver.wayfarer.api.WayfarerServices;
+import io.github.eariver.wayfarer.api.WayfarerAudit;
 import io.github.eariver.wayfarer.main.application.GrowthCheckpointService;
 import io.github.eariver.wayfarer.main.application.GrowthSessionStore;
 import io.github.eariver.wayfarer.main.application.GrowthToolDeliveryCoordinator;
@@ -20,10 +21,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.player.PlayerItemMendEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.event.inventory.PrepareGrindstoneEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.inventory.PrepareSmithingEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -37,6 +45,7 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletableFuture;
 import java.util.Optional;
 
 public final class MainGameplayRuntime implements Listener, AutoCloseable {
@@ -188,6 +197,68 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onMend(PlayerItemMendEvent event) {
+        if (wayfarerTool(event.getItem())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPrepareAnvil(PrepareAnvilEvent event) {
+        if (containsWayfarerTool(event.getInventory().getContents())) {
+            event.setResult(null);
+        }
+    }
+
+    @EventHandler
+    public void onPrepareGrindstone(PrepareGrindstoneEvent event) {
+        if (containsWayfarerTool(event.getInventory().getContents())) {
+            event.setResult(null);
+        }
+    }
+
+    @EventHandler
+    public void onPrepareSmithing(PrepareSmithingEvent event) {
+        if (containsWayfarerTool(event.getInventory().getContents())) {
+            event.setResult(null);
+        }
+    }
+
+    @EventHandler
+    public void onPrepareCraft(PrepareItemCraftEvent event) {
+        if (containsWayfarerTool(event.getInventory().getMatrix())) {
+            event.getInventory().setResult(null);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        ItemStack current = event.getCurrentItem();
+        ItemStack cursor = event.getCursor();
+        boolean carriesTool = wayfarerTool(current) || wayfarerTool(cursor);
+        InventoryType type = event.getView().getTopInventory().getType();
+        boolean targetsRestrictedInventory =
+            event.getClickedInventory() == event.getView().getTopInventory()
+                || (event.isShiftClick() && wayfarerTool(current));
+        if (carriesTool && targetsRestrictedInventory
+            && (type == InventoryType.ANVIL
+            || type == InventoryType.GRINDSTONE
+            || type == InventoryType.SMITHING
+            || type == InventoryType.CRAFTING
+            || type == InventoryType.WORKBENCH)) {
+            event.setCancelled(true);
+            return;
+        }
+        if ((wayfarerTool(current) && !validAuthority(player, current))
+            || (wayfarerTool(cursor) && !validAuthority(player, cursor))) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_AIR
             || event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
@@ -218,6 +289,35 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
 
     public Optional<GrowthTool> current(UUID playerUuid) {
         return sessions.current(playerUuid);
+    }
+
+    public CompletionStage<Optional<GrowthTool>> inspect(UUID playerUuid) {
+        return services.tasks().database(() ->
+            repository.findByOwner(playerUuid)
+        );
+    }
+
+    public CompletionStage<GrowthToolDeliveryCoordinator.Outcome> retryDelivery(
+        UUID playerUuid
+    ) {
+        return delivery.onJoin(playerUuid).thenCompose(outcome ->
+            refreshSession(playerUuid).thenApply(ignored -> outcome)
+        );
+    }
+
+    public CompletionStage<AdminMutation> revoke(UUID playerUuid) {
+        return replaceAuthority(playerUuid, false);
+    }
+
+    public CompletionStage<AdminMutation> reissue(UUID playerUuid) {
+        return replaceAuthority(playerUuid, true).thenCompose(result -> {
+            if (result != AdminMutation.APPLIED) {
+                return CompletableFuture.completedFuture(result);
+            }
+            return delivery.onJoin(playerUuid)
+                .thenCompose(ignored -> refreshSession(playerUuid))
+                .thenApply(ignored -> result);
+        });
     }
 
     public Optional<RepairSnapshot> repairSnapshot(Player player, GrowthTool tool) {
@@ -305,6 +405,61 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
         return true;
     }
 
+    public boolean debug(Player player, String action) {
+        GrowthTool current = sessions.current(player.getUniqueId()).orElse(null);
+        ItemStack held = player.getInventory().getItemInMainHand();
+        if (current == null || !canonical(held, player.getUniqueId(), current)) {
+            return false;
+        }
+        boolean applied = switch (action) {
+            case "progress-next" -> {
+                EvolutionPlan.EvolutionSnapshot snapshot =
+                    config.evolutionPlan().evaluate(
+                        current.cumulativeProgressUnits(),
+                        current.branch(),
+                        config.enchantmentCaps()
+                    );
+                Long next = snapshot.nextThresholdUnits();
+                if (next == null || next <= current.cumulativeProgressUnits()) {
+                    yield false;
+                }
+                GrowthTool updated = sessions.addProgress(
+                    player.getUniqueId(),
+                    Math.subtractExact(
+                        next,
+                        current.cumulativeProgressUnits()
+                    ),
+                    clock.instant()
+                );
+                applyEvolution(held, updated);
+                checkpoints.checkpoint(player.getUniqueId());
+                yield true;
+            }
+            case "durability-one" -> {
+                if (!(held.getItemMeta() instanceof Damageable damageable)) {
+                    yield false;
+                }
+                damageable.setDamage(
+                    Math.max(0, held.getType().getMaxDurability() - 1)
+                );
+                held.setItemMeta(damageable);
+                yield true;
+            }
+            case "repair-free" -> applyFullRepair(
+                player.getUniqueId(),
+                current.toolId(),
+                current.instanceEpoch(),
+                UUID.randomUUID()
+            );
+            default -> false;
+        };
+        if (applied) {
+            recordAdmin(current, "GROWTH_TOOL_DEBUG_MUTATION")
+                .exceptionally(ignored -> null);
+        }
+        return applied;
+    }
+
     @Override
     public void close() {
         stopAndFlush();
@@ -316,6 +471,75 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
             player.getUniqueId(),
             clock.instant()
         )).thenAccept(sessions::open);
+    }
+
+    private CompletionStage<AdminMutation> replaceAuthority(
+        UUID playerUuid,
+        boolean reissue
+    ) {
+        return services.tasks().database(() -> {
+            GrowthTool current = repository.findByOwner(playerUuid).orElse(null);
+            if (current == null) {
+                return new AuthorityMutation(null, AdminMutation.NOT_FOUND);
+            }
+            GrowthTool next = reissue
+                ? current.reissued(clock.instant())
+                : current.revoked(clock.instant());
+            if (next == current) {
+                return new AuthorityMutation(current, AdminMutation.NO_CHANGE);
+            }
+            Optional<GrowthTool> persisted = repository.replaceAuthority(
+                next,
+                current.lockVersion(),
+                clock.instant()
+            );
+            return persisted
+                .map(value -> new AuthorityMutation(value, AdminMutation.APPLIED))
+                .orElseGet(() ->
+                    new AuthorityMutation(null, AdminMutation.CONFLICT)
+                );
+        }).thenCompose(mutation -> {
+            if (mutation.tool() == null) {
+                return CompletableFuture.completedFuture(mutation.result());
+            }
+            return services.tasks().mainThread(() -> {
+                Player online = plugin.getServer().getPlayer(playerUuid);
+                if (online != null && online.isOnline()) {
+                    sessions.open(mutation.tool());
+                    removeStaleTools(online, mutation.tool());
+                }
+            }).thenCompose(ignored -> recordAdmin(
+                mutation.tool(),
+                reissue ? "GROWTH_TOOL_REISSUED" : "GROWTH_TOOL_REVOKED"
+            ).handle((recorded, failure) -> mutation.result()));
+        }).exceptionally(ignored -> AdminMutation.UNAVAILABLE);
+    }
+
+    private CompletionStage<Void> refreshSession(UUID playerUuid) {
+        return services.tasks().database(() ->
+            repository.findByOwner(playerUuid)
+        ).thenCompose(found -> services.tasks().mainThread(() -> {
+            Player online = plugin.getServer().getPlayer(playerUuid);
+            if (online != null && online.isOnline()) {
+                found.ifPresent(sessions::open);
+            }
+        }));
+    }
+
+    private CompletionStage<Void> recordAdmin(
+        GrowthTool tool,
+        String eventType
+    ) {
+        return services.audit().record(new WayfarerAudit.AuditEvent(
+            UUID.randomUUID(),
+            eventType,
+            tool.ownerUuid(),
+            "GROWTH_TOOL",
+            tool.toolId().toString(),
+            services.serverId(),
+            "{\"result\":\"APPLIED\"}",
+            clock.instant()
+        ));
     }
 
     private GrowthToolDeliveryCoordinator.Outcome deliver(GrowthTool tool) {
@@ -381,6 +605,61 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
             && authority.status() == GrowthTool.Status.ACTIVE;
     }
 
+    private boolean validAuthority(Player player, ItemStack item) {
+        GrowthTool authority = sessions.current(player.getUniqueId()).orElse(null);
+        if (authority == null
+            || !authority.toolId().toString().equals(text(item, TOOL_ID))
+            || !authority.ownerUuid().toString().equals(text(item, OWNER_ID))
+            || authority.instanceEpoch() != number(item, EPOCH)
+            || authority.schemaVersion() != number(item, SCHEMA)
+            || authority.status() == GrowthTool.Status.REVOKED) {
+            return false;
+        }
+        String type = text(item, ITEM_TYPE);
+        return authority.status() == GrowthTool.Status.BROKEN
+            ? "BROKEN_GROWTH_TOOL".equals(type)
+            : "GROWTH_TOOL".equals(type);
+    }
+
+    private static void removeStaleTools(
+        Player player,
+        GrowthTool authority
+    ) {
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int slot = 0; slot < contents.length; slot++) {
+            ItemStack item = contents[slot];
+            if (!wayfarerTool(item)) {
+                continue;
+            }
+            boolean current = authority.status() != GrowthTool.Status.REVOKED
+                && authority.toolId().toString().equals(text(item, TOOL_ID))
+                && authority.ownerUuid().toString().equals(text(item, OWNER_ID))
+                && authority.instanceEpoch() == number(item, EPOCH)
+                && authority.schemaVersion() == number(item, SCHEMA);
+            if (!current) {
+                player.getInventory().setItem(slot, null);
+            }
+        }
+    }
+
+    private static boolean containsWayfarerTool(ItemStack[] contents) {
+        for (ItemStack item : contents) {
+            if (wayfarerTool(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean wayfarerTool(ItemStack item) {
+        if (item == null) {
+            return false;
+        }
+        String type = text(item, ITEM_TYPE);
+        return "GROWTH_TOOL".equals(type)
+            || "BROKEN_GROWTH_TOOL".equals(type);
+    }
+
     private static void writeIdentity(
         ItemStack item,
         GrowthTool tool,
@@ -398,6 +677,9 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
     }
 
     private static String text(ItemStack item, NamespacedKey key) {
+        if (item == null || !item.hasItemMeta()) {
+            return null;
+        }
         return item.getItemMeta().getPersistentDataContainer().get(
             key,
             PersistentDataType.STRING
@@ -405,6 +687,9 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
     }
 
     private static long number(ItemStack item, NamespacedKey key) {
+        if (item == null || !item.hasItemMeta()) {
+            return Long.MIN_VALUE;
+        }
         PersistentDataContainer pdc =
             item.getItemMeta().getPersistentDataContainer();
         Long longValue = pdc.get(key, PersistentDataType.LONG);
@@ -443,4 +728,17 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
     }
 
     public record RepairSnapshot(int damage, int maximumDurability) {}
+
+    public enum AdminMutation {
+        APPLIED,
+        NO_CHANGE,
+        NOT_FOUND,
+        CONFLICT,
+        UNAVAILABLE
+    }
+
+    private record AuthorityMutation(
+        GrowthTool tool,
+        AdminMutation result
+    ) {}
 }

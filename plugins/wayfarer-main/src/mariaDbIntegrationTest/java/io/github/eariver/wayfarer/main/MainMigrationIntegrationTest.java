@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.eariver.wayfarer.testkit.MariaDbContainerFixture;
 import io.github.eariver.wayfarer.main.persistence.JdbcRepairOperationRepository;
+import io.github.eariver.wayfarer.main.persistence.JdbcGrowthToolRepository;
+import io.github.eariver.wayfarer.main.domain.GrowthTool;
 import io.github.eariver.wayfarer.main.domain.RepairOperation;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -64,9 +66,31 @@ final class MainMigrationIntegrationTest {
             ).orElseThrow();
             assertEquals(RepairOperation.State.FAILED, failed.state());
             assertEquals("INSUFFICIENT_FUNDS", failed.failureCode());
+            assertEquals(failed, repository.find(failed.repairId()).orElseThrow());
             assertTrue(repository.claimPayment(
                 failed.repairId(),
                 failed.lockVersion(),
+                Instant.now()
+            ).isEmpty());
+
+            JdbcGrowthToolRepository growth =
+                new JdbcGrowthToolRepository(dataSource);
+            GrowthTool authority = growth.findByOwner(player).orElseThrow();
+            GrowthTool revoked = growth.replaceAuthority(
+                authority.revoked(Instant.now()),
+                authority.lockVersion(),
+                Instant.now()
+            ).orElseThrow();
+            assertEquals(GrowthTool.Status.REVOKED, revoked.status());
+            GrowthTool reissued = growth.replaceAuthority(
+                revoked.reissued(Instant.now()),
+                revoked.lockVersion(),
+                Instant.now()
+            ).orElseThrow();
+            assertEquals(revoked.instanceEpoch() + 1, reissued.instanceEpoch());
+            assertTrue(growth.replaceAuthority(
+                reissued.reissued(Instant.now()),
+                revoked.lockVersion(),
                 Instant.now()
             ).isEmpty());
         }
