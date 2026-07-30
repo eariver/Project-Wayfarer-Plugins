@@ -19,6 +19,7 @@ import io.github.eariver.wayfarer.frontier.identity.LaunchpadItemClaim;
 import io.github.eariver.wayfarer.frontier.integration.WorldGuardPlacementBridge;
 import io.github.eariver.wayfarer.frontier.integration.WorldEditLaunchpadProtection;
 import io.github.eariver.wayfarer.common.SingleUseGate;
+import io.github.eariver.wayfarer.common.BoundItemTransferPolicy;
 import io.github.eariver.wayfarer.integration.leafgrapple.LeafGrappleBridge;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -514,12 +515,14 @@ public final class FrontierGameplayRuntime implements Listener {
         InventoryType topType = event.getView().getTopInventory().getType();
         boolean externalContainer = topType != InventoryType.CRAFTING
             && topType != InventoryType.PLAYER;
-        if (externalContainer
-            && (permanent(current) || permanent(cursor) || permanent(hotbar))
-            && (event.getClickedInventory() == event.getView().getTopInventory()
-                || event.isShiftClick()
-                || permanent(cursor)
-                || permanent(hotbar))) {
+        if (BoundItemTransferPolicy.denyContainerClick(
+            externalContainer,
+            permanent(current),
+            permanent(cursor),
+            permanent(hotbar),
+            event.isShiftClick(),
+            event.getClickedInventory() == event.getView().getTopInventory()
+        )) {
             event.setCancelled(true);
             return;
         }
@@ -544,11 +547,14 @@ public final class FrontierGameplayRuntime implements Listener {
             return;
         }
         InventoryType topType = event.getView().getTopInventory().getType();
-        if (topType != InventoryType.CRAFTING
-            && topType != InventoryType.PLAYER
-            && event.getRawSlots().stream().anyMatch(
+        if (BoundItemTransferPolicy.denyContainerDrag(
+            topType != InventoryType.CRAFTING
+                && topType != InventoryType.PLAYER,
+            true,
+            event.getRawSlots().stream().anyMatch(
                 slot -> slot < event.getView().getTopInventory().getSize()
-            )) {
+            )
+        )) {
             event.setCancelled(true);
         }
     }

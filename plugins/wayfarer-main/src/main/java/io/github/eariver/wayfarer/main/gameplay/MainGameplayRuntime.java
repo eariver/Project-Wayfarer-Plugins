@@ -13,6 +13,7 @@ import io.github.eariver.wayfarer.main.domain.DurabilitySemantics;
 import io.github.eariver.wayfarer.main.domain.GrowthTool;
 import io.github.eariver.wayfarer.main.identity.GrowthToolPhysicalClaim;
 import io.github.eariver.wayfarer.common.SingleUseGate;
+import io.github.eariver.wayfarer.common.BoundItemTransferPolicy;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -373,10 +374,14 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
                 || event.isShiftClick()
                 || wayfarerTool(cursor)
                 || wayfarerTool(hotbar));
-        if (externalContainer
-            && (wayfarerTool(current) || wayfarerTool(cursor)
-                || wayfarerTool(hotbar))
-            && targetsRestrictedInventory) {
+        if (BoundItemTransferPolicy.denyContainerClick(
+            externalContainer,
+            wayfarerTool(current),
+            wayfarerTool(cursor),
+            wayfarerTool(hotbar),
+            event.isShiftClick(),
+            event.getClickedInventory() == event.getView().getTopInventory()
+        )) {
             event.setCancelled(true);
             return;
         }
@@ -417,8 +422,11 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
                 != InventoryType.CRAFTING
                 && event.getView().getTopInventory().getType()
                 != InventoryType.PLAYER;
-        if (externalContainer && event.getRawSlots().stream()
-            .anyMatch(slot -> slot < topSize)) {
+        if (BoundItemTransferPolicy.denyContainerDrag(
+            externalContainer,
+            true,
+            event.getRawSlots().stream().anyMatch(slot -> slot < topSize)
+        )) {
             event.setCancelled(true);
         }
     }
