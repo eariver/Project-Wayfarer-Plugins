@@ -47,6 +47,7 @@ dependencies {
 val mariaDbIntegrationTest = tasks.register<Test>("mariaDbIntegrationTest") {
     description = "Runs isolated Frontier migration integration tests."
     group = LifecycleBasePlugin.VERIFICATION_GROUP
+    dependsOn(":plugins:wayfarer-core:shadowJar")
     testClassesDirs = mariaDbIntegrationTestSourceSet.output.classesDirs
     classpath = mariaDbIntegrationTestSourceSet.runtimeClasspath
     shouldRunAfter(tasks.test)
