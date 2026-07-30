@@ -27,6 +27,7 @@ public final class MainModulePersistence implements AutoCloseable {
         String username = required(environment, database.usernameReference());
         String password = required(environment, database.passwordReference());
         HikariConfig hikari = new HikariConfig();
+        hikari.setDriverClassName("org.mariadb.jdbc.Driver");
         hikari.setJdbcUrl(jdbcUrl);
         hikari.setUsername(username);
         hikari.setPassword(password);

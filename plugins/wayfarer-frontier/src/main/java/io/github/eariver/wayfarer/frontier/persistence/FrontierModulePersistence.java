@@ -24,6 +24,7 @@ public final class FrontierModulePersistence implements AutoCloseable {
         Objects.requireNonNull(database, "database");
         Objects.requireNonNull(environment, "environment");
         HikariConfig hikari = new HikariConfig();
+        hikari.setDriverClassName("org.mariadb.jdbc.Driver");
         hikari.setJdbcUrl(required(environment, database.jdbcUrlReference()));
         hikari.setUsername(required(environment, database.usernameReference()));
         hikari.setPassword(required(environment, database.passwordReference()));
