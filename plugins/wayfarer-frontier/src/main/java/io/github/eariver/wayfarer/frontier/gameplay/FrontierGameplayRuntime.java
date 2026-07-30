@@ -5,6 +5,7 @@ import io.github.eariver.wayfarer.api.WayfarerAudit;
 import io.github.eariver.wayfarer.frontier.application.TraversalDeliveryCoordinator;
 import io.github.eariver.wayfarer.frontier.application.TraversalLoadoutRepository;
 import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseRepository;
+import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseCoordinator;
 import io.github.eariver.wayfarer.frontier.application.LaunchpadRepository;
 import io.github.eariver.wayfarer.frontier.application.LaunchpadUseCoordinator;
 import io.github.eariver.wayfarer.frontier.domain.Launchpad;
@@ -18,6 +19,8 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -26,6 +29,10 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.Action;
@@ -44,10 +51,16 @@ import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.util.Vector;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -91,9 +104,14 @@ public final class FrontierGameplayRuntime implements Listener {
         new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, TraversalLoadout> authorities =
         new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, List<ItemStack>> deathRetained =
+        new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, NavigationSession> navigationSessions =
+        new ConcurrentHashMap<>();
     private final AtomicBoolean accepting = new AtomicBoolean(true);
     private final Clock clock;
     private final BukkitTask reconcileTask;
+    private volatile FrontierPurchaseCoordinator purchaseCoordinator;
 
     public FrontierGameplayRuntime(
         JavaPlugin plugin,
@@ -151,6 +169,22 @@ public final class FrontierGameplayRuntime implements Listener {
         reconcileTask.cancel();
         cooldowns.clear();
         authorities.clear();
+        deathRetained.clear();
+        navigationSessions.clear();
+    }
+
+    public void bindPurchaseCoordinator(
+        FrontierPurchaseCoordinator coordinator
+    ) {
+        if (purchaseCoordinator != null) {
+            throw new IllegalStateException(
+                "Purchase coordinator is already bound"
+            );
+        }
+        purchaseCoordinator = java.util.Objects.requireNonNull(
+            coordinator,
+            "coordinator"
+        );
     }
 
     @EventHandler
@@ -184,8 +218,33 @@ public final class FrontierGameplayRuntime implements Listener {
             return;
         }
         Item dropped = event.getItem();
-        String owner = text(dropped.getItemStack(), OWNER_ID);
-        if (owner != null && !owner.equals(player.getUniqueId().toString())) {
+        if (permanent(dropped.getItemStack())
+            && !validPermanent(player, dropped.getItemStack())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
+        List<ItemStack> retained = event.getDrops().stream()
+            .filter(FrontierGameplayRuntime::permanent)
+            .map(ItemStack::clone)
+            .toList();
+        if (retained.isEmpty()) {
+            return;
+        }
+        event.getDrops().removeIf(FrontierGameplayRuntime::permanent);
+        deathRetained.put(event.getEntity().getUniqueId(), retained);
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+        enter(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPermanentDamage(PlayerItemDamageEvent event) {
+        if (permanent(event.getItem())) {
             event.setCancelled(true);
         }
     }
@@ -304,14 +363,95 @@ public final class FrontierGameplayRuntime implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
+        if (event.getView().getTopInventory().getHolder()
+            instanceof NavigationHolder holder) {
+            event.setCancelled(true);
+            handleNavigationClick(player, event.getRawSlot(), holder);
+            return;
+        }
         ItemStack current = event.getCurrentItem();
         ItemStack cursor = event.getCursor();
+        ItemStack hotbar = event.getHotbarButton() >= 0
+            ? player.getInventory().getItem(event.getHotbarButton())
+            : null;
+        InventoryType topType = event.getView().getTopInventory().getType();
+        boolean externalContainer = topType != InventoryType.CRAFTING
+            && topType != InventoryType.PLAYER;
+        if (externalContainer
+            && (permanent(current) || permanent(cursor) || permanent(hotbar))
+            && (event.getClickedInventory() == event.getView().getTopInventory()
+                || event.isShiftClick()
+                || permanent(cursor)
+                || permanent(hotbar))) {
+            event.setCancelled(true);
+            return;
+        }
         if ((current != null && permanent(current)
             && !validPermanent(player, current))
             || (cursor != null && permanent(cursor)
-                && !validPermanent(player, cursor))) {
+                && !validPermanent(player, cursor))
+            || (hotbar != null && permanent(hotbar)
+                && !validPermanent(player, hotbar))) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (event.getView().getTopInventory().getHolder()
+            instanceof NavigationHolder) {
+            event.setCancelled(true);
+            return;
+        }
+        if (!permanent(event.getOldCursor())) {
+            return;
+        }
+        InventoryType topType = event.getView().getTopInventory().getType();
+        if (topType != InventoryType.CRAFTING
+            && topType != InventoryType.PLAYER
+            && event.getRawSlots().stream().anyMatch(
+                slot -> slot < event.getView().getTopInventory().getSize()
+            )) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onArmorStand(PlayerArmorStandManipulateEvent event) {
+        if (permanent(event.getPlayerItem())
+            && !validPermanent(event.getPlayer(), event.getPlayerItem())) {
+            event.setCancelled(true);
+            return;
+        }
+        if (permanent(event.getPlayerItem())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityInteract(PlayerInteractEntityEvent event) {
+        if (!(event.getRightClicked() instanceof ItemFrame
+            || event.getRightClicked() instanceof ArmorStand)) {
+            return;
+        }
+        ItemStack item = event.getPlayer().getInventory().getItem(event.getHand());
+        if (permanent(item)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onNavigationClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player player)
+            || !(event.getInventory().getHolder()
+                instanceof NavigationHolder holder)) {
+            return;
+        }
+        navigationSessions.computeIfPresent(
+            player.getUniqueId(),
+            (ignored, session) ->
+                session.token().equals(holder.token()) ? null : session
+        );
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -457,9 +597,20 @@ public final class FrontierGameplayRuntime implements Listener {
         delivery.onSafeEntry(playerUuid, player.getWorld().getName())
             .thenCompose(ignored -> services.tasks().database(() ->
                 loadouts.find(playerUuid)
-            )).thenAccept(found ->
-                found.ifPresent(loadout -> authorities.put(playerUuid, loadout))
-            ).exceptionally(ignored -> null);
+            )).thenCompose(found -> services.tasks().mainThread(() -> {
+                Player online = plugin.getServer().getPlayer(playerUuid);
+                if (online == null || !online.isOnline()
+                    || !config.exactWorldName().equals(
+                        online.getWorld().getName()
+                    )) {
+                    return;
+                }
+                found.ifPresent(loadout -> {
+                    authorities.put(playerUuid, loadout);
+                    removeStalePermanent(online, loadout);
+                    restoreDeathRetained(online);
+                });
+            })).exceptionally(ignored -> null);
     }
 
     private TraversalDeliveryCoordinator.DeliveryOutcome deliver(
@@ -816,21 +967,49 @@ public final class FrontierGameplayRuntime implements Listener {
 
     private ItemStack create(UUID ownerUuid, PendingDelivery pending) {
         return switch (pending.itemType()) {
-            case ELYTRA -> new ItemStack(Material.ELYTRA);
+            case ELYTRA -> {
+                ItemStack elytra = new ItemStack(Material.ELYTRA);
+                configureUnbreakable(elytra);
+                yield elytra;
+            }
             case NAVIGATION -> new ItemStack(Material.COMPASS);
             case LAUNCHPAD -> new ItemStack(
                 Material.valueOf(config.launchpad().material()),
                 pending.quantity()
             );
-            case FIREWORK_ROCKET -> new ItemStack(
-                Material.FIREWORK_ROCKET,
-                pending.quantity()
-            );
+            case FIREWORK_ROCKET -> {
+                ItemStack rockets = new ItemStack(
+                    Material.FIREWORK_ROCKET,
+                    pending.quantity()
+                );
+                int power = config.shopCatalog()
+                    .findV002("firework_rocket")
+                    .orElseThrow()
+                    .flightDuration();
+                configureRocket(rockets, power);
+                yield rockets;
+            }
             case GRAPPLING_HOOK -> leafGrapple.capability()
                 == LeafGrappleBridge.Capability.AVAILABLE
                 ? leafGrapple.createHook(ownerUuid, 1)
                 : null;
         };
+    }
+
+    static void configureUnbreakable(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        meta.setUnbreakable(true);
+        item.setItemMeta(meta);
+    }
+
+    static void configureRocket(ItemStack item, int power) {
+        if (power != 3 || !(item.getItemMeta() instanceof FireworkMeta meta)) {
+            throw new IllegalArgumentException(
+                "Frontier rockets require FireworkMeta power 3"
+            );
+        }
+        meta.setPower(3);
+        item.setItemMeta(meta);
     }
 
     private static void annotate(
@@ -898,6 +1077,66 @@ public final class FrontierGameplayRuntime implements Listener {
         }
     }
 
+    private static void removeStalePermanent(
+        Player player,
+        TraversalLoadout authority
+    ) {
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int slot = 0; slot < contents.length; slot++) {
+            ItemStack item = contents[slot];
+            if (!permanent(item)) {
+                continue;
+            }
+            boolean current = authority.permanentItems().stream().anyMatch(
+                logical -> logical.state()
+                    == TraversalLoadout.LogicalItem.State.ACTIVE
+                    && logical.itemType().name().equals(
+                        text(item, ITEM_TYPE)
+                    )
+                    && logical.itemInstanceId().toString().equals(
+                        text(item, ITEM_INSTANCE_ID)
+                    )
+                    && logical.instanceEpoch()
+                        == number(item, INSTANCE_EPOCH)
+            );
+            if (!current) {
+                player.getInventory().setItem(slot, null);
+            }
+        }
+    }
+
+    private void restoreDeathRetained(Player player) {
+        List<ItemStack> retained = deathRetained.remove(
+            player.getUniqueId()
+        );
+        if (retained == null) {
+            return;
+        }
+        for (ItemStack item : retained) {
+            if (validPermanent(player, item)
+                && !containsPhysicalInstance(player, item)
+                && player.getInventory().firstEmpty() >= 0) {
+                player.getInventory().addItem(item);
+            }
+        }
+    }
+
+    private static boolean containsPhysicalInstance(
+        Player player,
+        ItemStack expected
+    ) {
+        String id = text(expected, ITEM_INSTANCE_ID);
+        if (id == null) {
+            return false;
+        }
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (id.equals(text(item, ITEM_INSTANCE_ID))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean permanent(ItemStack item) {
         String type = text(item, ITEM_TYPE);
         return type != null && switch (type) {
@@ -951,15 +1190,300 @@ public final class FrontierGameplayRuntime implements Listener {
     }
 
     public void openNavigation(Player player) {
-        var inventory = org.bukkit.Bukkit.createInventory(
-            null,
+        if (!config.exactWorldName().equals(player.getWorld().getName())
+            || !authorities.containsKey(player.getUniqueId())) {
+            player.sendMessage(
+                "Wayfarer navigation is available only in frontier_iris "
+                    + "after loadout initialization."
+            );
+            return;
+        }
+        NavigationHolder holder = new NavigationHolder(
+            NavigationMode.MAIN,
+            UUID.randomUUID(),
+            null
+        );
+        Inventory inventory = org.bukkit.Bukkit.createInventory(
+            holder,
             27,
             net.kyori.adventure.text.Component.text("Wayfarer Navigation")
         );
-        inventory.setItem(11, new ItemStack(Material.LIGHT_WEIGHTED_PRESSURE_PLATE));
-        inventory.setItem(13, new ItemStack(Material.COMPASS));
-        inventory.setItem(15, new ItemStack(Material.FIREWORK_ROCKET));
+        holder.inventory = inventory;
+        inventory.setItem(10, named(
+            Material.EMERALD,
+            "Shop",
+            List.of("Launchpads and Flight Duration 3 rockets")
+        ));
+        inventory.setItem(13, named(
+            Material.ELYTRA,
+            "Loadout",
+            List.of("Permanent item status and reissue guidance")
+        ));
+        inventory.setItem(16, named(
+            Material.PAPER,
+            "Help",
+            List.of("Traversal, launchpads, shop and delivery status")
+        ));
+        inventory.setItem(22, named(
+            Material.BARRIER,
+            "Waystone Unavailable",
+            List.of("Deferred by V0.0.2 requirement")
+        ));
         player.openInventory(inventory);
+    }
+
+    private void openShop(Player player) {
+        NavigationHolder holder = new NavigationHolder(
+            NavigationMode.SHOP,
+            UUID.randomUUID(),
+            null
+        );
+        Inventory inventory = org.bukkit.Bukkit.createInventory(
+            holder,
+            27,
+            net.kyori.adventure.text.Component.text("Wayfarer Shop")
+        );
+        holder.inventory = inventory;
+        var launchpad = config.shopCatalog()
+            .findV002("launchpad")
+            .orElseThrow();
+        var rockets = config.shopCatalog()
+            .findV002("firework_rocket")
+            .orElseThrow();
+        inventory.setItem(11, named(
+            Material.LIGHT_WEIGHTED_PRESSURE_PLATE,
+            "Launchpad",
+            List.of(
+                "Quantity: " + launchpad.quantity(),
+                "Price: " + launchpad.priceWaymark() + " WM"
+            )
+        ));
+        inventory.setItem(15, named(
+            Material.FIREWORK_ROCKET,
+            "Flight Duration 3 Rocket",
+            List.of(
+                "Quantity: " + rockets.quantity(),
+                "Price: " + rockets.priceWaymark() + " WM"
+            )
+        ));
+        player.openInventory(inventory);
+    }
+
+    private void openLoadout(Player player) {
+        TraversalLoadout loadout = authorities.get(player.getUniqueId());
+        if (loadout == null) {
+            player.sendMessage("Frontier loadout is unavailable.");
+            return;
+        }
+        NavigationHolder holder = new NavigationHolder(
+            NavigationMode.LOADOUT,
+            UUID.randomUUID(),
+            null
+        );
+        Inventory inventory = org.bukkit.Bukkit.createInventory(
+            holder,
+            27,
+            net.kyori.adventure.text.Component.text("Frontier Loadout")
+        );
+        holder.inventory = inventory;
+        int slot = 11;
+        for (TraversalLoadout.LogicalItem item : loadout.permanentItems()) {
+            Material material = switch (item.itemType()) {
+                case ELYTRA -> Material.ELYTRA;
+                case GRAPPLING_HOOK -> Material.FISHING_ROD;
+                case NAVIGATION -> Material.COMPASS;
+            };
+            inventory.setItem(slot, named(
+                material,
+                item.itemType().name(),
+                List.of(
+                    "State: " + item.state(),
+                    "Epoch: " + item.instanceEpoch(),
+                    "Admin-assisted reissue is available if missing"
+                )
+            ));
+            slot += 2;
+        }
+        player.openInventory(inventory);
+    }
+
+    private void openPurchaseConfirm(Player player, String offerId) {
+        var offer = config.shopCatalog().findV002(offerId).orElse(null);
+        if (offer == null || purchaseCoordinator == null) {
+            player.sendMessage("Frontier purchase is unavailable.");
+            return;
+        }
+        UUID token = UUID.randomUUID();
+        NavigationSession session = new NavigationSession(
+            token,
+            offerId,
+            new AtomicBoolean()
+        );
+        navigationSessions.put(player.getUniqueId(), session);
+        NavigationHolder holder = new NavigationHolder(
+            NavigationMode.PURCHASE_CONFIRM,
+            token,
+            offerId
+        );
+        Inventory inventory = org.bukkit.Bukkit.createInventory(
+            holder,
+            27,
+            net.kyori.adventure.text.Component.text("Confirm Frontier Purchase")
+        );
+        holder.inventory = inventory;
+        inventory.setItem(11, named(
+            Material.LIME_CONCRETE,
+            "Confirm",
+            List.of(
+                "Offer: " + offer.offerId(),
+                "Price: " + offer.priceWaymark() + " WM"
+            )
+        ));
+        inventory.setItem(15, named(
+            Material.BARRIER,
+            "Cancel",
+            List.of("No Waymark will be charged")
+        ));
+        player.openInventory(inventory);
+    }
+
+    private void handleNavigationClick(
+        Player player,
+        int rawSlot,
+        NavigationHolder holder
+    ) {
+        if (rawSlot < 0 || rawSlot >= 27
+            || !config.exactWorldName().equals(
+                player.getWorld().getName()
+            )) {
+            return;
+        }
+        switch (holder.mode()) {
+            case MAIN -> {
+                if (rawSlot == 10) {
+                    openShop(player);
+                } else if (rawSlot == 13) {
+                    openLoadout(player);
+                } else if (rawSlot == 16) {
+                    player.sendMessage(
+                        "Use the navigation item for Shop, Loadout and Help. "
+                            + "Waystones are unavailable in V0.0.2."
+                    );
+                } else if (rawSlot == 22) {
+                    player.sendMessage(
+                        "Waystone is unavailable in V0.0.2."
+                    );
+                }
+            }
+            case SHOP -> {
+                if (rawSlot == 11) {
+                    openPurchaseConfirm(player, "launchpad");
+                } else if (rawSlot == 15) {
+                    openPurchaseConfirm(player, "firework_rocket");
+                }
+            }
+            case LOADOUT, PURCHASE_RESULT -> {
+                // Display-only surfaces.
+            }
+            case PURCHASE_CONFIRM -> {
+                if (rawSlot == 11) {
+                    confirmPurchase(player, holder);
+                } else if (rawSlot == 15) {
+                    navigationSessions.remove(player.getUniqueId());
+                    player.closeInventory();
+                }
+            }
+        }
+    }
+
+    private void confirmPurchase(
+        Player player,
+        NavigationHolder holder
+    ) {
+        NavigationSession session = navigationSessions.get(
+            player.getUniqueId()
+        );
+        FrontierPurchaseCoordinator coordinator = purchaseCoordinator;
+        if (session == null || coordinator == null
+            || !session.token().equals(holder.token())
+            || !session.offerId().equals(holder.offerId())
+            || !session.accepted().compareAndSet(false, true)) {
+            player.sendMessage("Frontier purchase confirmation expired.");
+            return;
+        }
+        navigationSessions.remove(player.getUniqueId(), session);
+        player.closeInventory();
+        coordinator.purchase(new FrontierPurchaseCoordinator.Request(
+            "frontier-gui-shop:" + session.token(),
+            player.getUniqueId(),
+            player.getWorld().getName(),
+            session.offerId()
+        )).whenComplete((result, failure) ->
+            services.tasks().mainThread(() -> {
+                Player online = plugin.getServer().getPlayer(
+                    player.getUniqueId()
+                );
+                if (online == null || !online.isOnline()) {
+                    return;
+                }
+                if (failure != null) {
+                    online.sendMessage("Frontier purchase is unavailable.");
+                    return;
+                }
+                showPurchaseResult(online, result);
+            })
+        );
+    }
+
+    private void showPurchaseResult(
+        Player player,
+        FrontierPurchaseCoordinator.Result result
+    ) {
+        NavigationHolder holder = new NavigationHolder(
+            NavigationMode.PURCHASE_RESULT,
+            UUID.randomUUID(),
+            null
+        );
+        Inventory inventory = org.bukkit.Bukkit.createInventory(
+            holder,
+            27,
+            net.kyori.adventure.text.Component.text("Frontier Purchase Result")
+        );
+        holder.inventory = inventory;
+        Material material = switch (result.status()) {
+            case DELIVERED -> Material.LIME_CONCRETE;
+            case PENDING -> Material.YELLOW_CONCRETE;
+            case FAILED -> Material.RED_CONCRETE;
+            case UNKNOWN -> Material.ORANGE_CONCRETE;
+        };
+        inventory.setItem(13, named(
+            material,
+            result.status().name(),
+            List.of(switch (result.status()) {
+                case DELIVERED -> "Item delivered.";
+                case PENDING ->
+                    "Payment accepted; durable delivery is pending.";
+                case FAILED -> "Payment was not committed.";
+                case UNKNOWN ->
+                    "State requires administrator reconciliation.";
+            })
+        ));
+        player.openInventory(inventory);
+    }
+
+    private static ItemStack named(
+        Material material,
+        String name,
+        List<String> lore
+    ) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(net.kyori.adventure.text.Component.text(name));
+        meta.lore(lore.stream()
+            .map(net.kyori.adventure.text.Component::text)
+            .toList());
+        item.setItemMeta(meta);
+        return item;
     }
 
     private static TraversalLoadout replaceAuthority(
@@ -1145,6 +1669,54 @@ public final class FrontierGameplayRuntime implements Listener {
     private record RemovalCapture(
         Launchpad launchpad,
         boolean removed
+    ) {}
+
+    private enum NavigationMode {
+        MAIN,
+        SHOP,
+        LOADOUT,
+        PURCHASE_CONFIRM,
+        PURCHASE_RESULT
+    }
+
+    private static final class NavigationHolder implements InventoryHolder {
+        private final NavigationMode mode;
+        private final UUID token;
+        private final String offerId;
+        private Inventory inventory;
+
+        private NavigationHolder(
+            NavigationMode mode,
+            UUID token,
+            String offerId
+        ) {
+            this.mode = mode;
+            this.token = token;
+            this.offerId = offerId;
+        }
+
+        private NavigationMode mode() {
+            return mode;
+        }
+
+        private UUID token() {
+            return token;
+        }
+
+        private String offerId() {
+            return offerId;
+        }
+
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+    }
+
+    private record NavigationSession(
+        UUID token,
+        String offerId,
+        AtomicBoolean accepted
     ) {}
 
     private static final class RetryCapture {

@@ -176,6 +176,7 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             gameplay::deliverPurchase,
             Clock.systemUTC()
         );
+        gameplay.bindPurchaseCoordinator(purchases);
         PluginCommand command = getCommand("wayfarer-frontier");
         if (command != null) {
             command.setExecutor((sender, ignored, label, arguments) ->
