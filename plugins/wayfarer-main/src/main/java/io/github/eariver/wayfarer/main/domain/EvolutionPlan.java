@@ -1,19 +1,40 @@
 package io.github.eariver.wayfarer.main.domain;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 public final class EvolutionPlan {
+    private final String configRevision;
     private final long stoneThreshold;
     private final long ironThreshold;
     private final long diamondThreshold;
     private final long enchantBase;
     private final long enchantLinear;
     private final long enchantQuadratic;
+    private volatile List<Long> thresholdCache;
 
     public EvolutionPlan(
+        long stoneThreshold,
+        long ironThreshold,
+        long diamondThreshold,
+        long enchantBase,
+        long enchantLinear,
+        long enchantQuadratic
+    ) {
+        this(
+            "legacy",
+            stoneThreshold,
+            ironThreshold,
+            diamondThreshold,
+            enchantBase,
+            enchantLinear,
+            enchantQuadratic
+        );
+    }
+
+    public EvolutionPlan(
+        String configRevision,
         long stoneThreshold,
         long ironThreshold,
         long diamondThreshold,
@@ -26,12 +47,21 @@ public final class EvolutionPlan {
             || enchantLinear < 0 || enchantQuadratic < 0) {
             throw new IllegalArgumentException("Evolution thresholds are invalid");
         }
+        this.configRevision = Objects.requireNonNull(configRevision, "configRevision");
+        if (configRevision.isBlank()) {
+            throw new IllegalArgumentException("Config revision is required");
+        }
         this.stoneThreshold = stoneThreshold;
         this.ironThreshold = ironThreshold;
         this.diamondThreshold = diamondThreshold;
         this.enchantBase = enchantBase;
         this.enchantLinear = enchantLinear;
         this.enchantQuadratic = enchantQuadratic;
+        this.thresholdCache = List.of(
+            stoneThreshold,
+            ironThreshold,
+            diamondThreshold
+        );
     }
 
     public static EvolutionPlan defaults() {
@@ -74,7 +104,7 @@ public final class EvolutionPlan {
         fortune = branch == GrowthTool.Branch.FORTUNE
             ? Math.min(fortune, caps.fortune())
             : 0;
-        int silkTouch = branch == GrowthTool.Branch.SILK_TOUCH && enchantEvolutionCount > 0
+        int silkTouch = branch == GrowthTool.Branch.SILK_TOUCH
             ? Math.min(1, caps.silkTouch())
             : 0;
         Long next = evolutionCount < thresholds.size() ? thresholds.get(evolutionCount) : null;
@@ -90,13 +120,15 @@ public final class EvolutionPlan {
         );
     }
 
-    List<Long> thresholdsThrough(long progress) {
-        List<Long> values = new ArrayList<>();
-        values.add(stoneThreshold);
-        values.add(ironThreshold);
-        values.add(diamondThreshold);
-        long cursor = diamondThreshold;
-        for (long enchantIndex = 0; cursor <= progress; enchantIndex++) {
+    synchronized List<Long> thresholdsThrough(long progress) {
+        List<Long> current = thresholdCache;
+        if (current.get(current.size() - 1) > progress) {
+            return current;
+        }
+        List<Long> values = new ArrayList<>(current);
+        long cursor = values.get(values.size() - 1);
+        long enchantIndex = values.size() - 2L;
+        while (cursor <= progress) {
             long increment = Math.addExact(
                 enchantBase,
                 Math.addExact(
@@ -106,8 +138,18 @@ public final class EvolutionPlan {
             );
             cursor = Math.addExact(cursor, increment);
             values.add(cursor);
+            enchantIndex++;
         }
-        return Collections.unmodifiableList(values);
+        thresholdCache = List.copyOf(values);
+        return thresholdCache;
+    }
+
+    String configRevision() {
+        return configRevision;
+    }
+
+    int cachedThresholdCount() {
+        return thresholdCache.size();
     }
 
     private static int upperBound(List<Long> sorted, long value) {

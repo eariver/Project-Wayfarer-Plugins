@@ -46,7 +46,9 @@ persistence:
   username-ref: WAYFARER_DB_USERNAME
   password-ref: WAYFARER_DB_PASSWORD
   maximum-pool-size: 3
+  minimum-idle: 0
   connection-timeout-millis: 5000
 
 checkpoint:
+  interval-seconds: 300
   disable-timeout-seconds: 15
