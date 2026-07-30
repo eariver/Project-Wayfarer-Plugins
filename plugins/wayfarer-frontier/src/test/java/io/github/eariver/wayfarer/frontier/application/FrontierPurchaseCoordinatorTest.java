@@ -49,14 +49,37 @@ final class FrontierPurchaseCoordinatorTest {
         FrontierPurchaseCoordinator.Request request = request("frontier_iris", "launchpad");
 
         assertEquals(
-            FrontierPurchaseCoordinator.Status.ACCEPTED,
+            FrontierPurchaseCoordinator.Status.PENDING,
             coordinator.purchase(request).toCompletableFuture().join().status()
         );
         assertEquals(
-            FrontierPurchaseCoordinator.Status.ACCEPTED,
+            FrontierPurchaseCoordinator.Status.PENDING,
             coordinator.purchase(request).toCompletableFuture().join().status()
         );
         assertEquals(1, transactions.executeCalls);
+    }
+
+    @Test
+    void deliversOnMainThreadAndReplayDoesNotGrantTwice() {
+        FakeTransactions transactions = new FakeTransactions();
+        java.util.concurrent.atomic.AtomicInteger grants =
+            new java.util.concurrent.atomic.AtomicInteger();
+        FrontierPurchaseCoordinator coordinator = coordinator(
+            transactions,
+            (purchase, deliveryId) -> {
+                grants.incrementAndGet();
+                return true;
+            }
+        );
+        FrontierPurchaseCoordinator.Request request =
+            request("frontier_iris", "firework_rocket");
+
+        assertEquals(FrontierPurchaseCoordinator.Status.DELIVERED,
+            coordinator.purchase(request).toCompletableFuture().join().status());
+        assertEquals(FrontierPurchaseCoordinator.Status.DELIVERED,
+            coordinator.purchase(request).toCompletableFuture().join().status());
+        assertEquals(1, transactions.executeCalls);
+        assertEquals(1, grants.get());
     }
 
     @Test
@@ -78,12 +101,20 @@ final class FrontierPurchaseCoordinatorTest {
     }
 
     private static FrontierPurchaseCoordinator coordinator(FakeTransactions transactions) {
+        return coordinator(transactions, (purchase, deliveryId) -> false);
+    }
+
+    private static FrontierPurchaseCoordinator coordinator(
+        FakeTransactions transactions,
+        FrontierPurchaseCoordinator.DeliveryGateway delivery
+    ) {
         return new FrontierPurchaseCoordinator(
             FrontierWorldGate.worldsBeyondDefault(),
             new FrontierShopCatalog(),
             new FakeRepository(),
             transactions,
             new DirectTasks(),
+            delivery,
             Clock.fixed(NOW, ZoneOffset.UTC)
         );
     }
@@ -145,10 +176,52 @@ final class FrontierPurchaseCoordinatorTest {
                 .filter(value -> value.purchaseId().equals(purchaseId))
                 .findFirst()
                 .orElseThrow();
-            purchases.put(
-                current.idempotencyKey(),
-                transition(current, State.PAYMENT_COMMITTED, transactionId)
+            if (current.state() != State.PAYMENT_PENDING
+                || current.lockVersion() != expectedLockVersion) {
+                return false;
+            }
+            purchases.put(current.idempotencyKey(),
+                transition(current, State.PAYMENT_COMMITTED, transactionId, null));
+            return true;
+        }
+
+        @Override
+        public Optional<Purchase> attachPendingDelivery(
+            UUID purchaseId,
+            long expectedLockVersion,
+            io.github.eariver.wayfarer.frontier.domain.PendingDelivery delivery,
+            Instant now
+        ) {
+            Purchase current = find(purchaseId).orElseThrow();
+            if (current.state() != State.PAYMENT_COMMITTED
+                || current.lockVersion() != expectedLockVersion) {
+                return Optional.empty();
+            }
+            Purchase pending = transition(
+                current,
+                State.PENDING_DELIVERY,
+                current.transactionId(),
+                delivery.deliveryId()
             );
+            purchases.put(current.idempotencyKey(), pending);
+            return Optional.of(pending);
+        }
+
+        @Override
+        public boolean markDelivered(
+            UUID purchaseId,
+            UUID deliveryId,
+            long expectedLockVersion,
+            Instant now
+        ) {
+            Purchase current = find(purchaseId).orElseThrow();
+            if (current.state() != State.PENDING_DELIVERY
+                || !deliveryId.equals(current.deliveryId())
+                || current.lockVersion() != expectedLockVersion) {
+                return false;
+            }
+            purchases.put(current.idempotencyKey(),
+                transition(current, State.DELIVERED, current.transactionId(), deliveryId));
             return true;
         }
 
@@ -163,7 +236,8 @@ final class FrontierPurchaseCoordinatorTest {
             if (current.lockVersion() != expectedLockVersion) {
                 return false;
             }
-            purchases.put(current.idempotencyKey(), transition(current, State.FAILED, null));
+            purchases.put(current.idempotencyKey(),
+                transition(current, State.FAILED, null, null));
             return true;
         }
 
@@ -175,7 +249,9 @@ final class FrontierPurchaseCoordinatorTest {
             Instant now
         ) {
             Purchase current = find(purchaseId).orElseThrow();
-            purchases.put(current.idempotencyKey(), transition(current, State.UNKNOWN, null));
+            purchases.put(current.idempotencyKey(),
+                transition(current, State.UNKNOWN, current.transactionId(),
+                    current.deliveryId()));
         }
 
         @Override
@@ -190,6 +266,15 @@ final class FrontierPurchaseCoordinatorTest {
             State state,
             UUID transactionId
         ) {
+            return transition(current, state, transactionId, current.deliveryId());
+        }
+
+        private static Purchase transition(
+            Purchase current,
+            State state,
+            UUID transactionId,
+            UUID deliveryId
+        ) {
             return new Purchase(
                 current.purchaseId(),
                 current.idempotencyKey(),
@@ -197,6 +282,7 @@ final class FrontierPurchaseCoordinatorTest {
                 current.offer(),
                 state,
                 transactionId,
+                deliveryId,
                 current.lockVersion() + 1
             );
         }

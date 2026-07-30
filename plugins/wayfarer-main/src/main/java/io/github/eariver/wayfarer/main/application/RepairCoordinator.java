@@ -59,7 +59,12 @@ public final class RepairCoordinator {
             case REFUNDED ->
                 CompletableFuture.completedFuture(Result.refunded(operation));
             case FAILED ->
-                CompletableFuture.completedFuture(Result.failed("REPAIR_NOT_APPLIED"));
+                CompletableFuture.completedFuture(Result.failed(
+                    operation,
+                    operation.failureCode() == null
+                        ? "REPAIR_NOT_APPLIED"
+                        : operation.failureCode()
+                ));
             case UNKNOWN ->
                 CompletableFuture.completedFuture(Result.unknown(operation, "RECONCILE_REQUIRED"));
             case PAYMENT_COMMITTED -> applyRepair(operation);
@@ -114,7 +119,18 @@ public final class RepairCoordinator {
         }
         if (transaction.state() != WayfarerTransactions.State.COMMITTED
             && transaction.state() != WayfarerTransactions.State.RECONCILED_COMMITTED) {
-            return CompletableFuture.completedFuture(Result.failed("PAYMENT_FAILED"));
+            String failureCode = sanitizedPaymentFailure(transaction.failureCode());
+            return tasks.database(() -> repository.failed(
+                claimed.repairId(),
+                claimed.lockVersion(),
+                failureCode,
+                clock.instant()
+            )).thenApply(failed -> failed
+                .map(value -> Result.failed(value, failureCode))
+                .orElseGet(() -> Result.unknown(claimed, "PAYMENT_FAILURE_COMMIT_UNKNOWN"))
+            ).exceptionally(ignored ->
+                Result.unknown(claimed, "PAYMENT_FAILURE_COMMIT_UNKNOWN")
+            );
         }
         return tasks.database(() -> repository.paymentCommitted(
             claimed.repairId(),
@@ -207,6 +223,13 @@ public final class RepairCoordinator {
         }).exceptionally(ignored -> Result.unknown(operation, failureCode));
     }
 
+    private static String sanitizedPaymentFailure(String failureCode) {
+        if (failureCode != null && failureCode.matches("[A-Z0-9_]{3,96}")) {
+            return failureCode;
+        }
+        return "PAYMENT_FAILED";
+    }
+
     public interface RepairGateway {
         /**
          * Runs on the main thread and must revalidate the online player, canonical PDC claim,
@@ -239,6 +262,15 @@ public final class RepairCoordinator {
 
         private static Result failed(String code) {
             return new Result(Status.FAILED, null, null, code);
+        }
+
+        private static Result failed(RepairOperation operation, String code) {
+            return new Result(
+                Status.FAILED,
+                operation.repairId(),
+                operation.transactionId(),
+                code
+            );
         }
 
         private static Result unknown(RepairOperation operation, String code) {

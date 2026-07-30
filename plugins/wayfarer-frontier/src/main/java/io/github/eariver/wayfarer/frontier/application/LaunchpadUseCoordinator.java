@@ -49,7 +49,9 @@ public final class LaunchpadUseCoordinator {
                 );
             }
             UseCapture capture = new UseCapture(claimed.orElseThrow());
-            return tasks.mainThread(() -> {
+            CompletionStage<Void> stage;
+            try {
+                stage = tasks.mainThread(() -> {
                 boolean safe = gateway.safeToLaunch(request.playerUuid(), capture.original);
                 Launchpad.UseResult use = capture.original.use(
                     clock.instant(),
@@ -61,15 +63,28 @@ public final class LaunchpadUseCoordinator {
                 capture.updated = use.launchpad();
                 capture.outcome = use.outcome();
                 if (capture.outcome == Launchpad.Outcome.LAUNCHED) {
+                    capture.launchAttempted = true;
                     gateway.launch(request.playerUuid(), capture.updated);
                 }
-            }).thenCompose(ignored -> persist(capture));
+                });
+            } catch (RuntimeException failure) {
+                return release(capture);
+            }
+            return stage.handle((ignored, failure) -> failure)
+                .thenCompose(failure -> {
+                    if (failure == null) {
+                        return persist(capture);
+                    }
+                    return capture.launchAttempted
+                        ? markUnknown(capture.original.launchpadId())
+                        : release(capture);
+                });
         }).exceptionally(ignored -> Result.unknown());
     }
 
     private CompletionStage<Result> persist(UseCapture capture) {
         if (capture.outcome != Launchpad.Outcome.LAUNCHED) {
-            return CompletableFuture.completedFuture(Result.of(capture.outcome));
+            return release(capture);
         }
         return tasks.database(() -> repository.saveAfterUse(
             capture.updated,
@@ -81,6 +96,17 @@ public final class LaunchpadUseCoordinator {
             }
             return markUnknown(capture.original.launchpadId());
         }).exceptionallyCompose(ignored -> markUnknown(capture.original.launchpadId()));
+    }
+
+    private CompletionStage<Result> release(UseCapture capture) {
+        return tasks.database(() -> repository.releaseUseClaim(
+            capture.original.launchpadId(),
+            capture.original.lockVersion(),
+            clock.instant()
+        )).thenApply(released -> released
+            ? Result.of(capture.outcome)
+            : Result.reconcile(capture.outcome)
+        ).exceptionally(ignored -> Result.reconcile(capture.outcome));
     }
 
     private CompletionStage<Result> markUnknown(UUID launchpadId) {
@@ -120,12 +146,17 @@ public final class LaunchpadUseCoordinator {
         private static Result unknown() {
             return new Result(Launchpad.Outcome.UNAVAILABLE, true);
         }
+
+        private static Result reconcile(Launchpad.Outcome outcome) {
+            return new Result(outcome, true);
+        }
     }
 
     private static final class UseCapture {
         private final Launchpad original;
         private Launchpad updated;
         private Launchpad.Outcome outcome = Launchpad.Outcome.UNAVAILABLE;
+        private boolean launchAttempted;
 
         private UseCapture(Launchpad original) {
             this.original = original;

@@ -13,8 +13,36 @@ public record RepairOperation(
     State state,
     UUID transactionId,
     String refundOperationId,
+    String failureCode,
     long lockVersion
 ) {
+    public RepairOperation(
+        UUID repairId,
+        String idempotencyKey,
+        UUID playerUuid,
+        UUID toolId,
+        long instanceEpoch,
+        long amountWaymark,
+        State state,
+        UUID transactionId,
+        String refundOperationId,
+        long lockVersion
+    ) {
+        this(
+            repairId,
+            idempotencyKey,
+            playerUuid,
+            toolId,
+            instanceEpoch,
+            amountWaymark,
+            state,
+            transactionId,
+            refundOperationId,
+            null,
+            lockVersion
+        );
+    }
+
     public RepairOperation {
         Objects.requireNonNull(repairId, "repairId");
         Objects.requireNonNull(idempotencyKey, "idempotencyKey");
@@ -28,6 +56,9 @@ public record RepairOperation(
         if (refundOperationId != null
             && !refundOperationId.matches("[A-Za-z0-9:_-]{8,191}")) {
             throw new IllegalArgumentException("Refund operation id is invalid");
+        }
+        if (failureCode != null && !failureCode.matches("[A-Z0-9_]{3,96}")) {
+            throw new IllegalArgumentException("Failure code is invalid");
         }
     }
 

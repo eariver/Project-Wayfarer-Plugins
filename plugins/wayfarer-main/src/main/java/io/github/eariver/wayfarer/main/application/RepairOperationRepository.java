@@ -28,6 +28,13 @@ public interface RepairOperationRepository {
         Instant now
     );
 
+    Optional<RepairOperation> failed(
+        UUID repairId,
+        long expectedLockVersion,
+        String failureCode,
+        Instant now
+    );
+
     boolean domainCommitted(UUID repairId, long expectedLockVersion, Instant now);
 
     Optional<RepairOperation> claimRefund(UUID repairId, long expectedLockVersion, Instant now);

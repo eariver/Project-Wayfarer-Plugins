@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface LaunchpadRepository {
     Optional<Launchpad> claimForUse(UUID launchpadId, Instant claimUntil, Instant now);
 
+    boolean releaseUseClaim(UUID launchpadId, long expectedLockVersion, Instant now);
+
     boolean saveAfterUse(Launchpad launchpad, long expectedLockVersion, Instant now);
 
     void markUnknown(UUID launchpadId, String failureCode, Instant now);

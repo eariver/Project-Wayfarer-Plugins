@@ -88,6 +88,71 @@ final class RepairCoordinatorTest {
         assertEquals(0, waymark.refundCalls);
     }
 
+    @Test
+    void clearPaymentFailuresPersistFailedAndReplayWithoutDebit() {
+        for (String code : java.util.List.of("INSUFFICIENT_FUNDS", "PROVIDER_REJECTED")) {
+            FakeRepository repository = new FakeRepository();
+            FakeTransactions transactions = new FakeTransactions();
+            transactions.resultState = WayfarerTransactions.State.FAILED;
+            transactions.failureCode = code;
+            RepairCoordinator coordinator = coordinator(
+                repository,
+                transactions,
+                new FakeWaymark(),
+                (player, tool, epoch, repair) -> true
+            );
+
+            assertEquals(code,
+                coordinator.repair(request()).toCompletableFuture().join().failureCode());
+            assertEquals(RepairCoordinator.Status.FAILED,
+                coordinator.repair(request()).toCompletableFuture().join().status());
+            assertEquals(RepairOperation.State.FAILED, repository.operation.state());
+            assertEquals(1, transactions.executeCalls);
+        }
+    }
+
+    @Test
+    void paymentUnknownAndExceptionAreNotRetried() {
+        for (boolean exception : java.util.List.of(false, true)) {
+            FakeRepository repository = new FakeRepository();
+            FakeTransactions transactions = new FakeTransactions();
+            transactions.resultState = WayfarerTransactions.State.UNKNOWN;
+            transactions.failAsync = exception;
+            RepairCoordinator coordinator = coordinator(
+                repository,
+                transactions,
+                new FakeWaymark(),
+                (player, tool, epoch, repair) -> true
+            );
+
+            assertEquals(RepairCoordinator.Status.UNKNOWN,
+                coordinator.repair(request()).toCompletableFuture().join().status());
+            assertEquals(RepairCoordinator.Status.UNKNOWN,
+                coordinator.repair(request()).toCompletableFuture().join().status());
+            assertEquals(1, transactions.executeCalls);
+        }
+    }
+
+    @Test
+    void unknownRefundIsNeverIssuedTwice() {
+        FakeRepository repository = new FakeRepository();
+        FakeTransactions transactions = new FakeTransactions();
+        FakeWaymark waymark = new FakeWaymark();
+        waymark.failAsync = true;
+        RepairCoordinator coordinator = coordinator(
+            repository,
+            transactions,
+            waymark,
+            (player, tool, epoch, repair) -> false
+        );
+
+        assertEquals(RepairCoordinator.Status.UNKNOWN,
+            coordinator.repair(request()).toCompletableFuture().join().status());
+        assertEquals(RepairCoordinator.Status.UNKNOWN,
+            coordinator.repair(request()).toCompletableFuture().join().status());
+        assertEquals(1, waymark.refundCalls);
+    }
+
     private static RepairCoordinator coordinator(
         FakeRepository repository,
         FakeTransactions transactions,
@@ -168,6 +233,26 @@ final class RepairCoordinatorTest {
         }
 
         @Override
+        public Optional<RepairOperation> failed(
+            UUID repairId,
+            long expectedLockVersion,
+            String failureCode,
+            Instant now
+        ) {
+            if (operation.state() != RepairOperation.State.PAYMENT_PENDING
+                || operation.lockVersion() != expectedLockVersion) {
+                return Optional.empty();
+            }
+            operation = transition(
+                RepairOperation.State.FAILED,
+                null,
+                null,
+                failureCode
+            );
+            return Optional.of(operation);
+        }
+
+        @Override
         public boolean domainCommitted(UUID repairId, long expectedLockVersion, Instant now) {
             if (rejectDomainCommit) {
                 return false;
@@ -228,6 +313,15 @@ final class RepairCoordinatorTest {
             UUID transactionId,
             String refundOperationId
         ) {
+            return transition(state, transactionId, refundOperationId, null);
+        }
+
+        private RepairOperation transition(
+            RepairOperation.State state,
+            UUID transactionId,
+            String refundOperationId,
+            String failureCode
+        ) {
             return new RepairOperation(
                 operation.repairId(),
                 operation.idempotencyKey(),
@@ -238,6 +332,7 @@ final class RepairCoordinatorTest {
                 state,
                 transactionId,
                 refundOperationId,
+                failureCode,
                 operation.lockVersion() + 1
             );
         }
@@ -245,12 +340,20 @@ final class RepairCoordinatorTest {
 
     private static final class FakeTransactions implements WayfarerTransactions {
         private int executeCalls;
+        private State resultState = State.COMMITTED;
+        private String failureCode;
+        private boolean failAsync;
 
         @Override
         public CompletionStage<TransactionResult> execute(TransactionRequest request) {
             executeCalls++;
+            if (failAsync) {
+                return CompletableFuture.failedFuture(
+                    new IllegalStateException("sensitive transaction failure")
+                );
+            }
             return CompletableFuture.completedFuture(
-                new TransactionResult(TRANSACTION, State.COMMITTED, null)
+                new TransactionResult(TRANSACTION, resultState, failureCode)
             );
         }
 
@@ -262,6 +365,7 @@ final class RepairCoordinatorTest {
 
     private static final class FakeWaymark implements WayfarerWaymark {
         private int refundCalls;
+        private boolean failAsync;
 
         @Override
         public CompletionStage<BigDecimal> balance(UUID playerUuid) {
@@ -284,6 +388,11 @@ final class RepairCoordinatorTest {
             String reference
         ) {
             refundCalls++;
+            if (failAsync) {
+                return CompletableFuture.failedFuture(
+                    new IllegalStateException("sensitive refund failure")
+                );
+            }
             return CompletableFuture.completedFuture(new OperationResult(true, null, null));
         }
     }

@@ -1,6 +1,7 @@
 package io.github.eariver.wayfarer.frontier.application;
 
 import io.github.eariver.wayfarer.frontier.domain.FrontierShopCatalog;
+import io.github.eariver.wayfarer.frontier.domain.PendingDelivery;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,6 +31,20 @@ public interface FrontierPurchaseRepository {
         Instant now
     );
 
+    Optional<Purchase> attachPendingDelivery(
+        UUID purchaseId,
+        long expectedLockVersion,
+        PendingDelivery delivery,
+        Instant now
+    );
+
+    boolean markDelivered(
+        UUID purchaseId,
+        UUID deliveryId,
+        long expectedLockVersion,
+        Instant now
+    );
+
     boolean markFailed(
         UUID purchaseId,
         long expectedLockVersion,
@@ -53,13 +68,36 @@ public interface FrontierPurchaseRepository {
         FrontierShopCatalog.Offer offer,
         State state,
         UUID transactionId,
+        UUID deliveryId,
         long lockVersion
-    ) {}
+    ) {
+        public Purchase(
+            UUID purchaseId,
+            String idempotencyKey,
+            UUID playerUuid,
+            FrontierShopCatalog.Offer offer,
+            State state,
+            UUID transactionId,
+            long lockVersion
+        ) {
+            this(
+                purchaseId,
+                idempotencyKey,
+                playerUuid,
+                offer,
+                state,
+                transactionId,
+                null,
+                lockVersion
+            );
+        }
+    }
 
     enum State {
         PREPARED,
         PAYMENT_PENDING,
         PAYMENT_COMMITTED,
+        PENDING_DELIVERY,
         DELIVERED,
         UNKNOWN,
         FAILED
