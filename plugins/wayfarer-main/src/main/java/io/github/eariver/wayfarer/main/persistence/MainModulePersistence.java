@@ -37,7 +37,7 @@ public final class MainModulePersistence implements AutoCloseable {
         hikari.setPoolName("Wayfarer-Main");
         HikariDataSource source = new HikariDataSource(hikari);
         try {
-            Flyway.configure()
+            Flyway.configure(MainModulePersistence.class.getClassLoader())
                 .dataSource(source)
                 .table(HISTORY_TABLE)
                 .baselineOnMigrate(true)

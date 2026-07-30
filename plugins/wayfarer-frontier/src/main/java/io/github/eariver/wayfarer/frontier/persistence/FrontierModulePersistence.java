@@ -34,7 +34,7 @@ public final class FrontierModulePersistence implements AutoCloseable {
         hikari.setPoolName("Wayfarer-Frontier");
         HikariDataSource source = new HikariDataSource(hikari);
         try {
-            Flyway.configure()
+            Flyway.configure(FrontierModulePersistence.class.getClassLoader())
                 .dataSource(source)
                 .table(HISTORY_TABLE)
                 .baselineOnMigrate(true)
