@@ -164,7 +164,7 @@ migration:
 waymark:
   enabled: true
   expected-provider: RedisEconomy
-  operation-timeout-ms: 1000
+  operation-timeout-ms: 5000
 CONFIG
   cp "$core_jar" "$server_root/plugins/Wayfarer_Core-${candidate_version}.jar"
   cp "$main_jar" "$server_root/plugins/Wayfarer_Main-${candidate_version}.jar"
