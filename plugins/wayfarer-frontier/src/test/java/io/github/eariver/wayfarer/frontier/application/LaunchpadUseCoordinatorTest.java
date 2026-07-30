@@ -137,6 +137,16 @@ final class LaunchpadUseCoordinatorTest {
         private int unknownCalls;
 
         @Override
+        public boolean create(Launchpad launchpad, Instant now) {
+            return true;
+        }
+
+        @Override
+        public Optional<Launchpad> findAt(Launchpad.Location location) {
+            return Optional.of(launchpad());
+        }
+
+        @Override
         public Optional<Launchpad> claimForUse(
             UUID launchpadId,
             Instant claimUntil,
@@ -176,6 +186,16 @@ final class LaunchpadUseCoordinatorTest {
         @Override
         public void markUnknown(UUID launchpadId, String failureCode, Instant now) {
             unknownCalls++;
+        }
+
+        @Override
+        public boolean remove(
+            UUID launchpadId,
+            long expectedLockVersion,
+            Launchpad.State removalState,
+            Instant now
+        ) {
+            return true;
         }
 
         @Override

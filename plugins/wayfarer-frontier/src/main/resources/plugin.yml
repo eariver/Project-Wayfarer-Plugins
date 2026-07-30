@@ -9,7 +9,7 @@ softdepend: [Multiverse-Inventories, LeafGrapple, WorldGuard, WorldEdit]
 commands:
   wayfarer-frontier:
     description: Wayfarer Frontier navigation and administration
-    usage: /wayfarer-frontier <open|status|loadout|delivery|launchpad|transaction|audit>
+    usage: /wayfarer-frontier <open|status|shop|loadout|delivery|launchpad|transaction|audit>
     aliases: [wffrontier]
 permissions:
   wayfarer.frontier.use:

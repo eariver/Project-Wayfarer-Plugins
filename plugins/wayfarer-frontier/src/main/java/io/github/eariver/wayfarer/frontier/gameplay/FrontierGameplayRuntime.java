@@ -3,6 +3,10 @@ package io.github.eariver.wayfarer.frontier.gameplay;
 import io.github.eariver.wayfarer.api.WayfarerServices;
 import io.github.eariver.wayfarer.frontier.application.TraversalDeliveryCoordinator;
 import io.github.eariver.wayfarer.frontier.application.TraversalLoadoutRepository;
+import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseRepository;
+import io.github.eariver.wayfarer.frontier.application.LaunchpadRepository;
+import io.github.eariver.wayfarer.frontier.application.LaunchpadUseCoordinator;
+import io.github.eariver.wayfarer.frontier.domain.Launchpad;
 import io.github.eariver.wayfarer.frontier.config.FrontierModuleConfig;
 import io.github.eariver.wayfarer.frontier.domain.FrontierWorldGate;
 import io.github.eariver.wayfarer.frontier.domain.PendingDelivery;
@@ -19,6 +23,16 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.util.Vector;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -27,6 +41,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Clock;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.time.Instant;
+import java.time.Duration;
 
 public final class FrontierGameplayRuntime implements Listener {
     private static final NamespacedKey ITEM_TYPE =
@@ -41,12 +58,18 @@ public final class FrontierGameplayRuntime implements Listener {
     private final FrontierModuleConfig config;
     private final LeafGrappleBridge leafGrapple;
     private final TraversalDeliveryCoordinator delivery;
+    private final WayfarerServices services;
+    private final LaunchpadRepository launchpads;
+    private final LaunchpadUseCoordinator launchpadUse;
+    private final ConcurrentHashMap<UUID, Instant> cooldowns =
+        new ConcurrentHashMap<>();
 
     public FrontierGameplayRuntime(
         JavaPlugin plugin,
         FrontierModuleConfig config,
         WayfarerServices services,
         TraversalLoadoutRepository repository,
+        LaunchpadRepository launchpads,
         LeafGrappleBridge leafGrapple,
         Clock clock
     ) {
@@ -56,12 +79,22 @@ public final class FrontierGameplayRuntime implements Listener {
             leafGrapple,
             "leafGrapple"
         );
+        this.services = java.util.Objects.requireNonNull(services, "services");
+        this.launchpads = java.util.Objects.requireNonNull(launchpads, "launchpads");
         delivery = new TraversalDeliveryCoordinator(
             new FrontierWorldGate(java.util.Set.of(config.exactWorldName())),
             repository,
             services.tasks(),
             this::deliver,
             clock
+        );
+        launchpadUse = new LaunchpadUseCoordinator(
+            launchpads,
+            services.tasks(),
+            new LaunchpadGateway(),
+            clock,
+            Duration.ofSeconds(5),
+            config.launchpad().expiration()
         );
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         for (Player player : plugin.getServer().getOnlinePlayers()) {
@@ -106,6 +139,150 @@ public final class FrontierGameplayRuntime implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        ItemStack used = event.getItemInHand();
+        if (!config.exactWorldName().equals(player.getWorld().getName())
+            || event.getBlockPlaced().getType()
+            != Material.valueOf(config.launchpad().material())
+            || !"LAUNCHPAD".equals(text(used, ITEM_TYPE))
+            || !player.getUniqueId().toString().equals(text(used, OWNER_ID))) {
+            return;
+        }
+        event.setCancelled(true);
+        var block = event.getBlockPlaced();
+        Launchpad launchpad = new Launchpad(
+            UUID.randomUUID(),
+            location(block),
+            player.getLocation().getYaw(),
+            player.getUniqueId(),
+            0,
+            config.launchpad().maximumSuccessfulUses(),
+            Instant.now(),
+            null,
+            Instant.now().plus(config.launchpad().expiration()),
+            "frontier-v1",
+            Launchpad.State.ACTIVE,
+            1,
+            0
+        );
+        services.tasks().database(() ->
+            launchpads.create(launchpad, Instant.now())
+        ).thenAccept(created -> services.tasks().mainThread(() -> {
+            ItemStack current = event.getHand() == EquipmentSlot.HAND
+                ? player.getInventory().getItemInMainHand()
+                : player.getInventory().getItemInOffHand();
+            if (!created || !player.isOnline()
+                || !config.exactWorldName().equals(player.getWorld().getName())
+                || !block.getType().isAir()
+                || !"LAUNCHPAD".equals(text(current, ITEM_TYPE))) {
+                if (created) {
+                    services.tasks().database(() -> launchpads.remove(
+                        launchpad.launchpadId(),
+                        launchpad.lockVersion(),
+                        Launchpad.State.RECONCILED_REMOVED,
+                        Instant.now()
+                    ));
+                }
+                return;
+            }
+            block.setType(Material.valueOf(config.launchpad().material()), false);
+            current.setAmount(current.getAmount() - 1);
+        }));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onUse(PlayerInteractEvent event) {
+        if (event.getAction() != Action.PHYSICAL
+            || event.getClickedBlock() == null
+            || !config.exactWorldName().equals(event.getPlayer().getWorld().getName())
+            || event.getClickedBlock().getType()
+            != Material.valueOf(config.launchpad().material())) {
+            return;
+        }
+        event.setCancelled(true);
+        Launchpad.Location location = location(event.getClickedBlock());
+        services.tasks().database(() -> launchpads.findAt(location))
+            .thenAccept(found -> found.ifPresent(launchpad ->
+                launchpadUse.use(new LaunchpadUseCoordinator.Request(
+                    launchpad.launchpadId(),
+                    event.getPlayer().getUniqueId(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getPlayer().isSneaking(),
+                    cooldowns.get(event.getPlayer().getUniqueId())
+                )).thenAccept(result -> {
+                    if (result.outcome() == Launchpad.Outcome.LAUNCHED) {
+                        cooldowns.put(
+                            event.getPlayer().getUniqueId(),
+                            Instant.now().plus(config.launchpad().cooldown())
+                        );
+                    }
+                })
+            ));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBreak(BlockBreakEvent event) {
+        if (!config.exactWorldName().equals(event.getBlock().getWorld().getName())
+            || event.getBlock().getType()
+            != Material.valueOf(config.launchpad().material())) {
+            return;
+        }
+        event.setCancelled(true);
+        Launchpad.Location location = location(event.getBlock());
+        services.tasks().database(() -> launchpads.findAt(location))
+            .thenAccept(found -> services.tasks().mainThread(() -> {
+                if (found.isEmpty()) {
+                    event.getBlock().breakNaturally();
+                    return;
+                }
+                Launchpad launchpad = found.orElseThrow();
+                if (!config.launchpad().allowPlayerBreak()
+                    || (!launchpad.placerUuid().equals(
+                        event.getPlayer().getUniqueId()
+                    ) && !event.getPlayer().hasPermission(
+                        "wayfarer.frontier.admin"
+                    ))) {
+                    return;
+                }
+                services.tasks().database(() -> launchpads.remove(
+                    launchpad.launchpadId(),
+                    launchpad.lockVersion(),
+                    Launchpad.State.PLAYER_BROKEN,
+                    Instant.now()
+                )).thenAccept(removed -> services.tasks().mainThread(() -> {
+                    if (removed) {
+                        event.getBlock().setType(Material.AIR, false);
+                    }
+                }));
+            }));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityExplosion(EntityExplodeEvent event) {
+        event.blockList().removeIf(this::isProtectedLaunchpadMaterial);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockExplosion(BlockExplodeEvent event) {
+        event.blockList().removeIf(this::isProtectedLaunchpadMaterial);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPistonExtend(BlockPistonExtendEvent event) {
+        if (event.getBlocks().stream().anyMatch(this::isProtectedLaunchpadMaterial)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPistonRetract(BlockPistonRetractEvent event) {
+        if (event.getBlocks().stream().anyMatch(this::isProtectedLaunchpadMaterial)) {
+            event.setCancelled(true);
+        }
+    }
+
     private void enter(Player player) {
         delivery.onSafeEntry(
             player.getUniqueId(),
@@ -140,6 +317,25 @@ public final class FrontierGameplayRuntime implements Listener {
             return TraversalDeliveryCoordinator.DeliveryOutcome.INVENTORY_FULL;
         }
         return TraversalDeliveryCoordinator.DeliveryOutcome.DELIVERED;
+    }
+
+    public boolean deliverPurchase(
+        FrontierPurchaseRepository.Purchase purchase,
+        UUID deliveryId
+    ) {
+        PendingDelivery pending = new PendingDelivery(
+            deliveryId,
+            purchase.playerUuid(),
+            "worlds-beyond",
+            purchase.offer().itemType(),
+            purchase.offer().quantity(),
+            "frontier-shop-delivery:" + purchase.purchaseId(),
+            PendingDelivery.State.PENDING,
+            0,
+            java.time.Instant.now()
+        );
+        return deliver(purchase.playerUuid(), pending)
+            == TraversalDeliveryCoordinator.DeliveryOutcome.DELIVERED;
     }
 
     private ItemStack create(UUID ownerUuid, PendingDelivery pending) {
@@ -204,5 +400,63 @@ public final class FrontierGameplayRuntime implements Listener {
             key,
             PersistentDataType.STRING
         );
+    }
+
+    private boolean isProtectedLaunchpadMaterial(org.bukkit.block.Block block) {
+        return config.exactWorldName().equals(block.getWorld().getName())
+            && block.getType() == Material.valueOf(config.launchpad().material());
+    }
+
+    private static Launchpad.Location location(org.bukkit.block.Block block) {
+        return new Launchpad.Location(
+            block.getWorld().getName(),
+            block.getX(),
+            block.getY(),
+            block.getZ()
+        );
+    }
+
+    private final class LaunchpadGateway
+        implements LaunchpadUseCoordinator.LaunchGateway {
+        @Override
+        public boolean safeToLaunch(UUID playerUuid, Launchpad launchpad) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            if (player == null || !player.isOnline()
+                || !config.exactWorldName().equals(
+                    player.getWorld().getName()
+                )) {
+                return false;
+            }
+            var world = player.getWorld();
+            var block = world.getBlockAt(
+                launchpad.location().x(),
+                launchpad.location().y(),
+                launchpad.location().z()
+            );
+            return block.getType()
+                == Material.valueOf(config.launchpad().material())
+                && block.getRelative(0, 1, 0).isPassable()
+                && block.getRelative(0, 2, 0).isPassable();
+        }
+
+        @Override
+        public void launch(UUID playerUuid, Launchpad launchpad) {
+            Player player = java.util.Objects.requireNonNull(
+                plugin.getServer().getPlayer(playerUuid),
+                "online player"
+            );
+            Vector direction = player.getLocation().getDirection()
+                .setY(0)
+                .normalize()
+                .multiply(config.launchpad().horizontalVelocity());
+            direction.setY(config.launchpad().verticalVelocity());
+            player.setVelocity(direction);
+            if (config.launchpad().autoDeployElytra()
+                && player.getInventory().getChestplate() != null
+                && player.getInventory().getChestplate().getType()
+                == Material.ELYTRA) {
+                player.setGliding(true);
+            }
+        }
     }
 }

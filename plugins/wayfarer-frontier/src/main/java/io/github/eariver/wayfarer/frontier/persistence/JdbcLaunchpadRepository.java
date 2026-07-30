@@ -23,6 +23,61 @@ public final class JdbcLaunchpadRepository implements LaunchpadRepository {
     }
 
     @Override
+    public boolean create(Launchpad launchpad, Instant now) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement insert = connection.prepareStatement(
+                 "INSERT INTO wf_frontier_launchpad "
+                     + "(launchpad_id,world_id,x,y,z,yaw,placer_uuid,"
+                     + "successful_use_count,max_uses_at_creation,created_at,"
+                     + "last_used_at,expires_at,definition_id,state,schema_version,"
+                     + "lock_version,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+             )) {
+            insert.setString(1, launchpad.launchpadId().toString());
+            insert.setString(2, launchpad.location().worldId());
+            insert.setInt(3, launchpad.location().x());
+            insert.setInt(4, launchpad.location().y());
+            insert.setInt(5, launchpad.location().z());
+            insert.setFloat(6, launchpad.yaw());
+            insert.setString(7, launchpad.placerUuid().toString());
+            insert.setInt(8, launchpad.successfulUseCount());
+            insert.setInt(9, launchpad.maxUsesAtCreation());
+            insert.setTimestamp(10, Timestamp.from(launchpad.createdAt()));
+            insert.setTimestamp(11, nullable(launchpad.lastUsedAt()));
+            insert.setTimestamp(12, Timestamp.from(launchpad.expiresAt()));
+            insert.setString(13, launchpad.definitionId());
+            insert.setString(14, launchpad.state().name());
+            insert.setInt(15, launchpad.schemaVersion());
+            insert.setLong(16, launchpad.lockVersion());
+            insert.setTimestamp(17, Timestamp.from(now));
+            return insert.executeUpdate() == 1;
+        } catch (SQLException failure) {
+            if ("23000".equals(failure.getSQLState())) {
+                return false;
+            }
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public Optional<Launchpad> findAt(Launchpad.Location location) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement query = connection.prepareStatement(
+                 "SELECT * FROM wf_frontier_launchpad "
+                     + "WHERE world_id=? AND x=? AND y=? AND z=?"
+             )) {
+            query.setString(1, location.worldId());
+            query.setInt(2, location.x());
+            query.setInt(3, location.y());
+            query.setInt(4, location.z());
+            try (ResultSet result = query.executeQuery()) {
+                return result.next() ? Optional.of(map(result)) : Optional.empty();
+            }
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
     public Optional<Launchpad> claimForUse(
         UUID launchpadId,
         Instant claimUntil,
@@ -111,6 +166,35 @@ public final class JdbcLaunchpadRepository implements LaunchpadRepository {
             update.setTimestamp(2, Timestamp.from(now));
             update.setString(3, launchpadId.toString());
             update.executeUpdate();
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public boolean remove(
+        UUID launchpadId,
+        long expectedLockVersion,
+        Launchpad.State removalState,
+        Instant now
+    ) {
+        if (removalState != Launchpad.State.PLAYER_BROKEN
+            && removalState != Launchpad.State.ADMIN_REMOVED
+            && removalState != Launchpad.State.RECONCILED_REMOVED) {
+            throw new IllegalArgumentException("Invalid launchpad removal state");
+        }
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement update = connection.prepareStatement(
+                 "UPDATE wf_frontier_launchpad SET state=?,"
+                     + "use_claim_token=NULL,use_claim_until=NULL,"
+                     + "lock_version=lock_version+1,updated_at=? "
+                     + "WHERE launchpad_id=? AND state='ACTIVE' AND lock_version=?"
+             )) {
+            update.setString(1, removalState.name());
+            update.setTimestamp(2, Timestamp.from(now));
+            update.setString(3, launchpadId.toString());
+            update.setLong(4, expectedLockVersion);
+            return update.executeUpdate() == 1;
         } catch (SQLException failure) {
             throw unavailable();
         }

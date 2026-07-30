@@ -11,6 +11,10 @@ import java.util.UUID;
  * {@code WayfarerTasks.database}.
  */
 public interface LaunchpadRepository {
+    boolean create(Launchpad launchpad, Instant now);
+
+    Optional<Launchpad> findAt(Launchpad.Location location);
+
     Optional<Launchpad> claimForUse(UUID launchpadId, Instant claimUntil, Instant now);
 
     boolean releaseUseClaim(UUID launchpadId, long expectedLockVersion, Instant now);
@@ -18,6 +22,13 @@ public interface LaunchpadRepository {
     boolean saveAfterUse(Launchpad launchpad, long expectedLockVersion, Instant now);
 
     void markUnknown(UUID launchpadId, String failureCode, Instant now);
+
+    boolean remove(
+        UUID launchpadId,
+        long expectedLockVersion,
+        Launchpad.State removalState,
+        Instant now
+    );
 
     List<Launchpad> findExpirationCandidates(Instant now, int limit);
 }

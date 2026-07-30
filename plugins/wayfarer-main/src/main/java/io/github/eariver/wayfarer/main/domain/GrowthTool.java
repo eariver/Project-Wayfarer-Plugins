@@ -93,6 +93,27 @@ public record GrowthTool(
         );
     }
 
+    public GrowthTool withBranch(Branch nextBranch, Instant now) {
+        Objects.requireNonNull(nextBranch, "nextBranch");
+        if (status == Status.REVOKED) {
+            throw new IllegalStateException("A revoked tool cannot change branch");
+        }
+        return new GrowthTool(
+            toolId,
+            ownerUuid,
+            instanceEpoch,
+            cumulativeProgressUnits,
+            nextBranch,
+            status,
+            deliveryStatus,
+            storedDamage,
+            schemaVersion,
+            Math.addExact(displayRevision, 1),
+            lockVersion,
+            now
+        );
+    }
+
     public enum Branch {
         FORTUNE,
         SILK_TOUCH

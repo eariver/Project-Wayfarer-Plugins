@@ -22,6 +22,8 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -179,10 +181,34 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDrop(PlayerDropItemEvent event) {
-        String owner = text(event.getItemDrop().getItemStack(), OWNER_ID);
-        if (owner != null && !owner.equals(event.getPlayer().getUniqueId().toString())) {
+        String type = text(event.getItemDrop().getItemStack(), ITEM_TYPE);
+        if ("GROWTH_TOOL".equals(type) || "BROKEN_GROWTH_TOOL".equals(type)) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_AIR
+            || event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
+            return;
+        }
+        GrowthTool tool = sessions.current(event.getPlayer().getUniqueId()).orElse(null);
+        ItemStack held = event.getPlayer().getInventory().getItemInMainHand();
+        if (tool == null || (!canonical(held, event.getPlayer().getUniqueId(), tool)
+            && !"BROKEN_GROWTH_TOOL".equals(text(held, ITEM_TYPE)))) {
+            return;
+        }
+        event.setCancelled(true);
+        var inventory = org.bukkit.Bukkit.createInventory(
+            null,
+            27,
+            net.kyori.adventure.text.Component.text("Growth Tool")
+        );
+        inventory.setItem(11, held.clone());
+        inventory.setItem(13, new ItemStack(Material.EXPERIENCE_BOTTLE));
+        inventory.setItem(15, new ItemStack(Material.ANVIL));
+        event.getPlayer().openInventory(inventory);
     }
 
     public CompletionStage<Integer> stopAndFlush() {
@@ -261,6 +287,21 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
             target.setItemMeta(damageable);
         }
         checkpoints.checkpoint(playerUuid);
+        return true;
+    }
+
+    public boolean switchBranch(Player player, GrowthTool.Branch branch) {
+        GrowthTool current = sessions.current(player.getUniqueId()).orElse(null);
+        ItemStack held = player.getInventory().getItemInMainHand();
+        if (current == null || !canonical(held, player.getUniqueId(), current)) {
+            return false;
+        }
+        GrowthTool updated = sessions.update(
+            player.getUniqueId(),
+            tool -> tool.withBranch(branch, clock.instant())
+        );
+        applyEvolution(held, updated);
+        checkpoints.checkpoint(player.getUniqueId());
         return true;
     }
 

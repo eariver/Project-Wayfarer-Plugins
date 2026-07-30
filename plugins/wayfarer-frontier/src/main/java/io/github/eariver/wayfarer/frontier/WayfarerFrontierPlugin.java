@@ -9,12 +9,22 @@ import io.github.eariver.wayfarer.frontier.persistence.JdbcLaunchpadRepository;
 import io.github.eariver.wayfarer.frontier.persistence.JdbcTraversalLoadoutRepository;
 import io.github.eariver.wayfarer.frontier.gameplay.FrontierGameplayRuntime;
 import io.github.eariver.wayfarer.integration.leafgrapple.ReflectiveLeafGrappleBridge;
+import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseCoordinator;
+import io.github.eariver.wayfarer.frontier.domain.FrontierWorldGate;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.time.Clock;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class WayfarerFrontierPlugin extends JavaPlugin {
     private final AtomicBoolean accepting = new AtomicBoolean();
@@ -22,6 +32,9 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
     private volatile JdbcFrontierPurchaseRepository purchaseRepository;
     private volatile JdbcLaunchpadRepository launchpadRepository;
     private volatile FrontierGameplayRuntime gameplay;
+    private volatile FrontierPurchaseCoordinator purchases;
+    private final ConcurrentHashMap<String, String> purchaseRequests =
+        new ConcurrentHashMap<>();
     private volatile String runtimeState = "INITIALIZING";
 
     @Override
@@ -58,14 +71,9 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
         }
         PluginCommand command = getCommand("wayfarer-frontier");
         if (command != null) {
-            command.setExecutor((sender, ignored, label, arguments) -> {
-                sender.sendMessage(
-                    "Wayfarer Frontier: " + runtimeState
-                        + " | config=" + moduleConfig.configVersion()
-                        + " | world=" + moduleConfig.exactWorldName()
-                );
-                return true;
-            });
+            command.setExecutor((sender, ignored, label, arguments) ->
+                handleCommand(sender, arguments, moduleConfig, services)
+            );
         }
         accepting.set(true);
         services.tasks().database(() -> FrontierModulePersistence.open(
@@ -95,6 +103,8 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
         purchaseRepository = null;
         launchpadRepository = null;
         gameplay = null;
+        purchases = null;
+        purchaseRequests.clear();
         if (opened != null) {
             opened.close();
         }
@@ -122,10 +132,20 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             config,
             services,
             loadouts,
+            launchpadRepository,
             new ReflectiveLeafGrappleBridge(
                 this,
                 getServer().getPluginManager().getPlugin("LeafGrapple")
             ),
+            Clock.systemUTC()
+        );
+        purchases = new FrontierPurchaseCoordinator(
+            new FrontierWorldGate(java.util.Set.of(config.exactWorldName())),
+            config.shopCatalog(),
+            purchaseRepository,
+            services.transactions(),
+            services.tasks(),
+            gameplay::deliverPurchase,
             Clock.systemUTC()
         );
         runtimeState = "ENABLED";
@@ -136,6 +156,70 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
 
     private void scheduleFailClosed(String message) {
         getServer().getScheduler().runTask(this, () -> failClosed(message));
+    }
+
+    private boolean handleCommand(
+        CommandSender sender,
+        String[] arguments,
+        FrontierModuleConfig config,
+        WayfarerServices services
+    ) {
+        if (arguments.length == 0 || "status".equalsIgnoreCase(arguments[0])) {
+            sender.sendMessage(
+                "Wayfarer Frontier: " + runtimeState
+                    + " | config=" + config.configVersion()
+                    + " | world=" + config.exactWorldName()
+            );
+            return true;
+        }
+        if (!(sender instanceof Player player)
+            || !player.hasPermission("wayfarer.frontier.use")) {
+            sender.sendMessage("Wayfarer Frontier operation is unavailable.");
+            return true;
+        }
+        if ("open".equalsIgnoreCase(arguments[0])) {
+            var inventory = Bukkit.createInventory(
+                null,
+                27,
+                Component.text("Wayfarer Navigation")
+            );
+            inventory.setItem(13, new ItemStack(Material.COMPASS));
+            player.openInventory(inventory);
+            return true;
+        }
+        if (!"shop".equalsIgnoreCase(arguments[0]) || arguments.length != 2) {
+            sender.sendMessage(
+                "Usage: /wayfarer-frontier <status|open|shop <offer>>"
+            );
+            return true;
+        }
+        FrontierPurchaseCoordinator coordinator = purchases;
+        if (coordinator == null) {
+            sender.sendMessage("Wayfarer Frontier shop is unavailable.");
+            return true;
+        }
+        String offer = arguments[1].toLowerCase(java.util.Locale.ROOT);
+        String requestSlot = player.getUniqueId() + ":" + offer;
+        String idempotency = purchaseRequests.computeIfAbsent(
+            requestSlot,
+            ignored -> "frontier-shop:" + UUID.randomUUID()
+        );
+        coordinator.purchase(new FrontierPurchaseCoordinator.Request(
+            idempotency,
+            player.getUniqueId(),
+            player.getWorld().getName(),
+            offer
+        )).thenAccept(result -> services.tasks().mainThread(() -> {
+            player.sendMessage("Wayfarer Frontier purchase: " + result.status());
+            if (result.status() != FrontierPurchaseCoordinator.Status.UNKNOWN) {
+                getServer().getScheduler().runTaskLater(
+                    this,
+                    () -> purchaseRequests.remove(requestSlot, idempotency),
+                    40L
+                );
+            }
+        }));
+        return true;
     }
 
     private void failClosed(String message) {

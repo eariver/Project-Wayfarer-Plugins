@@ -158,11 +158,38 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         MainModuleConfig config,
         WayfarerServices services
     ) {
-        if (arguments.length == 0 || !"repair".equalsIgnoreCase(arguments[0])) {
+        if (arguments.length == 0 || "status".equalsIgnoreCase(arguments[0])) {
             sender.sendMessage(
                 "Wayfarer Main: " + runtimeState
                     + " | config=" + config.configVersion()
             );
+            return true;
+        }
+        if ("branch".equalsIgnoreCase(arguments[0])) {
+            if (!(sender instanceof Player player)
+                || !player.hasPermission("wayfarer.main.admin")
+                || arguments.length != 2) {
+                sender.sendMessage("Wayfarer Main branch change is unavailable.");
+                return true;
+            }
+            GrowthTool.Branch branch;
+            try {
+                branch = GrowthTool.Branch.valueOf(
+                    arguments[1].toUpperCase(java.util.Locale.ROOT)
+                );
+            } catch (IllegalArgumentException failure) {
+                sender.sendMessage("Use FORTUNE or SILK_TOUCH.");
+                return true;
+            }
+            MainGameplayRuntime active = gameplay;
+            boolean changed = active != null && active.switchBranch(player, branch);
+            sender.sendMessage(changed
+                ? "Wayfarer Main branch updated."
+                : "Hold your active bound Growth Tool.");
+            return true;
+        }
+        if (!"repair".equalsIgnoreCase(arguments[0])) {
+            sender.sendMessage("Usage: /wayfarer-main <status|repair|branch>");
             return true;
         }
         if (!(sender instanceof Player player)
