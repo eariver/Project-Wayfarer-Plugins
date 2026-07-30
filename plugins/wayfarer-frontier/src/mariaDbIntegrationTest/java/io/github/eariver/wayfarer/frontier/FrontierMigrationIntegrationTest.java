@@ -149,6 +149,12 @@ final class FrontierMigrationIntegrationTest {
             JdbcLaunchpadRepository launchpads =
                 new JdbcLaunchpadRepository(dataSource);
             assertEquals(1, launchpads.countActive(player, now));
+            assertEquals(
+                java.util.List.of(launchpadId),
+                launchpads.findActive(100).stream()
+                    .map(Launchpad::launchpadId)
+                    .toList()
+            );
             assertFalse(launchpads.create(
                 new Launchpad(
                     UUID.randomUUID(),
@@ -178,11 +184,75 @@ final class FrontierMigrationIntegrationTest {
                 firstClaim.lockVersion(),
                 now
             ));
-            assertTrue(launchpads.claimForUse(
+            Launchpad secondClaim = launchpads.claimForUse(
                 launchpadId,
                 now.plusSeconds(5),
                 now
-            ).isPresent());
+            ).orElseThrow();
+            assertTrue(launchpads.releaseUseClaim(
+                launchpadId,
+                secondClaim.lockVersion(),
+                now
+            ));
+            Launchpad breakable = launchpads.find(launchpadId).orElseThrow();
+            assertTrue(launchpads.remove(
+                launchpadId,
+                breakable.lockVersion(),
+                Launchpad.State.PLAYER_BROKEN,
+                now
+            ));
+            assertFalse(launchpads.remove(
+                launchpadId,
+                breakable.lockVersion(),
+                Launchpad.State.PLAYER_BROKEN,
+                now
+            ));
+            UUID itemInstanceId = UUID.randomUUID();
+            Launchpad fromItem = launchpad(
+                UUID.randomUUID(),
+                player,
+                3,
+                64,
+                3,
+                now
+            );
+            assertTrue(launchpads.createFromItem(
+                fromItem,
+                itemInstanceId,
+                0,
+                now
+            ));
+            assertFalse(launchpads.createFromItem(
+                launchpad(
+                    UUID.randomUUID(),
+                    player,
+                    4,
+                    64,
+                    4,
+                    now
+                ),
+                itemInstanceId,
+                0,
+                now
+            ));
+            assertTrue(launchpads.rollbackCreatedPlacement(
+                fromItem,
+                itemInstanceId,
+                now
+            ));
+            assertTrue(launchpads.createFromItem(
+                launchpad(
+                    UUID.randomUUID(),
+                    player,
+                    4,
+                    64,
+                    4,
+                    now
+                ),
+                itemInstanceId,
+                0,
+                now
+            ));
         }
     }
     @Test
@@ -277,6 +347,31 @@ final class FrontierMigrationIntegrationTest {
             .baselineOnMigrate(true)
             .baselineVersion("0")
             .load();
+    }
+
+    private static Launchpad launchpad(
+        UUID id,
+        UUID player,
+        int x,
+        int y,
+        int z,
+        Instant now
+    ) {
+        return new Launchpad(
+            id,
+            new Launchpad.Location("frontier_iris", x, y, z),
+            0,
+            player,
+            0,
+            3,
+            now,
+            null,
+            now.plus(Duration.ofDays(30)),
+            "frontier-v1",
+            Launchpad.State.ACTIVE,
+            1,
+            0
+        );
     }
 
     private static Flyway coreFlyway(MariaDbContainerFixture fixture) {

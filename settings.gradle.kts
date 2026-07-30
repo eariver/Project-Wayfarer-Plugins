@@ -24,6 +24,17 @@ dependencyResolutionManagement {
                 includeGroup("com.github.MilkBowl")
             }
         }
+        maven {
+            name = "enginehub"
+            url = uri("https://maven.enginehub.org/repo/")
+            content {
+                includeGroup("com.sk89q.worldedit")
+                includeGroup("com.sk89q.worldguard")
+                includeGroup("org.enginehub.lin-bus")
+                includeGroup("com.sk89q.worldedit.worldedit-libs")
+                includeGroup("com.sk89q.worldguard.worldguard-libs")
+            }
+        }
     }
 }
 

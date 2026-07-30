@@ -5,6 +5,18 @@ plugins {
 
 dependencies {
     compileOnly(libs.paper.api)
+    compileOnly(libs.worldedit.bukkit) {
+        isTransitive = false
+    }
+    compileOnly(libs.worldedit.core) {
+        isTransitive = false
+    }
+    compileOnly(libs.worldguard.bukkit) {
+        isTransitive = false
+    }
+    compileOnly(libs.worldguard.core) {
+        isTransitive = false
+    }
     compileOnly(project(":libraries:wayfarer-api"))
     implementation(project(":libraries:wayfarer-common"))
     implementation(libs.hikari)

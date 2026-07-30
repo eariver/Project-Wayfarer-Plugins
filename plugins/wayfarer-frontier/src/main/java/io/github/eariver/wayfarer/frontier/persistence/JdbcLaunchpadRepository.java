@@ -95,6 +95,112 @@ public final class JdbcLaunchpadRepository implements LaunchpadRepository {
     }
 
     @Override
+    public boolean createFromItem(
+        Launchpad launchpad,
+        UUID itemInstanceId,
+        int maximumActive,
+        Instant now
+    ) {
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                if (maximumActive > 0
+                    && (!lockPlayer(connection, launchpad.placerUuid())
+                        || countActive(
+                            connection,
+                            launchpad.placerUuid(),
+                            now
+                        ) >= maximumActive)) {
+                    connection.rollback();
+                    return false;
+                }
+                UUID placementId = UUID.nameUUIDFromBytes(
+                    ("launchpad-placement:" + itemInstanceId)
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8)
+                );
+                try (PreparedStatement insert = connection.prepareStatement(
+                    "INSERT INTO wf_frontier_placement_transaction "
+                        + "(placement_transaction_id,placement_type,"
+                        + "player_uuid,item_instance_id,world_id,x,y,z,"
+                        + "rotation,state,domain_id,created_at,updated_at) "
+                        + "VALUES (?,'LAUNCHPAD',?,?,?,?,?,?,?,?,?,?,?)"
+                )) {
+                    insert.setString(1, placementId.toString());
+                    insert.setString(2, launchpad.placerUuid().toString());
+                    insert.setString(3, itemInstanceId.toString());
+                    insert.setString(4, launchpad.location().worldId());
+                    insert.setInt(5, launchpad.location().x());
+                    insert.setInt(6, launchpad.location().y());
+                    insert.setInt(7, launchpad.location().z());
+                    insert.setInt(8, Math.round(launchpad.yaw()));
+                    insert.setString(9, "DOMAIN_COMMITTED");
+                    insert.setString(10, launchpad.launchpadId().toString());
+                    insert.setTimestamp(11, Timestamp.from(now));
+                    insert.setTimestamp(12, Timestamp.from(now));
+                    insert.executeUpdate();
+                }
+                if (!insert(connection, launchpad, now)) {
+                    connection.rollback();
+                    return false;
+                }
+                connection.commit();
+                return true;
+            } catch (SQLException failure) {
+                connection.rollback();
+                if ("23000".equals(failure.getSQLState())) {
+                    return false;
+                }
+                throw failure;
+            }
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public boolean rollbackCreatedPlacement(
+        Launchpad launchpad,
+        UUID itemInstanceId,
+        Instant now
+    ) {
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement remove = connection.prepareStatement(
+                     "UPDATE wf_frontier_launchpad SET state='RECONCILED_REMOVED',"
+                         + "lock_version=lock_version+1,updated_at=? "
+                         + "WHERE launchpad_id=? AND state='ACTIVE' "
+                         + "AND lock_version=?"
+                 );
+                 PreparedStatement delete = connection.prepareStatement(
+                     "DELETE FROM wf_frontier_placement_transaction "
+                         + "WHERE item_instance_id=? AND domain_id=? "
+                         + "AND state='DOMAIN_COMMITTED'"
+                 )) {
+                remove.setTimestamp(1, Timestamp.from(now));
+                remove.setString(2, launchpad.launchpadId().toString());
+                remove.setLong(3, launchpad.lockVersion());
+                if (remove.executeUpdate() != 1) {
+                    connection.rollback();
+                    return false;
+                }
+                delete.setString(1, itemInstanceId.toString());
+                delete.setString(2, launchpad.launchpadId().toString());
+                if (delete.executeUpdate() != 1) {
+                    connection.rollback();
+                    return false;
+                }
+                connection.commit();
+                return true;
+            } catch (SQLException failure) {
+                connection.rollback();
+                throw failure;
+            }
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
     public Optional<Launchpad> findAt(Launchpad.Location location) {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement query = connection.prepareStatement(
@@ -107,6 +213,31 @@ public final class JdbcLaunchpadRepository implements LaunchpadRepository {
             query.setInt(4, location.z());
             try (ResultSet result = query.executeQuery()) {
                 return result.next() ? Optional.of(map(result)) : Optional.empty();
+            }
+        } catch (SQLException failure) {
+            throw unavailable();
+        }
+    }
+
+    @Override
+    public List<Launchpad> findActive(int limit) {
+        if (limit < 1 || limit > 100_000) {
+            throw new IllegalArgumentException(
+                "Active launchpad query limit is invalid"
+            );
+        }
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement query = connection.prepareStatement(
+                 "SELECT * FROM wf_frontier_launchpad "
+                     + "WHERE state='ACTIVE' ORDER BY launchpad_id LIMIT ?"
+             )) {
+            query.setInt(1, limit);
+            try (ResultSet result = query.executeQuery()) {
+                List<Launchpad> values = new ArrayList<>();
+                while (result.next()) {
+                    values.add(map(result));
+                }
+                return List.copyOf(values);
             }
         } catch (SQLException failure) {
             throw unavailable();

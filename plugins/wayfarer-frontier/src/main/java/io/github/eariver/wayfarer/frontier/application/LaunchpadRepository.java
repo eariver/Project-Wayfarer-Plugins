@@ -29,7 +29,33 @@ public interface LaunchpadRepository {
         return create(launchpad, now);
     }
 
+    default boolean createFromItem(
+        Launchpad launchpad,
+        UUID itemInstanceId,
+        int maximumActive,
+        Instant now
+    ) {
+        return create(launchpad, maximumActive, now);
+    }
+
+    default boolean rollbackCreatedPlacement(
+        Launchpad launchpad,
+        UUID itemInstanceId,
+        Instant now
+    ) {
+        return remove(
+            launchpad.launchpadId(),
+            launchpad.lockVersion(),
+            Launchpad.State.RECONCILED_REMOVED,
+            now
+        );
+    }
+
     Optional<Launchpad> findAt(Launchpad.Location location);
+
+    default List<Launchpad> findActive(int limit) {
+        return List.of();
+    }
 
     Optional<Launchpad> claimForUse(UUID launchpadId, Instant claimUntil, Instant now);
 

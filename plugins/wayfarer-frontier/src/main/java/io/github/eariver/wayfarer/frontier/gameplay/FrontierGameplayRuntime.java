@@ -9,11 +9,16 @@ import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseCoordinat
 import io.github.eariver.wayfarer.frontier.application.LaunchpadRepository;
 import io.github.eariver.wayfarer.frontier.application.LaunchpadUseCoordinator;
 import io.github.eariver.wayfarer.frontier.domain.Launchpad;
+import io.github.eariver.wayfarer.frontier.domain.LaunchpadPlacementPolicy;
 import io.github.eariver.wayfarer.frontier.config.FrontierModuleConfig;
 import io.github.eariver.wayfarer.frontier.domain.FrontierWorldGate;
 import io.github.eariver.wayfarer.frontier.domain.PendingDelivery;
 import io.github.eariver.wayfarer.frontier.domain.TraversalIdentity;
 import io.github.eariver.wayfarer.frontier.domain.TraversalLoadout;
+import io.github.eariver.wayfarer.frontier.identity.LaunchpadItemClaim;
+import io.github.eariver.wayfarer.frontier.integration.WorldGuardPlacementBridge;
+import io.github.eariver.wayfarer.frontier.integration.WorldEditLaunchpadProtection;
+import io.github.eariver.wayfarer.common.SingleUseGate;
 import io.github.eariver.wayfarer.integration.leafgrapple.LeafGrappleBridge;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -76,6 +81,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.time.Instant;
 import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 
 public final class FrontierGameplayRuntime implements Listener {
     private static final NamespacedKey ITEM_TYPE =
@@ -92,6 +98,9 @@ public final class FrontierGameplayRuntime implements Listener {
         new NamespacedKey("wayfarer", "instance_epoch");
     private static final NamespacedKey SCHEMA_VERSION =
         new NamespacedKey("wayfarer", "schema_version");
+    private static final NamespacedKey DEFINITION_ID =
+        new NamespacedKey("wayfarer", "definition_id");
+    private static final String LAUNCHPAD_DEFINITION = "frontier-v1";
     private final JavaPlugin plugin;
     private final FrontierModuleConfig config;
     private final LeafGrappleBridge leafGrapple;
@@ -100,17 +109,23 @@ public final class FrontierGameplayRuntime implements Listener {
     private final TraversalLoadoutRepository loadouts;
     private final LaunchpadRepository launchpads;
     private final LaunchpadUseCoordinator launchpadUse;
+    private final LaunchpadPlacementPolicy placementPolicy;
     private final ConcurrentHashMap<UUID, Instant> cooldowns =
         new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, TraversalLoadout> authorities =
         new ConcurrentHashMap<>();
+    private final LaunchpadRuntimeIndex activeLaunchpads =
+        new LaunchpadRuntimeIndex();
     private final ConcurrentHashMap<UUID, List<ItemStack>> deathRetained =
         new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, NavigationSession> navigationSessions =
         new ConcurrentHashMap<>();
     private final AtomicBoolean accepting = new AtomicBoolean(true);
+    private final AtomicBoolean launchpadIndexReady = new AtomicBoolean();
     private final Clock clock;
     private final BukkitTask reconcileTask;
+    private final WorldGuardPlacementBridge worldGuard;
+    private final WorldEditLaunchpadProtection worldEditProtection;
     private volatile FrontierPurchaseCoordinator purchaseCoordinator;
 
     public FrontierGameplayRuntime(
@@ -148,6 +163,26 @@ public final class FrontierGameplayRuntime implements Listener {
             config.launchpad().expiration(),
             config.launchpad().extendExpirationOnUse()
         );
+        placementPolicy = new LaunchpadPlacementPolicy(
+            new FrontierWorldGate(java.util.Set.of(config.exactWorldName()))
+        );
+        worldGuard = plugin.getServer().getPluginManager()
+            .isPluginEnabled("WorldGuard")
+            ? new WorldGuardPlacementBridge()
+            : null;
+        worldEditProtection = plugin.getServer().getPluginManager()
+            .isPluginEnabled("WorldEdit")
+            ? new WorldEditLaunchpadProtection(coordinate ->
+                (config.exactWorldName().equals(coordinate.worldName())
+                    && !launchpadIndexReady.get())
+                    || activeLaunchpads.contains(new Launchpad.Location(
+                        coordinate.worldName(),
+                        coordinate.x(),
+                        coordinate.y(),
+                        coordinate.z()
+                    ))
+            )
+            : null;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         long period = Math.max(
             20L,
@@ -162,6 +197,19 @@ public final class FrontierGameplayRuntime implements Listener {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             enter(player);
         }
+        services.tasks().database(() -> launchpads.findActive(100_000))
+            .thenAccept(active -> {
+                active.forEach(activeLaunchpads::activate);
+                launchpadIndexReady.set(true);
+            }).exceptionally(ignored -> {
+                services.tasks().mainThread(() -> {
+                    plugin.getLogger().severe(
+                        "Launchpad authority index failed closed."
+                    );
+                    plugin.getServer().getPluginManager().disablePlugin(plugin);
+                });
+                return null;
+            });
     }
 
     public void stop() {
@@ -169,8 +217,12 @@ public final class FrontierGameplayRuntime implements Listener {
         reconcileTask.cancel();
         cooldowns.clear();
         authorities.clear();
+        activeLaunchpads.clear();
         deathRetained.clear();
         navigationSessions.clear();
+        if (worldEditProtection != null) {
+            worldEditProtection.close();
+        }
     }
 
     public void bindPurchaseCoordinator(
@@ -253,59 +305,133 @@ public final class FrontierGameplayRuntime implements Listener {
     public void onPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         ItemStack used = event.getItemInHand();
-        if (!config.exactWorldName().equals(player.getWorld().getName())
-            || event.getBlockPlaced().getType()
-            != Material.valueOf(config.launchpad().material())
-            || !"LAUNCHPAD".equals(text(used, ITEM_TYPE))
-            || !player.getUniqueId().toString().equals(text(used, OWNER_ID))) {
+        if (!"LAUNCHPAD".equals(text(used, ITEM_TYPE))) {
             return;
         }
         event.setCancelled(true);
-        var block = event.getBlockPlaced();
+        if (!launchpadIndexReady.get()) {
+            player.sendMessage("Launchpad authority is still unavailable.");
+            return;
+        }
+        LaunchpadItemClaim claim = launchpadClaim(used).orElse(null);
+        UUID deliveryId = parseUuid(text(used, DELIVERY_ID));
+        org.bukkit.block.Block block = event.getBlockPlaced();
+        LaunchpadPlacementPolicy.Snapshot snapshot = placementSnapshot(
+            player,
+            block,
+            event.getBlockReplacedState().getType().isAir()
+        );
+        if (claim == null || deliveryId == null
+            || !LAUNCHPAD_DEFINITION.equals(claim.definitionId())
+            || !player.getUniqueId().toString().equals(text(used, OWNER_ID))
+            || placementPolicy.validate(snapshot)
+                != LaunchpadPlacementPolicy.Result.ALLOWED) {
+            player.sendMessage(
+                "Launchpad placement is unavailable at this location."
+            );
+            return;
+        }
+        Launchpad.Location location = location(block);
+        if (activeLaunchpads.contains(location)) {
+            player.sendMessage("A launchpad already occupies this location.");
+            return;
+        }
+        Instant now = clock.instant();
         Launchpad launchpad = new Launchpad(
             UUID.randomUUID(),
-            location(block),
+            location,
             player.getLocation().getYaw(),
             player.getUniqueId(),
             0,
             config.launchpad().maximumSuccessfulUses(),
-            Instant.now(),
+            now,
             null,
-            Instant.now().plus(config.launchpad().expiration()),
-            "frontier-v1",
+            now.plus(config.launchpad().expiration()),
+            claim.definitionId(),
             Launchpad.State.ACTIVE,
-            1,
+            claim.schemaVersion(),
             0
         );
+        PlacementRequest request = new PlacementRequest(
+            player.getUniqueId(),
+            location,
+            event.getHand(),
+            claim,
+            deliveryId,
+            launchpad
+        );
         services.tasks().database(() ->
-            launchpads.create(
+            launchpads.createFromItem(
                 launchpad,
+                claim.itemInstanceId(),
                 config.launchpad().maximumActivePerPlayer(),
-                Instant.now()
+                now
             )
         ).thenAccept(created -> services.tasks().mainThread(() -> {
             if (!accepting.get()) {
                 return;
             }
-            ItemStack current = event.getHand() == EquipmentSlot.HAND
-                ? player.getInventory().getItemInMainHand()
-                : player.getInventory().getItemInOffHand();
-            if (!created || !player.isOnline()
-                || !config.exactWorldName().equals(player.getWorld().getName())
-                || !block.getType().isAir()
-                || !"LAUNCHPAD".equals(text(current, ITEM_TYPE))) {
+            Player online = plugin.getServer().getPlayer(request.playerUuid());
+            org.bukkit.World world = plugin.getServer().getWorld(
+                request.location().worldId()
+            );
+            org.bukkit.block.Block currentBlock = world == null
+                ? null
+                : world.getBlockAt(
+                    request.location().x(),
+                    request.location().y(),
+                    request.location().z()
+                );
+            ItemStack current = online == null
+                ? null
+                : request.hand() == EquipmentSlot.HAND
+                    ? online.getInventory().getItemInMainHand()
+                    : online.getInventory().getItemInOffHand();
+            LaunchpadItemClaim currentClaim = launchpadClaim(current)
+                .orElse(null);
+            boolean stillAllowed = online != null
+                && online.isOnline()
+                && world != null
+                && currentBlock != null
+                && request.claim().equals(currentClaim)
+                && request.deliveryId().equals(
+                    parseUuid(text(current, DELIVERY_ID))
+                )
+                && request.playerUuid().toString().equals(
+                    text(current, OWNER_ID)
+                )
+                && placementPolicy.validate(
+                    placementSnapshot(online, currentBlock, currentBlock.isEmpty())
+                ) == LaunchpadPlacementPolicy.Result.ALLOWED
+                && !activeLaunchpads.contains(request.location());
+            if (!created || !stillAllowed) {
                 if (created) {
-                    services.tasks().database(() -> launchpads.remove(
-                        launchpad.launchpadId(),
-                        launchpad.lockVersion(),
-                        Launchpad.State.RECONCILED_REMOVED,
-                        Instant.now()
+                    services.tasks().database(() ->
+                        launchpads.rollbackCreatedPlacement(
+                        launchpad,
+                        request.claim().itemInstanceId(),
+                        clock.instant()
                     ));
+                }
+                if (online != null) {
+                    online.sendMessage(
+                        "Launchpad placement could not be committed."
+                    );
                 }
                 return;
             }
-            block.setType(Material.valueOf(config.launchpad().material()), false);
+            currentBlock.setType(
+                Material.valueOf(config.launchpad().material()),
+                false
+            );
             current.setAmount(current.getAmount() - 1);
+            activeLaunchpads.activate(request.launchpad());
+            recordLaunchpad(
+                request.launchpad(),
+                request.playerUuid(),
+                "LAUNCHPAD_PLACED",
+                "APPLIED"
+            ).exceptionally(ignored -> null);
         }));
     }
 
@@ -331,8 +457,20 @@ public final class FrontierGameplayRuntime implements Listener {
             != Material.valueOf(config.launchpad().material())) {
             return;
         }
-        event.setCancelled(true);
         Launchpad.Location location = location(event.getClickedBlock());
+        if (!launchpadIndexReady.get()) {
+            event.setCancelled(true);
+            return;
+        }
+        if (!activeLaunchpads.contains(location)) {
+            return;
+        }
+        event.setCancelled(true);
+        UUID playerUuid = event.getPlayer().getUniqueId();
+        String worldName = event.getPlayer().getWorld().getName();
+        boolean sneaking = config.launchpad().disableWhileSneaking()
+            && event.getPlayer().isSneaking();
+        Instant cooldownUntil = cooldowns.get(playerUuid);
         services.tasks().database(() -> launchpads.findAt(location))
             .thenAccept(found -> {
                 if (!accepting.get()) {
@@ -341,16 +479,15 @@ public final class FrontierGameplayRuntime implements Listener {
                 found.ifPresent(launchpad ->
                 launchpadUse.use(new LaunchpadUseCoordinator.Request(
                     launchpad.launchpadId(),
-                    event.getPlayer().getUniqueId(),
-                    event.getPlayer().getWorld().getName(),
-                    config.launchpad().disableWhileSneaking()
-                        && event.getPlayer().isSneaking(),
-                    cooldowns.get(event.getPlayer().getUniqueId())
+                    playerUuid,
+                    worldName,
+                    sneaking,
+                    cooldownUntil
                 )).thenAccept(result -> {
                     if (result.outcome() == Launchpad.Outcome.LAUNCHED) {
                         cooldowns.put(
-                            event.getPlayer().getUniqueId(),
-                            Instant.now().plus(config.launchpad().cooldown())
+                            playerUuid,
+                            clock.instant().plus(config.launchpad().cooldown())
                         );
                     }
                 })
@@ -461,24 +598,37 @@ public final class FrontierGameplayRuntime implements Listener {
             != Material.valueOf(config.launchpad().material())) {
             return;
         }
-        event.setCancelled(true);
         Launchpad.Location location = location(event.getBlock());
-        services.tasks().database(() -> launchpads.findAt(location))
+        if (!launchpadIndexReady.get()) {
+            event.setCancelled(true);
+            return;
+        }
+        UUID launchpadId = activeLaunchpads.idAt(location);
+        if (launchpadId == null) {
+            return;
+        }
+        event.setCancelled(true);
+        UUID actorUuid = event.getPlayer().getUniqueId();
+        services.tasks().database(() -> launchpads.find(launchpadId))
             .thenAccept(found -> services.tasks().mainThread(() -> {
                 if (!accepting.get()) {
                     return;
                 }
                 if (found.isEmpty()) {
-                    event.getBlock().breakNaturally();
+                    plugin.getLogger().warning(
+                        "Launchpad BLOCK_ONLY inconsistency requires "
+                            + "confirmed administrator reconciliation."
+                    );
+                    recordBlockOnly(
+                        launchpadId,
+                        actorUuid,
+                        location,
+                        "BLOCK_ONLY"
+                    ).exceptionally(ignored -> null);
                     return;
                 }
                 Launchpad launchpad = found.orElseThrow();
-                if (!config.launchpad().allowPlayerBreak()
-                    || (!launchpad.placerUuid().equals(
-                        event.getPlayer().getUniqueId()
-                    ) && !event.getPlayer().hasPermission(
-                        "wayfarer.frontier.admin"
-                    ))) {
+                if (!config.launchpad().allowPlayerBreak()) {
                     return;
                 }
                 services.tasks().database(() -> launchpads.remove(
@@ -488,10 +638,34 @@ public final class FrontierGameplayRuntime implements Listener {
                     Instant.now()
                 )).thenAccept(removed -> services.tasks().mainThread(() -> {
                     if (removed) {
-                        event.getBlock().setType(Material.AIR, false);
+                        org.bukkit.World world = plugin.getServer().getWorld(
+                            location.worldId()
+                        );
+                        if (world != null) {
+                            world.getBlockAt(
+                                location.x(),
+                                location.y(),
+                                location.z()
+                            ).setType(Material.AIR, false);
+                        }
+                        activeLaunchpads.deactivate(
+                            location,
+                            launchpad.launchpadId()
+                        );
+                        recordLaunchpad(
+                            launchpad,
+                            actorUuid,
+                            "LAUNCHPAD_PLAYER_BROKEN",
+                            "APPLIED"
+                        ).exceptionally(ignored -> null);
                     }
                 }));
-            }));
+            })).exceptionally(ignored -> {
+                plugin.getLogger().warning(
+                    "Launchpad break persistence is unavailable; block retained."
+                );
+                return null;
+            });
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -571,7 +745,13 @@ public final class FrontierGameplayRuntime implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityChangeBlock(EntityChangeBlockEvent event) {
-        if (isProtectedLaunchpadMaterial(event.getBlock())) {
+        if (isProtectedLaunchpadMaterial(event.getBlock())
+            || (event.getEntity() instanceof org.bukkit.entity.FallingBlock
+                && isProtectedLaunchpadMaterial(
+                    event.getBlock().getRelative(
+                        org.bukkit.block.BlockFace.DOWN
+                    )
+                ))) {
             event.setCancelled(true);
         }
     }
@@ -634,6 +814,9 @@ public final class FrontierGameplayRuntime implements Listener {
             && containsIdentity(player, pending.identity())) {
             return TraversalDeliveryCoordinator.DeliveryOutcome.ALREADY_PRESENT;
         }
+        if (pending.itemType() == PendingDelivery.ItemType.LAUNCHPAD) {
+            return deliverLaunchpads(player, pending);
+        }
         if (isPermanent(pending.itemType())) {
             removeStalePermanent(player, pending);
         }
@@ -658,6 +841,80 @@ public final class FrontierGameplayRuntime implements Listener {
             }
         }
         return TraversalDeliveryCoordinator.DeliveryOutcome.DELIVERED;
+    }
+
+    private TraversalDeliveryCoordinator.DeliveryOutcome deliverLaunchpads(
+        Player player,
+        PendingDelivery pending
+    ) {
+        int present = 0;
+        for (int index = 0; index < pending.quantity(); index++) {
+            if (containsItemInstance(
+                player,
+                launchpadItemInstance(pending.deliveryId(), index)
+            )) {
+                present++;
+            }
+        }
+        if (present == pending.quantity()) {
+            return TraversalDeliveryCoordinator.DeliveryOutcome.ALREADY_PRESENT;
+        }
+        if (emptySlots(player) < pending.quantity() - present) {
+            return TraversalDeliveryCoordinator.DeliveryOutcome.INVENTORY_FULL;
+        }
+        for (int index = 0; index < pending.quantity(); index++) {
+            UUID itemInstanceId = launchpadItemInstance(
+                pending.deliveryId(),
+                index
+            );
+            if (containsItemInstance(player, itemInstanceId)) {
+                continue;
+            }
+            ItemStack item = new ItemStack(
+                Material.valueOf(config.launchpad().material())
+            );
+            annotateLaunchpad(item, player.getUniqueId(), pending, itemInstanceId);
+            if (!player.getInventory().addItem(item).isEmpty()) {
+                return TraversalDeliveryCoordinator.DeliveryOutcome.INVENTORY_FULL;
+            }
+        }
+        return TraversalDeliveryCoordinator.DeliveryOutcome.DELIVERED;
+    }
+
+    private static int emptySlots(Player player) {
+        int empty = 0;
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+            if (item == null || item.isEmpty()) {
+                empty++;
+            }
+        }
+        return empty;
+    }
+
+    static UUID launchpadItemInstance(UUID deliveryId, int index) {
+        if (index < 0) {
+            throw new IllegalArgumentException(
+                "Launchpad delivery index cannot be negative"
+            );
+        }
+        return UUID.nameUUIDFromBytes(
+            ("launchpad-delivery:" + deliveryId + ":" + index)
+                .getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
+    private static boolean containsItemInstance(
+        Player player,
+        UUID itemInstanceId
+    ) {
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (itemInstanceId.toString().equals(
+                text(item, ITEM_INSTANCE_ID)
+            )) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean deliverPurchase(
@@ -746,12 +1003,38 @@ public final class FrontierGameplayRuntime implements Listener {
         return services.tasks().database(() -> launchpads.find(launchpadId))
             .thenCompose(found -> {
                 if (found.isEmpty()) {
-                    return CompletableFuture.completedFuture(
-                        new LaunchpadInspection(
-                            null,
-                            ReconcileClassification.NOT_FOUND
-                        )
-                    );
+                    Launchpad.Location cached = cachedLocation(launchpadId);
+                    if (cached == null) {
+                        return CompletableFuture.completedFuture(
+                            new LaunchpadInspection(
+                                null,
+                                ReconcileClassification.NOT_FOUND
+                            )
+                        );
+                    }
+                    InspectionCapture capture = new InspectionCapture();
+                    return services.tasks().mainThread(() -> {
+                        org.bukkit.World world = plugin.getServer().getWorld(
+                            cached.worldId()
+                        );
+                        boolean blockExists = world != null
+                            && world.getBlockAt(
+                                cached.x(),
+                                cached.y(),
+                                cached.z()
+                            ).getType() == Material.valueOf(
+                                config.launchpad().material()
+                            );
+                        capture.classification = blockExists
+                            ? ReconcileClassification.BLOCK_ONLY
+                            : ReconcileClassification.NOT_FOUND;
+                        if (!blockExists) {
+                            activeLaunchpads.deactivate(cached, launchpadId);
+                        }
+                    }).thenApply(ignored -> new LaunchpadInspection(
+                        null,
+                        capture.classification
+                    ));
                 }
                 Launchpad launchpad = found.orElseThrow();
                 InspectionCapture capture = new InspectionCapture();
@@ -792,6 +1075,14 @@ public final class FrontierGameplayRuntime implements Listener {
                     AdminLaunchpadResult.NO_CHANGE
                 );
             }
+            if (inspection.classification()
+                == ReconcileClassification.BLOCK_ONLY) {
+                return confirmed
+                    ? removeBlockOnly(launchpadId, actorUuid)
+                    : CompletableFuture.completedFuture(
+                        AdminLaunchpadResult.MANUAL_REVIEW_REQUIRED
+                    );
+            }
             if (!confirmed || inspection.classification()
                 == ReconcileClassification.CONFLICT) {
                 return CompletableFuture.completedFuture(
@@ -804,6 +1095,48 @@ public final class FrontierGameplayRuntime implements Listener {
                 Launchpad.State.RECONCILED_REMOVED
             );
         });
+    }
+
+    private CompletionStage<AdminLaunchpadResult> removeBlockOnly(
+        UUID launchpadId,
+        UUID actorUuid
+    ) {
+        Launchpad.Location location = cachedLocation(launchpadId);
+        if (location == null) {
+            return CompletableFuture.completedFuture(
+                AdminLaunchpadResult.NOT_FOUND
+            );
+        }
+        return services.tasks().mainThread(() -> {
+            org.bukkit.World world = plugin.getServer().getWorld(
+                location.worldId()
+            );
+            if (world != null) {
+                org.bukkit.block.Block block = world.getBlockAt(
+                    location.x(),
+                    location.y(),
+                    location.z()
+                );
+                if (block.getType()
+                    == Material.valueOf(config.launchpad().material())) {
+                    block.setType(Material.AIR, false);
+                }
+            }
+            activeLaunchpads.deactivate(location, launchpadId);
+        }).thenCompose(ignored -> recordBlockOnly(
+            launchpadId,
+            actorUuid,
+            location,
+            "RECONCILED_REMOVED"
+        )).handle((ignored, failure) ->
+            failure == null
+                ? AdminLaunchpadResult.APPLIED
+                : AdminLaunchpadResult.UNAVAILABLE
+        );
+    }
+
+    private Launchpad.Location cachedLocation(UUID launchpadId) {
+        return activeLaunchpads.locationOf(launchpadId);
     }
 
     private CompletionStage<AdminLaunchpadResult> removeLaunchpad(
@@ -834,6 +1167,10 @@ public final class FrontierGameplayRuntime implements Listener {
                     AdminLaunchpadResult.CONFLICT
                 );
             }
+            activeLaunchpads.deactivate(
+                capture.launchpad().location(),
+                capture.launchpad().launchpadId()
+            );
             return services.tasks().mainThread(() -> {
                 if (!accepting.get()) {
                     return;
@@ -893,6 +1230,10 @@ public final class FrontierGameplayRuntime implements Listener {
             if (!removed) {
                 return CompletableFuture.completedFuture(null);
             }
+            activeLaunchpads.deactivate(
+                launchpad.location(),
+                launchpad.launchpadId()
+            );
             return services.tasks().mainThread(() -> {
                 if (!accepting.get()
                     || capture.classification
@@ -961,6 +1302,25 @@ public final class FrontierGameplayRuntime implements Listener {
             launchpad.launchpadId().toString(),
             services.serverId(),
             "{\"result\":\"" + result + "\"}",
+            clock.instant()
+        ));
+    }
+
+    private CompletionStage<Void> recordBlockOnly(
+        UUID launchpadId,
+        UUID actorUuid,
+        Launchpad.Location location,
+        String result
+    ) {
+        return services.audit().record(new WayfarerAudit.AuditEvent(
+            UUID.randomUUID(),
+            "LAUNCHPAD_BLOCK_ONLY",
+            actorUuid,
+            "LAUNCHPAD",
+            launchpadId.toString(),
+            services.serverId(),
+            "{\"result\":\"" + result + "\",\"world\":\""
+                + location.worldId() + "\"}",
             clock.instant()
         ));
     }
@@ -1040,6 +1400,35 @@ public final class FrontierGameplayRuntime implements Listener {
                 pending.identity().schemaVersion()
             );
         }
+        item.setItemMeta(meta);
+    }
+
+    private static void annotateLaunchpad(
+        ItemStack item,
+        UUID ownerUuid,
+        PendingDelivery pending,
+        UUID itemInstanceId
+    ) {
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(ITEM_TYPE, PersistentDataType.STRING, "LAUNCHPAD");
+        pdc.set(OWNER_ID, PersistentDataType.STRING, ownerUuid.toString());
+        pdc.set(
+            DELIVERY_ID,
+            PersistentDataType.STRING,
+            pending.deliveryId().toString()
+        );
+        pdc.set(
+            ITEM_INSTANCE_ID,
+            PersistentDataType.STRING,
+            itemInstanceId.toString()
+        );
+        pdc.set(
+            DEFINITION_ID,
+            PersistentDataType.STRING,
+            LAUNCHPAD_DEFINITION
+        );
+        pdc.set(SCHEMA_VERSION, PersistentDataType.INTEGER, 1);
         item.setItemMeta(meta);
     }
 
@@ -1317,7 +1706,7 @@ public final class FrontierGameplayRuntime implements Listener {
         NavigationSession session = new NavigationSession(
             token,
             offerId,
-            new AtomicBoolean()
+            new SingleUseGate()
         );
         navigationSessions.put(player.getUniqueId(), session);
         NavigationHolder holder = new NavigationHolder(
@@ -1407,7 +1796,7 @@ public final class FrontierGameplayRuntime implements Listener {
         if (session == null || coordinator == null
             || !session.token().equals(holder.token())
             || !session.offerId().equals(holder.offerId())
-            || !session.accepted().compareAndSet(false, true)) {
+            || !session.accepted().tryAcquire()) {
             player.sendMessage("Frontier purchase confirmation expired.");
             return;
         }
@@ -1516,6 +1905,94 @@ public final class FrontierGameplayRuntime implements Listener {
         };
     }
 
+    private Optional<LaunchpadItemClaim> launchpadClaim(ItemStack item) {
+        java.util.Map<String, String> raw = new java.util.HashMap<>();
+        put(raw, "item_type", text(item, ITEM_TYPE));
+        put(raw, "item_instance_id", text(item, ITEM_INSTANCE_ID));
+        put(raw, "definition_id", text(item, DEFINITION_ID));
+        long schema = number(item, SCHEMA_VERSION);
+        if (schema != Long.MIN_VALUE) {
+            raw.put("schema_version", Long.toString(schema));
+        }
+        return LaunchpadItemClaim.parse(raw).claim();
+    }
+
+    private static void put(
+        java.util.Map<String, String> values,
+        String key,
+        String value
+    ) {
+        if (value != null) {
+            values.put(key, value);
+        }
+    }
+
+    private static UUID parseUuid(String value) {
+        try {
+            return value == null ? null : UUID.fromString(value);
+        } catch (IllegalArgumentException failure) {
+            return null;
+        }
+    }
+
+    private LaunchpadPlacementPolicy.Snapshot placementSnapshot(
+        Player player,
+        org.bukkit.block.Block target,
+        boolean targetAir
+    ) {
+        org.bukkit.World world = target.getWorld();
+        org.bukkit.block.Block support = target.getRelative(
+            org.bukkit.block.BlockFace.DOWN
+        );
+        boolean regionDenied = false;
+        if (worldGuard != null) {
+            try {
+                regionDenied = worldGuard.denied(
+                    player,
+                    target.getLocation()
+                );
+            } catch (RuntimeException failure) {
+                regionDenied = true;
+            }
+        }
+        return new LaunchpadPlacementPolicy.Snapshot(
+            world.getName(),
+            world.isChunkLoaded(target.getX() >> 4, target.getZ() >> 4),
+            targetAir,
+            support.getType().isSolid(),
+            target.isLiquid() || support.isLiquid(),
+            world.getWorldBorder().isInside(target.getLocation()),
+            protectedSystemArea(target),
+            regionDenied,
+            false,
+            activeLaunchpads.contains(location(target))
+        );
+    }
+
+    private static boolean protectedSystemArea(
+        org.bukkit.block.Block target
+    ) {
+        org.bukkit.Location spawn = target.getWorld().getSpawnLocation();
+        double dx = target.getX() + 0.5D - spawn.getX();
+        double dz = target.getZ() + 0.5D - spawn.getZ();
+        if (dx * dx + dz * dz <= 256D * 256D) {
+            return true;
+        }
+        for (int x = -4; x <= 4; x++) {
+            for (int y = -4; y <= 4; y++) {
+                for (int z = -4; z <= 4; z++) {
+                    Material material = target.getRelative(x, y, z).getType();
+                    if (material == Material.NETHER_PORTAL
+                        || material == Material.END_PORTAL
+                        || material == Material.END_GATEWAY) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private static String text(ItemStack item, NamespacedKey key) {
         if (item == null || !item.hasItemMeta()) {
             return null;
@@ -1542,7 +2019,10 @@ public final class FrontierGameplayRuntime implements Listener {
 
     private boolean isProtectedLaunchpadMaterial(org.bukkit.block.Block block) {
         return config.exactWorldName().equals(block.getWorld().getName())
-            && block.getType() == Material.valueOf(config.launchpad().material());
+            && ((!launchpadIndexReady.get()
+                && block.getType()
+                    == Material.valueOf(config.launchpad().material()))
+                || activeLaunchpads.contains(location(block)));
     }
 
     private static Launchpad.Location location(org.bukkit.block.Block block) {
@@ -1624,6 +2104,10 @@ public final class FrontierGameplayRuntime implements Listener {
                 == Material.valueOf(config.launchpad().material())) {
                 block.setType(Material.AIR, false);
             }
+            activeLaunchpads.deactivate(
+                launchpad.location(),
+                launchpad.launchpadId()
+            );
             recordLaunchpad(
                 launchpad,
                 null,
@@ -1641,6 +2125,7 @@ public final class FrontierGameplayRuntime implements Listener {
     public enum ReconcileClassification {
         DB_AND_BLOCK_MATCH,
         DB_ONLY,
+        BLOCK_ONLY,
         CONFLICT,
         UNKNOWN,
         NOT_FOUND
@@ -1669,6 +2154,15 @@ public final class FrontierGameplayRuntime implements Listener {
     private record RemovalCapture(
         Launchpad launchpad,
         boolean removed
+    ) {}
+
+    private record PlacementRequest(
+        UUID playerUuid,
+        Launchpad.Location location,
+        EquipmentSlot hand,
+        LaunchpadItemClaim claim,
+        UUID deliveryId,
+        Launchpad launchpad
     ) {}
 
     private enum NavigationMode {
@@ -1716,7 +2210,7 @@ public final class FrontierGameplayRuntime implements Listener {
     private record NavigationSession(
         UUID token,
         String offerId,
-        AtomicBoolean accepted
+        SingleUseGate accepted
     ) {}
 
     private static final class RetryCapture {
