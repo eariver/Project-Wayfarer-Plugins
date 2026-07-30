@@ -12,6 +12,7 @@ import io.github.eariver.wayfarer.main.domain.EvolutionPlan;
 import io.github.eariver.wayfarer.main.domain.DurabilitySemantics;
 import io.github.eariver.wayfarer.main.domain.GrowthTool;
 import io.github.eariver.wayfarer.main.identity.GrowthToolPhysicalClaim;
+import io.github.eariver.wayfarer.common.SingleUseGate;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -67,7 +68,6 @@ import java.util.Optional;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class MainGameplayRuntime implements Listener, AutoCloseable {
     private static final NamespacedKey ITEM_TYPE =
@@ -101,6 +101,8 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
     private final ConcurrentHashMap<UUID, RepairGuiSession> repairGuiSessions =
         new ConcurrentHashMap<>();
     private final Set<UUID> repairInFlight = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> evolutionRestorePending =
+        ConcurrentHashMap.newKeySet();
     private volatile RepairCoordinator repairCoordinator;
 
     public MainGameplayRuntime(
@@ -212,6 +214,15 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
                 updated,
                 after.evolutionCount() > before.evolutionCount()
             );
+            if (after.evolutionCount() > before.evolutionCount()) {
+                evolutionRestorePending.add(player.getUniqueId());
+                plugin.getServer().getScheduler().runTask(
+                    plugin,
+                    () -> evolutionRestorePending.remove(
+                        player.getUniqueId()
+                    )
+                );
+            }
         } catch (RuntimeException failure) {
             plugin.getLogger().severe("Growth progress update failed closed.");
         }
@@ -220,6 +231,12 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     @SuppressWarnings("deprecation")
     public void onDamage(PlayerItemDamageEvent event) {
+        if (evolutionRestorePending.remove(
+            event.getPlayer().getUniqueId()
+        ) && wayfarerTool(event.getItem())) {
+            event.setCancelled(true);
+            return;
+        }
         if (repairInFlight.contains(event.getPlayer().getUniqueId())
             && wayfarerTool(event.getItem())) {
             event.setCancelled(true);
@@ -485,6 +502,7 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
         deathRetained.clear();
         repairGuiSessions.clear();
         repairInFlight.clear();
+        evolutionRestorePending.clear();
         return checkpoints.stopAndFlush();
     }
 
@@ -935,7 +953,7 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
             snapshot.damage(),
             snapshot.maximumDurability(),
             quote.amountWaymark(),
-            new AtomicBoolean()
+            new SingleUseGate()
         );
         repairGuiSessions.put(player.getUniqueId(), session);
         GrowthToolGuiHolder holder = new GrowthToolGuiHolder(
@@ -1012,7 +1030,7 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
             || !session.itemInstanceId().equals(tool.itemInstanceId())
             || session.instanceEpoch() != tool.instanceEpoch()
             || session.displayRevision() != tool.displayRevision()
-            || !session.accepted().compareAndSet(false, true)) {
+            || !session.accepted().tryAcquire()) {
             player.sendMessage("Growth Tool repair quote expired.");
             return;
         }
@@ -1427,6 +1445,6 @@ public final class MainGameplayRuntime implements Listener, AutoCloseable {
         int damage,
         int maximumDurability,
         long amountWaymark,
-        AtomicBoolean accepted
+        SingleUseGate accepted
     ) {}
 }
