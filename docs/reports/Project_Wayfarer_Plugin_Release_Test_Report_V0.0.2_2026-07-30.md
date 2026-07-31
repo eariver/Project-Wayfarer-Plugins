@@ -117,8 +117,58 @@ Readiness: `PLUGIN_REVIEW_REQUIRED`
   placement revalidation were partial, arbitrary-player removal/protection scope were misaligned,
   and navigation actions were not connected.
 
+## Pre-client Phase 01 — Growth progress Long.MAX_VALUE saturation (2026-07-31)
+
+Scope: PR #14 final pre-client correction Phase 01 only. Positive growth progress
+addition saturates at `Long.MAX_VALUE` without negative wrap, and
+`EvolutionPlan.evaluate(Long.MAX_VALUE)` terminates because threshold generation now
+saturates internally and stops at the `Long.MAX_VALUE` terminal threshold. Balance,
+evolution formula, progress units, death, reissue, Frontier, permission and
+presentation behavior are unchanged. No migration was added.
+
+- Implementation commit: `85be072a7a3cb8d9d5b130191d08a89b1b347386`
+  (`fix(main): saturate cumulative progress at long maximum`).
+- Validation HEAD: `85be072a7a3cb8d9d5b130191d08a89b1b347386` (identical to the
+  implementation HEAD; no code change was needed during validation).
+
+Initial attempt (2026-07-31, same HEAD):
+
+- `.\gradlew.bat :plugins:wayfarer-main:test --tests "io.github.eariver.wayfarer.main.domain.EvolutionPlanTest" --tests "io.github.eariver.wayfarer.main.domain.GrowthToolProgressTest" --tests "io.github.eariver.wayfarer.main.domain.GrowthToolAuthorityTest" --tests "io.github.eariver.wayfarer.main.application.GrowthSessionStoreTest" --console=plain -q`:
+  PASS — 15 focused tests, 0 failures, 0 errors, 0 skipped.
+- `.\gradlew.bat :plugins:wayfarer-main:test :plugins:wayfarer-main:compileMariaDbIntegrationTestJava --console=plain`:
+  PASS — 40 Main unit tests across 14 classes, 0 failures, 0 errors, 0 skipped;
+  MariaDB integration source set compiles.
+- `:plugins:wayfarer-main:mariaDbIntegrationTest`: ENVIRONMENT_BLOCKED, not executed.
+  The local Docker daemon/Compose services were not running
+  (`npipe:////./pipe/dockerDesktopLinuxEngine` unreachable), so the MariaDB
+  Testcontainers suite — including the new
+  `growthToolCheckpointRoundTripsLongMaxProgress` — could not start. Not claimed.
+
+Re-run after the Docker Compose environment was started (2026-07-31, same HEAD,
+image `mariadb:11.8` verified pullable):
+
+- `.\gradlew.bat :plugins:wayfarer-main:cleanTest :plugins:wayfarer-main:test --console=plain`:
+  PASS (BUILD SUCCESSFUL); the `test` task outcome was restored FROM-CACHE, so it was
+  superseded by the forced local execution below.
+- `.\gradlew.bat :plugins:wayfarer-main:cleanTest :plugins:wayfarer-main:test --no-build-cache --console=plain`:
+  PASS — forced fresh local execution; 40 tests across 14 classes, 0 failures,
+  0 errors, 0 skipped.
+- `.\gradlew.bat :plugins:wayfarer-main:mariaDbIntegrationTest --console=plain`:
+  PASS — 5 tests, 0 failures, 0 errors, 0 skipped, including
+  `growthToolCheckpointRoundTripsLongMaxProgress` (`Long.MAX_VALUE` checkpoint
+  save/read round-trip against a MariaDB 11.8 Testcontainers instance).
+
+Code modification during validation: none. Phase 01 verdict: **PASS**.
+
+Phases 02–08, client gameplay testing and the stable V0.0.2 release remain
+incomplete. This entry does not assert `requirements_cleared=true` or V0.0.2
+completion.
+
 ## Not run / not claimed
 
+- Pre-client correction Phases 02–08 (Frontier durable death redelivery and safe-entry
+  result notification, Main death handling and player-paid reissue, admin permission
+  split, owner-decision documentation): not implemented, not claimed.
 - Canonical LeafGrapple motion: `EXTERNAL_BLOCKED` and `CLIENT_TEST_REQUIRED`.
 - Visual/interaction client acceptance: `CLIENT_TEST_REQUIRED`.
 - Project Runtime acceptance, Project migration and Project deployment: not authorized.
