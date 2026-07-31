@@ -122,7 +122,8 @@ public final class EvolutionPlan {
 
     synchronized List<Long> thresholdsThrough(long progress) {
         List<Long> current = thresholdCache;
-        if (current.get(current.size() - 1) > progress) {
+        long last = current.get(current.size() - 1);
+        if (last > progress || last == Long.MAX_VALUE) {
             return current;
         }
         List<Long> values = new ArrayList<>(current);

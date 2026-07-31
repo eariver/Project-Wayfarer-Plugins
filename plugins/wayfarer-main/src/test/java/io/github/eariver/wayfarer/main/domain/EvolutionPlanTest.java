@@ -114,6 +114,35 @@ final class EvolutionPlanTest {
             Long.MAX_VALUE,
             saturating.thresholdsThrough(Long.MAX_VALUE).get(3)
         );
+        assertEquals(4, saturating.cachedThresholdCount());
+    }
+
+    @Test
+    void terminalThresholdAtLongMaxIsIdempotentAcrossRepeatedEvaluations() {
+        EvolutionPlan.EvolutionSnapshot first = evaluate(Long.MAX_VALUE);
+        int cachedAfterFirst = plan.cachedThresholdCount();
+
+        EvolutionPlan.EvolutionSnapshot second = evaluate(Long.MAX_VALUE);
+        EvolutionPlan.EvolutionSnapshot third = evaluate(Long.MAX_VALUE);
+
+        assertEquals(first.evolutionCount(), second.evolutionCount());
+        assertEquals(second.evolutionCount(), third.evolutionCount());
+        assertEquals(cachedAfterFirst, plan.cachedThresholdCount());
+
+        java.util.List<Long> throughMax = plan.thresholdsThrough(Long.MAX_VALUE);
+        assertEquals(throughMax, plan.thresholdsThrough(Long.MAX_VALUE));
+        assertEquals(cachedAfterFirst, plan.cachedThresholdCount());
+        assertEquals(
+            1,
+            throughMax.stream()
+                .filter(threshold -> threshold == Long.MAX_VALUE)
+                .count()
+        );
+
+        EvolutionPlan fresh = EvolutionPlan.defaults();
+        assertEquals(2_240_000L, fresh.thresholdsThrough(1_200_000).get(3));
+        java.util.List<Long> boundary = fresh.thresholdsThrough(2_240_000);
+        assertEquals(3_600_000L, boundary.get(boundary.size() - 1));
     }
 
     @Test
