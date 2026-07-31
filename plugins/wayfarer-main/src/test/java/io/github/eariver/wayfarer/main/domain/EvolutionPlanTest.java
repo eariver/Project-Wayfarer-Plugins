@@ -1,6 +1,7 @@
 package io.github.eariver.wayfarer.main.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -97,13 +98,37 @@ final class EvolutionPlanTest {
     }
 
     @Test
-    void rejectsInvalidAndOverflowingPlans() {
+    void rejectsInvalidPlansAndSaturatesThresholdsAtLongMax() {
         assertThrows(IllegalArgumentException.class,
             () -> new EvolutionPlan(100, 100, 200, 1, 1, 1));
-        EvolutionPlan overflowing =
+        EvolutionPlan saturating =
             new EvolutionPlan(1, 2, Long.MAX_VALUE - 1, 10, 0, 0);
-        assertThrows(ArithmeticException.class,
-            () -> overflowing.evaluate(Long.MAX_VALUE, GrowthTool.Branch.FORTUNE, caps));
+        EvolutionPlan.EvolutionSnapshot snapshot = saturating.evaluate(
+            Long.MAX_VALUE,
+            GrowthTool.Branch.FORTUNE,
+            caps
+        );
+        assertEquals(4, snapshot.evolutionCount());
+        assertNull(snapshot.nextThresholdUnits());
+        assertEquals(
+            Long.MAX_VALUE,
+            saturating.thresholdsThrough(Long.MAX_VALUE).get(3)
+        );
+    }
+
+    @Test
+    void evaluatesLongMaxProgressWithTerminationAndCaps() {
+        EvolutionPlan.EvolutionSnapshot snapshot = evaluate(Long.MAX_VALUE);
+        assertEquals(EvolutionPlan.MaterialTier.DIAMOND, snapshot.material());
+        assertEquals(caps.efficiency(), snapshot.efficiency());
+        assertEquals(caps.unbreaking(), snapshot.unbreaking());
+        assertEquals(caps.fortune(), snapshot.fortune());
+        assertNull(snapshot.nextThresholdUnits());
+        java.util.List<Long> thresholds = plan.thresholdsThrough(Long.MAX_VALUE);
+        assertEquals(
+            Long.MAX_VALUE,
+            thresholds.get(thresholds.size() - 1)
+        );
     }
 
     private EvolutionPlan.EvolutionSnapshot evaluate(long units) {

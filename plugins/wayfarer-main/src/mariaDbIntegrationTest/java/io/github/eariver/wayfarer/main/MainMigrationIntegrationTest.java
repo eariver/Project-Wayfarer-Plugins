@@ -101,6 +101,48 @@ final class MainMigrationIntegrationTest {
         }
     }
     @Test
+    void growthToolCheckpointRoundTripsLongMaxProgress() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            coreFlyway(fixture).migrate();
+            flyway(fixture).migrate();
+            UUID player = UUID.randomUUID();
+            try (Connection connection = connection(fixture);
+                 PreparedStatement insert = connection.prepareStatement(
+                     "INSERT INTO wf_main_growth_tool "
+                         + "(tool_id,current_item_instance_id,owner_uuid,"
+                         + "tool_type) VALUES (?,?,?,'PICKAXE')"
+                 )) {
+                insert.setString(1, UUID.randomUUID().toString());
+                insert.setString(2, UUID.randomUUID().toString());
+                insert.setString(3, player.toString());
+                insert.executeUpdate();
+            }
+            var dataSource = new org.mariadb.jdbc.MariaDbDataSource(
+                fixture.jdbcUrl()
+            );
+            dataSource.setUser(fixture.username());
+            dataSource.setPassword(fixture.password());
+            JdbcGrowthToolRepository growth =
+                new JdbcGrowthToolRepository(dataSource);
+            GrowthTool authority = growth.findByOwner(player).orElseThrow();
+            GrowthTool saturated = authority.addProgress(
+                Long.MAX_VALUE,
+                Instant.now()
+            );
+            GrowthTool persisted = growth.checkpoint(
+                saturated,
+                authority.lockVersion(),
+                Instant.now()
+            ).orElseThrow();
+            assertEquals(Long.MAX_VALUE, persisted.cumulativeProgressUnits());
+            assertEquals(
+                Long.MAX_VALUE,
+                growth.findByOwner(player).orElseThrow().cumulativeProgressUnits()
+            );
+        }
+    }
+
+    @Test
     void migratesCoreThenMainInSameEmptySchemaAndRepeats() throws Exception {
         try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
             assertEquals(3, coreFlyway(fixture).migrate().migrationsExecuted);

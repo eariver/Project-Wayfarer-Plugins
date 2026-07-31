@@ -35,12 +35,40 @@ final class GrowthSessionStoreTest {
         assertTrue(store.takeDirty(OWNER).isPresent());
     }
 
+    @Test
+    void saturatesProgressAtLongMaxWithinSession() {
+        GrowthSessionStore store = new GrowthSessionStore();
+        store.open(tool(Long.MAX_VALUE - 100));
+
+        store.addProgress(OWNER, 50, NOW.plusSeconds(1));
+        assertEquals(
+            Long.MAX_VALUE - 50,
+            store.current(OWNER).orElseThrow().cumulativeProgressUnits()
+        );
+
+        store.addProgress(OWNER, 200, NOW.plusSeconds(2));
+        assertEquals(
+            Long.MAX_VALUE,
+            store.current(OWNER).orElseThrow().cumulativeProgressUnits()
+        );
+
+        store.addProgress(OWNER, 1, NOW.plusSeconds(3));
+        assertEquals(
+            Long.MAX_VALUE,
+            store.takeDirty(OWNER).orElseThrow().cumulativeProgressUnits()
+        );
+    }
+
     private static GrowthTool tool() {
+        return tool(0);
+    }
+
+    private static GrowthTool tool(long progress) {
         return new GrowthTool(
             UUID.fromString("00000000-0000-0000-0000-000000000021"),
             OWNER,
             1,
-            0,
+            progress,
             GrowthTool.Branch.FORTUNE,
             GrowthTool.Status.ACTIVE,
             GrowthTool.DeliveryStatus.DELIVERED,

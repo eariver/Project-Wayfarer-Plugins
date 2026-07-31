@@ -129,19 +129,36 @@ public final class EvolutionPlan {
         long cursor = values.get(values.size() - 1);
         long enchantIndex = values.size() - 2L;
         while (cursor <= progress) {
-            long increment = Math.addExact(
+            long increment = saturatingAdd(
                 enchantBase,
-                Math.addExact(
-                    Math.multiplyExact(enchantLinear, enchantIndex),
-                    Math.multiplyExact(enchantQuadratic, Math.multiplyExact(enchantIndex, enchantIndex))
+                saturatingAdd(
+                    saturatingMultiply(enchantLinear, enchantIndex),
+                    saturatingMultiply(
+                        enchantQuadratic,
+                        saturatingMultiply(enchantIndex, enchantIndex)
+                    )
                 )
             );
-            cursor = Math.addExact(cursor, increment);
+            cursor = saturatingAdd(cursor, increment);
             values.add(cursor);
             enchantIndex++;
+            if (cursor == Long.MAX_VALUE) {
+                break;
+            }
         }
         thresholdCache = List.copyOf(values);
         return thresholdCache;
+    }
+
+    private static long saturatingAdd(long left, long right) {
+        return left > Long.MAX_VALUE - right ? Long.MAX_VALUE : left + right;
+    }
+
+    private static long saturatingMultiply(long left, long right) {
+        if (left == 0 || right == 0) {
+            return 0;
+        }
+        return left > Long.MAX_VALUE / right ? Long.MAX_VALUE : left * right;
     }
 
     String configRevision() {

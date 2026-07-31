@@ -75,7 +75,7 @@ public record GrowthTool(
             itemInstanceId,
             ownerUuid,
             instanceEpoch,
-            Math.addExact(cumulativeProgressUnits, units),
+            saturatingAddPositive(cumulativeProgressUnits, units),
             branch,
             status,
             deliveryStatus,
@@ -85,6 +85,15 @@ public record GrowthTool(
             lockVersion,
             now
         );
+    }
+
+    static long saturatingAddPositive(long current, long earned) {
+        if (current < 0 || earned < 0) {
+            throw new IllegalArgumentException("Progress values must be non-negative");
+        }
+        return current > Long.MAX_VALUE - earned
+            ? Long.MAX_VALUE
+            : current + earned;
     }
 
     public GrowthTool broken(int terminalDamage, Instant now) {
