@@ -158,11 +158,57 @@ image `mariadb:11.8` verified pullable):
   `growthToolCheckpointRoundTripsLongMaxProgress` (`Long.MAX_VALUE` checkpoint
   save/read round-trip against a MariaDB 11.8 Testcontainers instance).
 
-Code modification during validation: none. Phase 01 verdict: **PASS**.
+Code modification during validation: none. Phase 01 initial verdict: **PASS** —
+superseded by the post-validation correction recorded below.
 
 Phases 02–08, client gameplay testing and the stable V0.0.2 release remain
 incomplete. This entry does not assert `requirements_cleared=true` or V0.0.2
 completion.
+
+### Post-validation correction — terminal threshold cache idempotency (2026-07-31)
+
+Post-validation code review found a blocking defect in the Phase 01 implementation:
+once the threshold cache ends at the `Long.MAX_VALUE` terminal threshold, a repeated
+`thresholdsThrough(Long.MAX_VALUE)` / `evaluate(Long.MAX_VALUE, ...)` call missed the
+early return (`last > progress` is false at `MAX == MAX`), re-entered threshold
+generation, and appended a duplicate `Long.MAX_VALUE` entry on every call. Because
+`upperBound` counts every entry `<= progress`, repeated terminal evaluations inflated
+the evolution count and grew the cache without bound — a non-idempotent terminal
+evaluation.
+
+- Correction commit: `b4ac6392503646fa5983825b983e0c0552b69e74`
+  (`fix(main): keep terminal evolution threshold idempotent`), an additional commit on
+  top of the unchanged Phase 01 implementation commit; no amend, no rebase.
+- Correction: when the cache tail is already `Long.MAX_VALUE`, the cache is returned
+  unchanged, so the terminal threshold is never duplicated. The general early-return
+  condition stays `last > progress`, so a non-MAX cached threshold equal to the
+  requested progress still triggers generation of the next threshold. Balance,
+  threshold formula and progress units are unchanged. No migration was added.
+- The initial validation results above are retained unchanged; the initial PASS
+  verdict was corrected by this post-validation review.
+
+Added regression coverage
+(`EvolutionPlanTest.terminalThresholdAtLongMaxIsIdempotentAcrossRepeatedEvaluations`,
+plus a cache-size assertion in
+`rejectsInvalidPlansAndSaturatesThresholdsAtLongMax`):
+
+1. Repeated `evaluate(Long.MAX_VALUE)` returns the same evolution count.
+2. `cachedThresholdCount()` does not increase across repeated calls.
+3. Exactly one `Long.MAX_VALUE` terminal threshold exists in the cache.
+4. Repeated `thresholdsThrough(Long.MAX_VALUE)` returns identical content.
+5. A non-MAX cached threshold equal to progress still generates the next threshold.
+
+Final test results (validation HEAD `b4ac6392503646fa5983825b983e0c0552b69e74`):
+
+- `.\gradlew.bat :plugins:wayfarer-main:test --tests "io.github.eariver.wayfarer.main.domain.EvolutionPlanTest" --no-daemon --console=plain`:
+  PASS — 8 tests, 0 failures, 0 errors, 0 skipped.
+- `.\gradlew.bat :plugins:wayfarer-main:cleanTest :plugins:wayfarer-main:test --no-build-cache --no-daemon --console=plain`:
+  PASS — 41 tests across 14 classes, 0 failures, 0 errors, 0 skipped (forced fresh
+  local execution).
+
+Phase 01 final verdict after correction: **PASS**. Phases 02–08, client gameplay
+testing and the stable V0.0.2 release remain incomplete; this correction does not
+assert `requirements_cleared=true` or V0.0.2 completion.
 
 ## Not run / not claimed
 
