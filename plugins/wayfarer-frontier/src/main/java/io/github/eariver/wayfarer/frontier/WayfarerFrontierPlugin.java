@@ -11,6 +11,7 @@ import io.github.eariver.wayfarer.frontier.gameplay.FrontierGameplayRuntime;
 import io.github.eariver.wayfarer.integration.leafgrapple.ReflectiveLeafGrappleBridge;
 import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseCoordinator;
 import io.github.eariver.wayfarer.frontier.application.TraversalDeliveryCoordinator;
+import io.github.eariver.wayfarer.frontier.application.FrontierCommandPermissionPolicy;
 import io.github.eariver.wayfarer.frontier.domain.FrontierWorldGate;
 import io.github.eariver.wayfarer.frontier.domain.TraversalIdentity;
 import org.bukkit.command.CommandSender;
@@ -200,7 +201,17 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
         FrontierModuleConfig config,
         WayfarerServices services
     ) {
-        if (arguments.length == 0 || "status".equalsIgnoreCase(arguments[0])) {
+        if (arguments.length == 0
+            || (arguments.length == 1 && "status".equalsIgnoreCase(arguments[0]))) {
+            if (!FrontierCommandPermissionPolicy.isAuthorized(
+                arguments,
+                sender::hasPermission
+            )) {
+                sender.sendMessage(
+                    "Wayfarer Frontier administration is unavailable."
+                );
+                return true;
+            }
             sender.sendMessage(
                 "Wayfarer Frontier: " + runtimeState
                     + " | config=" + config.configVersion()
@@ -212,11 +223,11 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             return handleAdminCommand(sender, arguments, services);
         }
         if (!(sender instanceof Player player)
-            || !player.hasPermission("wayfarer.frontier.use")) {
+            || !player.hasPermission(FrontierCommandPermissionPolicy.USE)) {
             sender.sendMessage("Wayfarer Frontier operation is unavailable.");
             return true;
         }
-        if ("open".equalsIgnoreCase(arguments[0])) {
+        if ("open".equalsIgnoreCase(arguments[0]) && arguments.length == 1) {
             FrontierGameplayRuntime active = gameplay;
             if (active == null) {
                 player.sendMessage("Wayfarer Frontier navigation is unavailable.");
@@ -265,7 +276,10 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
         String[] arguments,
         WayfarerServices services
     ) {
-        if (!sender.hasPermission("wayfarer.frontier.admin")) {
+        Optional<String> requiredPermission =
+            FrontierCommandPermissionPolicy.requiredPermission(arguments);
+        if (requiredPermission.isEmpty()
+            || !sender.hasPermission(requiredPermission.get())) {
             sender.sendMessage("Wayfarer Frontier administration is unavailable.");
             return true;
         }
@@ -443,7 +457,8 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
                 ));
             return true;
         }
-        if ("reconcile".equalsIgnoreCase(arguments[1])) {
+        if ("reconcile".equalsIgnoreCase(arguments[1])
+            && (arguments.length == 3 || confirmed)) {
             active.reconcileLaunchpad(
                 launchpadId,
                 actorUuid,

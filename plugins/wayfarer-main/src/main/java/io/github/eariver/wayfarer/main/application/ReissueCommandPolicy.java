@@ -12,7 +12,4 @@ public final class ReissueCommandPolicy {
         return isPlayer && hasUsePermission;
     }
 
-    public static boolean mayUseAdminRecovery(boolean hasAdminPermission) {
-        return hasAdminPermission;
-    }
 }

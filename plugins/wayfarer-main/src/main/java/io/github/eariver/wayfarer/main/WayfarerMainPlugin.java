@@ -14,6 +14,7 @@ import io.github.eariver.wayfarer.main.application.ReissueCommandMessages;
 import io.github.eariver.wayfarer.main.application.ReissueCommandDispatcher;
 import io.github.eariver.wayfarer.main.application.ReissueCommandParser;
 import io.github.eariver.wayfarer.main.application.ReissueCommandPolicy;
+import io.github.eariver.wayfarer.main.application.MainCommandPermissionPolicy;
 import io.github.eariver.wayfarer.main.application.RepairCoordinator;
 import io.github.eariver.wayfarer.main.application.ReissueCoordinator;
 import io.github.eariver.wayfarer.main.application.ReissueLifecyclePolicy;
@@ -258,7 +259,15 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         MainModuleConfig config,
         WayfarerServices services
     ) {
-        if (arguments.length == 0 || "status".equalsIgnoreCase(arguments[0])) {
+        if (arguments.length == 0
+            || (arguments.length == 1 && "status".equalsIgnoreCase(arguments[0]))) {
+            if (!MainCommandPermissionPolicy.isAuthorized(
+                arguments,
+                sender::hasPermission
+            )) {
+                sender.sendMessage("Wayfarer Main administration is unavailable.");
+                return true;
+            }
             sender.sendMessage(
                 "Wayfarer Main: " + runtimeState
                     + " | config=" + config.configVersion()
@@ -267,7 +276,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         }
         if ("debug".equalsIgnoreCase(arguments[0])) {
             if (!config.debugCommandsEnabled()
-                || !sender.hasPermission("wayfarer.main.debug")
+                || !sender.hasPermission(MainCommandPermissionPolicy.DEBUG)
                 || !(sender instanceof Player player)
                 || arguments.length != 2) {
                 sender.sendMessage("Wayfarer Main debug is unavailable.");
@@ -294,7 +303,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         }
         if ("branch".equalsIgnoreCase(arguments[0])) {
             if (!(sender instanceof Player player)
-                || !player.hasPermission("wayfarer.main.admin")
+                || !player.hasPermission(MainCommandPermissionPolicy.ADMIN_MODIFY)
                 || arguments.length != 2) {
                 sender.sendMessage("Wayfarer Main branch change is unavailable.");
                 return true;
@@ -315,14 +324,14 @@ public final class WayfarerMainPlugin extends JavaPlugin {
                 : "Hold your active bound Growth Tool.");
             return true;
         }
-        if (!"repair".equalsIgnoreCase(arguments[0])) {
+        if (!"repair".equalsIgnoreCase(arguments[0]) || arguments.length != 1) {
             sender.sendMessage(
                 "Usage: /wayfarer-main <status|tool|repair|branch|inspect|reconcile>"
             );
             return true;
         }
         if (!(sender instanceof Player player)
-            || !player.hasPermission("wayfarer.main.use")) {
+            || !player.hasPermission(MainCommandPermissionPolicy.USE)) {
             sender.sendMessage("Wayfarer Main repair is unavailable.");
             return true;
         }
@@ -382,7 +391,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
     ) {
         if (!ReissueCommandPolicy.mayUsePlayerReissue(
             sender instanceof Player,
-            sender.hasPermission("wayfarer.main.use")
+            sender.hasPermission(MainCommandPermissionPolicy.USE)
         )) {
             sender.sendMessage("Wayfarer Main reissue is unavailable.");
             return true;
@@ -471,9 +480,10 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         String[] arguments,
         WayfarerServices services
     ) {
-        if (!ReissueCommandPolicy.mayUseAdminRecovery(
-            sender.hasPermission("wayfarer.main.admin")
-        )) {
+        Optional<String> requiredPermission =
+            MainCommandPermissionPolicy.requiredPermission(arguments);
+        if (requiredPermission.isEmpty()
+            || !sender.hasPermission(requiredPermission.get())) {
             sender.sendMessage("Wayfarer Main administration is unavailable.");
             return true;
         }

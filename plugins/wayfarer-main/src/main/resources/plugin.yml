@@ -14,9 +14,26 @@ permissions:
   wayfarer.main.use:
     description: Use the bound Growth Tool interface
     default: true
-  wayfarer.main.admin:
-    description: Manage Wayfarer Main tools and recovery
+  wayfarer.main.admin.*:
+    description: Manage all Wayfarer Main administrative routes
     default: op
+    children:
+      wayfarer.main.admin.read: true
+      wayfarer.main.admin.delivery: true
+      wayfarer.main.admin.modify: true
+      wayfarer.main.admin.reconcile: true
+  wayfarer.main.admin.read:
+    description: Read Wayfarer Main status and administrative records
+    default: false
+  wayfarer.main.admin.delivery:
+    description: Retry and restore Wayfarer Main deliveries
+    default: false
+  wayfarer.main.admin.modify:
+    description: Modify or revoke Wayfarer Main tool authority
+    default: false
+  wayfarer.main.admin.reconcile:
+    description: Reconcile Wayfarer Main repair and reissue recovery
+    default: false
   wayfarer.main.debug:
     description: Use explicitly enabled Wayfarer Main debug commands
     default: op

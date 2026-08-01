@@ -15,6 +15,26 @@ permissions:
   wayfarer.frontier.use:
     description: Use Wayfarer Frontier traversal and shop features
     default: true
-  wayfarer.frontier.admin:
-    description: Manage Wayfarer Frontier delivery and launchpads
+  wayfarer.frontier.admin.*:
+    description: Manage all Wayfarer Frontier administrative routes
+    default: op
+    children:
+      wayfarer.frontier.admin.read: true
+      wayfarer.frontier.admin.delivery: true
+      wayfarer.frontier.admin.launchpad: true
+      wayfarer.frontier.admin.reconcile: true
+  wayfarer.frontier.admin.read:
+    description: Read Wayfarer Frontier status and administrative records
+    default: false
+  wayfarer.frontier.admin.delivery:
+    description: Reissue loadouts and retry Frontier deliveries
+    default: false
+  wayfarer.frontier.admin.launchpad:
+    description: Remove Wayfarer Frontier launchpads
+    default: false
+  wayfarer.frontier.admin.reconcile:
+    description: Reconcile Wayfarer Frontier launchpads
+    default: false
+  wayfarer.frontier.debug:
+    description: Use explicitly enabled Wayfarer Frontier debug commands
     default: op
