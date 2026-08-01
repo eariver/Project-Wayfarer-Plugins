@@ -476,12 +476,12 @@ latest_migration="$(
   query_database "$queue_db" \
     "SELECT MAX(version) FROM flyway_schema_history WHERE success = 1;"
 )"
-test "$migration_count" -eq 4
-test "$latest_migration" = "004"
+test "$migration_count" -eq 3
+test "$latest_migration" = "003"
 test "$(
   query_database "$baseline_db" \
     "SELECT COUNT(*) FROM wf_main_flyway_schema_history WHERE success = 1;"
-)" -eq 4
+)" -eq 5
 test "$(
   query_database "$baseline_db" \
     "SELECT COUNT(*) FROM wf_frontier_flyway_schema_history WHERE success = 1;"
@@ -500,8 +500,8 @@ candidate_core_runtime_jar_count=1
 test_only_probe_sha256=$probe_sha256
 test_only_fixture_sha256=$fixture_sha256
 config_version=1
-migration_latest=V004
-migration_count=4
+migration_latest=V003
+migration_count=3
 main_migration_history=wf_main_flyway_schema_history
 frontier_migration_history=wf_frontier_flyway_schema_history
 module_runtime_wiring=pass
