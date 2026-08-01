@@ -6,9 +6,16 @@ import io.github.eariver.wayfarer.main.config.MainModuleConfig;
 import io.github.eariver.wayfarer.main.persistence.MainModulePersistence;
 import io.github.eariver.wayfarer.main.persistence.JdbcRepairOperationRepository;
 import io.github.eariver.wayfarer.main.persistence.JdbcGrowthToolRepository;
+import io.github.eariver.wayfarer.main.persistence.JdbcReissueOperationRepository;
 import io.github.eariver.wayfarer.main.gameplay.MainGameplayRuntime;
+import io.github.eariver.wayfarer.main.application.ConfirmRequest;
+import io.github.eariver.wayfarer.main.application.QuoteRequest;
 import io.github.eariver.wayfarer.main.application.RepairCoordinator;
+import io.github.eariver.wayfarer.main.application.ReissueCoordinator;
+import io.github.eariver.wayfarer.main.application.ReissueQuoteStore;
 import io.github.eariver.wayfarer.main.domain.GrowthTool;
+import io.github.eariver.wayfarer.main.domain.ReissueOperation;
+import io.github.eariver.wayfarer.main.domain.ReissuePricing;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,14 +27,18 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 public final class WayfarerMainPlugin extends JavaPlugin {
     private final AtomicBoolean accepting = new AtomicBoolean();
     private volatile MainModulePersistence persistence;
     private volatile JdbcRepairOperationRepository repairRepository;
+    private volatile JdbcReissueOperationRepository reissueRepository;
     private volatile MainGameplayRuntime gameplay;
     private volatile RepairCoordinator repairCoordinator;
+    private volatile ReissueCoordinator reissueCoordinator;
     private volatile Duration disableTimeout = Duration.ofSeconds(15);
     private volatile String runtimeState = "INITIALIZING";
 
@@ -120,6 +131,8 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         runtimeState = "DISABLED";
         MainGameplayRuntime activeGameplay = gameplay;
         gameplay = null;
+        reissueCoordinator = null;
+        reissueRepository = null;
         if (activeGameplay != null) {
             try {
                 activeGameplay.stopAndFlush().toCompletableFuture().get(
@@ -152,6 +165,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         }
         persistence = opened;
         disableTimeout = config.disableTimeout();
+        Clock clock = Clock.systemUTC();
         JdbcGrowthToolRepository growthRepository =
             new JdbcGrowthToolRepository(opened.dataSource());
         repairRepository = new JdbcRepairOperationRepository(opened.dataSource());
@@ -160,7 +174,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             config,
             services,
             growthRepository,
-            Clock.systemUTC()
+            clock
         );
         repairCoordinator = new RepairCoordinator(
             repairRepository,
@@ -168,18 +182,52 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             services.waymark(),
             services.tasks(),
             gameplay::applyFullRepair,
-            Clock.systemUTC()
+            clock
         );
         gameplay.bindRepairCoordinator(repairCoordinator);
-        PluginCommand command = getCommand("wayfarer-main");
-        if (command != null) {
-            command.setExecutor((sender, ignored, label, arguments) ->
-                handleCommand(sender, arguments, config, services)
-            );
-        }
-        runtimeState = "ENABLED";
-        getLogger().info(
-            "Wayfarer_Main runtime enabled; module migration and persistence are UP."
+        reissueRepository = new JdbcReissueOperationRepository(opened.dataSource());
+        reissueCoordinator = new ReissueCoordinator(
+            reissueRepository,
+            growthRepository,
+            services.transactions(),
+            services.tasks(),
+            services.audit(),
+            new ReissuePricing(config.repairPricing()),
+            config.evolutionPlan(),
+            config.enchantmentCaps(),
+            config.configRevision(),
+            new ReissueQuoteStore(),
+            gameplay,
+            gameplay,
+            services.serverId(),
+            clock
+        );
+
+        ReissueCoordinator coordinator = reissueCoordinator;
+        coordinator.recoverAfterRestart().whenComplete((ignored, failure) ->
+            services.tasks().mainThread(() -> {
+                if (!accepting.get() || !isEnabled()) {
+                    return;
+                }
+                if (failure != null) {
+                    failClosed(
+                        "Wayfarer_Main reissue recovery is unavailable."
+                    );
+                    return;
+                }
+                PluginCommand command = getCommand("wayfarer-main");
+                if (command == null) {
+                    failClosed("Wayfarer_Main command registration is unavailable.");
+                    return;
+                }
+                command.setExecutor((sender, ignoredCommand, label, arguments) ->
+                    handleCommand(sender, arguments, config, services)
+                );
+                runtimeState = "ENABLED";
+                getLogger().info(
+                    "Wayfarer_Main runtime enabled; module migration, reissue recovery, and persistence are UP."
+                );
+            })
         );
     }
 
@@ -221,6 +269,9 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             );
             return true;
         }
+        if ("tool".equalsIgnoreCase(arguments[0])) {
+            return handlePlayerReissue(sender, arguments, services);
+        }
         if (adminCommand(arguments[0])) {
             return handleAdminCommand(sender, arguments, services);
         }
@@ -248,7 +299,9 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             return true;
         }
         if (!"repair".equalsIgnoreCase(arguments[0])) {
-            sender.sendMessage("Usage: /wayfarer-main <status|repair|branch>");
+            sender.sendMessage(
+                "Usage: /wayfarer-main <status|tool|repair|branch|inspect|reconcile>"
+            );
             return true;
         }
         if (!(sender instanceof Player player)
@@ -295,9 +348,78 @@ public final class WayfarerMainPlugin extends JavaPlugin {
             tool.toolId(),
             tool.instanceEpoch(),
             quote.amountWaymark()
-        )).thenAccept(result -> services.tasks().mainThread(() ->
-            sender.sendMessage("Wayfarer Main repair: " + result.status())
+        )).whenComplete((result, failure) -> sendOnMain(
+            services,
+            sender,
+            failure == null
+                ? "Wayfarer Main repair: " + result.status()
+                : "Wayfarer Main repair is unavailable."
         ));
+        return true;
+    }
+
+    private boolean handlePlayerReissue(
+        CommandSender sender,
+        String[] arguments,
+        WayfarerServices services
+    ) {
+        if (!(sender instanceof Player player)
+            || !player.hasPermission("wayfarer.main.use")) {
+            sender.sendMessage("Wayfarer Main reissue is unavailable.");
+            return true;
+        }
+        ReissueCoordinator coordinator = reissueCoordinator;
+        if (coordinator == null || !"ENABLED".equals(runtimeState)) {
+            player.sendMessage("Wayfarer Main reissue is unavailable.");
+            return true;
+        }
+        UUID playerUuid = player.getUniqueId();
+        if (arguments.length == 2
+            && "reissue".equalsIgnoreCase(arguments[1])) {
+            coordinator.quote(new QuoteRequest(playerUuid)).whenComplete(
+                (result, failure) -> sendPlayerOnMain(
+                    services,
+                    playerUuid,
+                    failure == null
+                        ? quoteMessage(result)
+                        : "Wayfarer Main reissue is unavailable."
+                )
+            );
+            return true;
+        }
+        if (arguments.length == 3
+            && "reissue".equalsIgnoreCase(arguments[1])
+            && "confirm".equalsIgnoreCase(arguments[2])) {
+            coordinator.confirm(new ConfirmRequest(playerUuid)).whenComplete(
+                (result, failure) -> {
+                    MainGameplayRuntime active = gameplay;
+                    boolean refreshRequired = failure == null
+                        && result != null
+                        && (result.status() == ReissueCoordinator.Status.DELIVERED
+                            || result.status() == ReissueCoordinator.Status.PENDING);
+                    CompletionStage<Void> refresh = refreshRequired
+                        ? active == null
+                            ? CompletableFuture.failedFuture(
+                                new IllegalStateException("Runtime unavailable")
+                            )
+                            : active.refreshSessionFromAuthority(playerUuid)
+                        : CompletableFuture.completedFuture(null);
+                    refresh.whenComplete((ignored, refreshFailure) ->
+                        sendPlayerOnMain(
+                            services,
+                            playerUuid,
+                            failure != null || result == null || refreshFailure != null
+                                ? "Wayfarer Main reissue is unavailable."
+                                : confirmMessage(result)
+                        )
+                    );
+                }
+            );
+            return true;
+        }
+        player.sendMessage(
+            "Usage: /wayfarer-main tool reissue [confirm]"
+        );
         return true;
     }
 
@@ -325,7 +447,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
                 case "reissue" ->
                     mutateAuthority(sender, arguments, active, services, true);
                 case "reconcile" ->
-                    reconcileRepair(sender, arguments, services);
+                    reconcile(sender, arguments, services);
                 default -> false;
             };
         } catch (RuntimeException failure) {
@@ -342,7 +464,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
     ) {
         if (arguments.length != 3) {
             sender.sendMessage(
-                "Usage: /wayfarer-main inspect <tool|repair> <uuid>"
+                "Usage: /wayfarer-main inspect <tool|reissue|repair> <uuid>"
             );
             return true;
         }
@@ -362,6 +484,22 @@ public final class WayfarerMainPlugin extends JavaPlugin {
                     : "Wayfarer Main inspection is unavailable.";
                 sendOnMain(services, sender, message);
             });
+            return true;
+        }
+        if ("reissue".equalsIgnoreCase(arguments[1])) {
+            JdbcReissueOperationRepository repository = reissueRepository;
+            if (repository == null) {
+                sender.sendMessage("Wayfarer Main inspection is unavailable.");
+                return true;
+            }
+            services.tasks().database(() -> repository.find(id))
+                .whenComplete((found, failure) -> {
+                    String message = failure == null
+                        ? found.map(WayfarerMainPlugin::describeReissue)
+                            .orElse("Reissue: NOT_FOUND")
+                        : "Wayfarer Main inspection is unavailable.";
+                    sendOnMain(services, sender, message);
+                });
             return true;
         }
         if ("repair".equalsIgnoreCase(arguments[1])) {
@@ -385,7 +523,7 @@ public final class WayfarerMainPlugin extends JavaPlugin {
                 });
             return true;
         }
-        sender.sendMessage("Use tool or repair.");
+        sender.sendMessage("Use tool, reissue, or repair.");
         return true;
     }
 
@@ -448,6 +586,86 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         return true;
     }
 
+    private boolean reconcile(
+        CommandSender sender,
+        String[] arguments,
+        WayfarerServices services
+    ) {
+        if (arguments.length == 2) {
+            return reconcileRepair(sender, arguments, services);
+        }
+        return reconcileReissue(sender, arguments, services);
+    }
+
+    private boolean reconcileReissue(
+        CommandSender sender,
+        String[] arguments,
+        WayfarerServices services
+    ) {
+        ReissueCoordinator coordinator = reissueCoordinator;
+        UUID reissueId = arguments.length >= 2
+            ? parseUuid(arguments[1])
+            : null;
+        if (coordinator == null || reissueId == null) {
+            sender.sendMessage(
+                "Usage: /wayfarer-main reconcile <reissue-uuid> "
+                    + "<confirm-payment|resume-payment|resume-rotation> confirm"
+            );
+            return true;
+        }
+        CompletionStage<ReissueCoordinator.Result> stage;
+        String action = arguments.length >= 3
+            ? arguments[2].toLowerCase(java.util.Locale.ROOT)
+            : "";
+        if ("confirm-payment".equals(action)
+            || "resume-payment".equals(action)
+            || "resume-rotation".equals(action)) {
+            if (arguments.length != 4
+                || !"confirm".equalsIgnoreCase(arguments[3])) {
+                sender.sendMessage(
+                    "Usage: /wayfarer-main reconcile <reissue-uuid> "
+                        + action + " confirm"
+                );
+                return true;
+            }
+            stage = switch (action) {
+                case "confirm-payment" ->
+                    coordinator.confirmPaymentAndResumeRotation(reissueId);
+                case "resume-payment" -> coordinator.resumePayment(reissueId);
+                case "resume-rotation" ->
+                    coordinator.resumeRotationFromUnknown(reissueId);
+                default -> throw new IllegalStateException("Unreachable action");
+            };
+        } else if ("mark-failed".equals(action)) {
+            if (arguments.length != 5
+                || !"confirm".equalsIgnoreCase(arguments[4])) {
+                sender.sendMessage(
+                    "Usage: /wayfarer-main reconcile <reissue-uuid> "
+                        + "mark-failed <FAILURE_CODE> confirm"
+                );
+                return true;
+            }
+            stage = coordinator.failByAdmin(
+                reissueId,
+                sanitizeAdminFailureCode(arguments[3])
+            );
+        } else {
+            sender.sendMessage(
+                "Usage: /wayfarer-main reconcile <reissue-uuid> "
+                    + "<confirm-payment|resume-payment|resume-rotation> confirm"
+            );
+            return true;
+        }
+        stage.whenComplete((result, failure) -> sendOnMain(
+            services,
+            sender,
+            failure == null && result != null
+                ? recoveryMessage(result)
+                : "Wayfarer Main reissue recovery is unavailable."
+        ));
+        return true;
+    }
+
     private boolean reconcileRepair(
         CommandSender sender,
         String[] arguments,
@@ -500,12 +718,138 @@ public final class WayfarerMainPlugin extends JavaPlugin {
         }
     }
 
-    private static void sendOnMain(
+    private static String quoteMessage(ReissueCoordinator.QuoteResult result) {
+        if (result == null) {
+            return "Wayfarer Main reissue is unavailable.";
+        }
+        if (result.status() == ReissueCoordinator.QuoteStatus.ISSUED
+            && result.quote() != null) {
+            return "Growth Tool reissue quote: "
+                + result.quote().amountWaymark()
+                + " WM; Evolution Count: "
+                + result.quote().evolutionCount()
+                + "; replacement is fully repaired. Confirm with "
+                + "/wayfarer-main tool reissue confirm";
+        }
+        String failureCode = result.failureCode() == null
+            ? ""
+            : result.failureCode();
+        return switch (failureCode) {
+            case "PLAYER_OFFLINE" ->
+                "You must be online to request a Growth Tool reissue quote.";
+            case "WORLD_NOT_ALLOWED" ->
+                "Growth Tool reissue is available only in a resource world.";
+            case "CURRENT_ITEM_PRESENT" ->
+                "Your current Growth Tool is present; paid reissue is unavailable.";
+            case "DELIVERY_PENDING" ->
+                "A free Growth Tool delivery is pending; free inventory space and rejoin.";
+            default -> "Growth Tool reissue quote is unavailable.";
+        };
+    }
+
+    private static String confirmMessage(ReissueCoordinator.Result result) {
+        return switch (result.status()) {
+            case DELIVERED ->
+                "Growth Tool reissue completed; the replacement is fully repaired.";
+            case PENDING ->
+                "Growth Tool reissue payment completed; free delivery is pending. "
+                    + "Free inventory space and rejoin to retry delivery.";
+            case UNKNOWN ->
+                "Growth Tool reissue requires administrator review; no automatic retry will occur.";
+            case FAILED ->
+                "Growth Tool reissue did not complete; no further automatic payment will occur.";
+            case REJECTED -> {
+                String failureCode = result.failureCode() == null
+                    ? ""
+                    : result.failureCode();
+                yield switch (failureCode) {
+                    case "QUOTE_EXPIRED", "QUOTE_CHANGED" ->
+                        "The reissue quote changed or expired; request a new quote before confirming.";
+                    case "CURRENT_ITEM_PRESENT" ->
+                        "Your current Growth Tool is present; no WM was charged.";
+                    case "DELIVERY_PENDING" ->
+                        "A free Growth Tool delivery is pending; no WM was charged. Free inventory space and rejoin.";
+                    case "PLAYER_OFFLINE" ->
+                        "You must be online to confirm a Growth Tool reissue.";
+                    case "WORLD_NOT_ALLOWED" ->
+                        "Growth Tool reissue is available only in a resource world.";
+                    default -> "Growth Tool reissue was rejected; no WM was charged.";
+                };
+            }
+            case UNAVAILABLE -> "Wayfarer Main reissue is unavailable.";
+        };
+    }
+
+    private static String describeReissue(ReissueOperation operation) {
+        return "Reissue: state=" + operation.state()
+            + " transaction=" + Optional.ofNullable(operation.transactionId())
+                .map(UUID::toString)
+                .orElse("NONE")
+            + " payment_marker="
+                + (operation.paymentCommittedAt() == null ? "NO" : "YES")
+            + " failure_code=" + sanitizeFailureCode(operation.failureCode());
+    }
+
+    private static String recoveryMessage(ReissueCoordinator.Result result) {
+        return "Reissue recovery: status=" + result.status()
+            + " reissue=" + Optional.ofNullable(result.reissueId())
+                .map(UUID::toString)
+                .orElse("NONE")
+            + " transaction=" + Optional.ofNullable(result.transactionId())
+                .map(UUID::toString)
+                .orElse("NONE")
+            + " failure_code=" + sanitizeFailureCode(result.failureCode());
+    }
+
+    private static String sanitizeFailureCode(String failureCode) {
+        return failureCode != null && failureCode.matches("[A-Z0-9_]{3,96}")
+            ? failureCode
+            : "NONE";
+    }
+
+    private static String sanitizeAdminFailureCode(String failureCode) {
+        return failureCode != null && failureCode.matches("[A-Z0-9_]{3,96}")
+            ? failureCode
+            : "ADMIN_FAILED";
+    }
+
+    private void sendPlayerOnMain(
+        WayfarerServices services,
+        UUID playerUuid,
+        String message
+    ) {
+        services.tasks().mainThread(() -> {
+            if (!accepting.get() || !"ENABLED".equals(runtimeState)) {
+                return;
+            }
+            Player online = getServer().getPlayer(playerUuid);
+            if (online != null && online.isOnline()) {
+                online.sendMessage(message);
+            }
+        });
+    }
+
+    private void sendOnMain(
         WayfarerServices services,
         CommandSender sender,
         String message
     ) {
-        services.tasks().mainThread(() -> sender.sendMessage(message));
+        UUID playerUuid = sender instanceof Player player
+            ? player.getUniqueId()
+            : null;
+        services.tasks().mainThread(() -> {
+            if (playerUuid == null) {
+                sender.sendMessage(message);
+                return;
+            }
+            if (!accepting.get()) {
+                return;
+            }
+            Player online = getServer().getPlayer(playerUuid);
+            if (online != null && online.isOnline()) {
+                online.sendMessage(message);
+            }
+        });
     }
 
     private void failClosed(String message) {

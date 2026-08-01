@@ -162,7 +162,7 @@ public final class EvolutionPlan {
         return left > Long.MAX_VALUE / right ? Long.MAX_VALUE : left * right;
     }
 
-    String configRevision() {
+    public String configRevision() {
         return configRevision;
     }
 

@@ -175,6 +175,14 @@ public record MainModuleConfig(
         );
     }
 
+    /**
+     * Returns the exact revision already bound to the immutable EvolutionPlan.
+     * The revision is not recomputed at the runtime wiring boundary.
+     */
+    public String configRevision() {
+        return evolutionPlan.configRevision();
+    }
+
     private static Map<String, BigDecimal> requiredMap(
         FileConfiguration config,
         String path,

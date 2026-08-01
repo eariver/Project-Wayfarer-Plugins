@@ -8,7 +8,7 @@ depend: [Wayfarer_Core]
 commands:
   wayfarer-main:
     description: Wayfarer Main administration and tool status
-    usage: /wayfarer-main <status|inspect|grant|reissue|repair|branch|revoke|reconcile|delivery>
+    usage: /wayfarer-main <status|tool reissue [confirm]|inspect|grant|reissue|repair|branch|revoke|reconcile|delivery>
     aliases: [wfmain]
 permissions:
   wayfarer.main.use:
