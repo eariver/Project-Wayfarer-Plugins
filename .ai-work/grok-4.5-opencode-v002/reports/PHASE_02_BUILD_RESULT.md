@@ -26,7 +26,7 @@ Match: **Yes**
 
 ## 4. Final HEAD
 
-(recorded after commits/push)
+`845d74921ab384c6e019fb611c4cabd8f273995f`
 
 ## 5. Initial / Final git status
 
@@ -117,11 +117,12 @@ Testcontainers `mariadb:11.8` via `MariaDbContainerFixture`. Durable cases in `F
 
 ## 18. Commits created
 
-(filled after git commit)
+- `43df09d6ed3aa7884586c5138f9e77ea5c65aef3` — `fix(frontier): make permanent redelivery durable`
+- `845d74921ab384c6e019fb611c4cabd8f273995f` — `docs(test): record phase 02 durable redelivery validation`
 
 ## 19. Push result
 
-(filled after push)
+Pushed to `origin/feature/V0.0.2-main-frontier` (`8e80fb0..845d749`). Draft PR #14 retained.
 
 ## 20. Known limitations
 
