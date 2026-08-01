@@ -1,5 +1,20 @@
 # V0.0.2 Evidence Index
 
+Current Plugin implementation/test anchor:
+`7faf79081572df028a5ec19ccfbc820123180fc7`
+
+Phase 01–06 capability evidence is distinct from client and Project acceptance:
+
+| Phase / capability | Evidence identity | Result |
+|---|---|---|
+| Phase 01 Main progress | Product anchor `7faf79081572df028a5ec19ccfbc820123180fc7`; saturation and terminal-idempotency tests | complete |
+| Phase 02 Frontier death recovery | Product anchor; typed durable Pending Delivery and same-identity/epoch redelivery evidence | complete |
+| Phase 03 Main reissue architecture | Phase 03 architecture/recovery evidence and current source anchor | complete |
+| Phase 04 Main reissue domain/persistence | `.ai-work/luna-gpt-5.6-v002/reports/PHASE_04_MAIN_REISSUE_DOMAIN_PERSISTENCE_RESULT.md` | complete |
+| Phase 05 Main death/command/runtime | `.ai-work/luna-gpt-5.6-v002/reports/PHASE_05_MAIN_DEATH_COMMAND_RUNTIME_RESULT.md` | complete |
+| Phase 06 permission split | CI run `30701316290`; Headless run `30701316289`; `preclient-headless-evidence`; digest `sha256:218a363b71acaa93b8e55ee9b6a2215e98f94763f732e636edb38cd068065fef` | complete |
+| Phase 07 documentation/full validation | Documentation and local validation prepared; exact-final-head CI/Headless IDs belong only in PR body and local Phase 07 report | external verification recorded after push |
+
 | Evidence | Path / immutable identity | Result |
 |---|---|---|
 | Authority foundation | commit `ae0f80237113fb96dffd6934d016b19d4e768f18` | complete |
@@ -26,7 +41,7 @@
 | Corrected isolated Headless Paper | [run 30509795942](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509795942) at `ddc6711e` | pass |
 | Second-review normal CI | [run 30546252168](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252168) at `2114e3cd` | pass |
 | Second-review isolated Headless Paper | [run 30546252420](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252420) at `2114e3cd`; artifact `preclient-headless-evidence`, digest `sha256:ee736e69e5fad4225fc63512b4c7a756405e5863e55c5d526199117456bb26e8` | pass |
-| Requirement snapshot | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/Project_Wayfarer_Plugin_V0.0.2_Main_Frontier_Requirements_REGENERATED.md` | SHA-256 fixed |
+| Requirement snapshot | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/Project_Wayfarer_Plugin_V0.0.2_Main_Frontier_Requirements.md` | SHA-256 `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F` fixed; `_REGENERATED` is not required |
 | Traceability | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/traceability.md` | terminal classifications |
 | Test report | `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md` | automated scope pass |
 | LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md` | unsafe default / blocked |

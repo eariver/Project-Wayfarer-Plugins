@@ -1,121 +1,68 @@
 # V0.0.2 Blocking Register
 
-Only tasks directly named in a blocker are stopped. Independent domain, config, tests, release
-tooling and documentation continue.
+Owner-resolved Phase 01–06 outcomes are recorded as completed implementation/evidence work.
+Only the following external, review, client, Project, or later-release boundaries remain active.
 
-## B-001 — Module persistence architecture review (resolved)
+## Resolved implementation boundaries
 
-- Category: `DONE`
-- Affected requirement: Req. 6.5–6.6, 8.6, 11.4; execution instruction section 7
-- Observed fact: Main and Frontier require authoritative `wf_main_*` and `wf_frontier_*`
-  persistence and module-local Flyway locations. V0.0.1 intentionally publishes no JDBC or opaque
-  database operations, while Core owns only its private Core pool and migrations.
-- Evidence: ADR 0005, `WayfarerDatabase`, Core persistence architecture, current module scaffolds
-- Resolution: the Plugin owner approved option B. Main and Frontier own bounded module-local
-  pools and separate history tables without changing the Core API.
-- Tasks directly blocked: none after resolution
-- Tasks not blocked: pure domains, config, DDL draft, repository interfaces, PDC/item logic,
-  threshold/cost/state machines, command/GUI proposals, world guards, release tooling and tests
-  that do not pretend to prove real MariaDB persistence
-- Implemented result: bounded module pools, separate Flyway histories, combined-schema
-  empty/upgrade/repeat/failure tests, sanitized configuration, and fail-closed production entry
-  points
-- Approval: recorded in ADR 0009 and implemented.
-- Options:
-  - A: additive JDK-only public Core persistence API
-  - B: Main and Frontier own bounded module-local Hikari/Flyway lifecycles, sharing only a private
-    implementation library
-  - C: Core internal extension registration
-  - D: another design that exposes no JDBC/framework/server type
-- Recommended option: B. It preserves the released API and dependency direction, keeps module
-  migrations and failures isolated, and avoids turning Core into a gameplay repository host.
-- Gameplay impact: module features remain fail-closed until their own persistence is healthy
-- Data / Migration impact: two module-specific migration histories; at most one module pool in
-  addition to Core on each backend; explicit pool budgets and shutdown order required
-- Compatibility impact: no V0.0.1 API or Core migration change
-- Security impact: repeated secret references but no resolved secret may be logged or persisted;
-  each module must validate and release its own secret values
-- Rollback: disable/remove the affected module without deleting schema; Core V0.0.1 remains usable
+### B-001 / ADR 0009 — module persistence
 
-## B-002 — Owner approval for player-facing proposals
+- Status: `DONE`.
+- Main and Frontier own bounded module-local pools and separate migration histories.
+- Core V0.0.1 API and migrations remain unchanged.
+- No Project Runtime database or migration operation is authorized here.
 
-- Category: `OWNER_APPROVAL_REQUIRED`
-- Affected requirement: MAIN-D04, MAIN-D05, FRONT-D01, FRONT-D05
-- Observed fact: layout, language, item presentation and missing-world policy are Owner decisions.
-- Evidence: requirement section 15 and decision register
-- Why Codex cannot safely decide: these define final player-facing product behavior, not merely
-  internal code structure.
-- Tasks directly blocked: stable approval of those presentation/policy choices
-- Tasks not blocked: safe configurable provisional implementations and all non-presentation logic
-- Safe provisional work completed: proposals are tracked in the decision register
-- Exact approval needed: accept or revise the four proposals before stable publication
-- Options: listed per decision ID in `docs/decisions/V0.0.2/decision-register.md`
-- Recommended option: use the safe provisional defaults so implementation and test can proceed
-- Gameplay impact: presentation and degraded behavior only; core progression/state semantics stay
-  fixed
-- Data / Migration impact: none
-- Compatibility impact: config defaults may change before stable publication
-- Security impact: no raw UUID, provider reference, exception or secret in player text
-- Rollback: change reviewed config/presentation before the candidate is fixed
+### B-004 — transaction/domain fulfillment
 
-## B-003 — Client acceptance
+- Status: `DONE`.
+- Durable module order, pending fulfillment, known-no-effect-only recovery, and `UNKNOWN`
+  handling are implemented.
+- Cross-store atomicity and unconditional exactly-once are not claimed.
+- `UNKNOWN` is never automatically debited, refunded, or retried.
 
-- Category: `CLIENT_TEST_REQUIRED`
-- Affected requirement: requirement section 21
-- Observed fact: visual GUI, item interaction, movement feel, LeafGrapple and Launchpad experience
-  cannot be fully established by unit or headless tests.
-- Evidence: client test plan to be added after runtime implementation
-- Why Codex cannot safely decide: a real Minecraft client and user observation are required.
-- Tasks directly blocked: final client acceptance result
-- Tasks not blocked: all automated, MariaDB, headless, packaging and handoff preparation
-- Safe provisional work completed:
-  `docs/testing/plans/V0.0.2-client-acceptance.md`
-- Exact approval needed: execute the bounded client checklist and record actual results
-- Options: pass, plugin defect, configuration/external limitation
-- Recommended option: run only the representative cases defined by the final client plan
-- Gameplay impact: player-visible behavior
-- Data / Migration impact: isolated task database only
-- Compatibility impact: may identify a focused correction before stable release
-- Security impact: verify sanitized messages and permission denial
-- Rollback: discard task-only data and candidate runtime
+### Resolved Owner Amendment outcomes
 
-## B-004 — Core transaction/domain fulfillment boundary (resolved)
+- MAIN-D01/D02/D03 baselines are implemented.
+- MAIN-D04/D05/D06 current English/presentation and sanitized text are accepted for V0.0.2;
+  later tuning is deferred.
+- MAIN-D07 Phase 06 permission split is implemented.
+- FRONT-D03 current-config Launchpad performance plus minimal durable authority is adopted;
+  stored yaw is reserved/non-authoritative.
+- FRONT-D05 current English Navigation presentation is accepted for V0.0.2.
+- FRONT-D06 typed durable Pending Delivery is implemented.
+- FRONT-D08 is limited to `PlayerPortalEvent` cancellation in current world `frontier_iris`.
+- Main death has no automatic restore and uses paid Player reissue; Frontier permanent items use
+  durable free redelivery; progress saturates at `Long.MAX_VALUE`.
 
-- Category: `DONE`
-- Affected requirement: Req. 8.14, 9.15; execution instruction section 7
-- Observed fact: V0.0.1 `WayfarerTransactions.execute` durably handles the provider debit and its
-  own transaction state, but exposes no module domain-commit callback. It reaches `COMMITTED`
-  before a Main repair or Frontier delivery has been persisted or applied.
-- Safe provisional pattern: claim an idempotent module order before Core Transactions; after
-  Core `COMMITTED`, record payment and retain fulfillment as durable pending delivery. Ambiguous
-  effects become module `UNKNOWN` and are not automatically retried. Main never refunds when a
-  physical repair effect may have occurred. Neither coordinator claims cross-store atomicity.
-- Resolution: the Plugin owner approved durable module recovery with V0.0.1 Core reuse,
-  UNKNOWN-no-retry, known-no-effect-only refund, and no cross-store atomicity claim.
-- Tasks directly blocked: none after resolution; review and client gates remain separate
-- Tasks not blocked: pure pricing, module repair state machine, GUI proposal, Frontier pending
-  delivery, and all non-transaction runtime work
-- Compatibility impact: a Core API addition changes ADR 0010 from `main-frontier` to `all`
-- Security impact: no provider reference or exception message may become player-facing
-- Rollback: disable Main/Frontier independently while retaining the unchanged V0.0.1 Core
+## Active gates
 
-## B-005 — External gameplay integration boundaries
+### FRONT-D01 — missing `frontier_iris`
 
-- Category: `EXTERNAL_BLOCKED`
-- Affected requirement: Req. 12–13; FRONT-D02 and FRONT-D04
-- Observed fact: the inspected LeafGrapple 1.0.2 default tier enables durability and entity
-  hooking, so it cannot satisfy the V0.0.2 permanent-item contract. Native Bukkit event guards
-  also cannot prove interception of every WorldEdit/FAWE bulk edit.
-- Evidence:
-  `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md` and the public capability probe
-- Tasks directly blocked: canonical client hook motion; final Launchpad external-protection claim
-- Tasks not blocked: fail-closed adapter, Launchpad state/use/placement/protection/reconcile,
-  migration, package, configuration and bounded client plan
-- Safe work completed: exact-version public-method adapter, unsafe-tier rejection, no fallback
-  physics/fork/private-field access, native event protection, placement policy and known
-  limitation
-- Exact resolution needed: provide/approve a LeafGrapple tier with durability and entity hooking
-  disabled; Plugin review must approve the supported public protection-hook matrix
-- Security/compatibility impact: raw plugin objects and internal exceptions remain hidden; an
-  unavailable capability produces no substitute item
-- Rollback: omit/disable Frontier gameplay; do not alter the external plugin artifact
+- State: `PLUGIN_REVIEW_REQUIRED`.
+- The missing-world behavior remains a review boundary; Phase 07 does not change source.
+
+### FRONT-D02 — LeafGrapple
+
+- State: `EXTERNAL_BLOCKED`, followed by `CLIENT_TEST_REQUIRED`.
+- A reviewed safe LeafGrapple 1.0.2 tier and later client motion evidence are required.
+
+### FRONT-D04 — external protection
+
+- State: `PLUGIN_REVIEW_REQUIRED`.
+- Native/public protection paths are documented; tools that bypass the supported API are not
+  claimed covered.
+
+### MAIN-D08 — external repair guards
+
+- State: `PLUGIN_REVIEW_REQUIRED`.
+- External repair plugins without a supported cancellable boundary remain a limitation.
+
+### Client / Project / publication
+
+- Client Test Candidate: not fixed.
+- Bounded Client Acceptance: `CLIENT_TEST_REQUIRED`.
+- Project acceptance: pending and Project-owned.
+- Stable V0.0.2 tag/release, release hashes, and release dispatch: not authorized in Phase 07.
+
+Waystone and EM–MVI remain deferred/not authorized, not open V0.0.2 choices. The immutable
+requirement and `source.md` are protected.

@@ -1,23 +1,25 @@
 # V0.0.2 Requirement Compliance
 
-Authority snapshot SHA-256:
-`2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
-Implementation evidence: `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`.
+Product implementation anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`.
+Requirement SHA-256: `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
+Owner Amendments are a separate layer; the immutable requirement and `source.md` are unchanged.
 
 | Workstream | Compliance state | Evidence / gate |
 |---|---|---|
-| Governance and immutable V0.0.1 | `DONE` | source ledger, API compatibility and migration hash tests |
-| Version/release/Node 24 foundations | `DONE` | policy, scope, package and workflow static tests |
-| Module persistence runtime | `DONE` | ADR 0009; bounded pools, distinct histories and combined-schema tests |
-| Main domain/recovery implementation | `DONE` | physical authority, soulbound guards, functional repair flow, evolution/config durability semantics |
-| Main player UI | `OWNER_APPROVAL_REQUIRED` | MAIN-D04/D05 proposals |
-| Frontier domain/recovery implementation | `DONE` | permanent items, navigation, delivery, shop, launchpad item/placement/protection and admin wiring |
-| LeafGrapple runtime motion | `EXTERNAL_BLOCKED` / `CLIENT_TEST_REQUIRED` | examined default is unsafe; no fallback |
-| Protection coverage | `PLUGIN_REVIEW_REQUIRED` | FRONT-D04 |
-| Waystone | `DEFERRED_BY_REQUIREMENT` | no sale, creation, discovery, teleport, or production listener |
-| EliteMobs–MVI | `DEFERRED_BY_REQUIREMENT` | no module or artifact |
-| Project Runtime acceptance | `OTHER_BLOCKED` | Project-owned and candidate not fixed |
-| Stable publication | `OTHER_BLOCKED` | review/Owner/client/hash/authorization gates remain |
+| Core V0.0.1 and V001–V003 | `DONE` | Immutable API/migration compatibility evidence |
+| Main progress saturation | `DONE` | `Long.MAX_VALUE` saturation and terminal-idempotency tests |
+| Main death/reissue and Main V004 | `DONE` | No auto-restore, paid reissue, rotation, pending/free retry, and recovery evidence |
+| Frontier durable death redelivery | `DONE` | Typed Pending Delivery, same identity/epoch, Safe Entry/reconnect reconciliation |
+| Phase 06 permission split | `DONE` | Leaf mapping, umbrella children, descriptor defaults, and no broad-node tests |
+| Launchpad / portal scope | `DONE_WITH_LIMITATION` | Current-config/current-view Launchpad behavior; exact PlayerPortalEvent boundary |
+| B-001 / B-004 | `DONE` | Module-local persistence and durable recovery model; no cross-store exactly-once claim |
+| FRONT-D01 | `PLUGIN_REVIEW_REQUIRED` | Missing-world policy remains open |
+| FRONT-D02 | `EXTERNAL_BLOCKED` / `CLIENT_TEST_REQUIRED` | LeafGrapple safe tier and client motion |
+| FRONT-D04 | `PLUGIN_REVIEW_REQUIRED` | External protection coverage |
+| MAIN-D08 | `PLUGIN_REVIEW_REQUIRED` | External repair guard matrix |
+| Client Test Candidate / Client Acceptance | `CLIENT_TEST_REQUIRED` | Candidate not fixed; bounded client run remains later |
+| Project acceptance | `PENDING` | Project Runtime evidence is outside this repository |
+| Stable publication | `NOT_AUTHORIZED` | No tag, release, artifact hash, workflow dispatch, or completion claim |
 
-The row-level authoritative mapping is
-`docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/traceability.md`.
+Waystone and EM–MVI remain deferred/not authorized. `requirements_cleared` is absent and not
+inferred. The row-level mapping is in `traceability.md`.

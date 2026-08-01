@@ -1,43 +1,46 @@
 # V0.0.2 Decision Register
 
-No proposal in this file silently becomes Project authority. Tunable values use the accepted
-baseline; Owner-facing items remain configurable and block stable approval, not independent work.
+This register records the Owner-resolved Phase 01–06 outcomes separately from the immutable
+mainline requirement. It does not promote an Owner Amendment into the original requirement.
 
-| ID | Class | Question | Provisional / recommended answer | Alternatives | Impact / rollback | Gate |
-|---|---|---|---|---|---|---|
-| MAIN-D01 | TUNABLE | Exact block weights / ore multipliers | Implement requirement baseline in fixed-point units | Adjust after measured playtest | Gameplay pace only; config rollback | NONE |
-| MAIN-D02 | TUNABLE | Threshold coefficients | Implement 100/400/1200 plus 800+200n+40n² | Revised monotonic formula | Re-derived from cumulative progress; config rollback | NONE |
-| MAIN-D03 | TUNABLE | Repair price | Implement specified baseline formulas | Measured economy adjustment | No progress mutation; config rollback | NONE |
-| MAIN-D04 | UNRESOLVED | Growth Tool GUI layout/language | Japanese 27-slot status view and separate 27-slot repair confirmation; cancel closes/returns safely | English or different slot layout | Presentation only; config/code layout rollback | OWNER_APPROVAL_REQUIRED |
-| MAIN-D05 | UNRESOLVED | Item name/lore | Japanese name; concise owner-safe lore with Evolution/status/branch only; no UUID/internal fields | English/minimal lore | Presentation only; regenerate canonical item metadata | OWNER_APPROVAL_REQUIRED |
-| MAIN-D06 | UNRESOLVED | Pending Delivery player UI | Two-line sanitized Japanese chat notification; no raw IDs | Action bar or GUI later | No schema impact; message config rollback | PLUGIN_REVIEW_REQUIRED |
-| MAIN-D07 | UNRESOLVED | Admin commands/permissions | Explicit `wayfarer.main.admin.*` nodes and no wildcard dependency; mutation commands separated from inspect | Alternate syntax | Permission/handoff change; remove nodes/commands | PLUGIN_REVIEW_REQUIRED |
-| MAIN-D08 | UNRESOLVED | External repair guards | Native Bukkit interaction guards first; add only verified external hooks | Broad plugin scan | Fail closed for owned items; remove optional adapter | PLUGIN_REVIEW_REQUIRED |
-| MAIN-D09 | DEFERRED | Netherite timing/price | Not implemented in V0.0.2 | Later approved transaction | No V0.0.2 data path | DEFERRED_BY_REQUIREMENT |
-| MAIN-D10 | PROJECT-OWNED | Pre-release reset/preserve | Never reset from Plugin repository | Project Order 25 decision | Destructive Project data boundary | DEFERRED_BY_REQUIREMENT |
-| FRONT-D01 | UNRESOLVED | Missing `frontier_iris` behavior | Enable administrative health only; keep gameplay/listeners/schedulers disabled and report DEGRADED/DOWN safely | Disable whole plugin | No world creation or data mutation; config rollback | OWNER_APPROVAL_REQUIRED |
-| FRONT-D02 | UNRESOLVED | Exact LeafGrapple API/class boundary | Public 1.0.2 reflective version adapter with durability/entity-hook capability probe; current examined default is `UNSAFE_CONFIGURATION` | Project supplies a reviewed safe tier, or later LeafGrapple exposes a service | No fallback item; adapter remains fail-closed | PLUGIN_REVIEW_REQUIRED |
-| FRONT-D03 | UNRESOLVED | Launchpad creation snapshot | Snapshot max uses, expiry duration/result, velocities, cooldown, auto-Elytra, material and orientation | Read all live config | Predictable existing records; additive migration if later expanded | PLUGIN_REVIEW_REQUIRED |
-| FRONT-D04 | UNRESOLVED | WorldGuard/WorldEdit/FAWE protection | Native Bukkit guards mandatory; supported public protection hooks only; unsupported bulk-edit protection disclosed/fail-closed | Private/reflection hooks | Stable release depends on reviewed protection sufficiency | PLUGIN_REVIEW_REQUIRED |
-| FRONT-D05 | UNRESOLVED | Navigation GUI layout/language | Japanese 27-slot GUI exposing Loadout, Shop, Help; Waystone/Discovery/Teleport slots shown unavailable, not actionable | Hide deferred entries completely | Presentation only; layout rollback | OWNER_APPROVAL_REQUIRED |
-| FRONT-D06 | UNRESOLVED | Shop Pending Delivery representation | Durable item-kind/quantity/idempotency record tied to Core transaction ID, with no raw serialized ItemStack | Refund-only on full inventory | Schema/reconcile impact; forward migration rollback only | PLUGIN_REVIEW_REQUIRED |
-| FRONT-D07 | PROJECT-OWNED | Seed/border/generation | Plugin never creates or changes worlds | None | Project Runtime only | DEFERRED_BY_REQUIREMENT |
-| FRONT-D08 | PROJECT-OWNED | Portal deny implementation | Plugin exposes no fallback portal route; Project Order owns physical/config deny | None | Project Runtime only | DEFERRED_BY_REQUIREMENT |
-| FRONT-D09 | PROJECT-OWNED | Gate coordinates/safe arrival | No coordinates in plugin | None | Project Order 17 | DEFERRED_BY_REQUIREMENT |
-| FRONT-D10 | PROJECT-OWNED | MVI Runtime config | MVI remains sole normal-state authority; plugin only validates prerequisites | None | Project Orders 12/16 | DEFERRED_BY_REQUIREMENT |
-| FRONT-D11 | BLOCKS WAYSTONE | Template/palette | Not selected; production Waystone deferred | Future approved template | No Waystone tables/listeners/shop item in V0.0.2 runtime | DEFERRED_BY_REQUIREMENT |
-| FRONT-D12 | BLOCKS WAYSTONE | Safe arrival/interaction | Not selected; production Waystone deferred | Future approved destination contract | No teleport in V0.0.2 | DEFERRED_BY_REQUIREMENT |
-| FRONT-D13 | OPTIONAL | Resource pack/model | Use vanilla materials; no custom model requirement | Later Frontier pack | No code/data dependency | NOT_APPLICABLE |
-| FRONT-D14 | DEFERRED | Ruined WM rewards | Not implemented | Later balance/reward work | No reward source | DEFERRED_BY_REQUIREMENT |
-| FRONT-D15 | DECISION-GATED | EM–MVI adapter | Do not create module/artifact before `ADAPTER_REQUIRED` | Static registration, strict regex, then adapter | MVI/EliteMobs remain external authority | DEFERRED_BY_REQUIREMENT |
+Product implementation anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`
 
-## Cross-cutting proposals
+## Resolved / implemented
 
-- ADR 0009 recommendation: module-local persistence lifecycles in Main and Frontier, using a
-  private shared implementation library and no public Core database API.
-- ADR 0010 expected consequence if ADR 0009 is approved: Core remains V0.0.1, V0.0.2 stable scope
-  is `main-frontier`, and the immutable Core release is referenced as a dependency rather than
-  renamed or reattached. B-004 must also confirm that no additive Core participant contract is
-  required; otherwise ADR 0010 reopens and the only valid V0.0.2 scope is `all`.
-- Correction suffix grammar: `^V0\.0\.[1-9][0-9]*[a-z]?$`; suffixes are stable corrections, not
-  pre-releases. No correction tag is created by this task.
+| ID / area | Fixed outcome | Status |
+|---|---|---|
+| B-001 / ADR 0009 | Main and Frontier use bounded module-local persistence and separate migration histories; Core remains unchanged. | `DONE` |
+| B-004 | Durable module fulfillment and pending recovery reuse Core V0.0.1; cross-store atomicity and unconditional exactly-once are not claimed; `UNKNOWN` is manual and not auto-retried. | `DONE` |
+| MAIN-D01/D02/D03 | Tunable progress, threshold, and repair baselines are implemented. | `DONE` |
+| MAIN-D04 | Current English GUI/layout is accepted for V0.0.2; later presentation tuning is deferred. | `ACCEPTED_V0.0.2` |
+| MAIN-D05 | Current Growth Tool name/lore is accepted for V0.0.2; later presentation tuning is deferred. | `ACCEPTED_V0.0.2` |
+| MAIN-D06 | Current sanitized Player text is accepted for V0.0.2. | `ACCEPTED_V0.0.2` |
+| MAIN-D07 | Phase 06 leaf permission split is implemented and documented. | `DONE` |
+| FRONT-D03 | Current-config performance plus minimal durable Launchpad authority is adopted; reserved yaw is non-authoritative. | `ACCEPTED_V0.0.2` |
+| FRONT-D05 | Current English Navigation presentation is accepted for V0.0.2; later presentation tuning is deferred. | `ACCEPTED_V0.0.2` |
+| FRONT-D06 | Typed durable Pending Delivery is implemented and adopted; normal inventories remain backend/MVI-owned. | `DONE` |
+| FRONT-D08 | `FrontierGameplayRuntime` cancels `PlayerPortalEvent` when the Player's current world is `frontier_iris`; no separate End Gateway interception is claimed. | `ACCEPTED_SCOPE` |
+| Main death/reissue | Growth Tool/Broken Tool is removed from death drops; no automatic restore; Player may use paid reissue; pending physical delivery retries free. | `DONE` |
+| Frontier death | Elytra, Grappling Hook, and Navigation use same-identity/epoch durable free redelivery; Launchpad and Rocket are excluded. | `DONE` |
+| Progress overflow | Positive addition saturates at `Long.MAX_VALUE`; terminal threshold evaluation is idempotent. | `DONE` |
+
+## Remaining gates
+
+| Gate | State | Boundary |
+|---|---|---|
+| FRONT-D01 | `PLUGIN_REVIEW_REQUIRED` | Missing `frontier_iris` behavior remains a review item. |
+| FRONT-D02 | `EXTERNAL_BLOCKED`, then `CLIENT_TEST_REQUIRED` | LeafGrapple safe tier/capability and client motion. |
+| FRONT-D04 | `PLUGIN_REVIEW_REQUIRED` | External protection coverage and bypass limitation. |
+| MAIN-D08 | `PLUGIN_REVIEW_REQUIRED` | External repair guard matrix. |
+| Client Test Candidate | Not fixed | Must not be fixed in Phase 07. |
+| Bounded Client Acceptance | `CLIENT_TEST_REQUIRED` | Later fixed candidate and task-only environment. |
+| Project acceptance | Pending | Project-owned Runtime evidence. |
+| Stable publication | Not authorized in this task | Tag, release, release hashes and dispatch remain later work. |
+
+Waystone and the EM–MVI adapter remain deferred/not authorized, not open V0.0.2 choices.
+
+## Scope note
+
+Phase 07 synchronizes documentation and performs validation only. The immutable requirement and
+`source.md` remain unchanged; Project Runtime, migrations, configuration, worlds, inventories,
+tags, releases, and acceptance state are outside this task.

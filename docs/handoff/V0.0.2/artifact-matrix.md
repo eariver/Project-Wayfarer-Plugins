@@ -1,22 +1,18 @@
 # V0.0.2 Artifact Matrix
 
-Implementation evidence is fixed at
-`2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`. No release candidate or stable
-artifact is fixed.
+Product implementation anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`.
+Candidate, release artifact hashes, tag, and release are absent.
 
-| Area | State | Release artifact / dependency | Gate |
+| Area | Current state | Release/candidate state | Gate |
 |---|---|---|---|
-| Core | reused unchanged | released `Wayfarer_Core-V0.0.1.jar`; source `49e00e21716c1c13a2dbb170fdad1b19c4275612` | API and V001–V003 compatibility pass |
-| Main module | production lifecycle wired; development artifact only | proposed `Wayfarer_Main-V0.0.2.jar` | Plugin review, Owner UI, client |
-| Growth Tool | config/domain/persistence/gameplay/recovery wired | Main | Owner UI and client |
-| Frontier foundation | production lifecycle wired; development artifact only | proposed `Wayfarer_Frontier-V0.0.2.jar` | external, Owner and client gates |
-| Traversal loadout | identity, individual epoch reissue and pending delivery wired | Frontier | Owner UI and client |
-| LeafGrapple | public 1.0.2 adapter complete; examined default unsafe | external LeafGrapple 1.0.2 | safe tier and client motion |
-| Launchpad | state/use/placement/protection/expiration/reconcile wired | Frontier | external protection review and client |
-| Shop | catalog, durable payment, pending delivery and idempotent replay wired | Frontier | client |
-| Waystone | deferred | none | `DEFERRED_BY_REQUIREMENT` |
-| EliteMobs–MVI adapter | prohibited/not present | none | Order 13 `ADAPTER_REQUIRED` |
-| Project acceptance | pending | Main and Frontier accepted separately | reviewed candidate required |
+| Core | V0.0.1 reused unchanged; V001–V003 immutable | No V0.0.2 Core artifact | Compatibility evidence |
+| Main | Current source through V004; `0.0.2-SNAPSHOT` scope | Candidate not fixed; hash absent | Review, client, later publication |
+| Frontier | Current source migration level; `0.0.2-SNAPSHOT` scope | Candidate not fixed; hash absent | External, review, client |
+| Package scope | Future V0.0.2 scope is `main-frontier` | No release package created | Later authorization |
+| Launchpad | Current-config/current-view behavior; minimal durable authority | No release hash | FRONT-D03 outcome adopted; FRONT-D04 review |
+| Main/Frontier recovery | Main paid reissue and Frontier durable redelivery implemented | No candidate | Client and Project gates |
+| Waystone | Deferred/not authorized | No artifact/item/schema claim | Deferred by requirement |
+| EM–MVI adapter | Prohibited/not present | No artifact | Create only after `ADAPTER_REQUIRED` |
 
-The expected stable scope remains `main-frontier` only if review confirms that Core requires no
-change. The V0.0.1 Core JAR must not be renamed or reattached as V0.0.2.
+The immutable Core V0.0.1 is not renamed or reattached as V0.0.2. No release hash is fixed in
+Phase 07.

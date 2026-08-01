@@ -1,22 +1,26 @@
 # V0.0.2 Open Decisions
 
+Only the following gates remain open. Resolved B-001, B-004, MAIN-D04/D05/D06/D07, and
+FRONT-D03/D05/D06/D08 are not reopened here.
+
 ## Plugin review
 
-- B-001 / ADR 0009: approve module-local bounded Hikari/Flyway pools or select another opaque
-  boundary. Recommended maximum is three connections per module.
-- B-004: approve the durable module-order plus pending fulfillment/at-most-once refund model, or
-  require an additive Core transaction-participant contract and `all` release scope.
-- FRONT-D02: supply/approve a LeafGrapple 1.0.2 tier with durability and entity hooking disabled.
-- FRONT-D03: approve Launchpad creation snapshots.
-- FRONT-D04: approve the public protection-hook coverage and disclosed bulk-edit limitation.
-- FRONT-D06: approve durable typed Pending Delivery tied to Core transaction IDs.
-- MAIN-D07/D08: approve command permission granularity and external repair guard policy.
+- FRONT-D01: review behavior when `frontier_iris` is absent.
+- FRONT-D04: review the supported WorldGuard/WorldEdit protection-hook coverage and the disclosed
+  limitation for tools that bypass those APIs.
+- MAIN-D08: review the external repair guard matrix and unsupported cancellable boundaries.
 
-## Owner approval
+## External and client
 
-- MAIN-D04: Japanese 27-slot status plus separate 27-slot repair confirmation.
-- MAIN-D05: Japanese name and concise lore with no internal IDs.
-- FRONT-D01: administrative health only when `frontier_iris` is absent.
-- FRONT-D05: Japanese 27-slot navigation with Shop/Loadout/Help and explicit unavailable Waystone.
+- FRONT-D02: provide/approve a safe LeafGrapple 1.0.2 tier, then perform bounded client motion
+  checks.
+- Client Test Candidate: not fixed.
+- Bounded Client Acceptance: `CLIENT_TEST_REQUIRED` after a later candidate is fixed.
 
-Waystone and EM–MVI are deferred, not open V0.0.2 implementation choices.
+## Project and publication
+
+- Project acceptance: pending and Project-owned.
+- Stable V0.0.2 publication: not authorized in Phase 07; no tag, release, release hash, or
+  workflow dispatch is permitted here.
+
+Waystone and EM–MVI remain deferred/not authorized, not open V0.0.2 implementation choices.

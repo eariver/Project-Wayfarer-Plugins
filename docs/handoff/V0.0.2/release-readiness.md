@@ -1,21 +1,29 @@
 # V0.0.2 Release Readiness
 
+- Product implementation anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`
 - Release readiness: `PLUGIN_REVIEW_REQUIRED`
-- Release candidate: not fixed
+- Client Test Candidate: not fixed
 - Stable tag/release: not authorized and not created
+- `requirements_cleared`: absent and not inferred
 - Project Runtime changed: No
 
-Automated domain, gameplay-structure, compatibility, release-policy, packaging, isolated
-migration, and startup evidence is available in Draft PR #14. Second-review normal CI
-([30546252168](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252168))
-and isolated Headless Paper
-([30546252420](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252420))
-passed at `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`. Stable readiness is blocked by:
+Phase 01–06 capability evidence is retained in the Evidence Index. Fixed Phase 06 evidence:
 
-1. FRONT-D02 LeafGrapple safe tier/capability resolution;
-2. FRONT-D04 external launchpad protection sufficiency review;
-3. Owner approval for MAIN-D04, MAIN-D05, FRONT-D01, and FRONT-D05;
-4. bounded client acceptance on a later fixed candidate.
+```text
+Phase 06 CI: 30701316290
+Phase 06 Headless: 30701316289
+Artifact: preclient-headless-evidence
+Digest: sha256:218a363b71acaa93b8e55ee9b6a2215e98f94763f732e636edb38cd068065fef
+```
 
-`requirements_cleared` is not set or inferred. The release workflow must not be dispatched from
-this state.
+Remaining gates:
+
+1. FRONT-D01 `PLUGIN_REVIEW_REQUIRED`.
+2. FRONT-D02 `EXTERNAL_BLOCKED`, then `CLIENT_TEST_REQUIRED` for motion.
+3. FRONT-D04 `PLUGIN_REVIEW_REQUIRED`.
+4. MAIN-D08 `PLUGIN_REVIEW_REQUIRED`.
+5. Bounded Client Acceptance, Project acceptance, and later stable publication.
+
+Phase 07 must not fix a Candidate, mark the PR Ready, merge, tag, release, dispatch a release
+workflow, set `requirements_cleared=true`, or claim Client/Project acceptance or Stable
+completion.

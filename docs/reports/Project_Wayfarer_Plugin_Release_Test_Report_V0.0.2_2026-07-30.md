@@ -2,7 +2,11 @@
 
 Report date: 2026-07-30
 
-Second-review implementation/evidence commit: `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`
+Historical second-review implementation/evidence commit: `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`
+
+Current Plugin implementation/test anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`
+
+Phase 07 documentation revision: current Phase 07 documentation commit; see Git history and PR #14.
 
 Release candidate: not fixed
 
@@ -161,9 +165,10 @@ image `mariadb:11.8` verified pullable):
 Code modification during validation: none. Phase 01 initial verdict: **PASS** —
 superseded by the post-validation correction recorded below.
 
-Phases 02–08, client gameplay testing and the stable V0.0.2 release remain
-incomplete. This entry does not assert `requirements_cleared=true` or V0.0.2
-completion.
+At the historical Phase 01 checkpoint, later Phase 02–08 work, client gameplay testing, and the
+stable V0.0.2 release were not yet recorded. The current Phase 01–06 Plugin capability state is
+recorded below; Phase 08, client acceptance, Project acceptance, and Stable publication remain
+pending. This entry does not assert `requirements_cleared=true` or V0.0.2 completion.
 
 ### Post-validation correction — terminal threshold cache idempotency (2026-07-31)
 
@@ -206,15 +211,47 @@ Final test results (validation HEAD `b4ac6392503646fa5983825b983e0c0552b69e74`):
   PASS — 41 tests across 14 classes, 0 failures, 0 errors, 0 skipped (forced fresh
   local execution).
 
-Phase 01 final verdict after correction: **PASS**. Phases 02–08, client gameplay
-testing and the stable V0.0.2 release remain incomplete; this correction does not
-assert `requirements_cleared=true` or V0.0.2 completion.
+Phase 01 final verdict after correction: **PASS**. At that historical checkpoint, later work was
+not yet recorded; this correction does not assert `requirements_cleared=true` or V0.0.2
+completion. Current Phase 01–06 capability evidence is summarized below, while Phase 08, client
+acceptance, Project acceptance, and Stable publication remain pending.
+
+## Current pre-client Phase 01–06 capability record
+
+- Phase 01: positive progress addition saturates at `Long.MAX_VALUE` and terminal threshold
+  evaluation is idempotent.
+- Phase 02: Frontier permanent-item death recovery uses typed durable Pending Delivery with the
+  same identity/epoch and Safe Entry/respawn reconciliation; Launchpad/Rocket are excluded.
+- Phase 03: Main reissue architecture and authority/recovery boundaries are complete.
+- Phase 04: Main reissue domain/persistence and V004 evidence is retained in the Phase 04 report.
+- Phase 05: Main death/no-auto-restore, paid Player reissue, pending/free retry, and recovery
+  evidence is retained in the Phase 05 report.
+- Phase 06: Main/Frontier permission leaf split and descriptor boundaries are complete. The Phase
+  06 report records Main 108 unit plus 9 MariaDB integration tests and Frontier 65 unit plus 6
+  MariaDB integration tests, all with zero failures/errors/skips.
+
+These are Plugin source/test/headless evidence types. They do not constitute Client Acceptance,
+Project acceptance, or a Client Test Candidate.
+
+## Phase 07 local validation (2026-08-01)
+
+- `.\gradlew.bat --no-daemon --console=plain --rerun-tasks clean check assemble`: PASS;
+  `BUILD SUCCESSFUL`, 90 actionable tasks executed. Generated JUnit XML observed 409 tests,
+  0 failures, 0 errors, and 0 skipped. Existing Javadoc warning output did not fail the build;
+  no source correction was made.
+- Validators all returned exit code 0: `test-release-policy.sh`, `test-scoped-runtime-jars.sh`,
+  `test-scoped-stable-package.sh`, `test-runtime-jar-manifest.sh`, `test-node24-actions.sh`,
+  `test-v002-handoff-mapping.sh`, `test-stable-release-package.sh`,
+  `test-stable-publication-recovery.sh`, and `verify-v002-plugin-packaging.sh`.
+- `git diff --check`: PASS. Allowed documentation scope only; immutable requirement and
+  `source.md` unchanged. No release workflow was dispatched.
+- Consistency searches found only explicitly historical anchor references and deferred/current
+  limitation wording; no present-tense forbidden completion claim was added.
 
 ## Not run / not claimed
 
-- Pre-client correction Phases 02–08 (Frontier durable death redelivery and safe-entry
-  result notification, Main death handling and player-paid reissue, admin permission
-  split, owner-decision documentation): not implemented, not claimed.
+- Phase 08 independent audit, Client Test Candidate, bounded Client Acceptance, Project acceptance,
+  and Stable publication: not performed and not claimed.
 - Canonical LeafGrapple motion: `EXTERNAL_BLOCKED` and `CLIENT_TEST_REQUIRED`.
 - Visual/interaction client acceptance: `CLIENT_TEST_REQUIRED`.
 - Project Runtime acceptance, Project migration and Project deployment: not authorized.

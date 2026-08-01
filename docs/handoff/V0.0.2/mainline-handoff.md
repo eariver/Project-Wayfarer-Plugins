@@ -1,28 +1,31 @@
 # V0.0.2 Mainline Handoff
 
-Draft PR #14 is review-only. The implementation packet is anchored by
-`2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`.
+Draft PR #14 remains review-only. The Plugin implementation/test anchor is the immutable commit
+`7faf79081572df028a5ec19ccfbc820123180fc7`. The Phase 07 documentation revision is the current
+documentation commit recorded by Git history and PR #14.
+
+Owner Amendments are documented separately from the immutable requirement. Phase 01–06 Plugin
+implementation/evidence is complete; this is not a Client Test Candidate and does not represent
+Client or Project acceptance.
 
 ## Review order
 
-1. Review second-review CI/headless and representative gameplay evidence.
-2. Review LeafGrapple safe capability and supported protection hooks.
-3. Resolve Owner presentation decisions.
-4. Fix a candidate only after review, then run bounded client tests.
+1. Review the Phase 01–06 capability evidence and Phase 07 local full-validation result.
+2. Perform the independent Phase 08 audit.
+3. Resolve remaining Plugin/external gates: FRONT-D01, FRONT-D02, FRONT-D04, and MAIN-D08.
+4. Fix a Client Test Candidate only after those gates and review authorize it.
+5. Run bounded Client Acceptance, then perform any separately authorized correction and later
+   Stable publication.
 
 ## Project-owned follow-up
 
-After Plugin acceptance, transfer the following to the Project repository's deferred-design
-record (for example `docs/11-deferred-design-items.md`) without changing Project Runtime from this
-repository:
+- Verify LuckPerms leaf behavior with temporary `wayfarer_admin` global `*`; Project OP remains
+  disabled.
+- Verify exact worlds, Main V004, restart/disable, Safe Entry, provider behavior, Portal boundary,
+  and End Gateway observation in a task-approved Project/client environment.
+- Own gate coordinates, safe arrival, seed/border/generation, MVI configuration, and any return
+  mechanism tracked by Issue #15.
+- Review unsupported external protection/repair boundaries and true orphan recovery Issue #16.
 
-- Vault/RedisEconomy success is acceptance, not durable Redis completion or effect lookup;
-- stronger guarantees must be a common economy-platform improvement, not a Wayfarer side channel;
-- Frontier seed/border/generation, portal deny, gate coordinates, and MVI configuration;
-- protection coverage for tools that bypass Bukkit and the public WorldEdit edit-session API;
-- Waystone production template/safe-arrival work;
-- Order 13 decision for any EliteMobs–MVI adapter;
-- Order 25 preserve/reset authority.
-
-Main and Frontier acceptance must remain independently reversible. No stable tag, release,
-deployment, migration, server restart, or roadmap completion is implied by this handoff.
+Core V0.0.1 remains independently reused. No stable tag, release, deployment, migration, server
+restart, or roadmap completion is implied by this handoff.

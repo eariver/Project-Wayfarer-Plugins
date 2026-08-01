@@ -1,28 +1,33 @@
 # V0.0.2 Requirement Traceability
 
-Status: terminal Codex classification for Draft PR #14. A blocked row is not a PASS claim;
-implementation evidence is fixed at `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`.
+Classification: pre-client Plugin implementation/evidence at product anchor
+`7faf79081572df028a5ec19ccfbc820123180fc7` for Draft PR #14.
 
-| Requirement ID | Source section | Implementation path | Automated / integration evidence | Headless / client need | Decision / release asset | Status | Notes |
-|---|---|---|---|---|---|---|---|
-| GOV-001 | Req. 1–7, 22–23 | `docs/requirements/**/V0.0.2/`, `docs/work-orders/V0.0.2/` | Snapshot hash and Git boundary audit | None | Source and execution ledgers | DONE | Project Runtime remains out of scope |
-| BASE-001 | Req. 3, 6; Exec. 2.3, 6 | V0.0.1 tag/API/migration/package baselines | Compatibility and immutable-hash gates | None | Compatibility report | DONE | V0.0.1 artifact/tag remain immutable |
-| REL-001 | Exec. 2.2, 8.1 | Version parser, release validators, release docs | Stable/correction/pre-release negative tests | None | Release tooling | DONE | No correction release is created |
-| CI-001 | Exec. 8.2 | `.github/workflows/` | Workflow/static and normal CI | None | Node 24 action inventory | DONE | Official action majors only |
-| PERSIST-001 | Req. 6.5–6.6, 8.6, 11.4; Exec. 7 | ADR 0009 and module persistence implementation | MariaDB/Testcontainers, combined-history and migration failure tests | Headless startup | ADR 0009 | DONE | Bounded module pools; no public JDBC/API leakage |
-| REL-002 | Req. 16; Exec. 8.3 | Scope-aware release/package scripts and workflows | Package/recovery/reproducibility tests | None | ADR 0010 and artifact manifest | DONE | Required scopes only: core, main-frontier, all; no dispatch |
-| MAIN-001 | Req. 8.1–8.4 | Main lifecycle, config, role and Core gates | Config, capability, migration and headless tests | Client commands/UX | Main config | DONE | Failed initialization disables only Main |
-| MAIN-002 | Req. 8.5–8.9 | Growth Tool model, repository, delivery and physical PDC/owner guard | Domain, physical-claim, soulbound-transfer and migration tests | Client item interaction | Main JAR | DONE | DB current physical instance is authoritative; normal inventory is not persisted |
-| MAIN-003 | Req. 8.10–8.13 | Progress, threshold/evolution and config reconciliation | Domain, evolution restore, remaining-ratio, revision-cache and boundary tests | Client mining | Main JAR | DONE | Evolution alone restores durability; config reconcile preserves progress and remaining ratio |
-| MAIN-004 | Req. 8.14–8.18 | Broken state, holder-bound GUI, repair transaction, sessions/checkpoint | Repair ambiguity/idempotency, single-use gate and persistence tests | Client GUI/repair | MAIN-D04/D05; B-004 | DONE | Confirm revalidates quote and physical identity; UNKNOWN is not refunded/retried |
-| MAIN-005 | Req. 8.19–8.20 | Admin, inspect, reissue, reconcile, audit | Authority epoch, permission and sanitized-boundary tests | Client admin flow | Command reference | DONE | Mutation confirmation and audit are wired |
-| FRONT-001 | Req. 11.1–11.4 | Frontier lifecycle, config, exact-world and persistence foundation | Config, exact-world, MariaDB and headless tests | Client entry/UX | Frontier config | DONE | Failed initialization disables only Frontier |
-| FRONT-002 | Req. 11.5–11.8 | Traversal physical identity/loadout/Pending Delivery/Navigation runtime | Domain, permanent-item guard, metadata, rocket and navigation-action tests | Client item/GUI | FRONT-D01/D05 | OWNER_APPROVAL_REQUIRED | Functional provisional UI is wired; final presentation remains Owner-owned |
-| FRONT-003 | Req. 12 | LeafGrapple adapter boundary | Version/public-API/capability fail-closed tests | Client hook | FRONT-D02 | EXTERNAL_BLOCKED | Examined default tier is unsafe; no fallback/fork |
-| FRONT-004 | Req. 13 | Launchpad item authority, placement/use/protection/expiration/reconcile | Identity/replay, placement policy, active-index, public-break and MariaDB tests | Client placement/use | FRONT-D03/D04 | DONE | Native and public WorldGuard/WorldEdit paths are covered; bypassing tools remain review-limited |
-| FRONT-005 | Req. 14 | Frontier WM shop and Pending Delivery | Transaction ambiguity/idempotency/delivery tests | Client shop | FRONT-D06 | DONE | Launchpad/rocket only; ambiguous payment not retried |
-| WAYSTONE-001 | Exec. 2.4 and final scope | No production Waystone, discovery or teleport registration | Absence/config/package tests | N/A | Known limitation | DEFERRED_BY_REQUIREMENT | Placement tool must not be sold or granted |
-| ADAPTER-001 | Req. 11, 15; Exec. 2.5 | No EM–MVI module/artifact | Module/package absence tests | N/A | FRONT-D15 | DEFERRED_BY_REQUIREMENT | Await Project Order 13 `ADAPTER_REQUIRED` |
-| MIG-001 | Req. 9 | Separate Core/Main/Frontier locations | Empty/upgrade/repeat/failure/boundary tests | Headless startup | Migration handoff | DONE | Core V001–V003 immutable; ADR 0009 ownership implemented |
-| TEST-001 | Req. 17–21 | Focused unit, MariaDB, headless and client instructions | `check` plus representative suites | Bounded client plan prepared | Test report/evidence index | CLIENT_TEST_REQUIRED | Automated scope does not replace visual/motion acceptance |
-| HANDOFF-001 | Req. 16, 24–26; Exec. 22–23 | `docs/handoff/V0.0.2/`, reports and evidence | Package/document validators | Project acceptance later | Candidate handoff package | PLUGIN_REVIEW_REQUIRED | No candidate/tag/release/merge |
+The immutable mainline requirement SHA-256 is
+`2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
+Owner Amendments are documented as a separate decision layer; they do not rewrite the immutable
+requirement. `requirements_cleared` is absent and is not inferred.
+
+| Requirement / area | Implementation path | Automated or source evidence | Headless / client / Project evidence | State | Notes |
+|---|---|---|---|---|---|
+| Governance and authority | `docs/decisions/V0.0.2/`, `docs/work-orders/V0.0.2/` | Hash and Git boundary checks | Project Runtime unchanged | `DONE` | Phase 07 is documentation/full validation only. |
+| Core compatibility and migrations | Core API, V001–V003 | Compatibility and immutable migration tests | None required here | `DONE` | Core V0.0.1 is reused unchanged. |
+| Main progress | Main progress/threshold domain | Saturation and terminal idempotency tests | Client mining later | `DONE` | Positive addition saturates at `Long.MAX_VALUE`; no negative wrap. |
+| Main death/reissue | Main death policy, V004, reissue coordinator/commands | Death, quote, payment, rotation, pending, recovery tests | Client death/reissue later | `DONE` | No automatic respawn restoration; paid reissue; pending retry is free. |
+| Main transaction recovery | Core transaction boundary and Main recovery | Idempotency/CAS and recovery tests | Project provider verification later | `DONE_WITH_LIMITATION` | `UNKNOWN` is explicit/manual and never auto-redebited or retried. |
+| Main permissions | Main descriptor and leaf policy | Phase 06 descriptor/policy tests | LuckPerms Project check later | `DONE` | Old exact broad node is inactive. |
+| Frontier permanent-item death | Typed durable Pending Delivery and Safe Entry/respawn reconciliation | Delivery/death identity and persistence tests | Client redelivery later | `DONE` | Elytra/Grappling Hook/Navigation redeliver free at same identity/epoch. |
+| Frontier Launchpad | Launchpad authority, current config, placement/use/reconcile | Identity/replay/placement/protection tests | Client motion/protection review later | `DONE_WITH_LIMITATION` | Current view direction at use time; stored yaw is reserved, not authoritative. |
+| Frontier portal boundary | `FrontierGameplayRuntime` | Source/runtime event coverage | Nether/End/End Gateway client observation later | `ACCEPTED_SCOPE` | Cancels `PlayerPortalEvent` when current world is `frontier_iris`; no separate End Gateway interception. |
+| Frontier permissions | Frontier descriptor and leaf policy | Phase 06 descriptor/policy tests | LuckPerms Project check later | `DONE` | No top-level command permission; debug is separate. |
+| FRONT-D01 | Frontier missing-world policy | Source/runtime boundary | Plugin review required | `PLUGIN_REVIEW_REQUIRED` | Not changed in Phase 07. |
+| FRONT-D02 | LeafGrapple 1.0.2 public capability boundary | Fail-closed capability tests | Safe tier and client motion required | `EXTERNAL_BLOCKED` / `CLIENT_TEST_REQUIRED` | No fallback physics or private API claim. |
+| FRONT-D04 | WorldGuard/WorldEdit/public protection boundary | Native/public hook tests | Plugin review required | `PLUGIN_REVIEW_REQUIRED` | Unsupported bypassing tools remain outside the claim. |
+| MAIN-D08 | External repair guard matrix | Native-first guard evidence | Plugin review required | `PLUGIN_REVIEW_REQUIRED` | Unsupported cancellable boundaries remain limited. |
+| Waystone | No production Waystone behavior | Absence/config/package checks | Not authorized | `DEFERRED_BY_REQUIREMENT` | Not an open V0.0.2 choice. |
+| EM–MVI adapter | No module or artifact | Absence checks | Project decision required | `DEFERRED_BY_REQUIREMENT` | Create only after `ADAPTER_REQUIRED`. |
+| Client Test Candidate / acceptance | Client plan only | No candidate fixed | Bounded client run required | `CLIENT_TEST_REQUIRED` | Candidate and acceptance remain unclaimed. |
+| Project acceptance / Stable publication | Handoff and readiness docs | No release/tag/hash/dispatch | Project-owned | `PENDING` | No Client/Project acceptance, Stable Release, or `requirements_cleared`. |
+
+Evidence types are intentionally separated: source/test evidence, headless evidence, client
+observation, and Project acceptance are not interchangeable.

@@ -1,37 +1,53 @@
 # V0.0.2 Known Limitations
 
-## Review-blocking limitations
+## Transaction and persistence
 
-- ADR 0009 and B-004 are owner-approved and implemented with module-local pools, separate
-  histories, durable pre-payment records, CAS claims, pending fulfillment, and UNKNOWN-no-retry.
-- Core V0.0.1 Transactions and module domain commits are not cross-store atomic. Manual
-  inspection remains required for UNKNOWN outcomes; unconditional exactly-once is not claimed.
-- The examined LeafGrapple 1.0.2 artifact's default `wood` tier enables durability and entity
-  hooking. The adapter reports `UNSAFE_CONFIGURATION`; it does not synthesize or fork a hook.
-- Native explosion, piston, fluid, fire, physics, growth, and entity-change launchpad guards apply
-  only to the active-location index. Public WorldGuard RegionQuery placement checks and the public
-  WorldEdit EditSession extent hook are implemented. FRONT-D04 remains a review gate because
-  external tools that bypass Bukkit and the public WorldEdit edit-session API are not claimed
-  covered; reconcile remains the bounded recovery path.
+- Core transaction state and module domain persistence are not cross-store atomic. Unconditional
+  exactly-once is not claimed.
+- `UNKNOWN` is an explicit recovery state; it is never automatically debited, refunded, or
+  retried.
+- Paid Main reissue may rotate authority before physical delivery. A Pending Delivery is then
+  retried free; it never causes a second debit or rotation.
+- Growth progress is session-cached. A crash may lose up to the configured checkpoint interval
+  of non-critical progress.
+- Normal inventories/profile state remains solely owned by the Minecraft backend/MVI; no raw
+  Inventory or ItemStack is persisted in this repository's MariaDB schema.
 
-## Accepted/deferred product limitations
+## External integration
 
-- Waystone placement, sale, discovery, teleport, and lifecycle are
-  `DEFERRED_BY_REQUIREMENT`. Existing unreleased Frontier V001 scaffold tables are dormant and no
-  runtime code registers Waystone behavior.
-- The EliteMobs–MVI adapter is not authorized and is not present.
-- Normal inventory/profile state remains solely owned by the Minecraft backend/MVI.
-- Growth progress is session-cached. A crash may lose up to the configured checkpoint interval of
-  non-critical progress; evolution, broken, repair, reissue, quit, and disable checkpoints use
-  immediate or bounded persistence paths.
-- Native anvil, grindstone, smithing, crafting, and mending repair paths are denied for the
-  Growth Tool. External repair plugins without a supported cancellable event remain a review
-  matrix item and must not be assumed safe.
-- Vault/RedisEconomy `SUCCESS` means the shared provider path accepted an operation, not durable
-  Redis completion. There is no provider effect lookup or unconditional exactly-once guarantee.
-- `UNKNOWN` effects are not automatically debited or refunded again.
-- Project-owned Frontier gate coordinates, safe arrival, seed/border and structure generation
-  remain unavailable. The plugin does not guess them or create the world.
+- The examined LeafGrapple 1.0.2 default tier is not a verified safe tier. Without an approved
+  safe tier, the adapter fails closed and does not synthesize/fork hook physics.
+- Native/public Launchpad protection paths are covered at the supported boundary. External tools
+  that bypass Bukkit and the supported WorldEdit/WorldGuard APIs are not claimed covered; this is
+  the FRONT-D04 review limitation.
+- Native repair guards are implemented. External repair plugins without a supported cancellable
+  event remain a review limitation.
+
+## Gameplay and presentation boundaries
+
+- Main death removes managed Growth Tool/Broken Tool from drops and does not automatically restore
+  it. Player paid reissue is the recovery route.
+- Frontier Elytra/Grappling Hook/Navigation use typed durable same-identity/epoch free redelivery;
+  Launchpad/Rocket are excluded from permanent free redelivery.
+- Launchpad uses the current Player view direction at use time. Current config controls performance;
+  persisted yaw is reserved/non-authoritative. A separate physical-material or full immutable
+  performance snapshot is not claimed.
+- Portal handling is exact: `FrontierGameplayRuntime` cancels `PlayerPortalEvent` when the
+  Player's current world is `frontier_iris`. End Gateway is an observation for client/Project
+  testing, not a proven separate interception.
+- Issue #15 tracks the in-world Frontier return mechanism; Issue #16 tracks true orphan
+  `BLOCK_ONLY` recovery.
+- Japanese localization and GUI/presentation tuning are deferred; current English presentation is
+  accepted for V0.0.2.
+
+## Deferred and acceptance boundaries
+
+- Waystone behavior and the EM–MVI adapter are absent/deferred; the adapter requires a Project
+  decision of `ADAPTER_REQUIRED` before creation.
+- FRONT-D01, FRONT-D02, FRONT-D04, and MAIN-D08 remain review/external gates.
+- No Client Acceptance, Project acceptance, Client Test Candidate, or Stable Release is claimed.
+- Project Runtime, permissions groups, configuration, worlds, databases, migrations, and servers
+  were not changed by this repository task.
 
 No secret, raw provider object/reference, internal exception message, or stack trace is intended
-for player-facing output.
+for Player-facing output.
