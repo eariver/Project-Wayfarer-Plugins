@@ -361,94 +361,187 @@ final class TraversalDeliveryCoordinatorTest {
     }
 
     @Test
-    void adminReissueRaceA_deathThenReissueThenSafeEntry() {
+    void adminReissueRaceA_safeEntryHoldsPhysicalAddUntilReissueWaits()
+        throws Exception {
         FakeRepository repository = new FakeRepository();
         repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        repository.forcePending = true;
         FakeGateway gateway = new FakeGateway();
+        gateway.deliverStarted = new CountDownLatch(1);
+        gateway.releaseDeliver = new CountDownLatch(1);
+        repository.reissueStarted = new CountDownLatch(1);
         TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
-        coordinator.persistDeathSnapshots(
-            PLAYER,
-            List.of(snapshot(TraversalIdentity.ItemType.ELYTRA, 1))
-        ).toCompletableFuture().join();
-        assertTrue(coordinator.adminReissueCritical(
+
+        CompletionStage<TraversalDeliveryCoordinator.Result> firstSafe =
+            coordinator.onSafeEntry(PLAYER, WORLD);
+        assertTrue(gateway.deliverStarted.await(2, TimeUnit.SECONDS));
+        assertEquals(0, repository.reissueStartCount.get());
+
+        CompletionStage<Boolean> reissue = coordinator.adminReissueCritical(
             PLAYER,
             TraversalIdentity.ItemType.ELYTRA
-        ).toCompletableFuture().join());
+        );
+        Thread.sleep(40);
+        assertEquals(0, repository.reissueStartCount.get());
+        assertFalse(reissue.toCompletableFuture().isDone());
+        assertFalse(firstSafe.toCompletableFuture().isDone());
+
+        gateway.releaseDeliver.countDown();
+        TraversalDeliveryCoordinator.Result firstResult =
+            firstSafe.toCompletableFuture().get(3, TimeUnit.SECONDS);
+        assertEquals(1, firstResult.delivered());
+        assertTrue(repository.reissueStarted.await(2, TimeUnit.SECONDS));
+        assertTrue(reissue.toCompletableFuture().get(3, TimeUnit.SECONDS));
         assertEquals(2, repository.logicalEpoch(
             PLAYER,
             TraversalIdentity.ItemType.ELYTRA
         ));
-        TraversalDeliveryCoordinator.Result result = coordinator.onSafeEntry(
-            PLAYER,
-            WORLD
-        ).toCompletableFuture().join();
-        assertTrue(result.delivered() >= 1 || result.alreadyPresent() >= 0);
-        assertEquals(2, repository.logicalEpoch(
-            PLAYER,
-            TraversalIdentity.ItemType.ELYTRA
-        ));
+
+        gateway.deliverStarted = null;
+        gateway.releaseDeliver = null;
+        TraversalDeliveryCoordinator.Result second =
+            coordinator.onSafeEntry(PLAYER, WORLD)
+                .toCompletableFuture().get(3, TimeUnit.SECONDS);
+        assertEquals(1, second.delivered());
+        assertFinalEpochTwoOracle(repository, gateway);
     }
 
     @Test
-    void adminReissueRaceB_reissueThenStaleDeathSkipped() {
+    void adminReissueRaceB_completionHoldsUntilReissueWaits() throws Exception {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        repository.forcePending = true;
+        repository.markStarted = new CountDownLatch(1);
+        repository.releaseMark = new CountDownLatch(1);
+        repository.reissueStarted = new CountDownLatch(1);
+        FakeGateway gateway = new FakeGateway();
+        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
+
+        CompletionStage<TraversalDeliveryCoordinator.Result> firstSafe =
+            coordinator.onSafeEntry(PLAYER, WORLD);
+        assertTrue(repository.markStarted.await(2, TimeUnit.SECONDS));
+        assertEquals(1, gateway.physicalIdentities().size());
+        assertEquals(1L, gateway.physicalIdentities().getFirst().instanceEpoch());
+        assertEquals(0, repository.reissueStartCount.get());
+
+        CompletionStage<Boolean> reissue = coordinator.adminReissueCritical(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        );
+        Thread.sleep(40);
+        assertEquals(0, repository.reissueStartCount.get());
+        assertFalse(reissue.toCompletableFuture().isDone());
+        assertFalse(firstSafe.toCompletableFuture().isDone());
+
+        repository.releaseMark.countDown();
+        assertEquals(1, firstSafe.toCompletableFuture().get(3, TimeUnit.SECONDS)
+            .delivered());
+        assertTrue(repository.reissueStarted.await(2, TimeUnit.SECONDS));
+        assertTrue(reissue.toCompletableFuture().get(3, TimeUnit.SECONDS));
+
+        repository.markStarted = null;
+        repository.releaseMark = null;
+        TraversalDeliveryCoordinator.Result second =
+            coordinator.onSafeEntry(PLAYER, WORLD)
+                .toCompletableFuture().get(3, TimeUnit.SECONDS);
+        assertEquals(1, second.delivered());
+        assertFinalEpochTwoOracle(repository, gateway);
+    }
+
+    @Test
+    void adminReissueRaceC_deathThenReissueThenSafeEntryEpoch2() {
         FakeRepository repository = new FakeRepository();
         repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
         FakeGateway gateway = new FakeGateway();
+        AtomicInteger deathStarts = new AtomicInteger();
+        AtomicInteger reissueStarts = new AtomicInteger();
+        AtomicInteger safeStarts = new AtomicInteger();
+        repository.onDeathStart = deathStarts::incrementAndGet;
+        repository.onReissueStart = reissueStarts::incrementAndGet;
         TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
-        assertTrue(coordinator.adminReissueCritical(
-            PLAYER,
-            TraversalIdentity.ItemType.ELYTRA
-        ).toCompletableFuture().join());
+
         List<DeathPersistResult> death = coordinator.persistDeathSnapshots(
             PLAYER,
             List.of(snapshot(TraversalIdentity.ItemType.ELYTRA, 1))
         ).toCompletableFuture().join();
-        assertEquals(List.of(DeathPersistResult.STALE_SKIPPED), death);
+        assertEquals(List.of(DeathPersistResult.PENDING_CREATED), death);
+        assertEquals(1, deathStarts.get());
+
+        assertTrue(coordinator.adminReissueCritical(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ).toCompletableFuture().join());
+        assertEquals(1, reissueStarts.get());
         assertEquals(2, repository.logicalEpoch(
             PLAYER,
             TraversalIdentity.ItemType.ELYTRA
         ));
+
+        gateway.onDeliverStart = safeStarts::incrementAndGet;
+        TraversalDeliveryCoordinator.Result safe = coordinator.onSafeEntry(
+            PLAYER,
+            WORLD
+        ).toCompletableFuture().join();
+        assertEquals(1, safe.delivered());
+        assertEquals(1, safeStarts.get());
+        assertFinalEpochTwoOracle(repository, gateway);
     }
 
     @Test
-    void adminReissueRaceC_safeEntryDoesNotNestReissueEnqueue() throws Exception {
+    void adminReissueRaceC_reissueThenDelayedDeathIsStaleThenSafeEntryEpoch2()
+        throws Exception {
         FakeRepository repository = new FakeRepository();
         repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
         FakeGateway gateway = new FakeGateway();
-        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
-        CountDownLatch reissueStarted = new CountDownLatch(1);
-        CountDownLatch releaseReissue = new CountDownLatch(1);
-        repository.deathBlock = () -> {
-            // reuse blocker for reissue path via mark - use custom by delaying reissue in serializer
+        CountDownLatch deathStarted = new CountDownLatch(1);
+        CountDownLatch releaseDeath = new CountDownLatch(1);
+        AtomicInteger deathStarts = new AtomicInteger();
+        AtomicInteger reissueStarts = new AtomicInteger();
+        repository.onDeathStart = () -> {
+            deathStarts.incrementAndGet();
+            deathStarted.countDown();
+            await(releaseDeath);
         };
-        AtomicInteger safeStartsDuringReissue = new AtomicInteger();
-        CompletionStage<Boolean> reissue = coordinator.serializer().enqueue(
+        repository.onReissueStart = reissueStarts::incrementAndGet;
+        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
+
+        assertTrue(coordinator.adminReissueCritical(
             PLAYER,
-            () -> {
-                reissueStarted.countDown();
-                return CompletableFuture.supplyAsync(() -> {
-                    await(releaseReissue);
-                    return repository.reissuePermanent(
-                        PLAYER,
-                        TraversalIdentity.ItemType.ELYTRA,
-                        NOW
-                    );
-                });
-            }
-        );
+            TraversalIdentity.ItemType.ELYTRA
+        ).toCompletableFuture().join());
+        assertEquals(1, reissueStarts.get());
+        assertEquals(2, repository.logicalEpoch(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ));
+
+        CompletionStage<List<DeathPersistResult>> delayedDeath =
+            coordinator.persistDeathSnapshots(
+                PLAYER,
+                List.of(snapshot(TraversalIdentity.ItemType.ELYTRA, 1))
+            );
+        assertTrue(deathStarted.await(2, TimeUnit.SECONDS));
         CompletionStage<TraversalDeliveryCoordinator.Result> safe =
             coordinator.onSafeEntry(PLAYER, WORLD);
-        assertTrue(reissueStarted.await(2, TimeUnit.SECONDS));
         Thread.sleep(30);
         assertFalse(safe.toCompletableFuture().isDone());
-        releaseReissue.countDown();
-        assertTrue(reissue.toCompletableFuture().get(2, TimeUnit.SECONDS));
-        safe.toCompletableFuture().get(2, TimeUnit.SECONDS);
-        assertEquals(0, safeStartsDuringReissue.get());
+        releaseDeath.countDown();
+        assertEquals(
+            List.of(DeathPersistResult.STALE_SKIPPED),
+            delayedDeath.toCompletableFuture().get(3, TimeUnit.SECONDS)
+        );
+        TraversalDeliveryCoordinator.Result safeResult =
+            safe.toCompletableFuture().get(3, TimeUnit.SECONDS);
+        assertEquals(1, safeResult.delivered());
+        assertEquals(2, repository.logicalEpoch(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ));
+        assertFinalEpochTwoOracle(repository, gateway);
     }
 
     @Test
-    void deathPersistenceFailureIsObservedAndDoesNotPoison() {
+    void deathPersistenceFailureWarnsExactlyOnceViaAudit() {
         FakeRepository repository = new FakeRepository();
         repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
         repository.failNextDeath = true;
@@ -473,22 +566,36 @@ final class TraversalDeliveryCoordinatorTest {
             WORLD
         ).toCompletableFuture().join();
         assertFalse(result.repositoryUnavailable());
+        assertEquals(1, audit.deathPersistenceFailures);
     }
 
-    @Test
-    void offlineOnlyResultIsNotRepositoryUnavailable() {
-        TraversalDeliveryCoordinator.Result offline =
-            TraversalDeliveryCoordinator.Result.offlineOnly();
-        TraversalDeliveryCoordinator.Result unavailable =
-            TraversalDeliveryCoordinator.Result.unavailable();
-        assertEquals(1, offline.playerOffline());
-        assertFalse(offline.repositoryUnavailable());
-        assertEquals(0, unavailable.playerOffline());
-        assertTrue(unavailable.repositoryUnavailable());
-        assertFalse(
-            TraversalDeliveryCoordinator.Result.formatAdmin(offline)
-                .contains("Result[")
+    private static void assertFinalEpochTwoOracle(
+        FakeRepository repository,
+        FakeGateway gateway
+    ) {
+        assertEquals(2, repository.logicalEpoch(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ));
+        assertEquals(1, gateway.physicalIdentities().size());
+        TraversalIdentity physical = gateway.physicalIdentities().getFirst();
+        assertEquals(2L, physical.instanceEpoch());
+        assertEquals(
+            stableId(PLAYER, TraversalIdentity.ItemType.ELYTRA, 2),
+            physical.itemInstanceId()
         );
+        assertFalse(gateway.physicalIdentities().stream().anyMatch(value ->
+            value.instanceEpoch() == 1L
+        ));
+        assertEquals(
+            "DELIVERED",
+            repository.deliveryState(
+                PLAYER,
+                TraversalIdentity.ItemType.ELYTRA,
+                2
+            )
+        );
+        assertEquals(0, repository.pending(PLAYER).size());
     }
 
     private static boolean exceptionally(CompletionStage<?> stage) {
@@ -633,6 +740,8 @@ final class TraversalDeliveryCoordinatorTest {
         implements TraversalDeliveryCoordinator.DeliveryGateway {
         private final EnumSet<TraversalIdentity.ItemType> present =
             EnumSet.noneOf(TraversalIdentity.ItemType.class);
+        private final List<TraversalIdentity> physical =
+            new CopyOnWriteArrayList<>();
         private int deliverCalls;
         private int compensateCalls;
         private int cacheUpdates;
@@ -643,7 +752,15 @@ final class TraversalDeliveryCoordinatorTest {
         private boolean exactWorld = true;
         private CountDownLatch compensateStarted;
         private CountDownLatch releaseCompensate;
+        private CountDownLatch deliverStarted;
+        private CountDownLatch releaseDeliver;
+        private Runnable onDeliverStart;
         private final List<TraversalIdentity> compensated = new CopyOnWriteArrayList<>();
+        private TraversalLoadout authority;
+
+        List<TraversalIdentity> physicalIdentities() {
+            return List.copyOf(physical);
+        }
 
         @Override
         public TraversalDeliveryCoordinator.DeliveryOutcome deliverIfStillEligible(
@@ -651,6 +768,15 @@ final class TraversalDeliveryCoordinatorTest {
             PendingDelivery delivery
         ) {
             deliverCalls++;
+            if (onDeliverStart != null) {
+                onDeliverStart.run();
+            }
+            if (deliverStarted != null) {
+                deliverStarted.countDown();
+            }
+            if (releaseDeliver != null) {
+                await(releaseDeliver);
+            }
             if (!online) {
                 return TraversalDeliveryCoordinator.DeliveryOutcome.PLAYER_OFFLINE;
             }
@@ -665,16 +791,30 @@ final class TraversalDeliveryCoordinatorTest {
                 return TraversalDeliveryCoordinator.DeliveryOutcome.DELIVERED;
             }
             if (delivery.identity() != null
-                && present.contains(delivery.identity().itemType())) {
+                && hasExactPhysical(delivery.identity())) {
                 return TraversalDeliveryCoordinator.DeliveryOutcome.ALREADY_PRESENT;
             }
             if (forceDelivered || delivery.identity() != null) {
                 if (delivery.identity() != null) {
+                    replacePhysical(delivery.identity());
                     present.add(delivery.identity().itemType());
                 }
                 return TraversalDeliveryCoordinator.DeliveryOutcome.DELIVERED;
             }
             return TraversalDeliveryCoordinator.DeliveryOutcome.CAPABILITY_UNAVAILABLE;
+        }
+
+        private boolean hasExactPhysical(TraversalIdentity identity) {
+            return physical.stream().anyMatch(value ->
+                value.itemType() == identity.itemType()
+                    && value.itemInstanceId().equals(identity.itemInstanceId())
+                    && value.instanceEpoch() == identity.instanceEpoch()
+            );
+        }
+
+        private void replacePhysical(TraversalIdentity identity) {
+            physical.removeIf(value -> value.itemType() == identity.itemType());
+            physical.add(identity);
         }
 
         @Override
@@ -691,14 +831,40 @@ final class TraversalDeliveryCoordinatorTest {
         public void cleanupNonCurrentManaged(
             UUID playerUuid,
             TraversalLoadout loadout
-        ) {}
+        ) {
+            authority = loadout;
+            physical.removeIf(item -> loadout.permanentItems().stream().noneMatch(
+                logical -> logical.state()
+                    == TraversalLoadout.LogicalItem.State.ACTIVE
+                    && logical.itemType() == item.itemType()
+                    && logical.itemInstanceId().equals(item.itemInstanceId())
+                    && logical.instanceEpoch() == item.instanceEpoch()
+            ));
+            present.clear();
+            physical.forEach(value -> present.add(value.itemType()));
+        }
 
         @Override
         public EnumSet<TraversalIdentity.ItemType> currentPhysicalPresence(
             UUID playerUuid,
             TraversalLoadout loadout
         ) {
-            return present.clone();
+            EnumSet<TraversalIdentity.ItemType> values =
+                EnumSet.noneOf(TraversalIdentity.ItemType.class);
+            for (TraversalLoadout.LogicalItem logical : loadout.permanentItems()) {
+                if (logical.state() != TraversalLoadout.LogicalItem.State.ACTIVE) {
+                    continue;
+                }
+                boolean found = physical.stream().anyMatch(item ->
+                    item.itemType() == logical.itemType()
+                        && item.itemInstanceId().equals(logical.itemInstanceId())
+                        && item.instanceEpoch() == logical.instanceEpoch()
+                );
+                if (found) {
+                    values.add(logical.itemType());
+                }
+            }
+            return values;
         }
 
         @Override
@@ -707,6 +873,8 @@ final class TraversalDeliveryCoordinatorTest {
             TraversalLoadout loadout
         ) {
             cacheUpdates++;
+            authority = loadout;
+            cleanupNonCurrentManaged(playerUuid, loadout);
         }
 
         @Override
@@ -729,6 +897,10 @@ final class TraversalDeliveryCoordinatorTest {
             compensateCalls++;
             if (identity != null) {
                 compensated.add(identity);
+                physical.removeIf(value ->
+                    value.itemInstanceId().equals(identity.itemInstanceId())
+                        && value.instanceEpoch() == identity.instanceEpoch()
+                );
                 present.remove(identity.itemType());
             }
         }
@@ -754,6 +926,12 @@ final class TraversalDeliveryCoordinatorTest {
         private boolean deathCompletedBeforeSafeDeliver;
         private int permanentMarkCalls;
         private int consumableMarkCalls;
+        private CountDownLatch markStarted;
+        private CountDownLatch releaseMark;
+        private CountDownLatch reissueStarted;
+        private final AtomicInteger reissueStartCount = new AtomicInteger();
+        private Runnable onDeathStart;
+        private Runnable onReissueStart;
 
         void seedLogical(
             UUID player,
@@ -765,6 +943,14 @@ final class TraversalDeliveryCoordinatorTest {
 
         long logicalEpoch(UUID player, TraversalIdentity.ItemType type) {
             return epochs.getOrDefault(key(player, type), 0L);
+        }
+
+        String deliveryState(
+            UUID player,
+            TraversalIdentity.ItemType type,
+            long epoch
+        ) {
+            return deliveryStates.get(permanentKey(player, type, epoch));
         }
 
         @Override
@@ -903,9 +1089,17 @@ final class TraversalDeliveryCoordinatorTest {
             TraversalIdentity.ItemType itemType,
             Instant now
         ) {
+            reissueStartCount.incrementAndGet();
+            if (onReissueStart != null) {
+                onReissueStart.run();
+            }
+            if (reissueStarted != null) {
+                reissueStarted.countDown();
+            }
             long epoch = epochs.merge(key(playerUuid, itemType), 1L, Long::sum);
             String previous = permanentKey(playerUuid, itemType, epoch - 1);
-            if ("PENDING".equals(deliveryStates.get(previous))) {
+            if ("PENDING".equals(deliveryStates.get(previous))
+                || "DELIVERED".equals(deliveryStates.get(previous))) {
                 deliveryStates.put(previous, "CANCELLED");
             }
             String next = permanentKey(playerUuid, itemType, epoch);
@@ -919,6 +1113,9 @@ final class TraversalDeliveryCoordinatorTest {
             DeathIdentitySnapshot snapshot,
             Instant now
         ) {
+            if (onDeathStart != null) {
+                onDeathStart.run();
+            }
             if (failNextDeath) {
                 failNextDeath = false;
                 throw new IllegalStateException("repository unavailable");
@@ -1009,6 +1206,12 @@ final class TraversalDeliveryCoordinatorTest {
             Instant now
         ) {
             permanentMarkCalls++;
+            if (markStarted != null) {
+                markStarted.countDown();
+            }
+            if (releaseMark != null) {
+                await(releaseMark);
+            }
             if (failMark) {
                 throw new IllegalStateException("repository unavailable");
             }

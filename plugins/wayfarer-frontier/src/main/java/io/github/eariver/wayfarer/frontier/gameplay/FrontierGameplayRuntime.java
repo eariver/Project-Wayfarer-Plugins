@@ -2,6 +2,7 @@ package io.github.eariver.wayfarer.frontier.gameplay;
 
 import io.github.eariver.wayfarer.api.WayfarerServices;
 import io.github.eariver.wayfarer.api.WayfarerAudit;
+import io.github.eariver.wayfarer.frontier.application.DeliveryRetryClassification;
 import io.github.eariver.wayfarer.frontier.application.TraversalDeliveryCoordinator;
 import io.github.eariver.wayfarer.frontier.application.TraversalLoadoutRepository;
 import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseRepository;
@@ -307,14 +308,8 @@ public final class FrontierGameplayRuntime implements Listener {
             return true;
         });
         if (!snapshots.isEmpty()) {
-            delivery.persistDeathSnapshots(playerUuid, List.copyOf(snapshots))
-                .whenComplete((ignored, failure) -> {
-                    if (failure != null) {
-                        plugin.getLogger().warning(
-                            "Frontier death pending persistence failed."
-                        );
-                    }
-                });
+            // Failure WARN is owned solely by DeliveryAudit.deathPersistenceFailure.
+            delivery.persistDeathSnapshots(playerUuid, List.copyOf(snapshots));
         }
     }
 
@@ -996,25 +991,22 @@ public final class FrontierGameplayRuntime implements Listener {
         retryDelivery(UUID playerUuid) {
         RetryCapture capture = new RetryCapture();
         return services.tasks().mainThread(() -> {
-            if (!accepting.get()) {
-                capture.shutdown = true;
-                return;
-            }
             Player player = plugin.getServer().getPlayer(playerUuid);
-            if (player == null || !player.isOnline()) {
-                capture.offline = true;
-                return;
+            boolean online = player != null && player.isOnline();
+            capture.kind = DeliveryRetryClassification.classify(
+                accepting.get(),
+                online
+            );
+            if (capture.kind
+                == DeliveryRetryClassification.Kind.PROCEED_SAFE_ENTRY
+                && player != null) {
+                capture.worldName = player.getWorld().getName();
             }
-            capture.worldName = player.getWorld().getName();
         }).thenCompose(ignored -> {
-            if (capture.shutdown) {
+            if (capture.kind
+                != DeliveryRetryClassification.Kind.PROCEED_SAFE_ENTRY) {
                 return CompletableFuture.completedFuture(
-                    TraversalDeliveryCoordinator.Result.unavailable()
-                );
-            }
-            if (capture.offline || capture.worldName == null) {
-                return CompletableFuture.completedFuture(
-                    TraversalDeliveryCoordinator.Result.offlineOnly()
+                    DeliveryRetryClassification.terminalResult(capture.kind)
                 );
             }
             return delivery.onSafeEntry(playerUuid, capture.worldName);
@@ -2634,7 +2626,7 @@ public final class FrontierGameplayRuntime implements Listener {
 
     private static final class RetryCapture {
         private String worldName;
-        private boolean offline;
-        private boolean shutdown;
+        private DeliveryRetryClassification.Kind kind =
+            DeliveryRetryClassification.Kind.SHUTDOWN_UNAVAILABLE;
     }
 }
