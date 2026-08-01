@@ -8,6 +8,9 @@ import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseRepositor
 import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseCoordinator;
 import io.github.eariver.wayfarer.frontier.application.LaunchpadRepository;
 import io.github.eariver.wayfarer.frontier.application.LaunchpadUseCoordinator;
+import io.github.eariver.wayfarer.frontier.domain.DeathIdentitySnapshot;
+import io.github.eariver.wayfarer.frontier.domain.DeathPersistResult;
+import io.github.eariver.wayfarer.frontier.domain.DeliveryCompletion;
 import io.github.eariver.wayfarer.frontier.domain.Launchpad;
 import io.github.eariver.wayfarer.frontier.domain.LaunchpadPlacementPolicy;
 import io.github.eariver.wayfarer.frontier.config.FrontierModuleConfig;
@@ -73,6 +76,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
@@ -117,8 +122,6 @@ public final class FrontierGameplayRuntime implements Listener {
         new ConcurrentHashMap<>();
     private final LaunchpadRuntimeIndex activeLaunchpads =
         new LaunchpadRuntimeIndex();
-    private final ConcurrentHashMap<UUID, List<ItemStack>> deathRetained =
-        new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, NavigationSession> navigationSessions =
         new ConcurrentHashMap<>();
     private final AtomicBoolean accepting = new AtomicBoolean(true);
@@ -152,7 +155,8 @@ public final class FrontierGameplayRuntime implements Listener {
             new FrontierWorldGate(java.util.Set.of(config.exactWorldName())),
             repository,
             services.tasks(),
-            this::deliver,
+            new DeliveryGatewayAdapter(),
+            new DeliveryAuditAdapter(),
             clock
         );
         launchpadUse = new LaunchpadUseCoordinator(
@@ -215,11 +219,11 @@ public final class FrontierGameplayRuntime implements Listener {
 
     public void stop() {
         accepting.set(false);
+        delivery.shutdown();
         reconcileTask.cancel();
         cooldowns.clear();
         authorities.clear();
         activeLaunchpads.clear();
-        deathRetained.clear();
         navigationSessions.clear();
         if (worldEditProtection != null) {
             worldEditProtection.close();
@@ -279,15 +283,32 @@ public final class FrontierGameplayRuntime implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
-        List<ItemStack> retained = event.getDrops().stream()
-            .filter(FrontierGameplayRuntime::permanent)
-            .map(ItemStack::clone)
-            .toList();
-        if (retained.isEmpty()) {
+        if (!accepting.get()) {
             return;
         }
-        event.getDrops().removeIf(FrontierGameplayRuntime::permanent);
-        deathRetained.put(event.getEntity().getUniqueId(), retained);
+        Player player = event.getEntity();
+        UUID playerUuid = player.getUniqueId();
+        List<DeathIdentitySnapshot> snapshots = new ArrayList<>();
+        event.getDrops().removeIf(item -> {
+            CompleteManagedPermanent managed = parseCompleteManagedPermanent(item);
+            if (managed == null) {
+                return false;
+            }
+            if (managed.ownerUuid.equals(playerUuid)) {
+                snapshots.add(new DeathIdentitySnapshot(
+                    playerUuid,
+                    managed.itemType,
+                    managed.itemInstanceId,
+                    managed.instanceEpoch,
+                    managed.schemaVersion,
+                    managed.themeId
+                ));
+            }
+            return true;
+        });
+        if (!snapshots.isEmpty()) {
+            delivery.persistDeathSnapshots(playerUuid, List.copyOf(snapshots));
+        }
     }
 
     @EventHandler
@@ -781,22 +802,7 @@ public final class FrontierGameplayRuntime implements Listener {
             return;
         }
         delivery.onSafeEntry(playerUuid, player.getWorld().getName())
-            .thenCompose(ignored -> services.tasks().database(() ->
-                loadouts.find(playerUuid)
-            )).thenCompose(found -> services.tasks().mainThread(() -> {
-                Player online = plugin.getServer().getPlayer(playerUuid);
-                if (online == null || !online.isOnline()
-                    || !config.exactWorldName().equals(
-                        online.getWorld().getName()
-                    )) {
-                    return;
-                }
-                found.ifPresent(loadout -> {
-                    authorities.put(playerUuid, loadout);
-                    removeStalePermanent(online, loadout);
-                    restoreDeathRetained(online);
-                });
-            })).exceptionally(ignored -> null);
+            .exceptionally(ignored -> null);
     }
 
     private TraversalDeliveryCoordinator.DeliveryOutcome deliver(
@@ -813,18 +819,25 @@ public final class FrontierGameplayRuntime implements Listener {
         if (!config.exactWorldName().equals(player.getWorld().getName())) {
             return TraversalDeliveryCoordinator.DeliveryOutcome.LEFT_THEME;
         }
-        if (isPermanent(pending.itemType()) && pending.identity() == null) {
-            return TraversalDeliveryCoordinator.DeliveryOutcome.CAPABILITY_UNAVAILABLE;
-        }
-        if (isPermanent(pending.itemType())
-            && containsIdentity(player, pending.identity())) {
-            return TraversalDeliveryCoordinator.DeliveryOutcome.ALREADY_PRESENT;
+        TraversalLoadout authority = authorities.get(playerUuid);
+        if (isPermanent(pending.itemType())) {
+            if (pending.identity() == null) {
+                return TraversalDeliveryCoordinator.DeliveryOutcome.UNKNOWN;
+            }
+            if (authority != null) {
+                cleanupNonCurrentManaged(player, authority);
+            }
+            if (isExactCurrentPhysical(
+                player,
+                pending.identity(),
+                authority,
+                true
+            )) {
+                return TraversalDeliveryCoordinator.DeliveryOutcome.ALREADY_PRESENT;
+            }
         }
         if (pending.itemType() == PendingDelivery.ItemType.LAUNCHPAD) {
             return deliverLaunchpads(player, pending);
-        }
-        if (isPermanent(pending.itemType())) {
-            removeStalePermanent(player, pending);
         }
         if (player.getInventory().firstEmpty() < 0) {
             return TraversalDeliveryCoordinator.DeliveryOutcome.INVENTORY_FULL;
@@ -836,15 +849,6 @@ public final class FrontierGameplayRuntime implements Listener {
         annotate(item, playerUuid, pending);
         if (!player.getInventory().addItem(item).isEmpty()) {
             return TraversalDeliveryCoordinator.DeliveryOutcome.INVENTORY_FULL;
-        }
-        if (pending.identity() != null) {
-            TraversalLoadout loadout = authorities.get(playerUuid);
-            if (loadout != null) {
-                authorities.put(
-                    playerUuid,
-                    replaceAuthority(loadout, pending.identity())
-                );
-            }
         }
         return TraversalDeliveryCoordinator.DeliveryOutcome.DELIVERED;
     }
@@ -952,33 +956,27 @@ public final class FrontierGameplayRuntime implements Listener {
         TraversalIdentity.ItemType itemType,
         UUID actorUuid
     ) {
-        return services.tasks().database(() ->
-            loadouts.reissuePermanent(playerUuid, itemType, clock.instant())
-        ).thenCompose(reissued -> {
-            if (!reissued) {
-                return CompletableFuture.completedFuture(
-                    AdminLoadoutResult.NOT_FOUND_OR_CONFLICT
-                );
-            }
-            return services.audit().record(new WayfarerAudit.AuditEvent(
-                UUID.randomUUID(),
-                "FRONTIER_LOADOUT_REISSUED",
-                actorUuid,
-                "FRONTIER_LOADOUT",
-                playerUuid.toString(),
-                services.serverId(),
-                "{\"result\":\"APPLIED\",\"item_type\":\""
-                    + itemType.name() + "\"}",
-                clock.instant()
-            )).handle((ignored, failure) -> reissued)
-                .thenCompose(ignored -> retryDelivery(playerUuid))
-                .thenCompose(ignored -> services.tasks().database(() ->
-                    loadouts.find(playerUuid)
-                )).thenApply(found -> {
-                    found.ifPresent(value -> authorities.put(playerUuid, value));
-                    return AdminLoadoutResult.APPLIED;
-                });
-        }).exceptionally(ignored -> AdminLoadoutResult.UNAVAILABLE);
+        return delivery.adminReissueCritical(playerUuid, itemType)
+            .thenCompose(reissued -> {
+                if (!reissued) {
+                    return CompletableFuture.completedFuture(
+                        AdminLoadoutResult.NOT_FOUND_OR_CONFLICT
+                    );
+                }
+                return services.audit().record(new WayfarerAudit.AuditEvent(
+                    UUID.randomUUID(),
+                    "FRONTIER_LOADOUT_REISSUED",
+                    actorUuid,
+                    "FRONTIER_LOADOUT",
+                    playerUuid.toString(),
+                    services.serverId(),
+                    "{\"result\":\"APPLIED\",\"item_type\":\""
+                        + itemType.name() + "\"}",
+                    clock.instant()
+                )).handle((ignored, failure) -> true)
+                    .thenCompose(ignored -> retryDelivery(playerUuid))
+                    .thenApply(ignored -> AdminLoadoutResult.APPLIED);
+            }).exceptionally(ignored -> AdminLoadoutResult.UNAVAILABLE);
     }
 
     public CompletionStage<List<PendingDelivery>> inspectDeliveries(
@@ -997,7 +995,7 @@ public final class FrontierGameplayRuntime implements Listener {
             }
         }).thenCompose(ignored -> capture.worldName == null
             ? CompletableFuture.completedFuture(
-                new TraversalDeliveryCoordinator.Result(0, 0, false, true)
+                TraversalDeliveryCoordinator.Result.unavailable()
             )
             : delivery.onSafeEntry(playerUuid, capture.worldName)
         );
@@ -1438,101 +1436,258 @@ public final class FrontierGameplayRuntime implements Listener {
         item.setItemMeta(meta);
     }
 
-    private static boolean containsIdentity(
-        Player player,
-        TraversalIdentity identity
+    private static CompleteManagedPermanent parseCompleteManagedPermanent(
+        ItemStack item
     ) {
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null
-                && identity.itemInstanceId().toString().equals(
-                    text(item, ITEM_INSTANCE_ID)
-                )
-                && identity.instanceEpoch() == number(item, INSTANCE_EPOCH)) {
+        if (item == null || item.getType().isAir()) {
+            return null;
+        }
+        try {
+            String typeText = text(item, ITEM_TYPE);
+            if (typeText == null) {
+                return null;
+            }
+            TraversalIdentity.ItemType type =
+                TraversalIdentity.ItemType.valueOf(typeText);
+            UUID owner = UUID.fromString(text(item, OWNER_ID));
+            String theme = text(item, THEME_ID);
+            if (!TraversalIdentity.WORLDS_BEYOND.equals(theme)) {
+                return null;
+            }
+            UUID itemInstanceId = UUID.fromString(text(item, ITEM_INSTANCE_ID));
+            long epoch = number(item, INSTANCE_EPOCH);
+            long schemaLong = number(item, SCHEMA_VERSION);
+            if (epoch < 1 || schemaLong < 1) {
+                return null;
+            }
+            int schema = Math.toIntExact(schemaLong);
+            return new CompleteManagedPermanent(
+                type,
+                owner,
+                theme,
+                itemInstanceId,
+                epoch,
+                schema
+            );
+        } catch (RuntimeException failure) {
+            return null;
+        }
+    }
+
+    private boolean isExactCurrentPhysical(
+        Player player,
+        TraversalIdentity identity,
+        TraversalLoadout authority,
+        boolean inExactWorld
+    ) {
+        if (identity == null || authority == null || !inExactWorld) {
+            return false;
+        }
+        TraversalLoadout.LogicalItem logical = authority.permanentItems().stream()
+            .filter(value -> value.itemType() == identity.itemType())
+            .findFirst()
+            .orElse(null);
+        if (logical == null
+            || logical.state() != TraversalLoadout.LogicalItem.State.ACTIVE
+            || !logical.itemInstanceId().equals(identity.itemInstanceId())
+            || logical.instanceEpoch() != identity.instanceEpoch()
+            || identity.schemaVersion() != 1
+            || !identity.ownerUuid().equals(player.getUniqueId())
+            || !TraversalIdentity.WORLDS_BEYOND.equals(identity.themeId())) {
+            return false;
+        }
+        return hasExactCurrentPhysical(player, logical, true);
+    }
+
+    private boolean hasExactCurrentPhysical(
+        Player player,
+        TraversalLoadout.LogicalItem logical,
+        boolean inExactWorld
+    ) {
+        if (!inExactWorld
+            || logical.state() != TraversalLoadout.LogicalItem.State.ACTIVE) {
+            return false;
+        }
+        for (ItemStack item : allPlayerItems(player)) {
+            if (matchesExactCurrent(item, player.getUniqueId(), logical)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static void removeStalePermanent(
-        Player player,
-        PendingDelivery pending
+    private static boolean matchesExactCurrent(
+        ItemStack item,
+        UUID playerUuid,
+        TraversalLoadout.LogicalItem logical
     ) {
-        ItemStack[] contents = player.getInventory().getContents();
-        for (int slot = 0; slot < contents.length; slot++) {
-            ItemStack item = contents[slot];
-            if (item != null
-                && pending.itemType().name().equals(text(item, ITEM_TYPE))
-                && pending.playerUuid().toString().equals(text(item, OWNER_ID))
-                && !pending.identity().itemInstanceId().toString().equals(
-                    text(item, ITEM_INSTANCE_ID)
-                )) {
-                player.getInventory().setItem(slot, null);
-            }
-        }
+        CompleteManagedPermanent managed = parseCompleteManagedPermanent(item);
+        return managed != null
+            && managed.ownerUuid.equals(playerUuid)
+            && TraversalIdentity.WORLDS_BEYOND.equals(managed.themeId)
+            && managed.itemType == logical.itemType()
+            && managed.itemInstanceId.equals(logical.itemInstanceId())
+            && managed.instanceEpoch == logical.instanceEpoch()
+            && managed.schemaVersion == 1
+            && logical.state() == TraversalLoadout.LogicalItem.State.ACTIVE;
     }
 
-    private static void removeStalePermanent(
+    private void cleanupNonCurrentManaged(
         Player player,
         TraversalLoadout authority
     ) {
-        ItemStack[] contents = player.getInventory().getContents();
-        for (int slot = 0; slot < contents.length; slot++) {
-            ItemStack item = contents[slot];
-            if (!permanent(item)) {
-                continue;
-            }
-            boolean current = authority.permanentItems().stream().anyMatch(
-                logical -> logical.state()
-                    == TraversalLoadout.LogicalItem.State.ACTIVE
-                    && logical.itemType().name().equals(
-                        text(item, ITEM_TYPE)
-                    )
-                    && logical.itemInstanceId().toString().equals(
-                        text(item, ITEM_INSTANCE_ID)
-                    )
-                    && logical.instanceEpoch()
-                        == number(item, INSTANCE_EPOCH)
-            );
-            if (!current) {
-                player.getInventory().setItem(slot, null);
-            }
-        }
-    }
-
-    private void restoreDeathRetained(Player player) {
-        List<ItemStack> retained = deathRetained.remove(
-            player.getUniqueId()
+        clearNonCurrentInArray(player.getInventory().getStorageContents(), slot ->
+            player.getInventory().setItem(slot, null), authority, player
         );
-        if (retained == null) {
-            return;
+        ItemStack[] armor = player.getInventory().getArmorContents();
+        boolean armorChanged = false;
+        for (int slot = 0; slot < armor.length; slot++) {
+            if (shouldClearNonCurrent(armor[slot], authority, player)) {
+                armor[slot] = null;
+                armorChanged = true;
+            }
         }
-        for (ItemStack item : retained) {
-            if (validPermanent(player, item)
-                && !containsPhysicalInstance(player, item)
-                && player.getInventory().firstEmpty() >= 0) {
-                player.getInventory().addItem(item);
+        if (armorChanged) {
+            player.getInventory().setArmorContents(armor);
+        }
+        ItemStack offhand = player.getInventory().getItemInOffHand();
+        if (shouldClearNonCurrent(offhand, authority, player)) {
+            player.getInventory().setItemInOffHand(null);
+        }
+        ItemStack cursor = player.getItemOnCursor();
+        if (shouldClearNonCurrent(cursor, authority, player)) {
+            player.setItemOnCursor(null);
+        }
+    }
+
+    private void clearNonCurrentInArray(
+        ItemStack[] contents,
+        java.util.function.IntConsumer clearer,
+        TraversalLoadout authority,
+        Player player
+    ) {
+        for (int slot = 0; slot < contents.length; slot++) {
+            if (shouldClearNonCurrent(contents[slot], authority, player)) {
+                clearer.accept(slot);
             }
         }
     }
 
-    private static boolean containsPhysicalInstance(
-        Player player,
-        ItemStack expected
+    private boolean shouldClearNonCurrent(
+        ItemStack item,
+        TraversalLoadout authority,
+        Player player
     ) {
-        String id = text(expected, ITEM_INSTANCE_ID);
-        if (id == null) {
+        CompleteManagedPermanent managed = parseCompleteManagedPermanent(item);
+        if (managed == null) {
             return false;
         }
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (id.equals(text(item, ITEM_INSTANCE_ID))) {
-                return true;
+        return authority.permanentItems().stream().noneMatch(logical ->
+            matchesExactCurrent(item, player.getUniqueId(), logical)
+        );
+    }
+
+    private EnumSet<TraversalIdentity.ItemType> currentPhysicalPresence(
+        Player player,
+        TraversalLoadout authority
+    ) {
+        EnumSet<TraversalIdentity.ItemType> present =
+            EnumSet.noneOf(TraversalIdentity.ItemType.class);
+        boolean inExact = config.exactWorldName().equals(
+            player.getWorld().getName()
+        );
+        for (TraversalLoadout.LogicalItem logical : authority.permanentItems()) {
+            if (hasExactCurrentPhysical(player, logical, inExact)) {
+                present.add(logical.itemType());
             }
         }
-        return false;
+        return present;
+    }
+
+    private static List<ItemStack> allPlayerItems(Player player) {
+        List<ItemStack> items = new ArrayList<>();
+        ItemStack[] storage = player.getInventory().getStorageContents();
+        if (storage != null) {
+            for (ItemStack item : storage) {
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+        }
+        ItemStack[] armor = player.getInventory().getArmorContents();
+        if (armor != null) {
+            for (ItemStack item : armor) {
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+        }
+        ItemStack offhand = player.getInventory().getItemInOffHand();
+        if (offhand != null && !offhand.getType().isAir()) {
+            items.add(offhand);
+        }
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor != null && !cursor.getType().isAir()) {
+            items.add(cursor);
+        }
+        return items;
+    }
+
+    private void compensateRemove(Player player, TraversalIdentity identity) {
+        clearMatchingIdentity(player.getInventory().getStorageContents(), slot ->
+            player.getInventory().setItem(slot, null), identity
+        );
+        ItemStack[] armor = player.getInventory().getArmorContents();
+        boolean armorChanged = false;
+        for (int slot = 0; slot < armor.length; slot++) {
+            if (matchesIdentity(armor[slot], identity)) {
+                armor[slot] = null;
+                armorChanged = true;
+            }
+        }
+        if (armorChanged) {
+            player.getInventory().setArmorContents(armor);
+        }
+        if (matchesIdentity(player.getInventory().getItemInOffHand(), identity)) {
+            player.getInventory().setItemInOffHand(null);
+        }
+        if (matchesIdentity(player.getItemOnCursor(), identity)) {
+            player.setItemOnCursor(null);
+        }
+    }
+
+    private void clearMatchingIdentity(
+        ItemStack[] contents,
+        java.util.function.IntConsumer clearer,
+        TraversalIdentity identity
+    ) {
+        for (int slot = 0; slot < contents.length; slot++) {
+            if (matchesIdentity(contents[slot], identity)) {
+                clearer.accept(slot);
+            }
+        }
+    }
+
+    private static boolean matchesIdentity(
+        ItemStack item,
+        TraversalIdentity identity
+    ) {
+        CompleteManagedPermanent managed = parseCompleteManagedPermanent(item);
+        return managed != null
+            && managed.itemType == identity.itemType()
+            && managed.itemInstanceId.equals(identity.itemInstanceId())
+            && managed.instanceEpoch == identity.instanceEpoch()
+            && managed.schemaVersion == identity.schemaVersion()
+            && managed.ownerUuid.equals(identity.ownerUuid())
+            && managed.themeId.equals(identity.themeId());
     }
 
     private static boolean permanent(ItemStack item) {
+        return parseCompleteManagedPermanent(item) != null
+            || isPermanentTypeTag(item);
+    }
+
+    private static boolean isPermanentTypeTag(ItemStack item) {
         String type = text(item, ITEM_TYPE);
         return type != null && switch (type) {
             case "ELYTRA", "GRAPPLING_HOOK", "NAVIGATION" -> true;
@@ -1546,41 +1701,227 @@ public final class FrontierGameplayRuntime implements Listener {
             || !config.exactWorldName().equals(player.getWorld().getName())) {
             return false;
         }
-        try {
-            TraversalIdentity.ItemType type = TraversalIdentity.ItemType.valueOf(
-                text(item, ITEM_TYPE)
-            );
-            UUID itemInstanceId = UUID.fromString(
-                text(item, ITEM_INSTANCE_ID)
-            );
-            long epoch = number(item, INSTANCE_EPOCH);
-            int schema = Math.toIntExact(number(item, SCHEMA_VERSION));
-            TraversalLoadout.LogicalItem logical = authority.permanentItems()
-                .stream()
-                .filter(value -> value.itemType() == type)
-                .findFirst()
-                .orElse(null);
-            if (logical == null
-                || logical.state()
-                != TraversalLoadout.LogicalItem.State.ACTIVE
-                || !logical.itemInstanceId().equals(itemInstanceId)) {
-                return false;
-            }
-            TraversalIdentity identity = new TraversalIdentity(
-                itemInstanceId,
-                type,
-                UUID.fromString(text(item, OWNER_ID)),
-                text(item, THEME_ID),
-                epoch,
-                schema
-            );
-            return identity.validate(
-                player.getUniqueId(),
-                TraversalIdentity.WORLDS_BEYOND,
-                logical.instanceEpoch()
-            ) == TraversalIdentity.Validation.VALID;
-        } catch (RuntimeException failure) {
+        CompleteManagedPermanent managed = parseCompleteManagedPermanent(item);
+        if (managed == null || !managed.ownerUuid.equals(player.getUniqueId())) {
             return false;
+        }
+        return authority.permanentItems().stream().anyMatch(logical ->
+            matchesExactCurrent(item, player.getUniqueId(), logical)
+        );
+    }
+
+    private void notifySafeEntryResult(
+        Player player,
+        TraversalDeliveryCoordinator.Result result
+    ) {
+        if (result.inventoryFull() > 0) {
+            player.sendMessage(
+                "Your Worlds Beyond loadout could not fit. Free inventory space and re-enter."
+            );
+        }
+        if (result.capabilityUnavailable() > 0) {
+            player.sendMessage(
+                "A Worlds Beyond loadout item could not be granted right now."
+            );
+        }
+        if (result.conflict() > 0 || result.unknown() > 0) {
+            player.sendMessage(
+                "A Worlds Beyond loadout delivery needs admin review. Do not retry blindly."
+            );
+        } else if (result.delivered() > 0) {
+            player.sendMessage("Worlds Beyond loadout items were delivered.");
+        }
+    }
+
+    private final class DeliveryGatewayAdapter
+        implements TraversalDeliveryCoordinator.DeliveryGateway {
+        @Override
+        public TraversalDeliveryCoordinator.DeliveryOutcome deliverIfStillEligible(
+            UUID playerUuid,
+            PendingDelivery delivery
+        ) {
+            return deliver(playerUuid, delivery);
+        }
+
+        @Override
+        public boolean isOnline(UUID playerUuid) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            return accepting.get() && player != null && player.isOnline();
+        }
+
+        @Override
+        public boolean isOnlineInExactWorld(UUID playerUuid, String exactWorldName) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            return accepting.get()
+                && player != null
+                && player.isOnline()
+                && exactWorldName.equals(player.getWorld().getName());
+        }
+
+        @Override
+        public void cleanupNonCurrentManaged(
+            UUID playerUuid,
+            TraversalLoadout loadout
+        ) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            if (player != null && player.isOnline()) {
+                FrontierGameplayRuntime.this.cleanupNonCurrentManaged(
+                    player,
+                    loadout
+                );
+            }
+        }
+
+        @Override
+        public EnumSet<TraversalIdentity.ItemType> currentPhysicalPresence(
+            UUID playerUuid,
+            TraversalLoadout loadout
+        ) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            if (player == null || !player.isOnline()) {
+                return EnumSet.noneOf(TraversalIdentity.ItemType.class);
+            }
+            return FrontierGameplayRuntime.this.currentPhysicalPresence(
+                player,
+                loadout
+            );
+        }
+
+        @Override
+        public void applyAuthorityCache(
+            UUID playerUuid,
+            TraversalLoadout loadout
+        ) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            if (player == null
+                || !player.isOnline()
+                || !config.exactWorldName().equals(player.getWorld().getName())) {
+                authorities.remove(playerUuid);
+                return;
+            }
+            authorities.put(playerUuid, loadout);
+        }
+
+        @Override
+        public void notifySafeEntryResult(
+            UUID playerUuid,
+            TraversalDeliveryCoordinator.Result result
+        ) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            if (player == null || !player.isOnline()) {
+                return;
+            }
+            if (result.playerOffline() > 0 || result.leftTheme() > 0) {
+                return;
+            }
+            FrontierGameplayRuntime.this.notifySafeEntryResult(player, result);
+        }
+
+        @Override
+        public void compensateRemove(
+            UUID playerUuid,
+            TraversalIdentity identity
+        ) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            if (player != null && player.isOnline()) {
+                FrontierGameplayRuntime.this.compensateRemove(player, identity);
+            }
+        }
+    }
+
+    private final class DeliveryAuditAdapter
+        implements TraversalDeliveryCoordinator.DeliveryAudit {
+        @Override
+        public void deathTransition(
+            DeathIdentitySnapshot snapshot,
+            DeathPersistResult result
+        ) {
+            services.audit().record(new WayfarerAudit.AuditEvent(
+                UUID.randomUUID(),
+                "FRONTIER_DEATH_PENDING_" + result.name(),
+                snapshot.playerUuid(),
+                "FRONTIER_LOADOUT",
+                snapshot.itemType().name(),
+                services.serverId(),
+                "{\"result\":\"" + result.name() + "\"}",
+                clock.instant()
+            ));
+        }
+
+        @Override
+        public void deathConflict(
+            DeathIdentitySnapshot snapshot,
+            DeathPersistResult result
+        ) {
+            plugin.getLogger().warning(
+                "Frontier death pending conflict for loadout item type."
+            );
+        }
+
+        @Override
+        public void deliveryTransitioned(UUID deliveryId) {
+            services.audit().record(new WayfarerAudit.AuditEvent(
+                UUID.randomUUID(),
+                "FRONTIER_DELIVERY_DELIVERED",
+                null,
+                "FRONTIER_DELIVERY",
+                deliveryId.toString(),
+                services.serverId(),
+                "{\"result\":\"TRANSITIONED_TO_DELIVERED\"}",
+                clock.instant()
+            ));
+        }
+
+        @Override
+        public void deliveryConflict(
+            UUID deliveryId,
+            DeliveryCompletion completion
+        ) {
+            plugin.getLogger().warning(
+                "Frontier delivery completion requires admin review."
+            );
+            services.audit().record(new WayfarerAudit.AuditEvent(
+                UUID.randomUUID(),
+                "FRONTIER_DELIVERY_CONFLICT",
+                null,
+                "FRONTIER_DELIVERY",
+                deliveryId.toString(),
+                services.serverId(),
+                "{\"result\":\"" + completion.name() + "\"}",
+                clock.instant()
+            ));
+        }
+
+        @Override
+        public void deliveryRepositoryFailure(UUID deliveryId) {
+            plugin.getLogger().warning(
+                "Frontier delivery repository operation failed."
+            );
+        }
+    }
+
+    private static final class CompleteManagedPermanent {
+        private final TraversalIdentity.ItemType itemType;
+        private final UUID ownerUuid;
+        private final String themeId;
+        private final UUID itemInstanceId;
+        private final long instanceEpoch;
+        private final int schemaVersion;
+
+        private CompleteManagedPermanent(
+            TraversalIdentity.ItemType itemType,
+            UUID ownerUuid,
+            String themeId,
+            UUID itemInstanceId,
+            long instanceEpoch,
+            int schemaVersion
+        ) {
+            this.itemType = itemType;
+            this.ownerUuid = ownerUuid;
+            this.themeId = themeId;
+            this.itemInstanceId = itemInstanceId;
+            this.instanceEpoch = instanceEpoch;
+            this.schemaVersion = schemaVersion;
         }
     }
 

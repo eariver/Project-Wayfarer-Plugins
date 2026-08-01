@@ -10,6 +10,7 @@ import io.github.eariver.wayfarer.frontier.persistence.JdbcTraversalLoadoutRepos
 import io.github.eariver.wayfarer.frontier.gameplay.FrontierGameplayRuntime;
 import io.github.eariver.wayfarer.integration.leafgrapple.ReflectiveLeafGrappleBridge;
 import io.github.eariver.wayfarer.frontier.application.FrontierPurchaseCoordinator;
+import io.github.eariver.wayfarer.frontier.application.TraversalDeliveryCoordinator;
 import io.github.eariver.wayfarer.frontier.domain.FrontierWorldGate;
 import io.github.eariver.wayfarer.frontier.domain.TraversalIdentity;
 import org.bukkit.command.CommandSender;
@@ -378,7 +379,8 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
                     services,
                     sender,
                     failure == null
-                        ? "Frontier delivery retry: " + result
+                        ? "Frontier delivery retry: "
+                            + TraversalDeliveryCoordinator.Result.formatAdmin(result)
                         : "Frontier delivery retry is unavailable."
                 )
             );
