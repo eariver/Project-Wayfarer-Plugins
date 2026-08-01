@@ -317,10 +317,10 @@ public final class JdbcReissueOperationRepository
             "PAYMENT_COMMITTED",
             now,
             "UPDATE wf_main_repair_operation SET state='PAYMENT_COMMITTED',"
-                + "lock_version=lock_version+1,updated_at=? "
+                + "failure_code=NULL,lock_version=lock_version+1,updated_at=? "
                 + "WHERE repair_id=? AND operation_kind='REISSUE' "
                 + "AND state='UNKNOWN' AND lock_version=? "
-                + "AND payment_committed_at IS NOT NULL"
+                + "AND transaction_id IS NOT NULL AND payment_committed_at IS NOT NULL"
         );
     }
 

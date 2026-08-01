@@ -260,6 +260,43 @@ public final class ReissueCoordinator {
         }).exceptionally(ignored -> Result.unavailable("REISSUE_UNAVAILABLE"));
     }
 
+    /**
+     * Explicit admin-only recovery for a payment-committed UNKNOWN operation.
+     * This path never calls transactions.execute().
+     */
+    public CompletionStage<Result> resumeRotationFromUnknown(UUID reissueId) {
+        Objects.requireNonNull(reissueId, "reissueId");
+        return tasks.database(() -> operations.find(reissueId)).thenCompose(found -> {
+            if (found.isEmpty()) {
+                return CompletableFuture.completedFuture(Result.rejected("OPERATION_NOT_FOUND"));
+            }
+            ReissueOperation operation = found.orElseThrow();
+            if (operation.state() != ReissueOperation.State.UNKNOWN) {
+                return durableResult(operation);
+            }
+            if (operation.transactionId() == null) {
+                return CompletableFuture.completedFuture(
+                    Result.rejected("RESUME_PAYMENT_REQUIRED")
+                );
+            }
+            if (operation.paymentCommittedAt() == null) {
+                return CompletableFuture.completedFuture(
+                    Result.rejected("PAYMENT_CONFIRMATION_REQUIRED")
+                );
+            }
+            return tasks.database(() -> operations.reopenToPaymentCommitted(
+                operation.reissueId(),
+                operation.lockVersion(),
+                clock.instant()
+            )).thenCompose(reopened -> reopened
+                .map(value -> resumeRotation(value.reissueId()))
+                .orElseGet(() -> durableAfterCas(
+                    operation,
+                    "ROTATION_RESUME_CONFLICT"
+                )));
+        }).exceptionally(ignored -> Result.unavailable("REISSUE_UNAVAILABLE"));
+    }
+
     /** Explicit admin path. It may start a new debit only after explicit resume. */
     public CompletionStage<Result> resumePayment(UUID reissueId) {
         Objects.requireNonNull(reissueId, "reissueId");
@@ -376,8 +413,7 @@ public final class ReissueCoordinator {
     /** Performs only safe restart actions; it never debits automatically. */
     public CompletionStage<Integer> recoverAfterRestart() {
         return tasks.database(operations::findRecoveryCandidates)
-            .thenCompose(this::recoverCandidates)
-            .exceptionally(ignored -> 0);
+            .thenCompose(this::recoverCandidates);
     }
 
     private CompletionStage<Integer> recoverCandidates(List<ReissueOperation> candidates) {
@@ -403,7 +439,9 @@ public final class ReissueCoordinator {
                 ).thenApply(ignored -> true))
                 .orElseGet(() -> CompletableFuture.completedFuture(false)));
             case PAYMENT_COMMITTED -> resumeRotation(operation.reissueId())
-                .thenApply(ignored -> true);
+                .thenApply(result -> result != null
+                    && (result.status() == Status.PENDING
+                        || result.status() == Status.DELIVERED));
             case PENDING_DELIVERY -> tasks.database(() ->
                 growthTools.findByOwner(operation.playerUuid())
             ).thenCompose(tool -> {
