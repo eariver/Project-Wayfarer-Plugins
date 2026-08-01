@@ -147,7 +147,7 @@ final class MainMigrationIntegrationTest {
         try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
             assertEquals(3, coreFlyway(fixture).migrate().migrationsExecuted);
             Flyway flyway = flyway(fixture);
-            assertEquals(3, flyway.migrate().migrationsExecuted);
+            assertEquals(4, flyway.migrate().migrationsExecuted);
             assertEquals(0, flyway.migrate().migrationsExecuted);
             assertEquals(0, coreFlyway(fixture).migrate().migrationsExecuted);
             try (Connection connection = connection(fixture)) {
@@ -165,10 +165,41 @@ final class MainMigrationIntegrationTest {
                     connection,
                     "flyway_schema_history"
                 ));
-                assertEquals(4, successfulMigrations(
+                assertEquals(5, successfulMigrations(
                     connection,
                     "wf_main_flyway_schema_history"
                 ));
+                Set<String> operationColumns = columns(
+                    connection,
+                    "wf_main_repair_operation"
+                );
+                assertTrue(operationColumns.containsAll(Set.of(
+                    "operation_kind",
+                    "config_revision",
+                    "evolution_count",
+                    "expected_item_instance_id",
+                    "new_item_instance_id",
+                    "payment_committed_at",
+                    "active_guard"
+                )));
+                assertTrue(indexes(connection, "wf_main_repair_operation").contains(
+                    "uq_wf_main_operation_active_guard"
+                ));
+                assertTrue(checkConstraints(
+                    connection,
+                    "wf_main_repair_operation"
+                ).containsAll(Set.of(
+                    "ck_wf_main_operation_kind",
+                    "ck_wf_main_operation_repair_state",
+                    "ck_wf_main_operation_reissue_state",
+                    "ck_wf_main_operation_repair_guard",
+                    "ck_wf_main_operation_guard_state",
+                    "ck_wf_main_operation_reissue_guard_required",
+                    "ck_wf_main_operation_reissue_snapshot",
+                    "ck_wf_main_operation_paid_state",
+                    "ck_wf_main_operation_unpaid_state",
+                    "ck_wf_main_operation_payment_marker"
+                )));
             }
         }
     }
@@ -186,11 +217,14 @@ final class MainMigrationIntegrationTest {
                 .target("1")
                 .load();
             assertEquals(1, first.migrate().migrationsExecuted);
-            assertEquals(2, flyway(fixture).migrate().migrationsExecuted);
+            assertEquals(3, flyway(fixture).migrate().migrationsExecuted);
             try (Connection connection = connection(fixture)) {
                 assertTrue(tables(connection).contains("wf_main_repair_operation"));
                 assertTrue(columns(connection, "wf_main_growth_tool").contains(
                     "current_item_instance_id"
+                ));
+                assertTrue(columns(connection, "wf_main_repair_operation").contains(
+                    "payment_committed_at"
                 ));
             }
         }
@@ -213,7 +247,7 @@ final class MainMigrationIntegrationTest {
             flyway(fixture).migrate();
             assertThrows(RuntimeException.class, broken::migrate);
             try (Connection connection = connection(fixture)) {
-                assertEquals(4, successfulMigrations(
+                assertEquals(5, successfulMigrations(
                     connection,
                     "wf_main_flyway_schema_history"
                 ));
@@ -291,5 +325,43 @@ final class MainMigrationIntegrationTest {
             }
         }
         return columns;
+    }
+
+    private static Set<String> indexes(
+        Connection connection,
+        String tableName
+    ) throws Exception {
+        Set<String> indexes = new HashSet<>();
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT DISTINCT index_name FROM information_schema.statistics "
+                + "WHERE table_schema=DATABASE() AND table_name=?"
+        )) {
+            query.setString(1, tableName);
+            try (ResultSet result = query.executeQuery()) {
+                while (result.next()) {
+                    indexes.add(result.getString(1));
+                }
+            }
+        }
+        return indexes;
+    }
+
+    private static Set<String> checkConstraints(
+        Connection connection,
+        String tableName
+    ) throws Exception {
+        Set<String> constraints = new HashSet<>();
+        try (PreparedStatement query = connection.prepareStatement(
+            "SELECT constraint_name FROM information_schema.check_constraints "
+                + "WHERE constraint_schema=DATABASE() AND table_name=?"
+        )) {
+            query.setString(1, tableName);
+            try (ResultSet result = query.executeQuery()) {
+                while (result.next()) {
+                    constraints.add(result.getString(1));
+                }
+            }
+        }
+        return constraints;
     }
 }

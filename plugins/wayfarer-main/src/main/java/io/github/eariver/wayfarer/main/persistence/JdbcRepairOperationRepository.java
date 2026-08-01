@@ -144,7 +144,8 @@ public final class JdbcRepairOperationRepository
              PreparedStatement update = connection.prepareStatement(
                  "UPDATE wf_main_repair_operation SET state='REFUND_PENDING',"
                      + "refund_operation_id=?,lock_version=lock_version+1,updated_at=? "
-                     + "WHERE repair_id=? AND state='PAYMENT_COMMITTED' AND lock_version=?"
+                     + "WHERE repair_id=? AND operation_kind='REPAIR' "
+                     + "AND state='PAYMENT_COMMITTED' AND lock_version=?"
              )) {
             update.setString(1, refundId);
             update.setTimestamp(2, Timestamp.from(now));
@@ -182,7 +183,7 @@ public final class JdbcRepairOperationRepository
              PreparedStatement update = connection.prepareStatement(
                  "UPDATE wf_main_repair_operation SET state='UNKNOWN',failure_code=?,"
                      + "lock_version=lock_version+1,updated_at=? "
-                     + "WHERE repair_id=? AND lock_version=? "
+                     + "WHERE repair_id=? AND operation_kind='REPAIR' AND lock_version=? "
                      + "AND state NOT IN ('DOMAIN_COMMITTED','REFUNDED','FAILED')"
              )) {
             update.setString(1, failureCode);
@@ -209,7 +210,8 @@ public final class JdbcRepairOperationRepository
                  "UPDATE wf_main_repair_operation SET state=?,"
                      + "transaction_id=COALESCE(?,transaction_id),failure_code=?,"
                      + "lock_version=lock_version+1,updated_at=? "
-                     + "WHERE repair_id=? AND state=? AND lock_version=?"
+                     + "WHERE repair_id=? AND operation_kind='REPAIR' "
+                     + "AND state=? AND lock_version=?"
              )) {
             update.setString(1, nextState);
             update.setString(2, transactionId == null ? null : transactionId.toString());
@@ -231,7 +233,8 @@ public final class JdbcRepairOperationRepository
         String idempotencyKey
     ) throws SQLException {
         try (PreparedStatement query = connection.prepareStatement(
-            "SELECT * FROM wf_main_repair_operation WHERE idempotency_key=?"
+            "SELECT * FROM wf_main_repair_operation "
+                + "WHERE idempotency_key=? AND operation_kind='REPAIR'"
         )) {
             query.setString(1, idempotencyKey);
             return one(query);
@@ -243,7 +246,8 @@ public final class JdbcRepairOperationRepository
         UUID repairId
     ) throws SQLException {
         try (PreparedStatement query = connection.prepareStatement(
-            "SELECT * FROM wf_main_repair_operation WHERE repair_id=?"
+            "SELECT * FROM wf_main_repair_operation "
+                + "WHERE repair_id=? AND operation_kind='REPAIR'"
         )) {
             query.setString(1, repairId.toString());
             return one(query);

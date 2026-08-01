@@ -184,9 +184,20 @@ public record GrowthTool(
 
     public GrowthTool reissued(Instant now) {
         Objects.requireNonNull(now, "now");
+        return reissued(UUID.randomUUID(), now);
+    }
+
+    /**
+     * Rotates the physical instance using an identity that was durably chosen
+     * by the operation before the authority CAS.  Recovery must use this
+     * overload so a replay never creates a second physical UUID.
+     */
+    public GrowthTool reissued(UUID newItemInstanceId, Instant now) {
+        Objects.requireNonNull(newItemInstanceId, "newItemInstanceId");
+        Objects.requireNonNull(now, "now");
         return new GrowthTool(
             toolId,
-            UUID.randomUUID(),
+            newItemInstanceId,
             ownerUuid,
             Math.addExact(instanceEpoch, 1),
             cumulativeProgressUnits,
