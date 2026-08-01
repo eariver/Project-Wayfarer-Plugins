@@ -10,8 +10,8 @@ import io.github.eariver.wayfarer.frontier.application.LaunchpadRepository;
 import io.github.eariver.wayfarer.frontier.application.LaunchpadUseCoordinator;
 import io.github.eariver.wayfarer.frontier.domain.DeathIdentitySnapshot;
 import io.github.eariver.wayfarer.frontier.domain.DeathPersistResult;
-import io.github.eariver.wayfarer.frontier.domain.DeliveryCompletion;
 import io.github.eariver.wayfarer.frontier.domain.Launchpad;
+import io.github.eariver.wayfarer.frontier.domain.ManagedPermanentIdentity;
 import io.github.eariver.wayfarer.frontier.domain.LaunchpadPlacementPolicy;
 import io.github.eariver.wayfarer.frontier.config.FrontierModuleConfig;
 import io.github.eariver.wayfarer.frontier.domain.FrontierWorldGate;
@@ -307,7 +307,14 @@ public final class FrontierGameplayRuntime implements Listener {
             return true;
         });
         if (!snapshots.isEmpty()) {
-            delivery.persistDeathSnapshots(playerUuid, List.copyOf(snapshots));
+            delivery.persistDeathSnapshots(playerUuid, List.copyOf(snapshots))
+                .whenComplete((ignored, failure) -> {
+                    if (failure != null) {
+                        plugin.getLogger().warning(
+                            "Frontier death pending persistence failed."
+                        );
+                    }
+                });
         }
     }
 
@@ -989,16 +996,29 @@ public final class FrontierGameplayRuntime implements Listener {
         retryDelivery(UUID playerUuid) {
         RetryCapture capture = new RetryCapture();
         return services.tasks().mainThread(() -> {
-            Player player = plugin.getServer().getPlayer(playerUuid);
-            if (accepting.get() && player != null && player.isOnline()) {
-                capture.worldName = player.getWorld().getName();
+            if (!accepting.get()) {
+                capture.shutdown = true;
+                return;
             }
-        }).thenCompose(ignored -> capture.worldName == null
-            ? CompletableFuture.completedFuture(
-                TraversalDeliveryCoordinator.Result.unavailable()
-            )
-            : delivery.onSafeEntry(playerUuid, capture.worldName)
-        );
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            if (player == null || !player.isOnline()) {
+                capture.offline = true;
+                return;
+            }
+            capture.worldName = player.getWorld().getName();
+        }).thenCompose(ignored -> {
+            if (capture.shutdown) {
+                return CompletableFuture.completedFuture(
+                    TraversalDeliveryCoordinator.Result.unavailable()
+                );
+            }
+            if (capture.offline || capture.worldName == null) {
+                return CompletableFuture.completedFuture(
+                    TraversalDeliveryCoordinator.Result.offlineOnly()
+                );
+            }
+            return delivery.onSafeEntry(playerUuid, capture.worldName);
+        });
     }
 
     public CompletionStage<LaunchpadInspection> inspectLaunchpad(
@@ -1442,7 +1462,7 @@ public final class FrontierGameplayRuntime implements Listener {
         if (item == null || item.getType().isAir()) {
             return null;
         }
-        try {
+            try {
             String typeText = text(item, ITEM_TYPE);
             if (typeText == null) {
                 return null;
@@ -1451,23 +1471,31 @@ public final class FrontierGameplayRuntime implements Listener {
                 TraversalIdentity.ItemType.valueOf(typeText);
             UUID owner = UUID.fromString(text(item, OWNER_ID));
             String theme = text(item, THEME_ID);
-            if (!TraversalIdentity.WORLDS_BEYOND.equals(theme)) {
-                return null;
-            }
             UUID itemInstanceId = UUID.fromString(text(item, ITEM_INSTANCE_ID));
             long epoch = number(item, INSTANCE_EPOCH);
             long schemaLong = number(item, SCHEMA_VERSION);
-            if (epoch < 1 || schemaLong < 1) {
+            if (epoch < 1 || schemaLong < 1 || schemaLong > Integer.MAX_VALUE) {
                 return null;
             }
-            int schema = Math.toIntExact(schemaLong);
+            ManagedPermanentIdentity.Parsed parsed =
+                ManagedPermanentIdentity.completeOrNull(
+                    type,
+                    owner,
+                    theme,
+                    itemInstanceId,
+                    epoch,
+                    (int) schemaLong
+                );
+            if (parsed == null) {
+                return null;
+            }
             return new CompleteManagedPermanent(
-                type,
-                owner,
-                theme,
-                itemInstanceId,
-                epoch,
-                schema
+                parsed.itemType(),
+                parsed.ownerUuid(),
+                parsed.themeId(),
+                parsed.itemInstanceId(),
+                parsed.instanceEpoch(),
+                parsed.schemaVersion()
             );
         } catch (RuntimeException failure) {
             return null;
@@ -1522,14 +1550,22 @@ public final class FrontierGameplayRuntime implements Listener {
         TraversalLoadout.LogicalItem logical
     ) {
         CompleteManagedPermanent managed = parseCompleteManagedPermanent(item);
-        return managed != null
-            && managed.ownerUuid.equals(playerUuid)
-            && TraversalIdentity.WORLDS_BEYOND.equals(managed.themeId)
-            && managed.itemType == logical.itemType()
-            && managed.itemInstanceId.equals(logical.itemInstanceId())
-            && managed.instanceEpoch == logical.instanceEpoch()
-            && managed.schemaVersion == 1
-            && logical.state() == TraversalLoadout.LogicalItem.State.ACTIVE;
+        if (managed == null) {
+            return false;
+        }
+        return ManagedPermanentIdentity.isExactCurrent(
+            new ManagedPermanentIdentity.Parsed(
+                managed.itemType,
+                managed.ownerUuid,
+                managed.themeId,
+                managed.itemInstanceId,
+                managed.instanceEpoch,
+                managed.schemaVersion
+            ),
+            playerUuid,
+            logical,
+            true
+        );
     }
 
     private void cleanupNonCurrentManaged(
@@ -1859,6 +1895,13 @@ public final class FrontierGameplayRuntime implements Listener {
         }
 
         @Override
+        public void deathPersistenceFailure(UUID playerUuid) {
+            plugin.getLogger().warning(
+                "Frontier death pending persistence failed."
+            );
+        }
+
+        @Override
         public void deliveryTransitioned(UUID deliveryId) {
             services.audit().record(new WayfarerAudit.AuditEvent(
                 UUID.randomUUID(),
@@ -1873,10 +1916,7 @@ public final class FrontierGameplayRuntime implements Listener {
         }
 
         @Override
-        public void deliveryConflict(
-            UUID deliveryId,
-            DeliveryCompletion completion
-        ) {
+        public void deliveryConflict(UUID deliveryId, String reason) {
             plugin.getLogger().warning(
                 "Frontier delivery completion requires admin review."
             );
@@ -1887,7 +1927,24 @@ public final class FrontierGameplayRuntime implements Listener {
                 "FRONTIER_DELIVERY",
                 deliveryId.toString(),
                 services.serverId(),
-                "{\"result\":\"" + completion.name() + "\"}",
+                "{\"result\":\"CONFLICT\"}",
+                clock.instant()
+            ));
+        }
+
+        @Override
+        public void deliveryUnknown(UUID deliveryId, String reason) {
+            plugin.getLogger().warning(
+                "Frontier delivery payload requires admin review."
+            );
+            services.audit().record(new WayfarerAudit.AuditEvent(
+                UUID.randomUUID(),
+                "FRONTIER_DELIVERY_UNKNOWN",
+                null,
+                "FRONTIER_DELIVERY",
+                deliveryId.toString(),
+                services.serverId(),
+                "{\"result\":\"UNKNOWN\"}",
                 clock.instant()
             ));
         }
@@ -1896,6 +1953,13 @@ public final class FrontierGameplayRuntime implements Listener {
         public void deliveryRepositoryFailure(UUID deliveryId) {
             plugin.getLogger().warning(
                 "Frontier delivery repository operation failed."
+            );
+        }
+
+        @Override
+        public void compensationFailure(UUID playerUuid) {
+            plugin.getLogger().warning(
+                "Frontier delivery physical compensation failed."
             );
         }
     }
@@ -2570,5 +2634,7 @@ public final class FrontierGameplayRuntime implements Listener {
 
     private static final class RetryCapture {
         private String worldName;
+        private boolean offline;
+        private boolean shutdown;
     }
 }

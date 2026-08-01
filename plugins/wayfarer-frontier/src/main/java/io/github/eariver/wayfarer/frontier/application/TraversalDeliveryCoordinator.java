@@ -11,13 +11,15 @@ import io.github.eariver.wayfarer.frontier.domain.TraversalLoadout;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class TraversalDeliveryCoordinator {
     private final FrontierWorldGate worldGate;
@@ -27,6 +29,7 @@ public final class TraversalDeliveryCoordinator {
     private final DeliveryAudit audit;
     private final Clock clock;
     private final PlayerOperationSerializer serializer;
+    private final Set<String> reportedDeliveryProblems = ConcurrentHashMap.newKeySet();
 
     public TraversalDeliveryCoordinator(
         FrontierWorldGate worldGate,
@@ -71,6 +74,7 @@ public final class TraversalDeliveryCoordinator {
 
     public void shutdown() {
         serializer.shutdown();
+        reportedDeliveryProblems.clear();
     }
 
     public CompletionStage<List<DeathPersistResult>> persistDeathSnapshots(
@@ -100,7 +104,11 @@ public final class TraversalDeliveryCoordinator {
                 }
                 return List.copyOf(results);
             })
-        );
+        ).whenComplete((ignored, failure) -> {
+            if (failure != null) {
+                audit.deathPersistenceFailure(playerUuid);
+            }
+        });
     }
 
     public CompletionStage<Result> onSafeEntry(UUID playerUuid, String exactWorldName) {
@@ -224,6 +232,14 @@ public final class TraversalDeliveryCoordinator {
         ).thenCompose(ignored -> {
             if (capture.outcome != DeliveryOutcome.DELIVERED
                 && capture.outcome != DeliveryOutcome.ALREADY_PRESENT) {
+                if (capture.outcome == DeliveryOutcome.UNKNOWN) {
+                    reportUnknownOnce(delivery.deliveryId(), "GATEWAY_IDENTITY");
+                } else if (capture.outcome == DeliveryOutcome.CONFLICT) {
+                    reportConflictOnce(
+                        delivery.deliveryId(),
+                        "GATEWAY_CONFLICT"
+                    );
+                }
                 return CompletableFuture.completedFuture(capture.outcome);
             }
             boolean permanent = isPermanent(delivery.itemType());
@@ -237,21 +253,37 @@ public final class TraversalDeliveryCoordinator {
                     delivery.deliveryId(),
                     clock.instant()
                 )
-            ).thenCompose(completion -> mapCompletion(
-                playerUuid,
-                delivery,
-                capture.outcome,
-                completion,
-                physicalAdded
-            )).exceptionally(failure -> {
-                if (physicalAdded && delivery.identity() != null) {
-                    tasks.mainThread(() ->
-                        gateway.compensateRemove(playerUuid, delivery.identity())
+            ).handle((completion, failure) -> {
+                if (failure != null) {
+                    return compensateAfterRepositoryFailure(
+                        playerUuid,
+                        delivery,
+                        physicalAdded
                     );
                 }
-                audit.deliveryRepositoryFailure(delivery.deliveryId());
-                return DeliveryOutcome.REPOSITORY_UNAVAILABLE;
-            });
+                return mapCompletion(
+                    playerUuid,
+                    delivery,
+                    capture.outcome,
+                    completion,
+                    physicalAdded
+                );
+            }).thenCompose(stage -> stage);
+        });
+    }
+
+    private CompletionStage<DeliveryOutcome> compensateAfterRepositoryFailure(
+        UUID playerUuid,
+        PendingDelivery delivery,
+        boolean physicalAdded
+    ) {
+        CompletionStage<Void> compensation = physicalAdded
+            && delivery.identity() != null
+            ? compensateSafely(playerUuid, delivery.identity())
+            : CompletableFuture.completedFuture(null);
+        return compensation.thenApply(ignored -> {
+            audit.deliveryRepositoryFailure(delivery.deliveryId());
+            return DeliveryOutcome.REPOSITORY_UNAVAILABLE;
         });
     }
 
@@ -264,6 +296,7 @@ public final class TraversalDeliveryCoordinator {
     ) {
         return switch (completion) {
             case TRANSITIONED_TO_DELIVERED -> {
+                clearReportedProblems(delivery.deliveryId());
                 audit.deliveryTransitioned(delivery.deliveryId());
                 yield CompletableFuture.completedFuture(
                     gatewayOutcome == DeliveryOutcome.DELIVERED
@@ -271,15 +304,18 @@ public final class TraversalDeliveryCoordinator {
                         : DeliveryOutcome.ALREADY_PRESENT
                 );
             }
-            case ALREADY_DELIVERED -> CompletableFuture.completedFuture(
-                DeliveryOutcome.ALREADY_PRESENT
-            );
+            case ALREADY_DELIVERED -> {
+                clearReportedProblems(delivery.deliveryId());
+                yield CompletableFuture.completedFuture(
+                    DeliveryOutcome.ALREADY_PRESENT
+                );
+            }
             case MALFORMED_PAYLOAD -> compensateAndOutcome(
                 playerUuid,
                 delivery,
                 physicalAdded,
                 DeliveryOutcome.UNKNOWN,
-                completion
+                completion.name()
             );
             case CANCELLED, NOT_FOUND, STALE_IDENTITY, TRUE_CONFLICT ->
                 compensateAndOutcome(
@@ -287,7 +323,7 @@ public final class TraversalDeliveryCoordinator {
                     delivery,
                     physicalAdded,
                     DeliveryOutcome.CONFLICT,
-                    completion
+                    completion.name()
                 );
         };
     }
@@ -297,15 +333,68 @@ public final class TraversalDeliveryCoordinator {
         PendingDelivery delivery,
         boolean physicalAdded,
         DeliveryOutcome outcome,
-        DeliveryCompletion completion
+        String reason
     ) {
-        audit.deliveryConflict(delivery.deliveryId(), completion);
+        if (outcome == DeliveryOutcome.UNKNOWN) {
+            reportUnknownOnce(delivery.deliveryId(), reason);
+        } else {
+            reportConflictOnce(delivery.deliveryId(), reason);
+        }
         if (physicalAdded && delivery.identity() != null) {
-            return tasks.mainThread(() ->
-                gateway.compensateRemove(playerUuid, delivery.identity())
-            ).thenApply(ignored -> outcome);
+            return compensateSafely(playerUuid, delivery.identity())
+                .thenApply(ignored -> outcome);
         }
         return CompletableFuture.completedFuture(outcome);
+    }
+
+    /**
+     * Runs compensation on the main thread and always completes the returned
+     * stage. Compensation failure is never treated as delivery success; a
+     * sanitized WARN is emitted and the stage completes normally so the
+     * per-player serializer can advance.
+     */
+    private CompletionStage<Void> compensateSafely(
+        UUID playerUuid,
+        TraversalIdentity identity
+    ) {
+        return tasks.mainThread(() -> {
+            try {
+                gateway.compensateRemove(playerUuid, identity);
+            } catch (RuntimeException failure) {
+                audit.compensationFailure(playerUuid);
+            }
+        }).handle((ignored, failure) -> {
+            if (failure != null) {
+                audit.compensationFailure(playerUuid);
+            }
+            return null;
+        });
+    }
+
+    private void reportConflictOnce(UUID deliveryId, String reason) {
+        if (reportedDeliveryProblems.add(problemKey(deliveryId, "CONFLICT", reason))) {
+            audit.deliveryConflict(deliveryId, reason);
+        }
+    }
+
+    private void reportUnknownOnce(UUID deliveryId, String reason) {
+        if (reportedDeliveryProblems.add(problemKey(deliveryId, "UNKNOWN", reason))) {
+            audit.deliveryUnknown(deliveryId, reason);
+        }
+    }
+
+    private void clearReportedProblems(UUID deliveryId) {
+        String prefix = deliveryId + ":";
+        Iterator<String> iterator = reportedDeliveryProblems.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().startsWith(prefix)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private static String problemKey(UUID deliveryId, String kind, String reason) {
+        return deliveryId + ":" + kind + ":" + reason;
     }
 
     private static boolean isPermanent(PendingDelivery.ItemType type) {
@@ -341,11 +430,17 @@ public final class TraversalDeliveryCoordinator {
 
         void deathConflict(DeathIdentitySnapshot snapshot, DeathPersistResult result);
 
+        void deathPersistenceFailure(UUID playerUuid);
+
         void deliveryTransitioned(UUID deliveryId);
 
-        void deliveryConflict(UUID deliveryId, DeliveryCompletion completion);
+        void deliveryConflict(UUID deliveryId, String reason);
+
+        void deliveryUnknown(UUID deliveryId, String reason);
 
         void deliveryRepositoryFailure(UUID deliveryId);
+
+        void compensationFailure(UUID playerUuid);
     }
 
     public enum DeliveryOutcome {
@@ -382,6 +477,10 @@ public final class TraversalDeliveryCoordinator {
 
         public static Result unavailable() {
             return new Result(0, 0, 0, 0, 0, 0, 0, 0, false, true);
+        }
+
+        public static Result offlineOnly() {
+            return new Result(0, 0, 0, 0, 1, 0, 0, 0, false, false);
         }
 
         public Result plusOffline() {

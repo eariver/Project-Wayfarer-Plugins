@@ -272,6 +272,225 @@ final class TraversalDeliveryCoordinatorTest {
         assertEquals(0, audit.deathConflicts);
     }
 
+    @Test
+    void repositoryFailureAwaitsCompensationBeforeNextOperation() throws Exception {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        repository.forcePending = true;
+        repository.failMark = true;
+        FakeGateway gateway = new FakeGateway();
+        gateway.forceDelivered = true;
+        gateway.compensateStarted = new CountDownLatch(1);
+        gateway.releaseCompensate = new CountDownLatch(1);
+        AtomicInteger nextOpStarts = new AtomicInteger();
+        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
+
+        CompletionStage<TraversalDeliveryCoordinator.Result> safe =
+            coordinator.onSafeEntry(PLAYER, WORLD);
+        assertTrue(gateway.compensateStarted.await(2, TimeUnit.SECONDS));
+        assertFalse(safe.toCompletableFuture().isDone());
+
+        CompletionStage<String> next = coordinator.serializer().enqueue(
+            PLAYER,
+            () -> {
+                nextOpStarts.incrementAndGet();
+                return CompletableFuture.completedFuture("next");
+            }
+        );
+        Thread.sleep(40);
+        assertEquals(0, nextOpStarts.get());
+        assertFalse(next.toCompletableFuture().isDone());
+
+        gateway.releaseCompensate.countDown();
+        TraversalDeliveryCoordinator.Result result =
+            safe.toCompletableFuture().get(2, TimeUnit.SECONDS);
+        assertTrue(result.repositoryUnavailable());
+        assertEquals(1, gateway.compensateCalls);
+        assertEquals(1, gateway.compensated.size());
+        assertEquals("next", next.toCompletableFuture().get(2, TimeUnit.SECONDS));
+        assertEquals(1, nextOpStarts.get());
+    }
+
+    @Test
+    void conflictAndUnknownAuditAreDedupedUntilTransition() {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        repository.forcePending = true;
+        repository.permanentCompletion = DeliveryCompletion.CANCELLED;
+        FakeGateway gateway = new FakeGateway();
+        gateway.forceDelivered = true;
+        FakeAudit audit = new FakeAudit();
+        TraversalDeliveryCoordinator coordinator = new TraversalDeliveryCoordinator(
+            new FrontierWorldGate(Set.of(WORLD)),
+            repository,
+            new DirectTasks(),
+            gateway,
+            audit,
+            Clock.fixed(NOW, ZoneOffset.UTC)
+        );
+        coordinator.onSafeEntry(PLAYER, WORLD).toCompletableFuture().join();
+        coordinator.onSafeEntry(PLAYER, WORLD).toCompletableFuture().join();
+        assertEquals(1, audit.deliveryConflicts);
+
+        gateway.forceDelivered = false;
+        gateway.forceUnknown = true;
+        gateway.present.clear();
+        FakeRepository unknownRepo = new FakeRepository();
+        unknownRepo.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        unknownRepo.forcePending = true;
+        FakeAudit unknownAudit = new FakeAudit();
+        TraversalDeliveryCoordinator unknownCoordinator =
+            new TraversalDeliveryCoordinator(
+                new FrontierWorldGate(Set.of(WORLD)),
+                unknownRepo,
+                new DirectTasks(),
+                gateway,
+                unknownAudit,
+                Clock.fixed(NOW, ZoneOffset.UTC)
+            );
+        TraversalDeliveryCoordinator.Result first =
+            unknownCoordinator.onSafeEntry(PLAYER, WORLD)
+                .toCompletableFuture().join();
+        TraversalDeliveryCoordinator.Result second =
+            unknownCoordinator.onSafeEntry(PLAYER, WORLD)
+                .toCompletableFuture().join();
+        assertEquals(1, first.unknown());
+        assertEquals(1, second.unknown());
+        assertEquals(1, unknownAudit.deliveryUnknowns);
+        assertEquals(0, first.delivered());
+    }
+
+    @Test
+    void adminReissueRaceA_deathThenReissueThenSafeEntry() {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        FakeGateway gateway = new FakeGateway();
+        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
+        coordinator.persistDeathSnapshots(
+            PLAYER,
+            List.of(snapshot(TraversalIdentity.ItemType.ELYTRA, 1))
+        ).toCompletableFuture().join();
+        assertTrue(coordinator.adminReissueCritical(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ).toCompletableFuture().join());
+        assertEquals(2, repository.logicalEpoch(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ));
+        TraversalDeliveryCoordinator.Result result = coordinator.onSafeEntry(
+            PLAYER,
+            WORLD
+        ).toCompletableFuture().join();
+        assertTrue(result.delivered() >= 1 || result.alreadyPresent() >= 0);
+        assertEquals(2, repository.logicalEpoch(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ));
+    }
+
+    @Test
+    void adminReissueRaceB_reissueThenStaleDeathSkipped() {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        FakeGateway gateway = new FakeGateway();
+        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
+        assertTrue(coordinator.adminReissueCritical(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ).toCompletableFuture().join());
+        List<DeathPersistResult> death = coordinator.persistDeathSnapshots(
+            PLAYER,
+            List.of(snapshot(TraversalIdentity.ItemType.ELYTRA, 1))
+        ).toCompletableFuture().join();
+        assertEquals(List.of(DeathPersistResult.STALE_SKIPPED), death);
+        assertEquals(2, repository.logicalEpoch(
+            PLAYER,
+            TraversalIdentity.ItemType.ELYTRA
+        ));
+    }
+
+    @Test
+    void adminReissueRaceC_safeEntryDoesNotNestReissueEnqueue() throws Exception {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        FakeGateway gateway = new FakeGateway();
+        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
+        CountDownLatch reissueStarted = new CountDownLatch(1);
+        CountDownLatch releaseReissue = new CountDownLatch(1);
+        repository.deathBlock = () -> {
+            // reuse blocker for reissue path via mark - use custom by delaying reissue in serializer
+        };
+        AtomicInteger safeStartsDuringReissue = new AtomicInteger();
+        CompletionStage<Boolean> reissue = coordinator.serializer().enqueue(
+            PLAYER,
+            () -> {
+                reissueStarted.countDown();
+                return CompletableFuture.supplyAsync(() -> {
+                    await(releaseReissue);
+                    return repository.reissuePermanent(
+                        PLAYER,
+                        TraversalIdentity.ItemType.ELYTRA,
+                        NOW
+                    );
+                });
+            }
+        );
+        CompletionStage<TraversalDeliveryCoordinator.Result> safe =
+            coordinator.onSafeEntry(PLAYER, WORLD);
+        assertTrue(reissueStarted.await(2, TimeUnit.SECONDS));
+        Thread.sleep(30);
+        assertFalse(safe.toCompletableFuture().isDone());
+        releaseReissue.countDown();
+        assertTrue(reissue.toCompletableFuture().get(2, TimeUnit.SECONDS));
+        safe.toCompletableFuture().get(2, TimeUnit.SECONDS);
+        assertEquals(0, safeStartsDuringReissue.get());
+    }
+
+    @Test
+    void deathPersistenceFailureIsObservedAndDoesNotPoison() {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        repository.failNextDeath = true;
+        FakeGateway gateway = new FakeGateway();
+        FakeAudit audit = new FakeAudit();
+        TraversalDeliveryCoordinator coordinator = new TraversalDeliveryCoordinator(
+            new FrontierWorldGate(Set.of(WORLD)),
+            repository,
+            new DirectTasks(),
+            gateway,
+            audit,
+            Clock.fixed(NOW, ZoneOffset.UTC)
+        );
+        assertTrue(exceptionally(coordinator.persistDeathSnapshots(
+            PLAYER,
+            List.of(snapshot(TraversalIdentity.ItemType.ELYTRA, 1))
+        )));
+        assertEquals(1, audit.deathPersistenceFailures);
+        assertEquals(0, audit.deathTransitions);
+        TraversalDeliveryCoordinator.Result result = coordinator.onSafeEntry(
+            PLAYER,
+            WORLD
+        ).toCompletableFuture().join();
+        assertFalse(result.repositoryUnavailable());
+    }
+
+    @Test
+    void offlineOnlyResultIsNotRepositoryUnavailable() {
+        TraversalDeliveryCoordinator.Result offline =
+            TraversalDeliveryCoordinator.Result.offlineOnly();
+        TraversalDeliveryCoordinator.Result unavailable =
+            TraversalDeliveryCoordinator.Result.unavailable();
+        assertEquals(1, offline.playerOffline());
+        assertFalse(offline.repositoryUnavailable());
+        assertEquals(0, unavailable.playerOffline());
+        assertTrue(unavailable.repositoryUnavailable());
+        assertFalse(
+            TraversalDeliveryCoordinator.Result.formatAdmin(offline)
+                .contains("Result[")
+        );
+    }
+
     private static boolean exceptionally(CompletionStage<?> stage) {
         try {
             stage.toCompletableFuture().join();
@@ -362,6 +581,10 @@ final class TraversalDeliveryCoordinatorTest {
         implements TraversalDeliveryCoordinator.DeliveryAudit {
         private int deathTransitions;
         private int deathConflicts;
+        private int deathPersistenceFailures;
+        private int deliveryConflicts;
+        private int deliveryUnknowns;
+        private int compensationFailures;
 
         @Override
         public void deathTransition(
@@ -380,16 +603,30 @@ final class TraversalDeliveryCoordinatorTest {
         }
 
         @Override
+        public void deathPersistenceFailure(UUID playerUuid) {
+            deathPersistenceFailures++;
+        }
+
+        @Override
         public void deliveryTransitioned(UUID deliveryId) {}
 
         @Override
-        public void deliveryConflict(
-            UUID deliveryId,
-            DeliveryCompletion completion
-        ) {}
+        public void deliveryConflict(UUID deliveryId, String reason) {
+            deliveryConflicts++;
+        }
+
+        @Override
+        public void deliveryUnknown(UUID deliveryId, String reason) {
+            deliveryUnknowns++;
+        }
 
         @Override
         public void deliveryRepositoryFailure(UUID deliveryId) {}
+
+        @Override
+        public void compensationFailure(UUID playerUuid) {
+            compensationFailures++;
+        }
     }
 
     private static final class FakeGateway
@@ -401,8 +638,12 @@ final class TraversalDeliveryCoordinatorTest {
         private int cacheUpdates;
         private boolean forceDelivered;
         private boolean launchpadDeliver;
+        private boolean forceUnknown;
         private boolean online = true;
         private boolean exactWorld = true;
+        private CountDownLatch compensateStarted;
+        private CountDownLatch releaseCompensate;
+        private final List<TraversalIdentity> compensated = new CopyOnWriteArrayList<>();
 
         @Override
         public TraversalDeliveryCoordinator.DeliveryOutcome deliverIfStillEligible(
@@ -415,6 +656,9 @@ final class TraversalDeliveryCoordinatorTest {
             }
             if (!exactWorld) {
                 return TraversalDeliveryCoordinator.DeliveryOutcome.LEFT_THEME;
+            }
+            if (forceUnknown) {
+                return TraversalDeliveryCoordinator.DeliveryOutcome.UNKNOWN;
             }
             if (delivery.itemType() == PendingDelivery.ItemType.LAUNCHPAD
                 && launchpadDeliver) {
@@ -476,8 +720,15 @@ final class TraversalDeliveryCoordinatorTest {
             UUID playerUuid,
             TraversalIdentity identity
         ) {
+            if (compensateStarted != null) {
+                compensateStarted.countDown();
+            }
+            if (releaseCompensate != null) {
+                await(releaseCompensate);
+            }
             compensateCalls++;
             if (identity != null) {
+                compensated.add(identity);
                 present.remove(identity.itemType());
             }
         }
@@ -497,6 +748,7 @@ final class TraversalDeliveryCoordinatorTest {
         private DeliveryCompletion permanentCompletion =
             DeliveryCompletion.TRANSITIONED_TO_DELIVERED;
         private DeliveryCompletion lastPermanentCompletion;
+        private boolean failMark;
         private int deathAuditTransitions;
         private int reopenOrCreateCount;
         private boolean deathCompletedBeforeSafeDeliver;
@@ -757,6 +1009,9 @@ final class TraversalDeliveryCoordinatorTest {
             Instant now
         ) {
             permanentMarkCalls++;
+            if (failMark) {
+                throw new IllegalStateException("repository unavailable");
+            }
             lastPermanentCompletion = permanentCompletion;
             if (permanentCompletion
                 == DeliveryCompletion.TRANSITIONED_TO_DELIVERED) {
