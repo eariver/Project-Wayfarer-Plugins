@@ -6,7 +6,7 @@
 
 `PHASE 05 GATE: GO`
 
-Phase 04のMain Reissue Domain／Persistence、V004 additive migration、focused test、MariaDB test、validation、normal push、最終HEADのCI／Pre-client Headlessを完了した。
+初回自己Reportは`PASS`としていたが、独立Reviewで未接続のpaid `UNKNOWN` rotation recoveryをBuild Blockerとして指摘され、補正開始時の判定は`CHANGES_REQUIRED`として扱った。Blockerを修正し、追加Test、MariaDB CAS検証、local validation、normal push、最終HEADのCI／Pre-client Headlessを完了したため、現時点の最終Verdictは`PASS`である。
 
 ## 2. Model／Reasoning
 
@@ -27,8 +27,8 @@ AuthorityおよびPhase 04 Instructionの指定SHA-256は開始時に検証し�
 
 ## 4. Implementation HEAD
 
-- Implementation／validation tree HEAD: `d00d6a0b747ae4aaa95018ad3f0d791eadb04f32`
-- Report Parent HEAD: `d00d6a0b747ae4aaa95018ad3f0d791eadb04f32`
+- Implementation／validation tree HEAD: `016c230e6dda9fdf8f40885fde3d0eec1b88aba2`
+- Report Parent HEAD: `016c230e6dda9fdf8f40885fde3d0eec1b88aba2`
 - Report自身のCommit SHAは本文へ埋め込まず、自己参照するReport-only Commitを作らない。
 
 ## 5. Changed Files
@@ -41,8 +41,10 @@ Phase 04 scope内の実効変更は次のとおり。
 - Migration: `V004__growth_tool_reissue_operation.sql`
 - Migration tests: `MainMigrationHashTest`, `MainMigrationIntegrationTest`, `ReissueOperationIntegrationTest`
 - Unit tests: `ReissueCoordinatorTest`, `ReissueQuoteStoreTest`, `ReissueOperationTest`, `ReissuePricingTest`
+- Correction tests: `ReissueCoordinatorTest`へUNKNOWN rotation／replay／failure／eligibility／recovery Scenarioを追加し、`ReissueOperationIntegrationTest`へpayment marker付きUNKNOWN reopen CASを追加
 - Failure fixture: `V004__broken.sql`を内容不変のまま`V005__broken.sql`へrename
 - Headless validation expectation: `scripts/runtime/preclient/run-headless-paper.sh`のMain専用history count `4`→`5`
+- Housekeeping: `.ai-work/grok-4.5-opencode-v002/`の追跡済み3ファイルをlocal file保持のままIndexから除外。`.git/info/exclude`、`.gitignore`、正式Report／Authorityは変更していない。
 
 V001～V003、Core、Frontier、Runtime本体、Command、Permission、`plugin.yml`、Raw ItemStack永続化、Dedicated Reissue Tableは変更していない。
 
@@ -90,6 +92,8 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 - `JdbcReissueOperationRepository`の全SELECT／UPDATEを`operation_kind='REISSUE'`に限定し、全SQLのPrimary Keyに`repair_id`を使用した。
 - 必須repository operationとCAS、idempotency、active guard、transaction ID conflict、recovery scanを実装した。
 - `ReissueCoordinator`はQuote、eligibility、prepare、payment、UNKNOWN、rotation checkpoint、pending delivery resultをBukkit非依存で合成する。
+- `ReissueCoordinator.resumeRotationFromUnknown(UUID reissueId)`を追加した。`tasks.database`でReadし、`state=UNKNOWN`、transaction ID、payment markerを厳密確認後、`reopenToPaymentCommitted`をCASし、成功時だけ既存`resumeRotation`へ継続する。CAS敗北時は再ReadしてDurable State由来のResultを返す。
+- 既にRotation済みの場合は保存済み`newItemInstanceId`／`instanceEpoch`を認識して`replaceAuthority`を再実行しない。成功後は`PENDING_DELIVERY`でguardを解放し、`failure_code`をクリアする。この経路は`transactions.execute()`を呼ばない。
 - Authority rotationとGrowth Toolの`delivery_status=PENDING`を同一Growth Tool UPDATEで扱い、Phase 04ではphysical deliveryを実行しない。
 
 ## 9. UNKNOWN／Recovery Contract
@@ -101,7 +105,10 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 - Coreが`COMMITTED`または`RECONCILED_COMMITTED`の場合だけ`confirmPaymentCommittedFromUnknown`をCASし、`PAYMENT_COMMITTED`からrotationを再開する。
 - Core `FAILED`またはinspect failureでは行を不変にし、rotationしない。
 - `reopenPayment`は`transaction_id IS NULL AND payment_committed_at IS NULL`を必須条件とする。
+- `reopenToPaymentCommitted`は`UNKNOWN`、non-null transaction ID、non-null `payment_committed_at`、expected lock versionを必須とし、CAS成功時に`failure_code=NULL`とする。marker null／transaction ID null／lock version不一致は失敗する。
+- 支払marker付きUNKNOWNの再開は新しい明示Admin `resumeRotationFromUnknown`だけが到達し、`resumePayment`およびRestart自動Recoveryからは到達しない。
 - Restart時の孤立`PREPARED`だけをCASで`ABANDONED`へ遷移し、`active_guard`を解放する。`PAYMENT_PENDING`以降はabandonしない。
+- `recoverAfterRestart()`のDB scan failureは`0件成功`へ変換せず、failed stageとして伝播する。`PAYMENT_COMMITTED` candidateは`PENDING`／`DELIVERED`だけをrecovered countへ加算し、`UNKNOWN`／`UNAVAILABLE`は加算しない。
 - `PENDING_DELIVERY`はterminal business resultとしてguardを解放し、`GrowthToolDeliveryCoordinator`によるPhase 05以降の再配達へ渡す。
 
 ## 10. Unit Test
@@ -112,7 +119,7 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 ./gradlew --no-daemon --console=plain --rerun-tasks :plugins:wayfarer-main:test
 ```
 
-結果: `BUILD SUCCESSFUL`、55 tests、failures=0、errors=0、skipped=0。
+結果: `BUILD SUCCESSFUL`、Main Unit Test total 74 tests、failures=0、errors=0、skipped=0。新規Reissue Testは`ReissueCoordinatorTest` 25 tests、うち今回追加19 tests。
 
 主な検証対象:
 
@@ -124,6 +131,30 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 - `confirmPaymentAndResumeRotation`、`COMMITTED`／`RECONCILED_COMMITTED`、FAILED、inspect failure、`executeCalls == 0`
 - double admin execution、Domain state invariant
 
+今回追加した`ReissueCoordinatorTest`の正確なScenario:
+
+- `currentPhysicalItemRejectsBeforeOperationOrDebit`
+- `pendingDeliveryRejectsQuote`
+- `revokedToolRejectsQuote`
+- `existingActiveOperationRejectsNewQuoteAsInFlight`
+- `doubleConfirmDebitsOnce`
+- `sameQuoteReplayCreatesOneOperationAndDebitsOnce`
+- `failedDebitTransitionsFailedAndReleasesGuard`
+- `intermediateDebitStateStoresTransactionAsUnknown`
+- `differentInspectTransactionDoesNotOverwriteExistingTransactionId`
+- `inspectFailureLeavesModuleRowUnchanged`
+- `reconciledCommittedResumesRotationWithoutExecute`
+- `transactionlessUnknownIsTheOnlyResumePaymentPath`
+- `knownTransactionUnknownCannotResumePayment`
+- `paymentMarkedUnknownUsesOnlyExplicitRotationResumeAndRecoversCrashWindow`
+- `markerlessUnknownCannotUseRotationResume`
+- `rotationResumeCasLossReturnsDurableState`
+- `restartRecoveryDoesNotAutoResumeUnknown`
+- `restartRecoveryDoesNotCountUnknownPaymentAsRecovered`
+- `restartRecoveryScanFailureIsNotReportedAsZero`
+
+Crash Window Testでは、Rotation成功、pendingDelivery checkpoint失敗、UNKNOWNへの遷移、transaction／marker／guard保持、Admin `resumeRotationFromUnknown`、reopen CAS、Already-Rotated認識、checkpoint、guard解放、二回目Adminのno-opを実際に通過させた。
+
 ## 11. MariaDB Test
 
 実行Command:
@@ -132,7 +163,7 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 ./gradlew --no-daemon --console=plain --rerun-tasks :plugins:wayfarer-main:mariaDbIntegrationTest
 ```
 
-結果: `BUILD SUCCESSFUL`、8 tests、failures=0、errors=0、skipped=0。
+結果: `BUILD SUCCESSFUL`、MariaDB Test total 9 tests、failures=0、errors=0、skipped=0。新規Reissue persistence Testは`ReissueOperationIntegrationTest` 4 tests。
 
 検証対象:
 
@@ -140,6 +171,7 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 - Existing Repair round-trip、Repair／Reissue kind分離、Reissue round-trip、idempotency replay
 - active guard競合、transaction ID同一CAS、異transaction ID非上書き、payment marker round-trip
 - `confirmPaymentCommittedFromUnknown`、PREPARED abandon、recovery scan、restart simulation
+- `paymentCommittedUnknownCanBeReopenedOnlyWithPaymentEvidence`によるUNKNOWN→`reopenToPaymentCommitted` CAS、payment marker／transaction ID保持、`failure_code`消去、guard保持、lock／marker／transaction null拒否
 - State／Guard CHECK、Paid State CHECK、V005 broken migration failure、V001～V003 hash不変
 
 `MainMigrationHashTest`および`MainMigrationIntegrationTest`を含むMain `check`も実行し、成功した。
@@ -147,17 +179,18 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 ## 12. Scope Check
 
 - 開始前およびCommit前に変更File一覧を確認した。
-- 実効差分はMain Phase 04、migration tests／fixture、Headless migration expectationに限定された。
+- 実効差分はMain Phase 04、migration tests／fixture、Headless migration expectation、および依頼されたGrok workspace housekeepingに限定された。
 - Core Public API、Frontier、Runtime wiring、Command、Bukkit gameplay、Permission、V001～V003は変更していない。
+- Grok workspaceの追跡解除後、`git ls-files -- .ai-work/grok-4.5-opencode-v002`は空。local filesは保持し、`.git/info/exclude`は変更していない。
 - `git diff --check`: clean
-- 最終Report作成前のworking tree: clean
+- Report更新前のworking tree: clean。Report correction commit後も最終statusを再確認する。
 
 ## 13. Known Limitations
 
 - Phase 04ではphysical item生成／delivery、Bukkit event、Command、player notification、runtime wiringを提供しない。これはPhase 05境界である。
 - `TransactionDetails.payloadJson`は現行Core APIで提供されないため、利用可能なtransaction fieldsを一致確認し、未提供payloadは確認対象外とした。
 - Headless evidenceの`minecraft_client_acceptance=pending`はPhase 05以降のclient acceptanceであり、Phase 04のBukkit非依存実装範囲外である。
-- Report Commit後の最終HEADはReport本文の`Report Parent HEAD`から進む。
+- Restart scan failureは安全側にexceptionとして伝播するため、呼び出し側はfailed stageを監視する必要がある。
 
 ## 14. Phase 05 API
 
@@ -173,6 +206,7 @@ MariaDBでNULLを含むCHECK評価も確認し、guard equalityがNULLで抜け�
 - `PrepareOutcome`
 - `PrepareResult`
 - `ReissueCoordinator.confirmPaymentAndResumeRotation(UUID reissueId)`
+- `ReissueCoordinator.resumeRotationFromUnknown(UUID reissueId)`
 
 Physical deliveryおよびBukkit runtime wiringは未実行である。
 
@@ -181,30 +215,34 @@ Physical deliveryおよびBukkit runtime wiringは未実行である。
 - `3dc0a7d679460eb83246b43ec60812ed76fae6a4` — `feat(main): add durable paid reissue domain`
 - `7c3b8ed63303621b980005a4f99801e7b1cb07df` — `test(preclient): track V004 migration`
 - `d00d6a0b747ae4aaa95018ad3f0d791eadb04f32` — `test(preclient): correct V004 history assertion`
+- `1d8f113fc167190dab7a1290ccc5b12817e38a66` — `docs(test): record phase 04 reissue validation` (初回Report)
+- `10ccb9deb6653de41e8d60b938991e7d2001b803` — `chore(repo): untrack accidental grok workspace` (Housekeeping Commit)
+- `4d1ffeb0e65b8fbce9895282dd709ee099a7825f` — `fix(main): restore paid reissue rotation recovery` (Correction Commit)
+- `016c230e6dda9fdf8f40885fde3d0eec1b88aba2` — `test(main): cover reissue failure and replay paths`
 - Amend、rebase、merge、force push、tag、releaseは行っていない。
 
 ## 16. Push
 
 - Remote: `origin`
 - Branch: `feature/V0.0.2-main-frontier`
-- 最終Implementation HEAD `d00d6a0`を通常Push済み。
+- 最終Implementation HEAD `016c230e6dda9fdf8f40885fde3d0eec1b88aba2`を通常Push済み。
 - PR `#14`はOpen／Draft／Unmergedのまま維持した。
 
 ## 17. CI／Headless
 
-最終Implementation HEAD `d00d6a0b747ae4aaa95018ad3f0d791eadb04f32`で確認した。
+最終Implementation HEAD `016c230e6dda9fdf8f40885fde3d0eec1b88aba2`で確認した。
 
 - CI: SUCCESS
-  - Run: `30690811766`
-  - URL: `https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30690811766`
+  - Run: `30692759099`
+  - URL: `https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30692759099`
 - Pre-client Headless Runtime: SUCCESS
-  - Run: `30690811767`
-  - URL: `https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30690811767`
+  - Run: `30692759108`
+  - URL: `https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30692759108`
   - Artifact: `preclient-headless-evidence`
-  - Evidence SHA-256: `be988000652da1016023b3bf1d6b4aaf0f6470b64351eac157f1bde06bdee8d6`
+  - Evidence SHA-256: `5d211e0445e022a9a470e573d83c0a2bdde17f403db8d550e9b1f2853a520f0f`
   - Paper: `1.21.11-build-132`
   - `result=PASS`
   - `module_runtime_wiring=pass`
   - `project_runtime_changed=no`
 
-初回Headless実行で旧Core migration assertionにより失敗したが、V004で増加するMain専用history countだけを更新し、Core `3`／`003`期待値を維持する修正後に再実行して成功した。
+初回Headless実行で旧Core migration assertionにより失敗したが、V004で増加するMain専用history countだけを更新し、Core `3`／`003`期待値を維持する修正後に再実行して成功した。独立ReviewのRecovery Blocker補正後も最終HEADでCI／HeadlessともSUCCESSとなった。
