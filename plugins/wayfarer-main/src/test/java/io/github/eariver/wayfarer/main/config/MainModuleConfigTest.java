@@ -15,6 +15,10 @@ final class MainModuleConfigTest {
         YamlConfiguration config = defaultConfig();
         MainModuleConfig loaded = MainModuleConfig.load(config);
         assertEquals(1, loaded.configVersion());
+        assertEquals(
+            loaded.evolutionPlan().configRevision(),
+            loaded.configRevision()
+        );
         assertEquals(1_000L, loaded.progressPolicy().unitsFor("GRANITE", null));
         assertEquals(2_000L,
             loaded.progressPolicy().unitsFor("CRYING_OBSIDIAN", null));

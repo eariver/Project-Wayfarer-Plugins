@@ -67,6 +67,8 @@ final class ReissueCoordinatorTest {
             new QuoteRequest(PLAYER)
         ).toCompletableFuture().join();
         assertEquals(ReissueCoordinator.QuoteStatus.ISSUED, quote.status());
+        assertEquals(300, quote.quote().amountWaymark());
+        assertEquals(0, quote.quote().evolutionCount());
         ReissueCoordinator.Result result = coordinator.confirm(
             new ConfirmRequest(PLAYER)
         ).toCompletableFuture().join();
@@ -116,6 +118,46 @@ final class ReissueCoordinatorTest {
             coordinator.quote(new QuoteRequest(PLAYER)).toCompletableFuture().join().status()
         );
         assertEquals(1, transactions.executeCalls);
+    }
+
+    @Test
+    void changedQuoteRejectsWithoutDebitOrRotation() {
+        FakeRepository operations = new FakeRepository();
+        FakeTransactions transactions = committedTransactions();
+        FakeGrowthTools growth = new FakeGrowthTools(tool());
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            growth,
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+
+        coordinator.quote(new QuoteRequest(PLAYER)).toCompletableFuture().join();
+        growth.tool = new GrowthTool(
+            TOOL,
+            OLD_INSTANCE,
+            PLAYER,
+            1,
+            100_000,
+            GrowthTool.Branch.FORTUNE,
+            GrowthTool.Status.BROKEN,
+            GrowthTool.DeliveryStatus.DELIVERED,
+            20,
+            1,
+            2,
+            0,
+            NOW
+        );
+
+        ReissueCoordinator.Result result = coordinator.confirm(
+            new ConfirmRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.REJECTED, result.status());
+        assertEquals("QUOTE_CHANGED", result.failureCode());
+        assertEquals(0, transactions.executeCalls);
+        assertEquals(0, growth.replaceCalls);
+        assertNull(operations.operation);
     }
 
     @Test
