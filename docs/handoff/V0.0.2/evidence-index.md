@@ -13,7 +13,8 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | Phase 04 Main reissue domain/persistence | `.ai-work/luna-gpt-5.6-v002/reports/PHASE_04_MAIN_REISSUE_DOMAIN_PERSISTENCE_RESULT.md` | complete |
 | Phase 05 Main death/command/runtime | `.ai-work/luna-gpt-5.6-v002/reports/PHASE_05_MAIN_DEATH_COMMAND_RUNTIME_RESULT.md` | complete |
 | Phase 06 permission split | CI run `30701316290`; Headless run `30701316289`; `preclient-headless-evidence`; digest `sha256:218a363b71acaa93b8e55ee9b6a2215e98f94763f732e636edb38cd068065fef` | complete |
-| Phase 07 documentation/full validation | Documentation and local validation prepared; exact-final-head CI/Headless IDs belong only in PR body and local Phase 07 report | external verification recorded after push |
+| Phase 07 documentation/full validation | Documentation and local validation history; exact-final-head IDs belong in its retained report | complete |
+| Phase 08B remediation | Focused `FrontierGameplayRuntime` expiration guard and `LaunchpadExpirationDecisionTest`; exact-new-HEAD CI/Headless IDs belong in PR #14 and the local Phase 08B report | review required |
 
 | Evidence | Path / immutable identity | Result |
 |---|---|---|
@@ -44,10 +45,10 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | Requirement snapshot | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/Project_Wayfarer_Plugin_V0.0.2_Main_Frontier_Requirements.md` | SHA-256 `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F` fixed; `_REGENERATED` is not required |
 | Traceability | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/traceability.md` | terminal classifications |
 | Test report | `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md` | automated scope pass |
-| LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md` | unsafe default / blocked |
+| LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md` | unsafe default; Plugin boundary accepted, client safe-tier/motion remains |
 | Node 24 assessment | `docs/reports/V0.0.2-node24-actions-assessment.md` | pass |
 | Client plan | `docs/testing/plans/V0.0.2-client-acceptance.md` | prepared / not run |
-| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | `PLUGIN_REVIEW_REQUIRED` |
+| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | `REVIEW_REQUIRED` for ChatGPT Phase 08B review |
 
 Build outputs, task databases, container state, Paper worlds, logs, and credentials are not
 version-controlled evidence.

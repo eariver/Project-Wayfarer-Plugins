@@ -9,10 +9,10 @@ Candidate, release artifact hashes, tag, and release are absent.
 | Main | Current source through V004; `0.0.2-SNAPSHOT` scope | Candidate not fixed; hash absent | Review, client, later publication |
 | Frontier | Current source migration level; `0.0.2-SNAPSHOT` scope | Candidate not fixed; hash absent | External, review, client |
 | Package scope | Future V0.0.2 scope is `main-frontier` | No release package created | Later authorization |
-| Launchpad | Current-config/current-view behavior; minimal durable authority | No release hash | FRONT-D03 outcome adopted; FRONT-D04 review |
+| Launchpad | Current-config/current-view behavior; minimal durable authority; unloaded-world expiration deferral | No release hash | FRONT-D03 adopted; FRONT-D04 accepted with limitation |
 | Main/Frontier recovery | Main paid reissue and Frontier durable redelivery implemented | No candidate | Client and Project gates |
 | Waystone | Deferred/not authorized | No artifact/item/schema claim | Deferred by requirement |
 | EM–MVI adapter | Prohibited/not present | No artifact | Create only after `ADAPTER_REQUIRED` |
 
 The immutable Core V0.0.1 is not renamed or reattached as V0.0.2. No release hash is fixed in
-Phase 07.
+Phase 08B; a Client Test Candidate remains absent.

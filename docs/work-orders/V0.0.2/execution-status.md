@@ -1,8 +1,9 @@
 # V0.0.2 Execution Status
 
 Status: Phase 01–06 Plugin implementation/evidence work is complete at the product anchor;
-Phase 07 is pre-client documentation synchronization and full validation. This document does
-not declare a Client Test Candidate, Client/Project acceptance, or Stable Release.
+Phase 08B remediation and pre-client finalization are complete for implementation and local
+evidence, pending independent ChatGPT review. This document does not declare a Client Test
+Candidate, Client/Project acceptance, or Stable Release.
 
 ## Fixed execution identity
 
@@ -12,6 +13,7 @@ not declare a Client Test Candidate, Client/Project acceptance, or Stable Releas
 - Project Runtime changed: No
 - PR #14: Open / Draft / Unmerged
 - `requirements_cleared`: absent and not inferred
+- V0.0.2 exact Frontier world: `frontier_iris`; future single-name configurability is Issue #17
 
 ## Phase 01–06 capability evidence
 
@@ -34,16 +36,23 @@ not declare a Client Test Candidate, Client/Project acceptance, or Stable Releas
 - Launchpad uses current Player view direction at use time and current config performance values;
   persisted yaw is reserved/non-authoritative.
 - Portal documentation is limited to the implemented `PlayerPortalEvent` boundary.
+- Frontier remains enabled when `frontier_iris` is absent or unloaded; it never creates worlds.
+  Expired Launchpads defer destructive transition while the world is unavailable and resume after
+  a later load/relevant player entry. No health/degraded subsystem is added.
+- Phase 08B regression covers the `UNKNOWN` defer decision and loaded-world expiration eligibility.
+- FRONT-D02 Plugin source boundary is accepted with limitation; its temporary safe-tier/client
+  motion gate remains, and final motion/range/balance is Mainline/Frontier-owned.
+- FRONT-D04 and MAIN-D08 are accepted with limitation at their supported public/cancellable
+  boundaries.
 
 ## Remaining gates
 
-- FRONT-D01: `PLUGIN_REVIEW_REQUIRED`.
-- FRONT-D02: `EXTERNAL_BLOCKED`, followed by `CLIENT_TEST_REQUIRED`.
-- FRONT-D04: `PLUGIN_REVIEW_REQUIRED`.
-- MAIN-D08: `PLUGIN_REVIEW_REQUIRED`.
+- ChatGPT independent review of the Phase 08B remediation: `REVIEW_REQUIRED`.
+- FRONT-D02 client safe-tier/motion gate: `CLIENT_TEST_REQUIRED`.
 - Client Test Candidate: not fixed; bounded Client Acceptance: `CLIENT_TEST_REQUIRED`.
-- Project acceptance: pending; Stable publication: not authorized in Phase 07.
+- Project acceptance: pending; Stable publication: not authorized in this task.
 - Waystone and EM–MVI remain deferred/not authorized.
 
-Phase 07 may change only the allowed documentation paths. No source, test workflow, script,
-migration, config, Gradle, dependency, or Project Runtime change is part of this status update.
+Phase 07's documentation-only history remains retained. Phase 08B changes only the focused
+Frontier source/test path and the required handoff documents; no migration, config, Gradle,
+dependency, or Project Runtime change is part of this status update.

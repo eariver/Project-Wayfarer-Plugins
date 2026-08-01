@@ -10,7 +10,7 @@ Phase 07 documentation revision: current Phase 07 documentation commit; see Git 
 
 Release candidate: not fixed
 
-Readiness: `PLUGIN_REVIEW_REQUIRED`
+Readiness: `REVIEW_REQUIRED` for independent ChatGPT review of Phase 08B
 
 ## Passed
 
@@ -259,3 +259,36 @@ Project acceptance, or a Client Test Candidate.
 
 Development `0.0.2-SNAPSHOT` JAR hashes are intentionally not release evidence. No candidate SHA,
 tag, pre-release, stable release, merge, or `requirements_cleared=true` assertion was created.
+
+## Phase 08B remediation (2026-08-02)
+
+Phase 08B corrected the Launchpad expiration boundary without changing persistence schema,
+threading boundaries, world lifecycle, or module architecture. In
+`FrontierGameplayRuntime.expireCandidate`, a main-thread `UNKNOWN` reconciliation classification
+now defers before the repository destructive remove; the runtime index, block mutation, audit
+success path, and DB state transition therefore remain untouched for an unloaded world. A later
+scheduler pass can classify again after the world is available. Loaded-world classifications retain
+the existing expiration path.
+
+The focused regression `LaunchpadExpirationDecisionTest` passed with both required behaviors:
+`unknownWorldClassificationDefersExpirationWithoutDestructiveTransition` and
+`loadedWorldClassificationKeepsExpirationEligible`. The V0.0.2 exact world remains
+`frontier_iris`; Issue #17 remains the future single-name configurability item. FRONT-D01 is
+resolved, FRONT-D02 is accepted at the Plugin source boundary but still requires a temporary
+test-only safe tier and bounded client motion, and FRONT-D04/MAIN-D08 are accepted with their
+supported-boundary limitations. This evidence does not fix a Client Test Candidate or claim
+Client/Project acceptance, Stable readiness, or `requirements_cleared`.
+
+Phase 08B local validation:
+
+- Focused command `:plugins:wayfarer-frontier:test --tests
+  io.github.eariver.wayfarer.frontier.gameplay.LaunchpadExpirationDecisionTest`: PASS.
+- `\.\gradlew.bat --no-daemon --console=plain --rerun-tasks clean check assemble`: PASS;
+  `BUILD SUCCESSFUL`, 90 actionable tasks executed. Generated JUnit XML totals: 411 tests,
+  0 failures, 0 errors, 0 skipped.
+- Existing V0.0.2 validators all returned exit code 0: `test-release-policy.sh`,
+  `test-scoped-runtime-jars.sh`, `test-scoped-stable-package.sh`, `test-runtime-jar-manifest.sh`,
+  `test-node24-actions.sh`, `test-v002-handoff-mapping.sh`, `test-stable-release-package.sh`,
+  `test-stable-publication-recovery.sh`, and `verify-v002-plugin-packaging.sh`.
+- Javadoc emitted the repository's existing non-fatal warning output; no unrelated source
+  correction was made. No release workflow was dispatched.

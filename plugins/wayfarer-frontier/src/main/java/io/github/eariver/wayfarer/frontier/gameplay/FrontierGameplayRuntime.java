@@ -1235,14 +1235,17 @@ public final class FrontierGameplayRuntime implements Listener {
             if (accepting.get()) {
                 capture.classification = classify(launchpad);
             }
-        }).thenCompose(ignored -> services.tasks().database(() ->
-            launchpads.remove(
+        }).thenCompose(ignored -> {
+            if (!mayPerformExpirationTransition(capture.classification)) {
+                return CompletableFuture.completedFuture(false);
+            }
+            return services.tasks().database(() -> launchpads.remove(
                 launchpad.launchpadId(),
                 launchpad.lockVersion(),
                 Launchpad.State.EXPIRED,
                 now
-            )
-        )).thenCompose(removed -> {
+            ));
+        }).thenCompose(removed -> {
             if (!removed) {
                 return CompletableFuture.completedFuture(null);
             }
@@ -1302,6 +1305,13 @@ public final class FrontierGameplayRuntime implements Listener {
         return blockMatches
             ? ReconcileClassification.CONFLICT
             : ReconcileClassification.DB_ONLY;
+    }
+
+    static boolean mayPerformExpirationTransition(
+        ReconcileClassification classification
+    ) {
+        return classification != null
+            && classification != ReconcileClassification.UNKNOWN;
     }
 
     private CompletionStage<Void> recordLaunchpad(

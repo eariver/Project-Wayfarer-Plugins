@@ -1,7 +1,8 @@
 # V0.0.2 Blocking Register
 
 Owner-resolved Phase 01–06 outcomes are recorded as completed implementation/evidence work.
-Only the following external, review, client, Project, or later-release boundaries remain active.
+Phase 08B resolved the unloaded-world expiration defect and synchronized the remaining
+external, client, Project, and later-release boundaries below.
 
 ## Resolved implementation boundaries
 
@@ -36,33 +37,50 @@ Only the following external, review, client, Project, or later-release boundarie
 
 ## Active gates
 
-### FRONT-D01 — missing `frontier_iris`
+### FRONT-D01 — missing or unloaded `frontier_iris`
 
-- State: `PLUGIN_REVIEW_REQUIRED`.
-- The missing-world behavior remains a review boundary; Phase 07 does not change source.
+- State: `RESOLVED` for V0.0.2.
+- The plugin remains enabled when `frontier_iris` is absent or unloaded and never creates worlds.
+  A scheduler expiration candidate is deferred while the world is unavailable; after a later
+  load, a relevant Join, WorldChanged, or Respawn path, the exact case-sensitive player boundary
+  resumes. No `WORLD_DOWN`, `DEGRADED`, or new health subsystem is added.
+- The Phase 08B regression proves that `UNKNOWN` cannot authorize the destructive expiration
+  transition.
 
 ### FRONT-D02 — LeafGrapple
 
-- State: `EXTERNAL_BLOCKED`, followed by `CLIENT_TEST_REQUIRED`.
-- A reviewed safe LeafGrapple 1.0.2 tier and later client motion evidence are required.
+- State: Plugin source boundary `ACCEPTED_WITH_LIMITATION`; `CLIENT_TEST_REQUIRED` remains.
+- The adapter targets LeafGrapple 1.0.2 through its public capability boundary and fails closed
+  when unsafe or unavailable. A temporary test-only safe tier must copy movement/range/display
+  values from a reviewed 1.0.2 standard tier and disable durability plus entity/player/mob/animal/
+  monster hooking. It is not a production balance recommendation; final motion/range/balance is
+  Mainline/Frontier-owned.
 
 ### FRONT-D04 — external protection
 
-- State: `PLUGIN_REVIEW_REQUIRED`.
-- Native/public protection paths are documented; tools that bypass the supported API are not
+- State: `ACCEPTED_WITH_LIMITATION`.
+- Coverage is claimed for native representative Bukkit events, public WorldGuard `RegionQuery`,
+  and public WorldEdit `EditSession`. Tools bypassing Bukkit and public EditSession APIs are not
   claimed covered.
 
 ### MAIN-D08 — external repair guards
 
-- State: `PLUGIN_REVIEW_REQUIRED`.
-- External repair plugins without a supported cancellable boundary remain a limitation.
+- State: `ACCEPTED_WITH_LIMITATION`.
+- Native repair boundaries are guarded, and reviewed external paths are covered only when they
+  expose a supported cancellable event or API boundary. Unsupported external repair plugins
+  remain outside the claim.
 
 ### Client / Project / publication
 
+- ChatGPT independent review of this remediation: `REVIEW_REQUIRED`.
 - Client Test Candidate: not fixed.
 - Bounded Client Acceptance: `CLIENT_TEST_REQUIRED`.
 - Project acceptance: pending and Project-owned.
-- Stable V0.0.2 tag/release, release hashes, and release dispatch: not authorized in Phase 07.
+- Stable V0.0.2 tag/release, release hashes, `requirements_cleared`, and release dispatch: not
+  authorized in this task.
+
+The V0.0.2 world name remains the exact case-sensitive `frontier_iris`. Future single-name
+configurability is tracked by Issue #17; no V0.0.2 implementation was added.
 
 Waystone and EM–MVI remain deferred/not authorized, not open V0.0.2 choices. The immutable
 requirement and `source.md` are protected.
