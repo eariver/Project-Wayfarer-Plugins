@@ -24,12 +24,6 @@ public final class ReissueCoordinator {
     private static final Duration QUOTE_TTL = Duration.ofSeconds(60);
     private static final String TRANSACTION_TYPE = "MAIN_TOOL_REISSUE";
     private static final String SUBJECT_TYPE = "GROWTH_TOOL";
-    private static final Set<String> ALLOWED_WORLDS = Set.of(
-        "resource",
-        "resource_nether",
-        "resource_end"
-    );
-
     private final ReissueOperationRepository operations;
     private final GrowthToolRepository growthTools;
     private final WayfarerTransactions transactions;
@@ -1059,7 +1053,8 @@ public final class ReissueCoordinator {
         if (!snapshot.playerOnline()) {
             return "PLAYER_OFFLINE";
         }
-        if (!snapshot.worldAllowed() || !ALLOWED_WORLDS.contains(snapshot.exactWorldName())) {
+        if (!snapshot.worldAllowed()
+            || !ReissueEligibilityPolicy.isAllowedWorld(snapshot.exactWorldName())) {
             return "WORLD_NOT_ALLOWED";
         }
         if (snapshot.currentItemPresent()) {

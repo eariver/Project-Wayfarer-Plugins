@@ -12,6 +12,8 @@ import io.github.eariver.wayfarer.main.application.ReissueDeliveryGateway;
 import io.github.eariver.wayfarer.main.application.ReissueEligibilityPort;
 import io.github.eariver.wayfarer.main.application.ReissueEligibilitySnapshot;
 import io.github.eariver.wayfarer.main.application.PhysicalItemPresence;
+import io.github.eariver.wayfarer.main.application.ReissueDeliveryPolicy;
+import io.github.eariver.wayfarer.main.application.ReissueEligibilityPolicy;
 import io.github.eariver.wayfarer.main.config.MainModuleConfig;
 import io.github.eariver.wayfarer.main.domain.EvolutionPlan;
 import io.github.eariver.wayfarer.main.domain.DurabilitySemantics;
@@ -532,7 +534,7 @@ public final class MainGameplayRuntime implements
             );
         }
         String worldName = player.getWorld().getName();
-        boolean allowed = config.progressPolicy().allowsWorld(worldName);
+        boolean allowed = ReissueEligibilityPolicy.isAllowedWorld(worldName);
         GrowthTool authority = sessions.current(playerUuid).orElse(null);
         if (authority == null) {
             // No loaded authority means physical presence cannot be proven
@@ -542,7 +544,7 @@ public final class MainGameplayRuntime implements
                 true,
                 worldName,
                 allowed,
-                new PhysicalItemPresence(true, true, true, true)
+                ReissueEligibilityPolicy.failClosedPresence()
             );
         }
         return new ReissueEligibilitySnapshot(
@@ -550,27 +552,12 @@ public final class MainGameplayRuntime implements
             true,
             worldName,
             allowed,
-            new PhysicalItemPresence(
-                containsCurrent(
-                    player.getInventory().getStorageContents(),
-                    playerUuid,
-                    authority
-                ),
-                containsCurrent(
-                    player.getInventory().getArmorContents(),
-                    playerUuid,
-                    authority
-                ),
-                currentPhysical(
-                    player.getInventory().getItemInOffHand(),
-                    playerUuid,
-                    authority
-                ),
-                currentPhysical(
-                    player.getOpenInventory().getCursor(),
-                    playerUuid,
-                    authority
-                )
+            ReissueEligibilityPolicy.scan(
+                player.getInventory().getStorageContents(),
+                player.getInventory().getArmorContents(),
+                player.getInventory().getItemInOffHand(),
+                player.getOpenInventory().getCursor(),
+                item -> currentPhysical(item, playerUuid, authority)
             )
         );
     }
@@ -588,10 +575,24 @@ public final class MainGameplayRuntime implements
         }
         Player player = plugin.getServer().getPlayer(rotatedTool.ownerUuid());
         if (player == null || !player.isOnline()) {
-            return DeliveryOutcome.PLAYER_OFFLINE;
+            return ReissueDeliveryPolicy.classify(
+                true,
+                false,
+                false,
+                0,
+                false
+            );
         }
-        if (!config.progressPolicy().allowsWorld(player.getWorld().getName())) {
-            return DeliveryOutcome.WORLD_NOT_ALLOWED;
+        if (!ReissueEligibilityPolicy.isAllowedWorld(
+            player.getWorld().getName()
+        )) {
+            return ReissueDeliveryPolicy.classify(
+                true,
+                true,
+                false,
+                0,
+                false
+            );
         }
 
         sessions.open(rotatedTool);
@@ -601,23 +602,27 @@ public final class MainGameplayRuntime implements
             rotatedTool.ownerUuid(),
             rotatedTool
         );
-        if (currentCount == 1) {
-            return DeliveryOutcome.ALREADY_PRESENT;
-        }
-        if (currentCount > 1) {
-            return DeliveryOutcome.UNAVAILABLE;
-        }
-        int emptySlot = player.getInventory().firstEmpty();
-        if (emptySlot < 0) {
-            return DeliveryOutcome.INVENTORY_FULL;
+        DeliveryOutcome classification = ReissueDeliveryPolicy.classify(
+            true,
+            true,
+            true,
+            currentCount,
+            player.getInventory().firstEmpty() >= 0
+        );
+        if (!ReissueDeliveryPolicy.createsOneItem(classification)) {
+            return classification;
         }
 
+        int emptySlot = player.getInventory().firstEmpty();
+        ReissueDeliveryPolicy.ReissueDeliveryIdentity identity =
+            ReissueDeliveryPolicy.identity(rotatedTool);
         ItemStack item = new ItemStack(Material.WOODEN_PICKAXE);
         applyEvolution(item, rotatedTool, false);
         if (item.getItemMeta() instanceof Damageable damageable) {
-            damageable.setDamage(0);
+            damageable.setDamage(identity.damage());
             item.setItemMeta(damageable);
         }
+        writeIdentity(item, identity, rotatedTool, "GROWTH_TOOL");
         player.getInventory().setItem(emptySlot, item);
         return DeliveryOutcome.DELIVERED;
     }
@@ -1358,19 +1363,6 @@ public final class MainGameplayRuntime implements
             && authority.ownerUuid().equals(ownerUuid);
     }
 
-    private static boolean containsCurrent(
-        ItemStack[] items,
-        UUID ownerUuid,
-        GrowthTool authority
-    ) {
-        for (ItemStack item : items) {
-            if (currentPhysical(item, ownerUuid, authority)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private static int countCurrent(
         Player player,
         UUID ownerUuid,
@@ -1497,18 +1489,32 @@ public final class MainGameplayRuntime implements
         GrowthTool tool,
         String itemType
     ) {
+        writeIdentity(
+            item,
+            ReissueDeliveryPolicy.identity(tool),
+            tool,
+            itemType
+        );
+    }
+
+    private static void writeIdentity(
+        ItemStack item,
+        ReissueDeliveryPolicy.ReissueDeliveryIdentity identity,
+        GrowthTool tool,
+        String itemType
+    ) {
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(ITEM_TYPE, PersistentDataType.STRING, itemType);
         pdc.set(
             ITEM_INSTANCE_ID,
             PersistentDataType.STRING,
-            tool.itemInstanceId().toString()
+            identity.itemInstanceId().toString()
         );
         pdc.set(TOOL_ID, PersistentDataType.STRING, tool.toolId().toString());
         pdc.set(OWNER_ID, PersistentDataType.STRING, tool.ownerUuid().toString());
         pdc.set(TOOL_TYPE, PersistentDataType.STRING, GrowthTool.TOOL_TYPE);
-        pdc.set(EPOCH, PersistentDataType.LONG, tool.instanceEpoch());
+        pdc.set(EPOCH, PersistentDataType.LONG, identity.instanceEpoch());
         pdc.set(SCHEMA, PersistentDataType.INTEGER, tool.schemaVersion());
         pdc.set(REVISION, PersistentDataType.LONG, tool.displayRevision());
         item.setItemMeta(meta);
