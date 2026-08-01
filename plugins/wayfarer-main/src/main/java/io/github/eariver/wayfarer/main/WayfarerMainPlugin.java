@@ -225,7 +225,8 @@ public final class WayfarerMainPlugin extends JavaPlugin {
                 );
                 runtimeState = "ENABLED";
                 getLogger().info(
-                    "Wayfarer_Main runtime enabled; module migration, reissue recovery, and persistence are UP."
+                    "Wayfarer_Main runtime enabled; module migration and persistence are UP. "
+                        + "Reissue recovery is UP."
                 );
             })
         );
