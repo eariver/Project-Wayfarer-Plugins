@@ -86,6 +86,32 @@ final class ReissueCoordinatorTest {
     }
 
     @Test
+    void quotingTwiceDoesNotExecuteOrRotate() {
+        FakeRepository operations = new FakeRepository();
+        FakeTransactions transactions = committedTransactions();
+        FakeGrowthTools growth = new FakeGrowthTools(tool());
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            growth,
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.QuoteResult first = coordinator.quote(
+            new QuoteRequest(PLAYER)
+        ).toCompletableFuture().join();
+        ReissueCoordinator.QuoteResult second = coordinator.quote(
+            new QuoteRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.QuoteStatus.ISSUED, first.status());
+        assertEquals(ReissueCoordinator.QuoteStatus.ISSUED, second.status());
+        assertEquals(0, transactions.executeCalls);
+        assertEquals(0, growth.replaceCalls);
+        assertNull(operations.operation);
+    }
+
+    @Test
     void unknownPaymentStoresTransactionAndDoesNotDebitAgain() {
         FakeRepository operations = new FakeRepository();
         FakeGrowthTools growth = new FakeGrowthTools(tool());
