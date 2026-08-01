@@ -3,6 +3,8 @@ package io.github.eariver.wayfarer.main.application;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.eariver.wayfarer.api.WayfarerAudit;
@@ -20,6 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -258,11 +261,584 @@ final class ReissueCoordinatorTest {
         assertEquals(newInstance, growth.tool.itemInstanceId());
     }
 
+    @Test
+    void currentPhysicalItemRejectsBeforeOperationOrDebit() {
+        FakeRepository operations = new FakeRepository();
+        FakeTransactions transactions = committedTransactions();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED,
+            new ReissueEligibilitySnapshot(
+                PLAYER,
+                true,
+                "resource",
+                true,
+                new PhysicalItemPresence(true, false, false, false)
+            )
+        );
+
+        ReissueCoordinator.QuoteResult result = coordinator.quote(
+            new QuoteRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.QuoteStatus.REJECTED, result.status());
+        assertEquals("CURRENT_ITEM_PRESENT", result.failureCode());
+        assertNull(operations.operation);
+        assertEquals(0, transactions.executeCalls);
+    }
+
+    @Test
+    void pendingDeliveryRejectsQuote() {
+        FakeRepository operations = new FakeRepository();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool(GrowthTool.Status.ACTIVE, GrowthTool.DeliveryStatus.PENDING)),
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.QuoteResult result = coordinator.quote(
+            new QuoteRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.QuoteStatus.REJECTED, result.status());
+        assertEquals("DELIVERY_PENDING", result.failureCode());
+        assertNull(operations.operation);
+    }
+
+    @Test
+    void revokedToolRejectsQuote() {
+        FakeRepository operations = new FakeRepository();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool(GrowthTool.Status.REVOKED, GrowthTool.DeliveryStatus.DELIVERED)),
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.QuoteResult result = coordinator.quote(
+            new QuoteRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.QuoteStatus.REJECTED, result.status());
+        assertEquals("TOOL_REVOKED", result.failureCode());
+        assertNull(operations.operation);
+    }
+
+    @Test
+    void existingActiveOperationRejectsNewQuoteAsInFlight() {
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.PAYMENT_PENDING,
+            null,
+            null,
+            null,
+            0
+        );
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.QuoteResult result = coordinator.quote(
+            new QuoteRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.QuoteStatus.REJECTED, result.status());
+        assertEquals("IN_FLIGHT", result.failureCode());
+        assertEquals(0, operations.prepareCalls);
+    }
+
+    @Test
+    void doubleConfirmDebitsOnce() {
+        FakeRepository operations = new FakeRepository();
+        FakeTransactions transactions = committedTransactions();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+        coordinator.quote(new QuoteRequest(PLAYER)).toCompletableFuture().join();
+
+        ReissueCoordinator.Result first = coordinator.confirm(
+            new ConfirmRequest(PLAYER)
+        ).toCompletableFuture().join();
+        ReissueCoordinator.Result second = coordinator.confirm(
+            new ConfirmRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.DELIVERED, first.status());
+        assertEquals(ReissueCoordinator.Status.REJECTED, second.status());
+        assertEquals("QUOTE_EXPIRED", second.failureCode());
+        assertEquals(1, transactions.executeCalls);
+        assertEquals(1, operations.prepareCalls);
+    }
+
+    @Test
+    void sameQuoteReplayCreatesOneOperationAndDebitsOnce() {
+        FakeRepository operations = new FakeRepository();
+        FakeTransactions transactions = new FakeTransactions(
+            new WayfarerTransactions.TransactionResult(
+                TRANSACTION,
+                WayfarerTransactions.State.UNKNOWN,
+                null
+            )
+        );
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+        coordinator.quote(new QuoteRequest(PLAYER)).toCompletableFuture().join();
+
+        ReissueCoordinator.Result first = coordinator.confirm(
+            new ConfirmRequest(PLAYER)
+        ).toCompletableFuture().join();
+        UUID operationId = operations.operation.reissueId();
+        ReissueCoordinator.Result replay = coordinator.confirm(
+            new ConfirmRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.UNKNOWN, first.status());
+        assertEquals(ReissueCoordinator.Status.REJECTED, replay.status());
+        assertEquals(operationId, operations.operation.reissueId());
+        assertEquals(1, operations.prepareCalls);
+        assertEquals(1, transactions.executeCalls);
+    }
+
+    @Test
+    void failedDebitTransitionsFailedAndReleasesGuard() {
+        FakeRepository operations = new FakeRepository();
+        FakeTransactions transactions = new FakeTransactions(
+            new WayfarerTransactions.TransactionResult(
+                TRANSACTION,
+                WayfarerTransactions.State.FAILED,
+                "CORE_FAILED"
+            )
+        );
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+        coordinator.quote(new QuoteRequest(PLAYER)).toCompletableFuture().join();
+
+        ReissueCoordinator.Result result = coordinator.confirm(
+            new ConfirmRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.FAILED, result.status());
+        assertEquals(ReissueOperation.State.FAILED, operations.operation.state());
+        assertFalse(operations.active());
+        assertEquals(1, transactions.executeCalls);
+    }
+
+    @Test
+    void intermediateDebitStateStoresTransactionAsUnknown() {
+        FakeRepository operations = new FakeRepository();
+        FakeTransactions transactions = new FakeTransactions(
+            new WayfarerTransactions.TransactionResult(
+                TRANSACTION,
+                WayfarerTransactions.State.DEBIT_PENDING,
+                null
+            )
+        );
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+        coordinator.quote(new QuoteRequest(PLAYER)).toCompletableFuture().join();
+
+        ReissueCoordinator.Result result = coordinator.confirm(
+            new ConfirmRequest(PLAYER)
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.UNKNOWN, result.status());
+        assertEquals(ReissueOperation.State.UNKNOWN, operations.operation.state());
+        assertEquals(TRANSACTION, operations.operation.transactionId());
+        assertNull(operations.operation.paymentCommittedAt());
+    }
+
+    @Test
+    void differentInspectTransactionDoesNotOverwriteExistingTransactionId() {
+        ReissueOperation unknown = operation(
+            ReissueOperation.State.UNKNOWN,
+            TRANSACTION,
+            null,
+            "PAYMENT_UNKNOWN",
+            0
+        );
+        FakeRepository operations = new FakeRepository();
+        operations.operation = unknown;
+        FakeTransactions transactions = new FakeTransactions(
+            new WayfarerTransactions.TransactionResult(
+                TRANSACTION,
+                WayfarerTransactions.State.UNKNOWN,
+                null
+            )
+        );
+        transactions.inspectState = WayfarerTransactions.State.COMMITTED;
+        transactions.inspectTransactionId = UUID.randomUUID();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.Result result = coordinator.confirmPaymentAndResumeRotation(
+            unknown.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.UNKNOWN, result.status());
+        assertEquals("TRANSACTION_DETAILS_MISMATCH", result.failureCode());
+        assertEquals(TRANSACTION, operations.operation.transactionId());
+        assertEquals(0, transactions.executeCalls);
+        assertEquals(unknown, operations.operation);
+    }
+
+    @Test
+    void inspectFailureLeavesModuleRowUnchanged() {
+        ReissueOperation unknown = operation(
+            ReissueOperation.State.UNKNOWN,
+            TRANSACTION,
+            null,
+            "PAYMENT_UNKNOWN",
+            0
+        );
+        FakeRepository operations = new FakeRepository();
+        operations.operation = unknown;
+        FakeTransactions transactions = committedTransactions();
+        transactions.inspectFailure = true;
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.Result result = coordinator.confirmPaymentAndResumeRotation(
+            unknown.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.UNAVAILABLE, result.status());
+        assertEquals("CORE_INSPECT_UNAVAILABLE", result.failureCode());
+        assertEquals(unknown, operations.operation);
+        assertEquals(0, transactions.executeCalls);
+    }
+
+    @Test
+    void reconciledCommittedResumesRotationWithoutExecute() {
+        ReissueOperation unknown = operation(
+            ReissueOperation.State.UNKNOWN,
+            TRANSACTION,
+            null,
+            "PAYMENT_UNKNOWN",
+            0
+        );
+        FakeRepository operations = new FakeRepository();
+        operations.operation = unknown;
+        FakeGrowthTools growth = new FakeGrowthTools(tool());
+        FakeTransactions transactions = committedTransactions();
+        transactions.inspectState = WayfarerTransactions.State.RECONCILED_COMMITTED;
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            growth,
+            transactions,
+            DeliveryOutcome.INVENTORY_FULL
+        );
+
+        ReissueCoordinator.Result result = coordinator.confirmPaymentAndResumeRotation(
+            unknown.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.PENDING, result.status());
+        assertEquals(ReissueOperation.State.PENDING_DELIVERY, operations.operation.state());
+        assertEquals(1, growth.replaceCalls);
+        assertEquals(0, transactions.executeCalls);
+    }
+
+    @Test
+    void transactionlessUnknownIsTheOnlyResumePaymentPath() {
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.UNKNOWN,
+            null,
+            null,
+            "PAYMENT_UNKNOWN",
+            0
+        );
+        FakeTransactions transactions = committedTransactions();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.Result result = coordinator.resumePayment(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.DELIVERED, result.status());
+        assertEquals(1, transactions.executeCalls);
+    }
+
+    @Test
+    void knownTransactionUnknownCannotResumePayment() {
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.UNKNOWN,
+            TRANSACTION,
+            null,
+            "PAYMENT_UNKNOWN",
+            0
+        );
+        FakeTransactions transactions = committedTransactions();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            transactions,
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.Result result = coordinator.resumePayment(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.REJECTED, result.status());
+        assertEquals("WRONG_PAYMENT_PHASE", result.failureCode());
+        assertEquals(0, transactions.executeCalls);
+        assertEquals(TRANSACTION, operations.operation.transactionId());
+    }
+
+    @Test
+    void paymentMarkedUnknownUsesOnlyExplicitRotationResumeAndRecoversCrashWindow() {
+        UUID newInstance = UUID.randomUUID();
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.PAYMENT_COMMITTED,
+            TRANSACTION,
+            NOW,
+            "OLD_FAILURE",
+            0,
+            newInstance
+        );
+        FakeGrowthTools growth = new FakeGrowthTools(tool());
+        operations.failPendingDelivery = true;
+        FakeTransactions transactions = committedTransactions();
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            growth,
+            transactions,
+            DeliveryOutcome.INVENTORY_FULL
+        );
+
+        ReissueCoordinator.Result crashed = coordinator.resumeRotation(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+        assertEquals(ReissueCoordinator.Status.UNKNOWN, crashed.status());
+        assertEquals(ReissueOperation.State.UNKNOWN, operations.operation.state());
+        assertEquals(TRANSACTION, operations.operation.transactionId());
+        assertNotNull(operations.operation.paymentCommittedAt());
+        assertTrue(operations.active());
+        assertEquals(1, growth.replaceCalls);
+        assertEquals(0, transactions.executeCalls);
+
+        ReissueCoordinator.Result wrongPath = coordinator.confirmPaymentAndResumeRotation(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+        assertEquals(ReissueCoordinator.Status.REJECTED, wrongPath.status());
+        assertEquals("WRONG_PHASE", wrongPath.failureCode());
+
+        operations.failPendingDelivery = false;
+        ReissueCoordinator.Result recovered = coordinator.resumeRotationFromUnknown(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.PENDING, recovered.status());
+        assertEquals(ReissueOperation.State.PENDING_DELIVERY, operations.operation.state());
+        assertEquals(newInstance, growth.tool.itemInstanceId());
+        assertEquals(2, growth.tool.instanceEpoch());
+        assertEquals(1, growth.replaceCalls);
+        assertEquals(0, transactions.executeCalls);
+        assertFalse(operations.active());
+        assertNull(operations.operation.failureCode());
+
+        ReissueCoordinator.Result replay = coordinator.resumeRotationFromUnknown(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+        assertEquals(ReissueCoordinator.Status.PENDING, replay.status());
+        assertEquals(1, growth.replaceCalls);
+        assertEquals(newInstance, growth.tool.itemInstanceId());
+    }
+
+    @Test
+    void markerlessUnknownCannotUseRotationResume() {
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.UNKNOWN,
+            TRANSACTION,
+            null,
+            "PAYMENT_UNKNOWN",
+            0
+        );
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.Result result = coordinator.resumeRotationFromUnknown(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.REJECTED, result.status());
+        assertEquals("PAYMENT_CONFIRMATION_REQUIRED", result.failureCode());
+        assertEquals(ReissueOperation.State.UNKNOWN, operations.operation.state());
+    }
+
+    @Test
+    void rotationResumeCasLossReturnsDurableState() {
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.UNKNOWN,
+            TRANSACTION,
+            NOW,
+            "ROTATION_COMMIT_UNKNOWN",
+            0
+        );
+        operations.forceReopenConflict = true;
+        FakeGrowthTools growth = new FakeGrowthTools(tool());
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            growth,
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        ReissueCoordinator.Result result = coordinator.resumeRotationFromUnknown(
+            operations.operation.reissueId()
+        ).toCompletableFuture().join();
+
+        assertEquals(ReissueCoordinator.Status.PENDING, result.status());
+        assertEquals(ReissueOperation.State.PENDING_DELIVERY, operations.operation.state());
+        assertEquals(0, growth.replaceCalls);
+    }
+
+    @Test
+    void restartRecoveryDoesNotAutoResumeUnknown() {
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.UNKNOWN,
+            TRANSACTION,
+            NOW,
+            "ROTATION_COMMIT_UNKNOWN",
+            0
+        );
+        FakeGrowthTools growth = new FakeGrowthTools(tool());
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            growth,
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        assertEquals(0, coordinator.recoverAfterRestart().toCompletableFuture().join());
+        assertEquals(ReissueOperation.State.UNKNOWN, operations.operation.state());
+        assertEquals(0, growth.replaceCalls);
+    }
+
+    @Test
+    void restartRecoveryDoesNotCountUnknownPaymentAsRecovered() {
+        FakeRepository operations = new FakeRepository();
+        operations.operation = operation(
+            ReissueOperation.State.PAYMENT_COMMITTED,
+            TRANSACTION,
+            NOW,
+            null,
+            0
+        );
+        FakeGrowthTools growth = new FakeGrowthTools(tool());
+        operations.failPendingDelivery = true;
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            growth,
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        int recovered = coordinator.recoverAfterRestart().toCompletableFuture().join();
+
+        assertEquals(0, recovered);
+        assertEquals(ReissueOperation.State.UNKNOWN, operations.operation.state());
+        assertTrue(operations.active());
+    }
+
+    @Test
+    void restartRecoveryScanFailureIsNotReportedAsZero() {
+        FakeRepository operations = new FakeRepository();
+        operations.recoveryScanFailure = new IllegalStateException("scan failed");
+        ReissueCoordinator coordinator = coordinator(
+            operations,
+            new FakeGrowthTools(tool()),
+            committedTransactions(),
+            DeliveryOutcome.DELIVERED
+        );
+
+        assertThrows(
+            CompletionException.class,
+            () -> coordinator.recoverAfterRestart().toCompletableFuture().join()
+        );
+    }
+
+    private static FakeTransactions committedTransactions() {
+        return new FakeTransactions(
+            new WayfarerTransactions.TransactionResult(
+                TRANSACTION,
+                WayfarerTransactions.State.COMMITTED,
+                null
+            )
+        );
+    }
+
     private static ReissueCoordinator coordinator(
         FakeRepository operations,
         FakeGrowthTools growth,
         FakeTransactions transactions,
         DeliveryOutcome deliveryOutcome
+    ) {
+        return coordinator(
+            operations,
+            growth,
+            transactions,
+            deliveryOutcome,
+            new ReissueEligibilitySnapshot(
+                PLAYER,
+                true,
+                "resource",
+                true,
+                new PhysicalItemPresence(false, false, false, false)
+            )
+        );
+    }
+
+    private static ReissueCoordinator coordinator(
+        FakeRepository operations,
+        FakeGrowthTools growth,
+        FakeTransactions transactions,
+        DeliveryOutcome deliveryOutcome,
+        ReissueEligibilitySnapshot eligibilitySnapshot
     ) {
         return new ReissueCoordinator(
             operations,
@@ -274,13 +850,7 @@ final class ReissueCoordinatorTest {
             EvolutionPlan.defaults(),
             "main-test",
             new ReissueQuoteStore(),
-            player -> new ReissueEligibilitySnapshot(
-                player,
-                true,
-                "resource",
-                true,
-                new PhysicalItemPresence(false, false, false, false)
-            ),
+            ignored -> eligibilitySnapshot,
             ignored -> deliveryOutcome,
             "test-server",
             CLOCK
@@ -288,6 +858,13 @@ final class ReissueCoordinatorTest {
     }
 
     private static GrowthTool tool() {
+        return tool(GrowthTool.Status.BROKEN, GrowthTool.DeliveryStatus.DELIVERED);
+    }
+
+    private static GrowthTool tool(
+        GrowthTool.Status status,
+        GrowthTool.DeliveryStatus deliveryStatus
+    ) {
         return new GrowthTool(
             TOOL,
             OLD_INSTANCE,
@@ -295,8 +872,8 @@ final class ReissueCoordinatorTest {
             1,
             10,
             GrowthTool.Branch.FORTUNE,
-            GrowthTool.Status.BROKEN,
-            GrowthTool.DeliveryStatus.DELIVERED,
+            status,
+            deliveryStatus,
             20,
             1,
             1,
@@ -357,6 +934,10 @@ final class ReissueCoordinatorTest {
 
     private static final class FakeRepository implements ReissueOperationRepository {
         private ReissueOperation operation;
+        private int prepareCalls;
+        private RuntimeException recoveryScanFailure;
+        private boolean failPendingDelivery;
+        private boolean forceReopenConflict;
 
         private boolean active() {
             return operation != null && operation.activeGuardRequired();
@@ -385,6 +966,7 @@ final class ReissueCoordinatorTest {
 
         @Override
         public PrepareOutcome prepare(ReissueOperation next, Instant now) {
+            prepareCalls++;
             Optional<ReissueOperation> same = findByIdempotency(next.idempotencyKey());
             if (same.isPresent()) {
                 return new PrepareOutcome(PrepareResult.EXISTING, same.orElseThrow());
@@ -501,6 +1083,9 @@ final class ReissueCoordinatorTest {
 
         @Override
         public Optional<ReissueOperation> pendingDelivery(UUID id, long lock, Instant now) {
+            if (failPendingDelivery) {
+                return Optional.empty();
+            }
             if (!matches(id, lock, ReissueOperation.State.PAYMENT_COMMITTED)) {
                 return Optional.empty();
             }
@@ -552,7 +1137,19 @@ final class ReissueCoordinatorTest {
             long lock,
             Instant now
         ) {
+            if (forceReopenConflict) {
+                forceReopenConflict = false;
+                operation = copy(
+                    ReissueOperation.State.PENDING_DELIVERY,
+                    operation.transactionId(),
+                    operation.paymentCommittedAt(),
+                    null,
+                    lock + 1
+                );
+                return Optional.empty();
+            }
             if (!matches(id, lock, ReissueOperation.State.UNKNOWN)
+                || operation.transactionId() == null
                 || operation.paymentCommittedAt() == null) {
                 return Optional.empty();
             }
@@ -560,7 +1157,7 @@ final class ReissueCoordinatorTest {
                 ReissueOperation.State.PAYMENT_COMMITTED,
                 operation.transactionId(),
                 operation.paymentCommittedAt(),
-                operation.failureCode(),
+                null,
                 lock + 1
             );
             return Optional.of(operation);
@@ -612,6 +1209,9 @@ final class ReissueCoordinatorTest {
 
         @Override
         public List<ReissueOperation> findRecoveryCandidates() {
+            if (recoveryScanFailure != null) {
+                throw recoveryScanFailure;
+            }
             return operation == null ? List.of() : switch (operation.state()) {
                 case PREPARED, PAYMENT_PENDING, PAYMENT_COMMITTED, PENDING_DELIVERY ->
                     List.of(operation);
@@ -737,6 +1337,8 @@ final class ReissueCoordinatorTest {
         private int executeCalls;
         private int inspectCalls;
         private State inspectState = State.UNKNOWN;
+        private boolean inspectFailure;
+        private UUID inspectTransactionId;
 
         private FakeTransactions(TransactionResult result) {
             this.result = result;
@@ -756,8 +1358,11 @@ final class ReissueCoordinatorTest {
         @Override
         public CompletionStage<TransactionDetails> inspect(UUID transactionId) {
             inspectCalls++;
+            if (inspectFailure) {
+                return CompletableFuture.failedFuture(new IllegalStateException("inspect failed"));
+            }
             return CompletableFuture.completedFuture(new TransactionDetails(
-                transactionId,
+                inspectTransactionId == null ? transactionId : inspectTransactionId,
                 "main-reissue:main-reissue:quote-test",
                 "MAIN_TOOL_REISSUE",
                 PLAYER,

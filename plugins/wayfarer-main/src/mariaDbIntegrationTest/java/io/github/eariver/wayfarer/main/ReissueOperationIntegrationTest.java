@@ -3,6 +3,7 @@ package io.github.eariver.wayfarer.main;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -196,6 +197,114 @@ final class ReissueOperationIntegrationTest {
             ).orElseThrow();
             assertEquals(ReissueOperation.State.ABANDONED, abandonedResult.state());
             assertTrue(repository.findActiveByTool(secondTool).isEmpty());
+        }
+    }
+
+    @Test
+    void paymentCommittedUnknownCanBeReopenedOnlyWithPaymentEvidence() throws Exception {
+        try (MariaDbContainerFixture fixture = MariaDbContainerFixture.start()) {
+            migrate(fixture);
+            UUID player = UUID.randomUUID();
+            UUID tool = insertTool(fixture, player);
+            ReissueOperationRepository repository =
+                new JdbcReissueOperationRepository(dataSource(fixture));
+
+            ReissueOperation prepared = repository.prepare(
+                operation(player, tool, UUID.randomUUID()),
+                NOW
+            ).operation();
+            ReissueOperation claimed = repository.claimPayment(
+                prepared.reissueId(),
+                prepared.lockVersion(),
+                NOW
+            ).orElseThrow();
+            UUID transaction = UUID.randomUUID();
+            ReissueOperation paid = repository.paymentCommitted(
+                claimed.reissueId(),
+                transaction,
+                claimed.lockVersion(),
+                NOW.plusSeconds(1)
+            ).orElseThrow();
+            ReissueOperation unknown = repository.unknown(
+                paid.reissueId(),
+                paid.lockVersion(),
+                transaction,
+                "ROTATION_COMMIT_UNKNOWN",
+                NOW.plusSeconds(2)
+            ).orElseThrow();
+
+            assertEquals(ReissueOperation.State.UNKNOWN, unknown.state());
+            assertEquals(transaction, unknown.transactionId());
+            assertNotNull(unknown.paymentCommittedAt());
+            assertTrue(repository.findActiveByTool(tool).isPresent());
+            assertTrue(repository.reopenToPaymentCommitted(
+                unknown.reissueId(),
+                unknown.lockVersion() + 1,
+                NOW.plusSeconds(3)
+            ).isEmpty());
+
+            ReissueOperation reopened = repository.reopenToPaymentCommitted(
+                unknown.reissueId(),
+                unknown.lockVersion(),
+                NOW.plusSeconds(3)
+            ).orElseThrow();
+            assertEquals(ReissueOperation.State.PAYMENT_COMMITTED, reopened.state());
+            assertEquals(transaction, reopened.transactionId());
+            assertNotNull(reopened.paymentCommittedAt());
+            assertNull(reopened.failureCode());
+            assertTrue(repository.findActiveByTool(tool).isPresent());
+            assertTrue(repository.reopenToPaymentCommitted(
+                reopened.reissueId(),
+                reopened.lockVersion(),
+                NOW.plusSeconds(4)
+            ).isEmpty());
+
+            UUID markerlessTool = insertTool(fixture, UUID.randomUUID());
+            ReissueOperation markerlessPrepared = repository.prepare(
+                operation(UUID.randomUUID(), markerlessTool, UUID.randomUUID()),
+                NOW
+            ).operation();
+            ReissueOperation markerlessClaimed = repository.claimPayment(
+                markerlessPrepared.reissueId(),
+                markerlessPrepared.lockVersion(),
+                NOW
+            ).orElseThrow();
+            ReissueOperation markerlessUnknown = repository.unknown(
+                markerlessClaimed.reissueId(),
+                markerlessClaimed.lockVersion(),
+                UUID.randomUUID(),
+                "PAYMENT_UNKNOWN",
+                NOW
+            ).orElseThrow();
+            assertTrue(repository.reopenToPaymentCommitted(
+                markerlessUnknown.reissueId(),
+                markerlessUnknown.lockVersion(),
+                NOW
+            ).isEmpty());
+
+            UUID transactionlessTool = insertTool(fixture, UUID.randomUUID());
+            UUID transactionlessPlayer = UUID.randomUUID();
+            ReissueOperation transactionlessPrepared = repository.prepare(
+                operation(transactionlessPlayer, transactionlessTool, UUID.randomUUID()),
+                NOW
+            ).operation();
+            ReissueOperation transactionlessClaimed = repository.claimPayment(
+                transactionlessPrepared.reissueId(),
+                transactionlessPrepared.lockVersion(),
+                NOW
+            ).orElseThrow();
+            ReissueOperation transactionlessUnknown = repository.unknown(
+                transactionlessClaimed.reissueId(),
+                transactionlessClaimed.lockVersion(),
+                null,
+                "PAYMENT_UNKNOWN",
+                NOW
+            ).orElseThrow();
+            assertTrue(repository.reopenToPaymentCommitted(
+                transactionlessUnknown.reissueId(),
+                transactionlessUnknown.lockVersion(),
+                NOW
+            ).isEmpty());
         }
     }
 
