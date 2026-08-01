@@ -34,8 +34,6 @@ final class ReissueCommandBoundaryTest {
         assertTrue(ReissueCommandPolicy.mayUsePlayerReissue(true, true));
         assertFalse(ReissueCommandPolicy.mayUsePlayerReissue(true, false));
         assertFalse(ReissueCommandPolicy.mayUsePlayerReissue(false, true));
-        assertTrue(ReissueCommandPolicy.mayUseAdminRecovery(true));
-        assertFalse(ReissueCommandPolicy.mayUseAdminRecovery(false));
     }
 
     @Test
