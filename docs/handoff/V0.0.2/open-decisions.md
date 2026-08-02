@@ -30,9 +30,10 @@ production balance remains open after the Client Test.
   `DECIDE_AFTER_CLIENT_TEST`.
 - Client Test Candidate-1: `CLIENT_TEST_FAIL`, rejected for promotion; exact local artifact
   hashes and failure evidence remain immutable historical evidence.
-- Client Test Candidate-2: `PREPARED_FOR_FOCUSED_CLIENT_RETEST` from product source
-  `f2281093a03c17be0b0e69004059dd7ccb072b1c`; exact local artifact hashes and focused gates are
-  recorded in the Candidate-2 handoff.
+- Client Test Candidate-2 and Candidate-3: rejected historical evidence. Candidate-4 is
+  `PREPARED_FOR_FOCUSED_CLIENT_RETEST` from Product HEAD
+  `9fe86d2e787ab1f86dcf38a5abdba6168515a802`; exact local artifact hashes and focused gates are
+  recorded in the Candidate-4 handoff.
 - Bounded Client Acceptance: `NOT COMPLETE` / `CLIENT_TEST_REQUIRED`; focused retest and
   independent review remain pending. Resource Pack is `SKIPPED_OUT_OF_SCOPE_BY_OWNER`.
 

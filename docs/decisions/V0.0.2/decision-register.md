@@ -47,7 +47,7 @@ mainline requirement or changing Project Wayfarer Runtime authority.
 | FRONT-C4-READINESS | Safe Entry permits at most 40 bounded observations, requires two stable observations, and treats zero required items as stable only after two observations. One late MVI public event may restart the same external entry cycle after timeout; no recursion, repeating, or unbounded retry. | `ACCEPTED_FOR_CANDIDATE_4` |
 | FRONT-C4-CLEANUP | Frontier self-heal removes only exact-current duplicate Elytra, Grappling Hook, and Navigation identities. Launchpad, Rocket, ordinary items, lookalikes, and incomplete metadata are not cleanup targets. | `ACCEPTED_FOR_CANDIDATE_4` |
 | CANDIDATE-3-OUTCOME | Candidate-3 remains preserved as rejected evidence because Frontier duplicate self-heal did not complete and exact timing evidence was unavailable. | `REJECTED_PRESERVED` |
-| CANDIDATE-4-OUTCOME | Candidate-4 Product Code is required before another focused Client Test. Candidate-4 remains distinct from Candidate-3 artifact and metadata evidence. | `REQUIRED` |
+| CANDIDATE-4-OUTCOME | Candidate-4 Product Code and fixed artifacts are prepared before another focused Client Test. Candidate-4 remains distinct from Candidate-3 artifact and metadata evidence. | `PREPARED_FOR_FOCUSED_CLIENT_RETEST` |
 | FRONT-D02-RESOURCE-PACK | Resource Pack work is not part of this Candidate-4 scope. | `SKIPPED_OUT_OF_SCOPE_BY_OWNER` |
 
 The exact Candidate-3 input identities and failure chronology are recorded in
@@ -121,8 +121,8 @@ The Phase 09A/09B Candidate-1 record above is historical. The current handoff st
 | Gate | State | Boundary |
 |---|---|---|
 | Candidate-3 | `REJECTED_PRESERVED` | Frontier duplicate self-heal failed; exact timing cause is unresolved. |
-| Candidate-4 Product Code | `PREPARED` | Product tests, Module Test, `check`, and `clean assemble` are green at the Product Commit to be recorded in the handoff. |
-| Candidate-4 artifact | `PENDING_EXACT_HEAD_FIXATION` | Two clean builds, manifest, and checksum must be captured at the exact Product HEAD. |
+| Candidate-4 Product Code | `PREPARED` | Product HEAD is `9fe86d2e787ab1f86dcf38a5abdba6168515a802`; Product tests, Module Test, `check`, and `clean assemble` are green. |
+| Candidate-4 artifact | `FIXED_PREPARED_FOR_FOCUSED_CLIENT_RETEST` | Published Core authority, approved Fixture, two Main/Frontier clean-build copies, manifest, and lowercase checksum are fixed; Main/Frontier/Fixture are byte-identical across builds. |
 | Focused Client Test | `NOT_STARTED` | Owner-assisted Minecraft client operation is the next boundary. |
 | Full Client Acceptance | `NOT_COMPLETE` | No client scenarios have started. |
 | Production balance promotion | `HOLD` | Client and Project evidence are pending. |

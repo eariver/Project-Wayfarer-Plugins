@@ -1,11 +1,29 @@
 # V0.0.2 Release Readiness
 
+Current Phase 10C-A Revision B state:
+
+```text
+PHASE 10C-A EXECUTION: PREPARED_WAITING_FOR_OPERATOR
+CANDIDATE-4: PREPARED_FOR_FOCUSED_CLIENT_RETEST
+CLIENT TEST: NOT STARTED
+FULL CLIENT ACCEPTANCE: NOT COMPLETE
+PRODUCTION BALANCE PROMOTION: HOLD
+PROJECT ACCEPTANCE: PENDING
+STABLE PUBLICATION: NOT AUTHORIZED
+```
+
+- Candidate-4 Product HEAD: `9fe86d2e787ab1f86dcf38a5abdba6168515a802`.
+- Candidate-3: rejected and preserved as historical failure evidence.
+- Candidate-4 Main／Frontier／Fixture: two-clean-build byte-identical evidence fixed;
+  Published V0.0.1 Core authority verified separately.
+- Current PR remains Open / Draft / Unmerged; no Client Scenario has started.
+
 - Candidate-1 historical product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
 - Candidate-2 product-source anchor: `f2281093a03c17be0b0e69004059dd7ccb072b1c`
 - Phase 09A independent review: `PASS`
 - Phase 09B executor evidence: historical; Candidate-1 client result is `FAIL`
 - Client Test Candidate-1: rejected for promotion; evidence retained immutable
-- Client Test Candidate-2: `PREPARED_FOR_FOCUSED_CLIENT_RETEST`
+- Client Test Candidate-2: historical and superseded by Candidate-4 preparation
 - Mainline Disposable Client Test Preparation: fresh two-backend environment prepared;
   focused retest pending independent review
 - Client Acceptance: `NOT COMPLETE` / `CLIENT_TEST_REQUIRED`
@@ -31,7 +49,7 @@ https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809 (ID
 
 ```text
 Candidate:
-  V0.0.2-Client-Candidate-2
+  V0.0.2-Client-Candidate-4
 
 Pre-test balance changes:
   NONE
@@ -57,11 +75,10 @@ Candidate-1 failed before the LeafGrapple motion/balance scenarios, so balance r
 
 Remaining gates:
 
-1. Phase 10B-B independent review of the remediation and Candidate-2 handoff.
-2. Candidate-2 focused Main/Frontier client gates using the fixed Fixture.
-3. FRONT-D02 bounded client motion gate (`CLIENT_TEST_REQUIRED`) using the fixed Fixture.
-4. Bounded Client Acceptance in the separate disposable environment.
-5. Project acceptance and later stable publication.
+1. Candidate-4 focused Main/Frontier client gates using the fixed Fixture.
+2. FRONT-D02 bounded client motion gate (`CLIENT_TEST_REQUIRED`) using the fixed Fixture.
+3. Bounded Client Acceptance in the separate disposable environment.
+4. Project acceptance and later stable publication.
 
 FRONT-D01 is resolved; FRONT-D04 and MAIN-D08 are accepted with limitation at supported
 boundaries. The first-test LeafGrapple baseline is `RESOLVED / APPROVED`, while production balance

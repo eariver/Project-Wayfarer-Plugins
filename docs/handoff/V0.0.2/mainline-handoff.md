@@ -1,22 +1,22 @@
 # V0.0.2 Mainline Handoff
 
 PR #14 remains Open / Draft / Unmerged. Phase 10B-A Candidate-1 failed the first mandatory Main
-and Frontier client scenarios and is rejected for promotion; its artifacts and evidence remain
-immutable historical evidence. Product remediation is complete at
-`f2281093a03c17be0b0e69004059dd7ccb072b1c`, and Candidate-2 is prepared for focused Client
-retest. Independent review and focused Client execution are still required. Metadata commits do
-not change Candidate-2 product bytes.
+and Frontier client scenarios and is rejected for promotion; Candidate-2 and Candidate-3 are
+also historical rejected candidates with preserved evidence. Candidate-4 Product remediation
+is complete at `9fe86d2e787ab1f86dcf38a5abdba6168515a802`, and Candidate-4 is prepared for
+focused Client retest. Independent review and focused Client execution are still required.
+Prepared metadata commits do not change Candidate-4 product bytes.
 
 ## Fixed candidate artifacts
 
 | Component | Exact artifact | Size | SHA-256 / provenance |
 |---|---|---:|---|
 | Core | `Wayfarer_Core-V0.0.1.jar` | 11751447 | `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2`; published GitHub Release `V0.0.1`, reused unchanged |
-| Main | `wayfarer-main-0.0.2-SNAPSHOT.jar` | 4678511 | `5b40dd4b66ab5fd15b9b89f30e5db09923759171e1f69429ab3ff669120ab36b` |
-| Frontier | `wayfarer-frontier-0.0.2-SNAPSHOT.jar` | 4700734 | `1559af0ebebb664a4f29dd08df41228fc9dfd9df1930da469b877075d829033d` |
+| Main | `wayfarer-main-0.0.2-SNAPSHOT.jar` | 4690292 | `c263f6957c69bf958b6374e37efbf0cff7cc0e21d27530acf7faa46cd1b54522` |
+| Frontier | `wayfarer-frontier-0.0.2-SNAPSHOT.jar` | 4710866 | `7897c31bdc69e05112e286235658364d2771ab875113f9410341b6d9910e1bac` |
 
 The exact local staging path is
-`.ai-work/luna-gpt-5.6-v002/candidate/V0.0.2-Client-Candidate-2/`. The Candidate-2 JARs are
+`.ai-work/luna-gpt-5.6-v003/candidate/V0.0.2-Client-Candidate-4/`. The Candidate-4 JARs are
 ignored local handoff artifacts, not tracked or published. Core was not rebuilt as V0.0.2.
 Historical Candidate-1 Main/Frontier hashes are `730d56888001e9c76bd127b25c118a937f03a5dd95a0fa381c8c38fec2517113`
 and `f43829c7b6e06ea44549ffdd1ef26a567aef1563ba73a0808c47634742e9d3ec`; both remediation
@@ -39,7 +39,7 @@ First Client Test baseline:
   APPROVED
 
 Candidate:
-  V0.0.2-Client-Candidate-2
+  V0.0.2-Client-Candidate-4
 
 Use:
   Client Test only
@@ -104,17 +104,18 @@ requests, cancels superseded/quit/world-leave work, and self-heals only exact-cu
 Elytra/Grappling Hook/Navigation duplicates after authoritative readiness. Launchpads, Rockets,
 malformed items, and unrelated items are not removed.
 
-The focused Candidate-2 gates are recorded in the Client Acceptance Plan and local Candidate-2
-handoff. Full Client Acceptance remains incomplete.
+The historical Candidate-2 gates are retained in the Client Acceptance Plan. The current
+Candidate-4 gates and local worksheet are under the V003 Candidate-4 handoff. Full Client
+Acceptance remains incomplete.
 
 ## Mainline disposable-client preparation
 
-Candidate-2 disposable Client Test preparation is ready for independent review. The fresh
-environment is under `.ai-work/luna-gpt-5.6-v002/client-test/V0.0.2-Client-Candidate-2/`.
-Mainline owns the separate disposable environment, server/world setup within that environment,
-actual Minecraft Client execution, and the resulting evidence. It must use the exact candidate
-bytes and the immutable test-only Fixture above; it must not use Project Runtime, Project worlds,
-Project data, credentials, or Player UUIDs.
+Candidate-4 disposable Client Test worksheets are prepared under
+`.ai-work/luna-gpt-5.6-v003/client-test/V0.0.2-Client-Candidate-4-Focused/`.
+Project Runtime creation and server/world setup were not executed from this repository because
+the repository authority boundary prohibits Project Runtime changes. Any later authorized
+environment must use the exact fixed Candidate-4 bytes and immutable test-only Fixture; it must
+not use Project Runtime, Project worlds, Project data, credentials, or Player UUIDs.
 
 The exact detailed procedure is solely
 `docs/testing/plans/V0.0.2-client-acceptance.md`. The required scenario groups are summarized
@@ -143,7 +144,7 @@ unambiguous result each. A single major failure remains material.
   authority above.
 - LeafGrapple production balance: `OPEN_AFTER_CLIENT_TEST`.
 - Candidate-1 Client Test: `FAIL`; rejected for promotion.
-- Candidate-2 focused Client retest: `PENDING_INDEPENDENT_REVIEW`.
+- Candidate-4 focused Client retest: `PREPARED_WAITING_FOR_OPERATOR` / `NOT_STARTED`.
 - Client Acceptance: `NOT COMPLETE`.
 - Resource Pack: `SKIPPED_OUT_OF_SCOPE_BY_OWNER`.
 - Project acceptance: `PENDING` and Project-owned.

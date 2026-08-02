@@ -1,8 +1,9 @@
 # V0.0.2 Requirement Traceability
 
-Classification: Phase 10C-A Revision B Candidate-4 preparation at the product-source head
-to be recorded after implementation. Candidate-3 is rejected and preserved as historical
-evidence; Candidate-4 focused Client Test has not started.
+Classification: Phase 10C-A Revision B Candidate-4 prepared handoff. Candidate-4 Product HEAD
+is `9fe86d2e787ab1f86dcf38a5abdba6168515a802`; the current PR head may contain only
+Sidecar/Prepared metadata after that Product HEAD. Candidate-3 is rejected and preserved as
+historical evidence; Candidate-4 focused Client Test has not started.
 
 The immutable mainline requirement SHA-256 is
 `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
@@ -33,7 +34,7 @@ requirement. `requirements_cleared` is absent and is not inferred.
 | Waystone | No production Waystone behavior | Absence/config/package checks | Not authorized | `DEFERRED_BY_REQUIREMENT` | Not an open V0.0.2 choice. |
 | EM–MVI adapter | No module or artifact | Absence checks | Project decision required | `DEFERRED_BY_REQUIREMENT` | Create only after `ADAPTER_REQUIRED`. |
 | Candidate-3 outcome | Candidate-3 review, failure timeline, and preserved submission | Exact input hashes, CI/headless evidence, failure chronology | No Candidate-3 promotion | `REJECTED_PRESERVED` | Frontier duplicate self-heal failed; exact timing cause is unresolved. |
-| Client Test Candidate | Exact staged Core/Main/Frontier artifacts and Candidate-4 manifest | SHA-256, descriptor, checksum, two-clean-build evidence | Bounded client run required | `CANDIDATE_4_REQUIRED` | Candidate-4 artifact fixation is pending implementation and exact-head verification. |
+| Client Test Candidate | Exact staged Core/Main/Frontier artifacts and Candidate-4 manifest | SHA-256, descriptor, checksum, two-clean-build evidence | Bounded client run required | `PREPARED_FOR_FOCUSED_CLIENT_RETEST` | Product HEAD `9fe86d2`; Main/Frontier/Fixture Build 1/2 are byte-identical; Published Core authority is separately verified. |
 | Client Acceptance | `docs/testing/plans/V0.0.2-client-acceptance.md` | Candidate and Safe Tier handoff | Mainline disposable client environment | `CLIENT_TEST_REQUIRED` | No client result has been produced. |
 | Project acceptance / Stable publication | Handoff and readiness docs | No release/tag/hash/dispatch | Project-owned | `PENDING` | No Client/Project acceptance, Stable Release, or `requirements_cleared`. |
 
