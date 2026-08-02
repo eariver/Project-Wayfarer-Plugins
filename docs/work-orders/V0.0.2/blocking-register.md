@@ -2,7 +2,8 @@
 
 Owner-resolved Phase 01–06 outcomes are recorded as completed implementation/evidence work.
 Phase 08B resolved the unloaded-world expiration defect. Phase 09A fixed the first bounded
-Client Test Candidate and synchronized the remaining external, client, Project, and later-release
+Client Test Candidate. Phase 09B adopted the external Frontier decision for the exact first-test
+Fixture and synchronized the remaining client, Project, production-balance, and later-release
 boundaries below.
 
 ## Resolved implementation boundaries
@@ -52,10 +53,18 @@ boundaries below.
 
 - State: Plugin source boundary `ACCEPTED_WITH_LIMITATION`; `CLIENT_TEST_REQUIRED` remains.
 - The adapter targets LeafGrapple 1.0.2 through its public capability boundary and fails closed
-  when unsafe or unavailable. A temporary test-only safe tier must copy movement/range/display
-  values from a reviewed 1.0.2 standard tier and disable durability plus entity/player/mob/animal/
-  monster hooking. It is not a production balance recommendation; final motion/range/balance is
-  Mainline/Frontier-owned.
+  when unsafe or unavailable. The exact test-only Fixture at
+  `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` is approved by Project Issue
+  #4 comment `5155937809` for the first Client Test only. Its approved values are
+  `max-distance=16.0`, `max-pull-distance=32.0`, `launch-speed=1.2`,
+  `pull-acceleration=0.05`, `max-pull-speed=0.85`, and `cooldown-ticks=20`; durability and all
+  entity targets are disabled. Pre-test balance changes are `NONE`, and production promotion is
+  `DECIDE_AFTER_CLIENT_TEST`. Final production motion/range/balance remains open after the Client
+  Test.
+- The Fixture owns LeafGrapple tier/item/model/display/movement configuration. The Wayfarer
+  Runtime Guard separately owns exact case-sensitive `frontier_iris` rejection and world
+  availability behavior; Wayfarer never creates worlds and Multiverse owns world
+  creation/loading.
 
 ### FRONT-D04 — external protection
 
@@ -73,13 +82,18 @@ boundaries below.
 
 ### Client / Project / publication
 
-- ChatGPT independent review of this remediation: `PASS` (external decision).
+- Phase 08B ChatGPT independent review: `PASS` (external decision).
+- Phase 09A independent review: `PASS`; Phase 09B executor handoff evidence is prepared and
+  independent review remains required.
 - Client Test Candidate: `FIXED` as `V0.0.2-Client-Candidate-1` from product source
   `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; exact local Core/Main/Frontier bytes and hashes are
   recorded in the Phase 09A handoff.
 - LeafGrapple 1.0.2 pinned artifact and complete test-only `hooks.wayfarer` Safe Tier handoff:
   `PASS`; tracked fixture is `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`.
-- Bounded Client Acceptance: `CLIENT_TEST_REQUIRED`.
+- LeafGrapple first-test baseline: `RESOLVED / APPROVED`; production balance:
+  `OPEN_AFTER_CLIENT_TEST`.
+- Bounded Client Acceptance: `NOT STARTED`; Mainline disposable Client Test preparation is
+  pending independent review.
 - Project acceptance: pending and Project-owned.
 - Stable V0.0.2 tag/release, release hashes, `requirements_cleared`, and release dispatch: not
   authorized in this task.

@@ -1,10 +1,11 @@
 # V0.0.2 Mainline Handoff
 
-PR #14 remains Open / Draft / Unmerged. Phase 08B independent review is `PASS`. The first
-bounded Client Test Candidate is fixed as `V0.0.2-Client-Candidate-1` from the accepted product
-source commit `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`. The later candidate-fixation metadata
-HEAD is documentation-only; its immutable SHA is recorded in the Phase 09A result report and
-PR #14, and it does not change the candidate product bytes.
+PR #14 remains Open / Draft / Unmerged. Phase 09A independent review is `PASS`. Phase 09B
+executor evidence is prepared, but independent review is still required before Mainline
+disposable Client Test preparation may proceed. The first bounded Client Test Candidate is fixed
+as `V0.0.2-Client-Candidate-1` from accepted product source commit
+`90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`. The Phase 09B metadata commit does not change any
+candidate product bytes.
 
 ## Fixed candidate artifacts
 
@@ -15,56 +16,113 @@ PR #14, and it does not change the candidate product bytes.
 | Frontier | `wayfarer-frontier-0.0.2-SNAPSHOT.jar` | 4682233 | `f43829c7b6e06ea44549ffdd1ef26a567aef1563ba73a0808c47634742e9d3ec` |
 
 The exact local staging path is
-`.ai-work/luna-gpt-5.6-v002/candidate/V0.0.2-Client-Candidate-1/`.
-The candidate JARs are ignored local handoff artifacts, not tracked or published. Core was not
-rebuilt as V0.0.2. Embedded descriptor identities and the checksum manifest are recorded in the
-local candidate manifest.
+`.ai-work/luna-gpt-5.6-v002/candidate/V0.0.2-Client-Candidate-1/`. The candidate JARs are
+ignored local handoff artifacts, not tracked or published. Core was not rebuilt as V0.0.2.
+Embedded descriptor identities and the checksum manifest are recorded in the local candidate
+manifest.
 
-## LeafGrapple test-only handoff
+## Frontier-approved first Client Test Fixture
 
-The pinned read-only artifact is `LeafGrapple.jar` version `1.0.2` / Maven `1.0.2-SNAPSHOT`,
-SHA-256 `FFE4B3305BB48737E1B6C373698FEFE7121B879FD5B9399F930F5023B5F78833`. The complete
-test-only `hooks.wayfarer` fragment is tracked at
-`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` and is byte-identical to the
-local candidate handoff. It copies the reviewed `hooks.wood` tier and changes only the tier key,
-durability enabled flag, entity-hook enabled flag, and all four entity target safety values to
-false. It is not a production balance recommendation and has not been applied to a server.
+The external Project/Frontier authority is Project Issue
+`eariver/Project_Wayfarer#4`, specifically
+https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809 (comment ID
+`5155937809`). That comment records:
+
+```text
+Concrete Fixture:
+  ACKNOWLEDGED
+
+First Client Test baseline:
+  APPROVED
+
+Candidate:
+  V0.0.2-Client-Candidate-1
+
+Use:
+  Client Test only
+
+Pre-test balance changes:
+  NONE
+
+Production promotion:
+  DECIDE_AFTER_CLIENT_TEST
+```
+
+The approved immutable Fixture is
+`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` at commit
+`521a41bbcc4d4e0e58111deeb663f52bf1c6e1af`, SHA-256
+`ed210f8e56db26315f91fecb9e1d35d686c8fe647480498b7588467a6fa2448a`. The pinned LeafGrapple
+artifact is `LeafGrapple.jar`, plugin version `1.0.2`, embedded Maven version
+`1.0.2-SNAPSHOT`, size `56175` bytes, SHA-256
+`FFE4B3305BB48737E1B6C373698FEFE7121B879FD5B9399F930F5023B5F78833`.
+
+The first-test movement/range/cooldown values are:
+
+```text
+max-distance: 16.0
+max-pull-distance: 32.0
+launch-speed: 1.2
+pull-acceleration: 0.05
+max-pull-speed: 0.85
+cooldown-ticks: 20
+```
+
+The Fixture also fixes `Wood Grapple`, PAPER with
+`leafgrapple:wood_grapple` / `leafgrapple:wood_grapple_head`, durability disabled, glowing
+display at scale `0.35`, offset Y `-0.1`, and entity-hook disabled with players, mobs, animals,
+and monsters all false. The complete Entity Hook subtree remains copied from `hooks.wood`.
+There are no pre-test balance changes.
+
+## Tier configuration and Runtime Guard boundary
+
+The LeafGrapple Tier Fixture owns the LeafGrapple public tier configuration: item/model/display,
+range, pull distance, launch speed, pull acceleration, maximum pull speed, cooldown, disabled
+durability, and disabled entity-hook targets. It does not own a world restriction.
+
+The Wayfarer Runtime Guard separately enforces the exact case-sensitive `frontier_iris` boundary:
+Themes outside `frontier_iris` are rejected; the plugin remains enabled when `frontier_iris` is
+absent or unloaded; Wayfarer never creates the world; and Multiverse owns world
+creation/loading. LeafGrapple itself must not be described as enforcing this boundary.
 
 ## Mainline disposable-client preparation
 
-Mainline may use the exact local candidate bytes and the tracked Safe Tier fixture to prepare its
-separate disposable environment. The test plan is
-`docs/testing/plans/V0.0.2-client-acceptance.md`.
+Mainline disposable Client Test preparation is `PENDING_INDEPENDENT_REVIEW`. After that review,
+Mainline owns the separate disposable environment, server/world setup within that environment,
+actual Minecraft Client execution, and the resulting evidence. It must use the exact candidate
+bytes and the immutable test-only Fixture above; it must not use Project Runtime, Project worlds,
+Project data, credentials, or Player UUIDs.
 
-- The exact Frontier world name is `frontier_iris` (case-sensitive).
-- Multiverse owns world creation and loading. Wayfarer must not create the world.
-- Wayfarer must remain enabled when `frontier_iris` is absent or unloaded; it must fail closed at
-  the exact player/world boundary and resume the relevant Join, WorldChanged, or Respawn path after
-  a later load. Unloaded-world Launchpad expiration must defer before destructive transition.
-- Mainline should verify the canonical LeafGrapple capability/item boundary, durability-disabled
-  behavior, entity/player/mob/animal/monster-hooking-disabled behavior, and bounded canonical
-  motion using the copied tier.
-- Mainline owns client execution, server configuration, world operations, motion/range/feel/balance
-  observation, and the resulting client evidence.
+The exact detailed procedure is solely
+`docs/testing/plans/V0.0.2-client-acceptance.md`. The required scenario groups are summarized
+here only for handoff:
 
-Accepted product-head evidence remains Normal CI run `30713914057` (`success`) and Pre-client
-Headless Runtime run `30713914051` (`success`), both at product source
-`90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`. A later metadata-head Normal CI run is required after
-the documentation commit; any automatically triggered metadata-head Headless run is observation
-only and does not replace the accepted product-head runtime gate.
+- motion and range: short-range Block Hook, horizontal long-range Hook, upward Hook to a cliff,
+  mountain, tree, or structure, and cave/ceiling/narrow-space Hook;
+- interaction composition: Hook-to-Elytra, Hook after Launchpad, cooldown-boundary repeated
+  input, and reissued canonical LeafGrapple item use;
+- safety and fail-closed: Player/Mob/Animal/Monster rejection, exact `frontier_iris` Runtime
+  Guard rejection outside the boundary, and missing plugin, wrong version, missing tier, or unsafe
+  configuration;
+- display: held Hook and launched Hook Head Resource Pack models, including glowing/scale/offset
+  usability.
+
+For motion and interaction scenarios, the bounded repetition rules are normally three attempts,
+stopping after three consecutive unambiguous successes; at least five consecutive cooldown
+inputs; one or two representative attempts per configured entity target category; and at least
+ten attempts for an affected scenario when an anomaly, instability, or unclear reproducibility
+remains under constant conditions. Distinct artifact/configuration/fail-closed states need one
+unambiguous result each. A single major failure remains material.
 
 ## Resolved and residual gates
 
-- `FRONT-D01`: resolved for V0.0.2.
-- `FRONT-D02`: Plugin public-capability/fail-closed boundary accepted with limitation; Safe Tier
-  handoff is complete, while bounded client motion remains required.
-- `FRONT-D04` and `MAIN-D08`: accepted with their supported-boundary limitations.
-- Client Test Candidate: fixed.
-- Client Acceptance: `NOT STARTED` / `CLIENT_TEST_REQUIRED`.
-- Project acceptance: pending and Project-owned.
-- Stable publication: not authorized.
+- LeafGrapple first-test baseline: `RESOLVED / APPROVED` by the external Project/Frontier
+  authority above.
+- LeafGrapple production balance: `OPEN_AFTER_CLIENT_TEST`.
+- Client Acceptance: `NOT STARTED`.
+- Project acceptance: `PENDING` and Project-owned.
+- Stable publication: `NOT AUTHORIZED`.
 
 No Project Runtime, server, world, database, migration, secret, external original JAR, or
-production configuration was changed. No candidate JAR was attached to a Release. Do not mark PR
-#14 Ready for Review, merge it, create a tag or GitHub Release, dispatch a stable release workflow,
-or set/infer `requirements_cleared`.
+production configuration was changed. This handoff does not authorize Client Test execution,
+production promotion, PR Ready status, merge, tag or GitHub Release creation, release workflow
+dispatch, or setting/inferencing `requirements_cleared`.

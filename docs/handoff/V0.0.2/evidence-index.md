@@ -16,6 +16,7 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | Phase 07 documentation/full validation | Documentation and local validation history; exact-final-head IDs belong in its retained report | complete |
 | Phase 08B remediation | Focused `FrontierGameplayRuntime` expiration guard and `LaunchpadExpirationDecisionTest`; Normal CI `30713914057`; Pre-client Headless `30713914051` | independent review PASS |
 | Phase 09A candidate fixation | Candidate label `V0.0.2-Client-Candidate-1`; exact product source `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; local ignored candidate manifest and result report | fixed; Client Acceptance not started |
+| Phase 09B Frontier Fixture adoption | Project Issue `eariver/Project_Wayfarer#4`, approval comment `5155937809`, exact first-test Fixture and bounded Client Test handoff | executor evidence prepared; independent review required; Client Acceptance not started |
 
 | Evidence | Path / immutable identity | Result |
 |---|---|---|
@@ -46,10 +47,11 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | Requirement snapshot | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/Project_Wayfarer_Plugin_V0.0.2_Main_Frontier_Requirements.md` | SHA-256 `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F` fixed; `_REGENERATED` is not required |
 | Traceability | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/traceability.md` | terminal classifications |
 | Test report | `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md` | automated scope and Phase 09A candidate-fixation record |
-| LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md`; tracked fixture `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` | pinned 1.0.2 Safe Tier handoff PASS; client motion remains |
+| LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md`; tracked fixture `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` | pinned 1.0.2 Fixture approved for first Client Test only; SHA-256 `ed210f8e56db26315f91fecb9e1d35d686c8fe647480498b7588467a6fa2448a`; production promotion remains pending Client Test |
 | Node 24 assessment | `docs/reports/V0.0.2-node24-actions-assessment.md` | pass |
-| Client plan | `docs/testing/plans/V0.0.2-client-acceptance.md` | prepared / not run |
-| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | candidate fixed; Client/Project/Stable gates remain |
+| Frontier decision authority | [Project Issue #4 approval comment](https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809) | exact Fixture acknowledged and approved for first Client Test only; no pre-test balance changes; `DECIDE_AFTER_CLIENT_TEST` |
+| Client plan | `docs/testing/plans/V0.0.2-client-acceptance.md` | approved concrete values and bounded scenarios recorded; prepared / not run |
+| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | Candidate fixed; Frontier baseline approved for first Client Test; independent review, Client, Project, and Stable gates remain |
 
 Build outputs, task databases, container state, Paper worlds, logs, and credentials are not
 version-controlled evidence.

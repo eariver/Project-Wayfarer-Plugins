@@ -2,7 +2,8 @@
 
 Only the following gates remain open. Resolved B-001, B-004, MAIN-D04/D05/D06/D07,
 FRONT-D01/D03/D04/D05/D06/D08, and MAIN-D08's supported-boundary decision are not reopened
-here.
+here. Phase 09B resolves the first-test LeafGrapple baseline from the external Frontier decision;
+production balance remains open after the Client Test.
 
 ## Phase 08B resolved Plugin decisions
 
@@ -19,19 +20,26 @@ here.
 
 ## External and client
 
-- FRONT-D02: the Plugin adapter/fail-closed source boundary is accepted; provide/approve a
-  temporary test-only safe LeafGrapple 1.0.2 tier, then perform bounded client motion checks.
-  Copy movement/range/display values from a reviewed 1.0.2 standard tier, disable durability and
-  entity/player/mob/animal/monster hooking, and do not treat the tier as a production balance
-  recommendation.
+- FRONT-D02: the Plugin adapter/fail-closed source boundary is accepted with limitation. The
+  exact test-only LeafGrapple 1.0.2 Fixture is `ACKNOWLEDGED` and the first Client Test baseline
+  is `APPROVED` by external Project Issue
+  [#4 approval comment](https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809).
+  It uses `max-distance=16.0`, `max-pull-distance=32.0`, `launch-speed=1.2`,
+  `pull-acceleration=0.05`, `max-pull-speed=0.85`, and `cooldown-ticks=20`, with durability and
+  all entity targets disabled. Pre-test balance changes are `NONE`; production promotion is
+  `DECIDE_AFTER_CLIENT_TEST`.
 - Client Test Candidate: `V0.0.2-Client-Candidate-1` fixed from product source
   `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; exact local artifact hashes and Safe Tier evidence
   are recorded in the Phase 09A handoff.
-- Bounded Client Acceptance: `CLIENT_TEST_REQUIRED` after a later candidate is fixed.
+- Bounded Client Acceptance: `NOT STARTED`; Mainline disposable Client Test preparation is
+  pending Phase 09B independent review. The detailed procedure remains in the Client Acceptance
+  Plan.
 
 ## Project and publication
 
 - ChatGPT independent review of the Phase 08B remediation: `PASS` (external decision).
+- Phase 09A independent review: `PASS`; Phase 09B executor handoff: prepared, independent review
+  required.
 - Project acceptance: pending and Project-owned.
 - Stable V0.0.2 publication: not authorized in this task; no tag, release, release hash,
   `requirements_cleared`, or workflow dispatch is permitted here.
