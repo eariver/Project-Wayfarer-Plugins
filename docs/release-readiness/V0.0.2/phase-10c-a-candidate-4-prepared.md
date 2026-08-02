@@ -1,10 +1,32 @@
 # Phase 10C-A Revision B — Candidate-4 Prepared Readiness Record
 
+> **Superseded by pre-client independent review.** Candidate-4 is rejected before Client Test and
+> must not be used for a Minecraft Client connection. See
+> `phase-10c-a-candidate-4-preclient-independent-review.md` and PR #14 comment `5159668460`.
+
+Current authority:
+
+```text
+PHASE 10C-A PRE-CLIENT INDEPENDENT REVIEW: FAIL / HOLD
+CANDIDATE-4: REJECTED BEFORE CLIENT TEST
+CANDIDATE-5: REQUIRED
+CLIENT TEST: DO NOT START
+FULL CLIENT ACCEPTANCE: NOT COMPLETE
+PRODUCTION BALANCE PROMOTION: HOLD
+PROJECT ACCEPTANCE: PENDING
+STABLE PUBLICATION: NOT AUTHORIZED
+```
+
+The remainder of this file is preserved as the historical Candidate-4 preparation record. It is not
+a current authorization to proceed.
+
+---
+
 This is a prepared/intermediate record. It is not a Focused Gate PASS,
 Project Acceptance, Full Client Acceptance, production promotion, or stable
 publication authorization.
 
-## Required state
+## Historical prepared state
 
 ```text
 PHASE 10C-A EXECUTION: PREPARED_WAITING_FOR_OPERATOR
@@ -74,5 +96,5 @@ Minecraft Client connection or Client Scenario was started.
   `.ai-work/luna-gpt-5.6-v003/candidate/V0.0.2-Client-Candidate-4/CANDIDATE_4_SHA256SUMS.txt`
 - Worksheet root:
   `.ai-work/luna-gpt-5.6-v003/client-test/V0.0.2-Client-Candidate-4-Focused/worksheet/`
-- The fixed JARs must not be overwritten. If Product Code must change after
-  fixation, Candidate-4 is rejected and Candidate-5 is required.
+- The fixed JARs must not be overwritten. Product changes belong to Candidate-5; Candidate-4 is
+  rejected and remains immutable historical evidence.
