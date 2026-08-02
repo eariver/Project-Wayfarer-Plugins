@@ -134,6 +134,40 @@ public final class TraversalDeliveryCoordinator {
         nextEntryGeneration(playerUuid);
     }
 
+    /**
+     * Reads the minimum number of active permanent items that should be
+     * visible before an existing player's MVI profile is considered restored.
+     * A permanent item with a durable Pending Delivery is intentionally
+     * excluded because its absence is an authoritative redelivery state.
+     * This is read-only and remains serialized with the player's operations.
+     */
+    public CompletionStage<Integer> requiredManagedItemCount(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        return serializer.enqueue(playerUuid, () -> tasks.database(() -> {
+            Optional<TraversalLoadout> found = repository.find(playerUuid);
+            if (found.isEmpty()) {
+                return 0;
+            }
+            TraversalLoadout loadout = found.orElseThrow();
+            int activePermanentItems = (int) loadout.permanentItems().stream()
+                .filter(item ->
+                    item.state() == TraversalLoadout.LogicalItem.State.ACTIVE
+                )
+                .count();
+            EnumSet<PendingDelivery.ItemType> pendingPermanentTypes =
+                EnumSet.noneOf(PendingDelivery.ItemType.class);
+            for (PendingDelivery pending : repository.pending(playerUuid)) {
+                if (isPermanent(pending.itemType())) {
+                    pendingPermanentTypes.add(pending.itemType());
+                }
+            }
+            return Math.max(
+                0,
+                activePermanentItems - pendingPermanentTypes.size()
+            );
+        }));
+    }
+
     public CompletionStage<Boolean> adminReissueCritical(
         UUID playerUuid,
         TraversalIdentity.ItemType itemType

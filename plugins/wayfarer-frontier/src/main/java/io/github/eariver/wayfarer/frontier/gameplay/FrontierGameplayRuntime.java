@@ -113,6 +113,7 @@ public final class FrontierGameplayRuntime implements Listener {
     private static final NamespacedKey DEFINITION_ID =
         new NamespacedKey("wayfarer", "definition_id");
     private static final String LAUNCHPAD_DEFINITION = "frontier-v1";
+    private static final long FINGERPRINT_POLL_PERIOD_TICKS = 5L;
     private final JavaPlugin plugin;
     private final FrontierModuleConfig config;
     private final LeafGrappleBridge leafGrapple;
@@ -138,6 +139,8 @@ public final class FrontierGameplayRuntime implements Listener {
     private final WorldEditLaunchpadProtection worldEditProtection;
     private final SafeEntryReadiness entryReadiness = new SafeEntryReadiness();
     private final ConcurrentHashMap<UUID, BukkitTask> entryReadinessTasks =
+        new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, EntryContext> entryContexts =
         new ConcurrentHashMap<>();
     private final Listener mviReadinessListener;
     private volatile FrontierPurchaseCoordinator purchaseCoordinator;
@@ -244,6 +247,7 @@ public final class FrontierGameplayRuntime implements Listener {
         delivery.shutdown();
         entryReadinessTasks.values().forEach(BukkitTask::cancel);
         entryReadinessTasks.clear();
+        entryContexts.clear();
         entryReadiness.cancelAll();
         if (mviReadinessListener != null) {
             org.bukkit.event.HandlerList.unregisterAll(mviReadinessListener);
@@ -851,7 +855,38 @@ public final class FrontierGameplayRuntime implements Listener {
                 + config.exactWorldName()
                 + "; generation=" + request.generation()
         );
-        scheduleEntryReadiness(player, request);
+        entryContexts.remove(playerUuid);
+        delivery.requiredManagedItemCount(playerUuid).whenComplete(
+            (requiredManagedItems, failure) -> services.tasks().mainThread(() -> {
+                if (!entryReadiness.isCurrent(request)) {
+                    return;
+                }
+                Player online = plugin.getServer().getPlayer(playerUuid);
+                if (failure != null
+                    || requiredManagedItems == null
+                    || online == null
+                    || !online.isOnline()
+                    || !config.exactWorldName().equals(
+                        online.getWorld().getName()
+                    )) {
+                    plugin.getLogger().warning(
+                        "Frontier safe entry readiness unavailable; retry later."
+                    );
+                    cancelEntry(playerUuid);
+                    return;
+                }
+                EntryContext context = new EntryContext(
+                    request,
+                    requiredManagedItems
+                );
+                entryContexts.put(playerUuid, context);
+                scheduleEntryReadiness(
+                    online,
+                    request,
+                    requiredManagedItems
+                );
+            })
+        );
     }
 
     private void onMviObservation(
@@ -883,22 +918,50 @@ public final class FrontierGameplayRuntime implements Listener {
         SafeEntryReadiness.Request request = entryReadiness.currentOrRequest(
             playerUuid
         );
-        schedulePublicContinuation(player, request);
+        EntryContext context = entryContexts.get(playerUuid);
+        if (context != null && context.request().equals(request)) {
+            schedulePublicContinuation(
+                player,
+                request,
+                context.requiredManagedItems()
+            );
+        }
     }
 
     private void scheduleEntryReadiness(
         Player player,
-        SafeEntryReadiness.Request request
+        SafeEntryReadiness.Request request,
+        int requiredManagedItems
     ) {
         cancelEntryTask(player.getUniqueId());
         if (entryReadiness.hasPublicShareEvent(request)) {
-            schedulePublicContinuation(player, request);
+            schedulePublicContinuation(
+                player,
+                request,
+                requiredManagedItems
+            );
             return;
         }
+        scheduleFingerprintReadiness(
+            player,
+            request,
+            requiredManagedItems,
+            "BOUNDED_FINGERPRINT"
+        );
+    }
+
+    private void scheduleFingerprintReadiness(
+        Player player,
+        SafeEntryReadiness.Request request,
+        int requiredManagedItems,
+        String source
+    ) {
+        cancelEntryTask(player.getUniqueId());
         UUID playerUuid = player.getUniqueId();
         plugin.getLogger().info(
-            "WAYFARER_ENTRY_STABILIZATION_BEGIN; source=BOUNDED_FINGERPRINT"
+            "WAYFARER_ENTRY_STABILIZATION_BEGIN; source=" + source
                 + "; generation=" + request.generation()
+                + "; requiredManagedItems=" + requiredManagedItems
         );
         java.util.concurrent.atomic.AtomicReference<BukkitTask> taskRef =
             new java.util.concurrent.atomic.AtomicReference<>();
@@ -918,11 +981,16 @@ public final class FrontierGameplayRuntime implements Listener {
                 int fingerprint = online == null
                     ? Integer.MIN_VALUE
                     : managedInventoryFingerprint(online);
+                int visibleManagedItems = online == null
+                    ? 0
+                    : managedItemCount(online);
                 SafeEntryReadiness.Decision decision =
                     entryReadiness.observeFingerprint(
                         request,
                         inExactWorld,
-                        fingerprint
+                        fingerprint,
+                        visibleManagedItems,
+                        requiredManagedItems
                     );
                 if (decision == SafeEntryReadiness.Decision.WAIT) {
                     return;
@@ -932,9 +1000,10 @@ public final class FrontierGameplayRuntime implements Listener {
                 if (decision == SafeEntryReadiness.Decision.READY) {
                     plugin.getLogger().info(
                         "MVI_PROFILE_VISIBLE; Frontier safe entry stabilized;"
-                            + " generation=" + request.generation()
+                            + " source=" + source
+                            + "; generation=" + request.generation()
                             + "; managedItems="
-                            + managedItemCount(online)
+                            + visibleManagedItems
                     );
                     startReadyEntry(online, request, "FINGERPRINT_STABLE");
                     return;
@@ -947,9 +1016,10 @@ public final class FrontierGameplayRuntime implements Listener {
                 }
                 entryReadiness.cancel(playerUuid);
                 delivery.cancelSafeEntry(playerUuid);
+                entryContexts.remove(playerUuid);
             },
             1L,
-            1L
+            FINGERPRINT_POLL_PERIOD_TICKS
         );
         taskRef.set(task);
         entryReadinessTasks.put(playerUuid, task);
@@ -957,7 +1027,8 @@ public final class FrontierGameplayRuntime implements Listener {
 
     private void schedulePublicContinuation(
         Player player,
-        SafeEntryReadiness.Request request
+        SafeEntryReadiness.Request request,
+        int requiredManagedItems
     ) {
         UUID playerUuid = player.getUniqueId();
         cancelEntryTask(playerUuid);
@@ -975,17 +1046,22 @@ public final class FrontierGameplayRuntime implements Listener {
                     entryReadiness.continueAfterPublicShareEvent(
                         request,
                         inExactWorld
-                    );
+                );
                 if (decision == SafeEntryReadiness.Decision.READY) {
                     plugin.getLogger().info(
-                        "MVI_PROFILE_VISIBLE; Frontier safe entry continuation"
-                            + " after public share event; generation="
-                            + request.generation()
+                        "MVI_PROFILE_CONTINUATION; bounded post-event"
+                            + " stabilization; generation=" + request.generation()
                     );
-                    startReadyEntry(online, request, "MVI_PUBLIC_EVENT");
+                    scheduleFingerprintReadiness(
+                        online,
+                        request,
+                        requiredManagedItems,
+                        "MVI_PUBLIC_EVENT"
+                    );
                 } else if (decision != SafeEntryReadiness.Decision.WAIT) {
                     entryReadiness.cancel(playerUuid);
                     delivery.cancelSafeEntry(playerUuid);
+                    entryContexts.remove(playerUuid);
                 }
             }
         );
@@ -1004,6 +1080,7 @@ public final class FrontierGameplayRuntime implements Listener {
             || !config.exactWorldName().equals(player.getWorld().getName())) {
             return;
         }
+        entryContexts.remove(player.getUniqueId());
         plugin.getLogger().info(
             "WAYFARER_DELIVERY_BEGIN; source=" + readinessSource
                 + "; generation=" + request.generation()
@@ -1015,6 +1092,7 @@ public final class FrontierGameplayRuntime implements Listener {
 
     private void cancelEntry(UUID playerUuid) {
         cancelEntryTask(playerUuid);
+        entryContexts.remove(playerUuid);
         entryReadiness.cancel(playerUuid);
         delivery.cancelSafeEntry(playerUuid);
     }
@@ -1921,6 +1999,19 @@ public final class FrontierGameplayRuntime implements Listener {
                 .append(count > 0 ? "(EXACT_CURRENT)" : "(ABSENT_OR_NOT_CURRENT)");
         }
         return summary.toString();
+    }
+
+    private record EntryContext(
+        SafeEntryReadiness.Request request,
+        int requiredManagedItems
+    ) {
+        private EntryContext {
+            if (requiredManagedItems < 0) {
+                throw new IllegalArgumentException(
+                    "Required managed item count cannot be negative"
+                );
+            }
+        }
     }
 
     private static int exactCurrentCount(

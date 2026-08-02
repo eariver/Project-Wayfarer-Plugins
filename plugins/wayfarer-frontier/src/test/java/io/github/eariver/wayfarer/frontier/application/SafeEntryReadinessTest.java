@@ -63,6 +63,50 @@ final class SafeEntryReadinessTest {
     }
 
     @Test
+    void existingProfileWaitsForRequiredManagedItemsBeforeReady() {
+        SafeEntryReadiness readiness = new SafeEntryReadiness();
+        SafeEntryReadiness.Request request = readiness.request(PLAYER);
+
+        assertEquals(
+            SafeEntryReadiness.Decision.WAIT,
+            readiness.observeFingerprint(request, true, 1, 0, 3)
+        );
+        assertEquals(
+            SafeEntryReadiness.Decision.WAIT,
+            readiness.observeFingerprint(request, true, 1, 0, 3)
+        );
+        assertEquals(
+            SafeEntryReadiness.Decision.WAIT,
+            readiness.observeFingerprint(request, true, 2, 2, 3)
+        );
+        assertEquals(
+            SafeEntryReadiness.Decision.WAIT,
+            readiness.observeFingerprint(request, true, 3, 3, 3)
+        );
+        assertEquals(
+            SafeEntryReadiness.Decision.READY,
+            readiness.observeFingerprint(request, true, 3, 3, 3)
+        );
+    }
+
+    @Test
+    void missingRequiredManagedItemsFailClosedAtBoundedTimeout() {
+        SafeEntryReadiness readiness = new SafeEntryReadiness();
+        SafeEntryReadiness.Request request = readiness.request(PLAYER);
+
+        for (int observation = 1; observation < 5; observation++) {
+            assertEquals(
+                SafeEntryReadiness.Decision.WAIT,
+                readiness.observeFingerprint(request, true, observation, 0, 3)
+            );
+        }
+        assertEquals(
+            SafeEntryReadiness.Decision.TIMEOUT,
+            readiness.observeFingerprint(request, true, 5, 0, 3)
+        );
+    }
+
+    @Test
     void newerRequestSupersedesOlderAndCancelRemovesIt() {
         SafeEntryReadiness readiness = new SafeEntryReadiness();
         SafeEntryReadiness.Request first = readiness.request(PLAYER);

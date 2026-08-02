@@ -247,6 +247,36 @@ final class TraversalDeliveryCoordinatorTest {
     }
 
     @Test
+    void requiredManagedItemsWaitForMviRestorationButHonorPendingDeath() {
+        FakeRepository repository = new FakeRepository();
+        for (TraversalIdentity.ItemType type : TraversalIdentity.ItemType.values()) {
+            repository.seedLogical(PLAYER, type, 1);
+        }
+        TraversalDeliveryCoordinator coordinator = coordinator(
+            repository,
+            new FakeGateway()
+        );
+
+        assertEquals(
+            3,
+            coordinator.requiredManagedItemCount(PLAYER)
+                .toCompletableFuture()
+                .join()
+        );
+
+        coordinator.persistDeathSnapshots(
+            PLAYER,
+            List.of(snapshot(TraversalIdentity.ItemType.ELYTRA, 1))
+        ).toCompletableFuture().join();
+        assertEquals(
+            2,
+            coordinator.requiredManagedItemCount(PLAYER)
+                .toCompletableFuture()
+                .join()
+        );
+    }
+
+    @Test
     void auditOnlyOnRealTransitions() {
         FakeRepository repository = new FakeRepository();
         repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);

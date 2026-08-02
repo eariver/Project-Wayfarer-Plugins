@@ -85,6 +85,34 @@ public final class SafeEntryReadiness {
         boolean onlineInExactWorld,
         int fingerprint
     ) {
+        return observeFingerprint(
+            request,
+            onlineInExactWorld,
+            fingerprint,
+            Integer.MAX_VALUE,
+            0
+        );
+    }
+
+    /**
+     * Observes a backend/MVI inventory fingerprint with an optional minimum
+     * count of managed items that must be visible before the fingerprint can
+     * stabilize. Existing durable active items make an empty restored profile
+     * unsafe: it must remain bounded WAIT rather than being treated as a
+     * legitimate empty first entry.
+     */
+    public Decision observeFingerprint(
+        Request request,
+        boolean onlineInExactWorld,
+        int fingerprint,
+        int managedItemCount,
+        int requiredManagedItems
+    ) {
+        if (managedItemCount < 0 || requiredManagedItems < 0) {
+            throw new IllegalArgumentException(
+                "Managed item counts cannot be negative"
+            );
+        }
         State state = currentState(request);
         if (state == null) {
             return Decision.SUPERSEDED;
@@ -97,6 +125,13 @@ public final class SafeEntryReadiness {
                 return Decision.WAIT;
             }
             state.observations++;
+            if (managedItemCount < requiredManagedItems) {
+                state.lastFingerprint = NO_FINGERPRINT;
+                state.stableObservations = 0;
+                return state.observations >= MAX_FINGERPRINT_OBSERVATIONS
+                    ? Decision.TIMEOUT
+                    : Decision.WAIT;
+            }
             if (state.lastFingerprint == fingerprint) {
                 state.stableObservations++;
             } else {
