@@ -19,8 +19,14 @@ Repository:
 Branch:
   feature/V0.0.2-main-frontier
 
-Expected branch HEAD at this handoff:
+Minimum required review commit:
+  70b66e17b7308ae4c9529a1685f820e8a7773bfa
+
+Required review addendum commit:
   b61be3dc5c69e22d507c027f4a3939d2da9330f3
+
+Initial handoff publication commit:
+  24684652b00ae6e5f9cd00215f8f2fe237cc9ef1
 
 Candidate-4 Product HEAD:
   9fe86d2e787ab1f86dcf38a5abdba6168515a802
@@ -38,8 +44,13 @@ Client Test:
   DO NOT START
 ```
 
-Before mutation, verify local, origin, and PR HEAD; clean worktree/index; branch identity; no tag or
-Release; and the two review files:
+The current branch HEAD may be a later documentation-only correction commit. Do not stop merely
+because it differs from the initial handoff publication commit. Before mutation, verify that the
+current local, origin, and PR HEAD are identical, descend from all three immutable commits above,
+and contain no Product changes after Candidate-4 Product HEAD except the already reviewed
+Candidate-4 implementation.
+
+Also verify clean worktree/index, branch identity, no V0.0.2 tag or Release, and the two review files:
 
 ```text
 docs/release-readiness/V0.0.2/
