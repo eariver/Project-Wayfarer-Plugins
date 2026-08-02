@@ -28,12 +28,13 @@ production balance remains open after the Client Test.
   `pull-acceleration=0.05`, `max-pull-speed=0.85`, and `cooldown-ticks=20`, with durability and
   all entity targets disabled. Pre-test balance changes are `NONE`; production promotion is
   `DECIDE_AFTER_CLIENT_TEST`.
-- Client Test Candidate: `V0.0.2-Client-Candidate-1` fixed from product source
-  `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; exact local artifact hashes and Safe Tier evidence
-  are recorded in the Phase 09A handoff.
-- Bounded Client Acceptance: `NOT STARTED`; Mainline disposable Client Test preparation is
-  pending Phase 09B independent review. The detailed procedure remains in the Client Acceptance
-  Plan.
+- Client Test Candidate-1: `CLIENT_TEST_FAIL`, rejected for promotion; exact local artifact
+  hashes and failure evidence remain immutable historical evidence.
+- Client Test Candidate-2: `PREPARED_FOR_FOCUSED_CLIENT_RETEST` from product source
+  `f2281093a03c17be0b0e69004059dd7ccb072b1c`; exact local artifact hashes and focused gates are
+  recorded in the Candidate-2 handoff.
+- Bounded Client Acceptance: `NOT COMPLETE` / `CLIENT_TEST_REQUIRED`; focused retest and
+  independent review remain pending. Resource Pack is `SKIPPED_OUT_OF_SCOPE_BY_OWNER`.
 
 ## Project and publication
 

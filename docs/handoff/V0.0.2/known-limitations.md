@@ -51,11 +51,17 @@
 
 ## Deferred and acceptance boundaries
 
+- Phase 10B-A Candidate-1 failed Main first delivery and Frontier exact-world reconnect
+  scenarios. Candidate-2 adds stage-specific Main delivery diagnostics, MVI-aware bounded
+  readiness, coalescing/cancellation, and exact-current duplicate self-heal, but focused Client
+  retest is still required; no Client Acceptance pass is claimed.
+- Resource Pack rendering is `SKIPPED_OUT_OF_SCOPE_BY_OWNER` for this remediation phase.
 - Waystone behavior and the EM–MVI adapter are absent/deferred; the adapter requires a Project
   decision of `ADAPTER_REQUIRED` before creation.
 - FRONT-D01 is resolved for V0.0.2. FRONT-D02 remains a bounded client safe-tier/motion gate;
   FRONT-D04 and MAIN-D08 are accepted with the supported-boundary limitations above.
-- No Client Acceptance, Project acceptance, Client Test Candidate, or Stable Release is claimed.
+- No full Client Acceptance, Project acceptance, or Stable Release is claimed. Candidate-1 is
+  rejected for promotion; Candidate-2 is prepared for focused Client retest only.
 - Project Runtime, permissions groups, configuration, worlds, databases, migrations, and servers
   were not changed by this repository task.
 

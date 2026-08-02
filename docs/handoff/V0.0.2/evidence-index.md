@@ -1,7 +1,10 @@
 # V0.0.2 Evidence Index
 
-Accepted candidate product-source anchor:
+Historical Candidate-1 product-source anchor:
 `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
+
+Candidate-2 remediation product-source anchor:
+`f2281093a03c17be0b0e69004059dd7ccb072b1c`
 
 Phase 01–06 capability evidence is distinct from client and Project acceptance:
 
@@ -15,8 +18,11 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | Phase 06 permission split | CI run `30701316290`; Headless run `30701316289`; `preclient-headless-evidence`; digest `sha256:218a363b71acaa93b8e55ee9b6a2215e98f94763f732e636edb38cd068065fef` | complete |
 | Phase 07 documentation/full validation | Documentation and local validation history; exact-final-head IDs belong in its retained report | complete |
 | Phase 08B remediation | Focused `FrontierGameplayRuntime` expiration guard and `LaunchpadExpirationDecisionTest`; Normal CI `30713914057`; Pre-client Headless `30713914051` | independent review PASS |
-| Phase 09A candidate fixation | Candidate label `V0.0.2-Client-Candidate-1`; exact product source `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; local ignored candidate manifest and result report | fixed; Client Acceptance not started |
-| Phase 09B Frontier Fixture adoption | Project Issue `eariver/Project_Wayfarer#4`, approval comment `5155937809`, exact first-test Fixture and bounded Client Test handoff | executor evidence prepared; independent review required; Client Acceptance not started |
+| Phase 09A candidate fixation | Candidate-1 label and exact product source `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; immutable local candidate/evidence | historical; Client Test later failed and Candidate-1 rejected for promotion |
+| Phase 09B Frontier Fixture adoption | Project Issue `eariver/Project_Wayfarer#4`, approval comment `5155937809`, exact first-test Fixture and bounded Client Test handoff | Fixture unchanged; balance decision still pending |
+| Phase 10B-B failure remediation | Product commit `f2281093a03c17be0b0e69004059dd7ccb072b1c`; stage-specific Main diagnostics; MVI 5.3.5 public lifecycle continuation; Frontier coalescing/cancellation and exact-current self-heal | remediation implemented; focused Client retest required |
+| Phase 10B-B exact product CI | [Normal CI run 30745215406](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30745215406); [Pre-client Headless run 30745215405](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30745215405) | both pass at product commit |
+| Phase 10B-B Candidate-2 | Ignored staging `.ai-work/luna-gpt-5.6-v002/candidate/V0.0.2-Client-Candidate-2/`; exact manifest and hashes | prepared for focused Client retest |
 
 | Evidence | Path / immutable identity | Result |
 |---|---|---|
@@ -50,8 +56,8 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md`; tracked fixture `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` | pinned 1.0.2 Fixture approved for first Client Test only; SHA-256 `ed210f8e56db26315f91fecb9e1d35d686c8fe647480498b7588467a6fa2448a`; production promotion remains pending Client Test |
 | Node 24 assessment | `docs/reports/V0.0.2-node24-actions-assessment.md` | pass |
 | Frontier decision authority | [Project Issue #4 approval comment](https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809) | exact Fixture acknowledged and approved for first Client Test only; no pre-test balance changes; `DECIDE_AFTER_CLIENT_TEST` |
-| Client plan | `docs/testing/plans/V0.0.2-client-acceptance.md` | approved concrete values and bounded scenarios recorded; prepared / not run |
-| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | Candidate fixed; Frontier baseline approved for first Client Test; independent review, Client, Project, and Stable gates remain |
+| Client plan | `docs/testing/plans/V0.0.2-client-acceptance.md` | Candidate-2 focused Main/Frontier gates recorded; full Client Acceptance not complete |
+| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | Candidate-1 rejected; Candidate-2 prepared; independent review, focused Client, Project, and Stable gates remain |
 
 Build outputs, task databases, container state, Paper worlds, logs, and credentials are not
 version-controlled evidence.

@@ -1,17 +1,22 @@
 # V0.0.2 Execution Status
 
-Status: Phase 01–06 Plugin implementation/evidence work and Phase 08B remediation are complete
-at the accepted product source. Phase 09A fixed the first bounded Client Test Candidate. Phase
-09B adopted the external Frontier-approved first-test Fixture and prepared the Plugin-side
-handoff; independent review and Client Acceptance remain pending, and Project acceptance and
-Stable Release remain not authorized.
+Status: Phase 01–06 Plugin implementation/evidence work, Phase 08B remediation, and Phase 10B-B
+client-failure remediation are complete at the fixed product source. Phase 10B-A Candidate-1
+failed the first mandatory Main and Frontier client scenarios and is rejected for promotion;
+its evidence remains immutable historical evidence. Candidate-2 is prepared for focused Client
+retest. Independent review, focused Client retest, full Client Acceptance, Project acceptance,
+and Stable Release remain pending/not authorized.
 
 ## Fixed execution identity
 
 - Work branch: `feature/V0.0.2-main-frontier`
-- Candidate product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
-- Client Test Candidate: `V0.0.2-Client-Candidate-1` (`FIXED`)
-- Candidate-fixation metadata / Fixture commit: `521a41bbcc4d4e0e58111deeb663f52bf1c6e1af`
+- Candidate-1 historical product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
+- Candidate-2 product-source anchor: `f2281093a03c17be0b0e69004059dd7ccb072b1c`
+- Client Test Candidate-1: `V0.0.2-Client-Candidate-1` (`CLIENT_TEST_FAIL`, rejected for
+  promotion; immutable evidence retained)
+- Client Test Candidate-2: `V0.0.2-Client-Candidate-2`
+  (`PREPARED_FOR_FOCUSED_CLIENT_RETEST`)
+- Candidate-1 fixation / Fixture commit: `521a41bbcc4d4e0e58111deeb663f52bf1c6e1af`
 - Frontier concrete Fixture authority: `eariver/Project_Wayfarer#4`, approval comment
   `5155937809`; first Client Test baseline `APPROVED`, Client Test only
 - Fixture: `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`; SHA-256
@@ -25,8 +30,9 @@ Stable Release remain not authorized.
 - `requirements_cleared`: absent and not inferred
 - V0.0.2 exact Frontier world: `frontier_iris`; future single-name configurability is Issue #17
 - Core: exact published V0.0.1 runtime reused unchanged; not rebuilt as V0.0.2
-- Main/Frontier: exact staged runtime filenames, sizes, and SHA-256 values are recorded in the
-  candidate manifest and Mainline handoff
+- Main/Frontier: Candidate-2 exact staged runtime filenames, sizes, and SHA-256 values are
+  recorded in the Candidate-2 manifest and Mainline handoff; Candidate-1 hashes remain recorded
+  as historical failure evidence
 - LeafGrapple: pinned 1.0.2 artifact and complete test-only Safe Tier handoff passed; tracked
   fixture is `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`
 
@@ -67,17 +73,22 @@ Stable Release remain not authorized.
 ## Remaining gates
 
 - ChatGPT independent review of the Phase 08B remediation: `PASS` (external decision).
-- Phase 09A independent review: `PASS`.
-- Phase 09B executor evidence: prepared; independent review required. Mainline disposable Client
-  Test preparation is pending that review.
+- Phase 09A/09B historical evidence: retained; Candidate-1 is rejected after Phase 10B-A
+  Client Test failure.
+- Phase 10B-B independent review: required.
+- Candidate-2 focused Client retest: `PENDING_INDEPENDENT_REVIEW` / `CLIENT_TEST_REQUIRED`.
 - FRONT-D02 client motion gate: `CLIENT_TEST_REQUIRED`; Safe Tier preparation is complete.
-- Client Test Candidate: fixed; LeafGrapple first-test baseline: `RESOLVED / APPROVED`.
-- Bounded Client Acceptance: `NOT STARTED` / `CLIENT_TEST_REQUIRED`.
+- Resource Pack: `SKIPPED_OUT_OF_SCOPE_BY_OWNER`.
+- LeafGrapple first-test baseline: unchanged; balance decision remains pending after Client Test.
+- Full Bounded Client Acceptance: `NOT COMPLETE` / `CLIENT_TEST_REQUIRED`.
 - Project acceptance: pending; Stable publication: not authorized in this task.
 - Waystone and EM–MVI remain deferred/not authorized.
 
 Phase 07's documentation-only history remains retained. Phase 08B changed only the focused
 Frontier source/test path and required handoff documents. Phase 09A changed candidate metadata,
-handoff documents, and one sanitized test fixture. Phase 09B is documentation-only: it does not
+handoff documents, and one sanitized test fixture. Phase 09B is documentation-only: it did not
 change the Fixture bytes, candidate artifacts, product source, migration, config, Gradle,
-dependency, or Project Runtime.
+dependency, or Project Runtime. Phase 10B-B changed Main/Frontier delivery boundaries and
+focused regression coverage in product commit `f2281093a03c17be0b0e69004059dd7ccb072b1c`, then
+prepared Candidate-2 and a fresh disposable two-backend retest handoff. It does not claim Client
+Acceptance or change Project Runtime.

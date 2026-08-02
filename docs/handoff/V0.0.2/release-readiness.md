@@ -1,11 +1,15 @@
 # V0.0.2 Release Readiness
 
-- Candidate product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
+- Candidate-1 historical product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
+- Candidate-2 product-source anchor: `f2281093a03c17be0b0e69004059dd7ccb072b1c`
 - Phase 09A independent review: `PASS`
-- Phase 09B executor evidence: prepared; independent review required
-- Client Test Candidate: `V0.0.2-Client-Candidate-1` fixed
-- Mainline Disposable Client Test Preparation: `PENDING_INDEPENDENT_REVIEW`
-- Client Acceptance: `NOT STARTED` / `CLIENT_TEST_REQUIRED`
+- Phase 09B executor evidence: historical; Candidate-1 client result is `FAIL`
+- Client Test Candidate-1: rejected for promotion; evidence retained immutable
+- Client Test Candidate-2: `PREPARED_FOR_FOCUSED_CLIENT_RETEST`
+- Mainline Disposable Client Test Preparation: fresh two-backend environment prepared;
+  focused retest pending independent review
+- Client Acceptance: `NOT COMPLETE` / `CLIENT_TEST_REQUIRED`
+- Resource Pack: `SKIPPED_OUT_OF_SCOPE_BY_OWNER`
 - Stable tag/release: not authorized and not created
 - `requirements_cleared`: absent and not inferred
 - Project Runtime changed: No
@@ -27,7 +31,7 @@ https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809 (ID
 
 ```text
 Candidate:
-  V0.0.2-Client-Candidate-1
+  V0.0.2-Client-Candidate-2
 
 Pre-test balance changes:
   NONE
@@ -48,15 +52,19 @@ and `cooldown-ticks`, respectively. The LeafGrapple Fixture owns these tier valu
 Runtime Guard separately owns exact case-sensitive `frontier_iris` rejection and world-availability
 behavior. Wayfarer never creates the world; Multiverse owns world creation/loading.
 
+The Fixture bytes and approved values are unchanged from the historical Candidate-1 handoff.
+Candidate-1 failed before the LeafGrapple motion/balance scenarios, so balance remains pending.
+
 Remaining gates:
 
-1. Phase 09B independent review of the prepared Plugin-side Client Test input.
-2. FRONT-D02 bounded client motion gate (`CLIENT_TEST_REQUIRED`) using the fixed Fixture.
-3. Bounded Client Acceptance in a separate disposable environment.
-4. Project acceptance and later stable publication.
+1. Phase 10B-B independent review of the remediation and Candidate-2 handoff.
+2. Candidate-2 focused Main/Frontier client gates using the fixed Fixture.
+3. FRONT-D02 bounded client motion gate (`CLIENT_TEST_REQUIRED`) using the fixed Fixture.
+4. Bounded Client Acceptance in the separate disposable environment.
+5. Project acceptance and later stable publication.
 
 FRONT-D01 is resolved; FRONT-D04 and MAIN-D08 are accepted with limitation at supported
 boundaries. The first-test LeafGrapple baseline is `RESOLVED / APPROVED`, while production balance
-is `OPEN_AFTER_CLIENT_TEST`. Phase 09B does not authorize Mainline execution before independent
-review, Project deployment, production configuration, PR Ready status, merge, tag, release,
-release workflow dispatch, `requirements_cleared=true`, or Client/Project acceptance.
+is `OPEN_AFTER_CLIENT_TEST`. Phase 10B-B does not authorize Project deployment, production
+configuration, PR Ready status, merge, tag, release, release workflow dispatch,
+`requirements_cleared=true`, or Client/Project acceptance.
