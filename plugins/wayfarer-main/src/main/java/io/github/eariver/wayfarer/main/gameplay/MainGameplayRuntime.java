@@ -1603,12 +1603,23 @@ public final class MainGameplayRuntime implements
         }
         PersistentDataContainer pdc =
             item.getItemMeta().getPersistentDataContainer();
-        Long longValue = pdc.get(key, PersistentDataType.LONG);
-        if (longValue != null) {
-            return longValue;
+        return number(pdc, key);
+    }
+
+    static long number(PersistentDataContainer pdc, NamespacedKey key) {
+        if (pdc.has(key, PersistentDataType.LONG)) {
+            Long longValue = pdc.get(key, PersistentDataType.LONG);
+            if (longValue != null) {
+                return longValue;
+            }
         }
-        Integer integer = pdc.get(key, PersistentDataType.INTEGER);
-        return integer == null ? Long.MIN_VALUE : integer.longValue();
+        if (pdc.has(key, PersistentDataType.INTEGER)) {
+            Integer integer = pdc.get(key, PersistentDataType.INTEGER);
+            if (integer != null) {
+                return integer.longValue();
+            }
+        }
+        return Long.MIN_VALUE;
     }
 
     private static String oreGroup(Material material) {
