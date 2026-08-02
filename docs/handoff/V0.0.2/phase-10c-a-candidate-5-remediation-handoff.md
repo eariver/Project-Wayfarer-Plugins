@@ -1,16 +1,27 @@
 # Phase 10C-A Candidate-5 Remediation Handoff
 
+Revision: A  
 Recorded: 2026-08-03 JST
 
-## 1. Purpose
+## 1. Purpose and stopping boundary
 
 This handoff authorizes a narrow Candidate-5 Product remediation after the Candidate-4 pre-client
 independent review.
 
-It does not authorize a Minecraft Client connection, Project Runtime change, deployment, merge,
-tag, Release, or `requirements_cleared`.
+It does not authorize:
 
-## 2. Starting authority
+- a Minecraft Client connection;
+- installation into Project Wayfarer Runtime;
+- MariaDB or Redis runtime mutation;
+- Paper start/restart or deployment;
+- merge, Ready for Review, tag, or Release;
+- Project Issue #4 modification;
+- `requirements_cleared`.
+
+Successful execution stops after Candidate-5 Product validation, two-formal-build fixation, tracked
+status synchronization, and creation of a complete runtime handoff and review package.
+
+## 2. Starting authority and recovery gate
 
 ```text
 Repository:
@@ -25,8 +36,11 @@ Minimum required review commit:
 Required review addendum commit:
   b61be3dc5c69e22d507c027f4a3939d2da9330f3
 
-Initial handoff publication commit:
+Initial Candidate-5 handoff publication commit:
   24684652b00ae6e5f9cd00215f8f2fe237cc9ef1
+
+Complete Candidate-5 handoff revision commit:
+  resolved from this file at execution start
 
 Candidate-4 Product HEAD:
   9fe86d2e787ab1f86dcf38a5abdba6168515a802
@@ -44,13 +58,39 @@ Client Test:
   DO NOT START
 ```
 
-The current branch HEAD may be a later documentation-only correction commit. Do not stop merely
-because it differs from the initial handoff publication commit. Before mutation, verify that the
-current local, origin, and PR HEAD are identical, descend from all three immutable commits above,
-and contain no Product changes after Candidate-4 Product HEAD except the already reviewed
-Candidate-4 implementation.
+The branch may have later documentation-only commits. Before mutation, Luna must report and verify:
 
-Also verify clean worktree/index, branch identity, no V0.0.2 tag or Release, and the two review files:
+```bash
+git branch --show-current
+git status --porcelain=v1
+git diff --exit-code
+git diff --cached --exit-code
+git rev-parse HEAD
+git fetch origin
+git rev-parse origin/feature/V0.0.2-main-frontier
+git merge-base --is-ancestor 70b66e17b7308ae4c9529a1685f820e8a7773bfa HEAD
+git merge-base --is-ancestor b61be3dc5c69e22d507c027f4a3939d2da9330f3 HEAD
+git merge-base --is-ancestor 24684652b00ae6e5f9cd00215f8f2fe237cc9ef1 HEAD
+git log --oneline --decorate 9fe86d2e787ab1f86dcf38a5abdba6168515a802..HEAD
+git tag --list 'V0.0.2*'
+git ls-remote --tags origin 'V0.0.2*'
+gh pr view 14 --json state,isDraft,mergedAt,mergeable,mergeStateStatus,headRefOid,headRefName,baseRefName
+gh release view V0.0.2
+```
+
+Required starting conditions:
+
+- local, origin, and PR HEAD are identical;
+- worktree and index are clean;
+- current HEAD descends from all required review/handoff commits;
+- no unexplained Product change exists after Candidate-4 Product HEAD;
+- PR #14 remains Open, Draft, Unmerged, and non-conflicting;
+- no V0.0.2 tag or Release exists.
+
+STOP without reset, clean, stash, rebase, amend, force push, or artifact deletion when any condition
+is not satisfied.
+
+Required review files:
 
 ```text
 docs/release-readiness/V0.0.2/
@@ -58,9 +98,9 @@ docs/release-readiness/V0.0.2/
   phase-10c-a-candidate-4-preclient-independent-review-addendum.md
 ```
 
-Do not reset, rebase, amend, force push, or overwrite Candidate-4 artifacts.
+Candidate-4 fixed JARs, manifests, worksheets, and local evidence must not be overwritten.
 
-## 3. Product scope
+## 3. Authorized Product scope
 
 Candidate-5 is limited to:
 
@@ -69,7 +109,7 @@ Candidate-5 is limited to:
 3. actual-held-item guards at managed action entry points;
 4. Frontier late-MVI restart coordination proof;
 5. complete bounded Frontier TIMEOUT diagnostics;
-6. tests and contract/handoff synchronization required by those changes.
+6. tests and contract/traceability/handoff synchronization required by those changes.
 
 No balance, Fixture, migration, permission-model, Resource Pack, unrelated refactor, or Project
 Runtime change is authorized.
@@ -79,30 +119,43 @@ Runtime change is authorized.
 Add or update focused tests first. Preserve one RED execution showing the intended Candidate-4
 failure before Product implementation.
 
-Minimum Main test coverage:
+Required RED evidence must record:
 
-- `HeldGrowthToolAuthorizationTest` expects `VALID_BROKEN_OWNER.allowsBranchMutation() == false`;
-- Broken Tool Branch command/runtime mutation is rejected without session or physical mutation;
+- exact Candidate-4 Product baseline or equivalent source state;
+- exact commands;
+- expected failing assertions;
+- actual failing assertions;
+- confirmation that failures are caused by the intended missing behavior, not compilation or test
+  setup errors.
+
+Minimum Main coverage:
+
+- `VALID_BROKEN_OWNER.allowsBranchMutation() == false`;
+- Broken Tool Branch mutation is rejected without session or physical mutation;
 - active current Tool Branch mutation remains accepted;
-- valid -> stale held-slot transition becomes fail-closed synchronously;
-- ordinary -> managed transition becomes fail-closed synchronously;
-- swap-hand, number-key/inventory-click, drag, Drop, Pickup, and Respawn transition cases;
-- stale cache cannot permit Block Break, Progress, GUI, Repair, Branch, debug, or Damage mutation;
-- ordinary item with stale valid cache cannot open the Growth Tool GUI;
-- invalid managed item interaction is cancelled;
-- ordinary item interaction remains untouched after full `NO_MANAGED_ITEM` authorization.
+- valid current Tool -> stale/old-epoch managed item transition becomes fail-closed synchronously;
+- ordinary item -> managed item transition becomes fail-closed synchronously;
+- held-slot, swap-hand, number-key/inventory-click, drag, Drop, Pickup, and Respawn transitions;
+- stale cache cannot permit Block Break, Progress, GUI, Repair, Branch, debug, or managed Damage
+  mutation;
+- ordinary item with stale valid cache does not open Growth Tool GUI;
+- invalid managed item interaction is cancelled and opens no GUI;
+- ordinary item interaction remains untouched after full `NO_MANAGED_ITEM` authorization;
+- failed/conflicted authority mutation restores a correct authorization for the still-current
+  authority rather than leaving a permanent transition denial.
 
-Minimum Frontier test coverage:
+Minimum Frontier coverage:
 
-- TIMEOUT plus a concrete MVI MONITOR observation schedules exactly one restart;
+- TIMEOUT plus a concrete MVI MONITOR observation schedules exactly one next-tick restart;
 - duplicate concrete observations coalesce;
 - only one late restart is consumed per external entry cycle;
 - quit, actual world leave, newer external entry, and stop cancel pending restart;
-- restart reuses the cycle and cannot recursively create unbounded retries;
+- the internal restart reuses the cycle and cannot recursively create unbounded retries;
+- MVI absent/disabled retains the native Bukkit fingerprint path;
 - terminal TIMEOUT snapshot contains source, generation, poll count, visible/required managed counts,
   fingerprint, and `TIMEOUT` decision.
 
-A Registry-only MVI test is not sufficient.
+A Registry-only MVI test is insufficient.
 
 ## 5. Main Product changes
 
@@ -117,20 +170,21 @@ allowsBranchMutation():
 
 `VALID_BROKEN_OWNER` retains GUI and Repair entry only.
 
-### 5.2 Synchronous transition state
+### 5.2 Synchronous fail-closed transition
 
 In `MainGameplayRuntime`, add one helper with equivalent semantics:
 
 ```text
 failCloseHeldAuthorization(Player or UUID):
-  synchronously store AUTHORITY_UNAVAILABLE
-  no PDC parse
-  no DB/Redis access
-  no item mutation
+  synchronously store AUTHORITY_UNAVAILABLE or an equivalent managed fail-closed transition state
+  deny all managed capabilities
+  perform no PDC parse
+  perform no DB/Redis access
+  perform no item mutation
 ```
 
-Call it before scheduling full `authorizeMainHand(...)` after every operation capable of changing
-Main Hand:
+Call it before scheduling full `authorizeMainHand(...)` after every accepted operation capable of
+changing Main Hand:
 
 - `PlayerItemHeldEvent`;
 - `PlayerSwapHandItemsEvent`;
@@ -138,24 +192,43 @@ Main Hand:
 - accepted `InventoryDragEvent`;
 - `PlayerDropItemEvent`;
 - `EntityPickupItemEvent`;
-- `PlayerRespawnEvent`;
-- authority replacement/refresh before the changed authority is exposed;
-- identity/status rewrites when the final authorization is not completed in the same uninterrupted
-  main-thread call.
+- `PlayerRespawnEvent`.
 
-The scheduled full comparison may then replace the transition state with `NO_MANAGED_ITEM`,
+For an event that is cancelled by Wayfarer, do not leave the Player permanently fail-closed; either
+do not transition the cache or immediately restore authorization for the unchanged Main Hand.
+
+The scheduled full comparison may replace the transition state with `NO_MANAGED_ITEM`,
 `VALID_ACTIVE_OWNER`, `VALID_BROKEN_OWNER`, or an exact invalid state.
 
-### 5.3 Block Break guard
+### 5.3 Authority and identity mutation ordering
 
-For an actual managed Main-Hand item, permit Block Break only when cached state is exactly
-`VALID_ACTIVE_OWNER`.
+For Reissue, Revoke, authority refresh, ACTIVE -> BROKEN, BROKEN -> ACTIVE, and any identity rewrite:
 
-Do not allow `NO_MANAGED_ITEM` to authorize an actual managed item.
+1. fail-close the old cached result before the changed authority/item becomes observable;
+2. perform persistence or physical mutation through the existing authoritative path;
+3. on success, install the new Session authority/item and run full authorization before later
+   managed use;
+4. on conflict, failure, cancellation, or no-change, reload or retain the still-authoritative state
+   and reauthorize it;
+5. never leave the Player permanently `AUTHORITY_UNAVAILABLE` solely because an asynchronous
+   mutation failed;
+6. never expose a cache produced for an older Item Instance or Epoch after a durable rotation.
+
+Do not introduce synchronous DB access in Bukkit event handlers.
+
+### 5.4 Block Break and Progress
+
+For an actual managed Main-Hand item, the HIGHEST guard permits Block Break only when cached state is
+exactly `VALID_ACTIVE_OWNER`.
+
+`NO_MANAGED_ITEM` must never authorize an actual managed item.
 
 Ordinary item Block Break remains untouched.
 
-### 5.4 Interaction handler
+The MONITOR Progress handler remains non-cancelling, ignores already-cancelled events, and records
+Progress only for `VALID_ACTIVE_OWNER`.
+
+### 5.5 Interaction handler
 
 `onInteract(...)` must first classify the actual Main-Hand item.
 
@@ -163,7 +236,7 @@ Ordinary item Block Break remains untouched.
 not managed:
   return without interference
 
-managed + invalid cached state:
+managed + invalid/transition cached state:
   cancel interaction
   open no GUI
 
@@ -174,16 +247,16 @@ managed + VALID_ACTIVE_OWNER or VALID_BROKEN_OWNER:
 
 Do not reparse the complete claim in the use handler.
 
-### 5.5 Mutation entry points
+### 5.6 Mutation entry points
 
-Require both actual held-item classification and cached capability:
+Require both actual held-item classification and exact cached capability:
 
 ```text
 Branch:
   actual managed Tool
   state exactly VALID_ACTIVE_OWNER
 
-Debug held-item mutations:
+Debug held-item mutation:
   actual managed active Tool
   state exactly VALID_ACTIVE_OWNER
 
@@ -192,7 +265,8 @@ Repair snapshot / execution:
   exact active/broken state appropriate to the operation
 ```
 
-No command or GUI path may rely solely on a stale capability cache.
+No command or GUI path may rely solely on a stale capability cache. Lightweight managed-item
+classification is permitted; per-action full PDC/DB authorization is not.
 
 ## 6. Frontier Product changes
 
@@ -216,8 +290,9 @@ The design must preserve:
 - at most one late restart per external cycle;
 - duplicate-event coalescing;
 - no recursive new external cycle from the internal restart;
-- cancellation on quit, world leave, newer cycle, and stop;
-- no repeating or unbounded retry timer.
+- cancellation on quit, actual world leave, newer cycle, and stop;
+- no repeating or unbounded retry timer;
+- native Bukkit fingerprint behavior when MVI is absent or disabled.
 
 ### 6.2 TIMEOUT observation
 
@@ -245,9 +320,34 @@ REQUIRED_STABLE_OBSERVATIONS = 2
 
 Do not replace readiness with an unconditional delay.
 
-## 7. Validation sequence
+## 7. Documentation and traceability updates
 
-Run in order and stop at first failure:
+Update only the minimum tracked contracts needed to keep the new Product truthful:
+
+- Decision Register;
+- Main/Frontier requirements and source provenance where affected;
+- traceability;
+- Client Acceptance plan;
+- blocking/execution status;
+- release-readiness and handoff records;
+- PR #14 body.
+
+Record:
+
+- Candidate-4 rejected and preserved;
+- Candidate-5 required, then exact Product/fixation status after execution;
+- the two confirmed Main defects and Frontier proof/diagnostic gaps;
+- Client Test not started;
+- Full Client Acceptance incomplete;
+- promotion HOLD;
+- Project acceptance pending;
+- stable publication not authorized.
+
+Do not modify Project Issue #4 or the approved Fixture.
+
+## 8. Local validation sequence
+
+Run in order and stop at the first failure:
 
 1. focused RED tests;
 2. focused Main authorization/interaction/Branch tests;
@@ -256,41 +356,145 @@ Run in order and stop at first failure:
 5. full Frontier module tests;
 6. `./gradlew check`;
 7. `./gradlew clean assemble`;
-8. `git diff --check` and scope review;
-9. normal Product commit and fast-forward push;
-10. exact new PR-head Normal CI and Pre-client Headless Runtime monitoring.
+8. release/package validators required by the current repository baseline;
+9. `git diff --check`;
+10. changed-file and scope review.
+
+Record exact command, Java and Gradle identity, start/end time, result, test count, and skipped count.
 
 No test may be skipped, disabled, quarantined, or weakened to obtain green.
 
-## 8. Candidate-5 fixation
+## 9. Product commit, push, and workflow evidence
+
+After local PASS:
+
+1. create one Candidate-5 Product commit containing Product code, tests, and defining contracts;
+2. push by normal fast-forward only;
+3. record exact Candidate-5 Product HEAD;
+4. monitor the new Normal CI and Pre-client Headless Runtime to completion.
+
+For each workflow, record separately:
+
+```text
+event head SHA
+PR head SHA
+workflow checkout SHA
+PR merge-ref SHA, when used
+Candidate-5 Product HEAD
+relationship between the tested tree and Product HEAD
+```
+
+When the workflow checks out `refs/pull/14/merge`, report:
+
+```text
+PR_MERGE_REF_VALIDATION:
+  PASS or FAIL
+
+EXACT_PRODUCT_HEAD_CHECKOUT:
+  NOT PERFORMED
+```
+
+Do not describe PR merge-ref validation as a direct Product-HEAD checkout. Do not modify a workflow
+merely to manufacture a different evidence classification.
+
+STOP when either workflow fails, targets an unexpected event head, or tests an unexplained tree.
+
+## 10. Candidate-5 reproducible fixation
 
 After Product CI and Headless succeed, perform two independently recorded, fully qualified clean
 builds from exact Candidate-5 Product HEAD.
 
+Each formal build must record:
+
+- clean detached worktree or equivalent proven clean checkout;
+- exact Product HEAD;
+- exact command;
+- Java and Gradle versions;
+- start/end time;
+- Main and Frontier filename, size, SHA-256;
+- binary comparison where available.
+
 Required equality:
 
-- Main filename, size, and SHA-256;
-- Frontier filename, size, and SHA-256;
-- binary equality where available.
+- Main same filename, size, SHA-256, and bytes;
+- Frontier same filename, size, SHA-256, and bytes.
 
-Core remains the published V0.0.1 authority and is not rebuilt as Candidate-5 Product.
-The approved LeafGrapple Fixture remains unchanged.
+Core remains the published V0.0.1 authority:
 
-Use a new staging root and never overwrite Candidate-4:
+```text
+Wayfarer_Core-V0.0.1.jar
+size 11751447
+SHA-256 b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2
+```
+
+The approved Fixture remains unchanged:
+
+```text
+docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml
+SHA-256 ed210f8e56db26315f91fecb9e1d35d686c8fe647480498b7588467a6fa2448a
+```
+
+Use a new local staging root and never overwrite Candidate-4:
 
 ```text
 .ai-work/luna-gpt-5.6-v003/candidate/
   V0.0.2-Client-Candidate-5/
 ```
 
-## 9. Runtime boundary
+Any Product-code change after fixation rejects Candidate-5 and requires Candidate-6.
+
+## 11. Candidate-5 evidence and submission package
+
+Prepare local-only evidence without committing JARs, worlds, DB/Redis data, full logs, secrets, or
+credentials.
+
+Required Candidate files:
+
+```text
+CANDIDATE_5_MANIFEST.md
+CANDIDATE_5_SHA256SUMS.txt
+CLIENT_RETEST_HANDOFF.md
+OWNER_BIND_CHANGE_SUMMARY.md
+FRONTIER_READINESS_CHANGE_SUMMARY.md
+```
+
+Prepare a sanitized submission ZIP and external sidecar under the V003 submission root. It must
+contain at least:
+
+- complete Candidate-5 result report;
+- Candidate-4 review acknowledgement;
+- RED and green test evidence;
+- Product changed-file list/stat/patch;
+- CI and Headless evidence with SHA classification;
+- two-formal-build reproducibility evidence;
+- Candidate-5 manifest and checksums;
+- runtime handoff;
+- PR/Git final state;
+- placeholders with explicit `NOT_CREATED_*` or `NOT_STARTED_*` status for every required but
+  intentionally unavailable runtime/client artifact.
+
+Internal `SHA256SUMS.txt` must:
+
+- hash every archive file except itself;
+- use lowercase 64-character SHA-256;
+- use two spaces before each relative POSIX path;
+- have no unlisted or missing archive file.
+
+Before delivery, validate:
+
+1. ZIP integrity;
+2. every internal checksum;
+3. all archive files are listed except the checksum file itself;
+4. every README/report reference exists in the archive;
+5. external sidecar target filename and final ZIP hash match.
+
+## 12. Runtime boundary and separate handoff
 
 `AGENTS.md` prohibits installing JARs, executing migrations, changing runtime configuration,
-restarting servers, or deployment from this repository.
+restarting servers, or deployment from this Plugin repository context.
 
-Therefore this Product remediation must stop after Candidate-5 artifact fixation and a complete
-runtime handoff. It must not start MariaDB, Redis, Paper, Main, Frontier, or a Minecraft Client from
-this repository context.
+Therefore this Product task must not start MariaDB, Redis, Paper, Main, Frontier, or a Minecraft
+Client.
 
 Prepare new isolated runtime authority for a separately authorized runtime task:
 
@@ -314,25 +518,38 @@ Suggested Frontier port:
   25573
 ```
 
-A runtime-authorized task must verify the current LAN address and port availability instead of
-assuming them.
+The runtime-authorized task must verify the current LAN address and port availability rather than
+assuming them. It must use only fixed Candidate-5 bytes, create fresh DB/Redis/world/player/MVI
+state, run server-side preflight, and stop before the first Client action for a new independent
+review.
 
-## 10. Required tracked synchronization
+## 13. Final Git and PR gate
 
-Truthfully update:
+Before stopping, verify:
 
-- Candidate-4 remains rejected;
-- Candidate-5 Product HEAD and fixed artifact identities;
-- exact CI/Headless runs and tested SHA classification;
-- Client Test not started;
-- full Client Acceptance incomplete;
-- promotion HOLD;
-- Project acceptance pending;
-- stable publication not authorized.
+```bash
+git status --porcelain=v1
+git diff --exit-code
+git diff --cached --exit-code
+git rev-parse HEAD
+git ls-remote origin refs/heads/feature/V0.0.2-main-frontier
+gh pr view 14 --json state,isDraft,mergedAt,mergeable,mergeStateStatus,headRefOid
+git tag --list 'V0.0.2*'
+git ls-remote --tags origin 'V0.0.2*'
+gh release view V0.0.2
+```
 
-PR #14 remains Open / Draft / Unmerged.
+Required:
 
-## 11. Stop verdict
+- tracked worktree/index clean;
+- local/origin/PR HEAD identical;
+- PR Open, Draft, Unmerged;
+- no V0.0.2 tag or Release;
+- PR body truthfully reflects Candidate-5 state;
+- no Candidate JAR or prohibited runtime evidence tracked;
+- Candidate-4 artifacts unchanged.
+
+## 14. Stop verdict
 
 Successful Product preparation stops with:
 
@@ -365,4 +582,12 @@ STABLE PUBLICATION:
   NOT AUTHORIZED
 ```
 
-Any Product-code change after Candidate-5 fixation requires Candidate-6.
+Any Product failure after fixation records:
+
+```text
+CANDIDATE-5:
+  REJECTED
+
+CANDIDATE-6:
+  REQUIRED
+```
