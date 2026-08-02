@@ -1,4 +1,4 @@
-­r‡^Ñf¥–Ø¦{OlyÊ'vÃ®¶›­# Phase 10B-C â€” Candidate-3 Formalization and Focused Retest Result
+# Phase 10B-C â€” Candidate-3 Formalization and Focused Retest Result
 
 **å®Ÿæ–½æ—¥:** 2026-08-02 (JST)  
 **Candidate:** `V0.0.2-Client-Candidate-3`  

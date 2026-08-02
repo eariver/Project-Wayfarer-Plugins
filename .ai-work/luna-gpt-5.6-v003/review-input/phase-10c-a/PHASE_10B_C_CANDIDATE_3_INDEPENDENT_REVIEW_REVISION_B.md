@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# Project Wayfarer V0.0.2
+# Project Wayfarer V0.0.2
 ## Phase 10B-C Candidate-3 Independent Review
 ### Revision B ‚Äî corrected input accounting
 

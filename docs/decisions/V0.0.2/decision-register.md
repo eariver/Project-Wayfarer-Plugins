@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# V0.0.2 Decision Register
+# V0.0.2 Decision Register
 
 This register records the Owner-resolved Phase 01‚Äì06 outcomes and the Phase 08B remediation
 decisions separately from the immutable mainline requirement. It does not promote an Owner

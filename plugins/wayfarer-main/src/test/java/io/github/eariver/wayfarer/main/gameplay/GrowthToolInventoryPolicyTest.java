@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{O,y 'v√Æ∂õ≠package io.github.eariver.wayfarer.main.gameplay;
+package io.github.eariver.wayfarer.main.gameplay;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

@@ -1,4 +1,4 @@
-�r�^�f��ئ{Oly�'vî���# Project Wayfarer Plugin担当向け
+# Project Wayfarer Plugin担当向け
 ## Plugin V0.0.2 Wayfarer_Main／Wayfarer_Frontier 実装・軽量試験・段階Release・本流Handoff要求書
 
 - 作成日: 2026-07-30

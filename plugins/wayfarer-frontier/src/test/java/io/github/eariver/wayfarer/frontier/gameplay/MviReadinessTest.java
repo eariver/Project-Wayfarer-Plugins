@@ -1,10 +1,35 @@
-­r‡^Ñf¥–Ø¦{[r‰İ°ë­¦ë\XÚØYÙH[Ë™Ú]X‹™X\š]™\‹Ø^Y˜\™\‹™œ›ÛY\‹™Ø[Y\^NÂ‚š[\Üİ]XÈÜ™Ëš[š]š\]\‹˜\K\ÜÙ\[ÛœË˜\ÜÙ\˜[ÙNÂš[\Üİ]XÈÜ™Ëš[š]š\]\‹˜\K\ÜÙ\[ÛœË˜\ÜÙ\YNÂ‚š[\Ü[Ë™Ú]X‹™X\š]™\‹Ø^Y˜\™\‹™œ›ÛY\‹˜\XØ][Û‹‘[PŞXÛT™YÚ\İNÂš[\Ü˜]˜K][•URQÂš[\ÜÜ™Ëš[š]š\]\‹˜\K•\İÂ‚™š[˜[Û\ÜÈ]šT™XY[™\ÜÕ\İÂˆš]˜]Hİ]XÈš[˜[URQVQTˆBˆURQ™œ›ÛTİš[™ÊŒLLLLÍLŠNÂ‚ˆ\İˆ›ÚY]S]šT™\İ\\ĞÛÛœİ[YYÛ˜ÙT\‘^\›˜[[PŞXÛJ
-HÂˆ[PŞXÛT™YÚ\İHŞXÛ\ÈH™]È[PŞXÛT™YÚ\İJ
-NÂˆÛ™ÈŞXÛHHŞXÛ\Ë˜™YÚ[‘^\›˜[[JVQTŠNÂ‚ˆ\ÜÙ\YJŞXÛ\Ë˜ÛÛœİ[YS]T™\İ\
-VQT‹ŞXÛJJNÂˆ\ÜÙ\˜[ÙJŞXÛ\Ë˜ÛÛœİ[YS]T™\İ\
-VQT‹ŞXÛJJNÂˆB‚ˆ\İˆ›ÚY™]Ù\‘[Tİ\\œÙY\ÓÛŞXÛP[™ÛX\œÔ[™[™Ôİ]J
-HÂˆ[PŞXÛT™YÚ\İHŞXÛ\ÈH™]È[PŞXÛT™YÚ\İJ
-NÂˆÛ™ÈÛŞXÛHHŞXÛ\Ë˜™YÚ[‘^\›˜[[JVQTŠNÂˆÛ™È™]ĞŞXÛHHŞXÛ\Ë˜™YÚ[‘^\›˜[[JVQTŠNÂ‚ˆ\ÜÙ\˜[ÙJŞXÛ\Ë˜ÛÛœİ[YS]T™\İ\
-VQT‹ÛŞXÛJJNÂˆ\ÜÙ\YJŞXÛ\Ë˜ÛÛœİ[YS]T™\İ\
-VQT‹™]ĞŞXÛJJNÂ‚ˆŞXÛ\Ë˜ÛX\ŠVQT‹™]ĞŞXÛJNÂˆ\ÜÙ\˜[ÙJŞXÛ\Ë˜ÛÛœİ[YS]T™\İ\
-VQT‹™]ĞŞXÛJJNÂˆBŸB
+package io.github.eariver.wayfarer.frontier.gameplay;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.github.eariver.wayfarer.frontier.application.EntryCycleRegistry;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+
+final class MviReadinessTest {
+    private static final UUID PLAYER =
+        UUID.fromString("00000000-0000-0000-0000-00000000c410");
+
+    @Test
+    void lateMviRestartIsConsumedOncePerExternalEntryCycle() {
+        EntryCycleRegistry cycles = new EntryCycleRegistry();
+        long cycle = cycles.beginExternalEntry(PLAYER);
+
+        assertTrue(cycles.consumeLateRestart(PLAYER, cycle));
+        assertFalse(cycles.consumeLateRestart(PLAYER, cycle));
+    }
+
+    @Test
+    void newerEntrySupersedesOldCycleAndClearsPendingState() {
+        EntryCycleRegistry cycles = new EntryCycleRegistry();
+        long oldCycle = cycles.beginExternalEntry(PLAYER);
+        long newCycle = cycles.beginExternalEntry(PLAYER);
+
+        assertFalse(cycles.consumeLateRestart(PLAYER, oldCycle));
+        assertTrue(cycles.consumeLateRestart(PLAYER, newCycle));
+
+        cycles.clear(PLAYER, newCycle);
+        assertFalse(cycles.consumeLateRestart(PLAYER, newCycle));
+    }
+}

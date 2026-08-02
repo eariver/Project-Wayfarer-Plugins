@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# V0.0.2 Requirement Source
+# V0.0.2 Requirement Source
 
 ## Received artifact
 

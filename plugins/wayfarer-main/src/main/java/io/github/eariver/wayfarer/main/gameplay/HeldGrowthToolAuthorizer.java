@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{O,y 'v√Æ∂õ≠package io.github.eariver.wayfarer.main.gameplay;
+package io.github.eariver.wayfarer.main.gameplay;
 
 import io.github.eariver.wayfarer.main.domain.GrowthTool;
 import io.github.eariver.wayfarer.main.identity.GrowthToolPhysicalClaim;

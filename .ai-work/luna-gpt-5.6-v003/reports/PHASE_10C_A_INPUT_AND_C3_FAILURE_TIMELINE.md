@@ -1,4 +1,4 @@
-­r‡^Ñf¥–Ø¦{OlyÊ'vÃ®¶›­# Phase 10C-A â€” Phase 10B-C Input Verification and Candidate-3 Failure Timeline
+# Phase 10C-A â€” Phase 10B-C Input Verification and Candidate-3 Failure Timeline
 
 Date: 2026-08-03 JST  
 Source work root: `.ai-work/luna-gpt-5.6-v002/` (historical, unchanged)  

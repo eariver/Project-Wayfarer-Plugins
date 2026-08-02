@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{O,y 'v√Æ∂õ≠package io.github.eariver.wayfarer.frontier.application;
+package io.github.eariver.wayfarer.frontier.application;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠package io.github.eariver.wayfarer.main.application;
+package io.github.eariver.wayfarer.main.application;
 
 import io.github.eariver.wayfarer.main.domain.GrowthTool;
 

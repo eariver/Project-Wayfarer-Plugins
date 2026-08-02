@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# V0.0.2 Requirement Traceability
+# V0.0.2 Requirement Traceability
 
 Classification: Phase 10C-A Revision B Candidate-4 preparation at the product-source head
 to be recorded after implementation. Candidate-3 is rejected and preserved as historical

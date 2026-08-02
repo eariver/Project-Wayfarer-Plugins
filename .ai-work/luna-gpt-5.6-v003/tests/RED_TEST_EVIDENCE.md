@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# Phase 10C-A Candidate-4 RED Test Evidence
+# Phase 10C-A Candidate-4 RED Test Evidence
 
 Recorded: 2026-08-03 JST  
 Purpose: prove the new Owner-Bind and Frontier readiness contract was added before Product Code.

@@ -1,115 +1,223 @@
-­r‡^Ñf¥–Ø¦{[r‰İ°ë­¦ë\XÚØYÙH[Ë™Ú]X‹™X\š]™\‹Ø^Y˜\™\‹™œ›ÛY\‹˜\XØ][ÛÂ‚š[\Ü˜]˜K][“Øš™XİÎÂš[\Ü˜]˜K][“Ü[Û˜[Âš[\Ü˜]˜K][•URQÂš[\Ü˜]˜K][˜ÛÛ˜İ\œ™[ÛÛ˜İ\œ™[\ÚX\Â‚‹ÊŠ‚ˆ
-ˆ›İ[™Y\‹\^Y\ˆØ]H›Üˆœ›ÛY\ˆ[H[]™\KˆHX›XÈU’HÚ\™Bˆ
-ˆ]™[\È™X]Y\ÈH™KX\XØ][ÛˆÚYÛ˜[ÈHØ[\ˆ]\İÛÛ[YHÛ‚ˆ
-ˆH™^XZ[‹]™XY\›‹ˆÚ]İ]]ÚYÛ˜[Hš[š]Hš[™Ù\œš[ˆ
-ˆİXš[^˜][ÛˆÚ[™İÈ\È\ÙY[™[ˆ˜Z[ÈÛÜÙY‚ˆ
-‹ÂœX›XÈš[˜[Û\ÜÈØY™Q[T™XY[™\ÜÈÂˆš]˜]Hİ]XÈš[˜[[‘TURT‘QÔÕP“WÓĞ”ÑT•USÓ”ÈHÂˆX›XÈİ]XÈš[˜[[PVÑ’S‘ÑT”’S•ÓĞ”ÑT•USÓ”ÈHÂˆš]˜]Hİ]XÈš[˜[[“×Ñ’S‘ÑT”’S•H[YÙ\‹“RS—ÕSQNÂ‚ˆš]˜]Hš[˜[ÛÛ˜İ\œ™[\ÚX\URQİ]Oˆİ]\ÈBˆ™]ÈÛÛ˜İ\œ™[\ÚX\Š
-NÂ‚ˆX›XÈ™\]Y\İ™\]Y\İ
-URQ^Y\•]ZY
-HÂˆØš™XİËœ™\]Z\™S›Û“[
-^Y\•]ZYœ^Y\•]ZYŠNÂˆİ]Hİ]HHİ]\Ë˜ÛÛ\]RYXœÙ[
-^Y\•]ZYYÛ›Ü™YOˆ™]Èİ]J
-JNÂˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆİ]K™Ù[™\˜][ÛŠÊÎÂˆİ]K›ØœÙ\˜][ÛœÈHÂˆİ]KœİX›SØœÙ\˜][ÛœÈHÂˆİ]K›\İš[™Ù\œš[H“×Ñ’S‘ÑT”’S•Âˆ™]\›ˆ™]È™\]Y\İ
-^Y\•]ZYİ]K™Ù[™\˜][ÛŠNÂˆBˆB‚ˆX›XÈ™\]Y\İİ\œ™[Ü”™\]Y\İ
-URQ^Y\•]ZY
-HÂˆØš™XİËœ™\]Z\™S›Û“[
-^Y\•]ZYœ^Y\•]ZYŠNÂˆİ]Hİ]HHİ]\Ë˜ÛÛ\]RYXœÙ[
-^Y\•]ZYYÛ›Ü™YOˆ™]Èİ]J
-JNÂˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆYˆ
-İ]K™Ù[™\˜][ÛˆOH
-HÂˆİ]K™Ù[™\˜][ÛˆHNÂˆBˆ™]\›ˆ™]È™\]Y\İ
-^Y\•]ZYİ]K™Ù[™\˜][ÛŠNÂˆBˆB‚ˆX›XÈ›ÚYX\šÔX›XÔÚ\™Q]™[
-URQ^Y\•]ZY
-HÂˆØš™XİËœ™\]Z\™S›Û“[
-^Y\•]ZYœ^Y\•]ZYŠNÂˆİ]Hİ]HHİ]\Ë˜ÛÛ\]RYXœÙ[
-^Y\•]ZYYÛ›Ü™YOˆ™]Èİ]J
-JNÂˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆİ]KœX›XÑ]™[ØœÙ\™YHYNÂˆBˆB‚ˆX›XÈ›ÛÛX[ˆ\ÔX›XÔÚ\™Q]™[
-™\]Y\İ™\]Y\İ
-HÂˆİ]Hİ]HHİ\œ™[İ]J™\]Y\İ
-NÂˆYˆ
-İ]HOH[
-HÂˆ™]\›ˆ˜[ÙNÂˆBˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆ™]\›ˆİ]KœX›XÑ]™[ØœÙ\™YÂˆBˆB‚ˆX›XÈ›ÚYÛX\”X›XÔÚ\™Q]™[
-URQ^Y\•]ZY
-HÂˆØš™XİËœ™\]Z\™S›Û“[
-^Y\•]ZYœ^Y\•]ZYŠNÂˆİ]Hİ]HHİ]\Ë™Ù]
-^Y\•]ZY
-NÂˆYˆ
-İ]HOH[
-HÂˆ™]\›ÂˆBˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆİ]KœX›XÑ]™[ØœÙ\™YH˜[ÙNÂˆBˆB‚ˆX›XÈXÚ\Ú[ÛˆÛÛ[YPY\”X›XÔÚ\™Q]™[
-ˆ™\]Y\İ™\]Y\İˆ›ÛÛX[ˆÛ›[™R[‘^XİÛÜ›ˆ
-HÂˆİ]Hİ]HHİ\œ™[İ]J™\]Y\İ
-NÂˆYˆ
-İ]HOH[
-HÂˆ™]\›ˆXÚ\Ú[Û‹”ÕTT”ÑQQÂˆBˆYˆ
-[Û›[™R[‘^XİÛÜ›
-HÂˆ™]\›ˆXÚ\Ú[Û‹ĞSÑSQÂˆBˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆYˆ
-\İ]KœX›XÑ]™[ØœÙ\™Y
-HÂˆ™]\›ˆXÚ\Ú[Û‹•ĞRUÂˆBˆİ]KœX›XÑ]™[ØœÙ\™YH˜[ÙNÂˆ™]\›ˆXÚ\Ú[Û‹”‘PQNÂˆBˆB‚ˆX›XÈXÚ\Ú[ÛˆØœÙ\™Qš[™Ù\œš[
-ˆ™\]Y\İ™\]Y\İˆ›ÛÛX[ˆÛ›[™R[‘^XİÛÜ›ˆ[š[™Ù\œš[ˆ
-HÂˆ™]\›ˆØœÙ\™Qš[™Ù\œš[
-ˆ™\]Y\İˆÛ›[™R[‘^XİÛÜ›ˆš[™Ù\œš[ˆˆˆ
-NÂˆB‚ˆÊŠ‚ˆ
-ˆØœÙ\™\ÈH˜XÚÙ[™ÓU’H[™[ÜHš[™Ù\œš[Ú][ˆÜ[Û˜[Z[š[][Bˆ
-ˆÛİ[ÙˆX[˜YÙY][\È]]\İ™Hš\ÚX›H™Y›Ü™HHš[™Ù\œš[Ø[‚ˆ
-ˆİXš[^™Kˆ^\İ[™È\˜X›HXİ]™H][\ÈXZÙH[ˆ[\H™\İÜ™Y›Ùš[Bˆ
-ˆ[œØY™Nˆ]]\İ™[XZ[ˆ›İ[™YĞRU˜]\ˆ[ˆ™Z[™È™X]Y\ÈBˆ
-ˆYÚ][X]H[\Hš\œİ[K‚ˆ
-‹ÂˆX›XÈXÚ\Ú[ÛˆØœÙ\™Qš[™Ù\œš[
-ˆ™\]Y\İ™\]Y\İˆ›ÛÛX[ˆÛ›[™R[‘^XİÛÜ›ˆ[š[™Ù\œš[ˆ[X[˜YÙY][PÛİ[ˆ[™\]Z\™YX[˜YÙY][\Âˆ
-HÂˆYˆ
-X[˜YÙY][PÛİ[™\]Z\™YX[˜YÙY][\È
-HÂˆ›İÈ™]È[YØ[\™İ[Y[^Ù\[ÛŠˆ“X[˜YÙY][HÛİ[ÈØ[››İ™H™YØ]]™H‚ˆ
-NÂˆBˆİ]Hİ]HHİ\œ™[İ]J™\]Y\İ
-NÂˆYˆ
-İ]HOH[
-HÂˆ™]\›ˆXÚ\Ú[Û‹”ÕTT”ÑQQÂˆBˆYˆ
-[Û›[™R[‘^XİÛÜ›
-HÂˆ™]\›ˆXÚ\Ú[Û‹ĞSÑSQÂˆBˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆYˆ
-İ]KœX›XÑ]™[ØœÙ\™Y
-HÂˆ™]\›ˆXÚ\Ú[Û‹•ĞRUÂˆBˆİ]K›ØœÙ\˜][ÛœÊÊÎÂˆYˆ
-X[˜YÙY][PÛİ[™\]Z\™YX[˜YÙY][\ÊHÂˆİ]K›\İš[™Ù\œš[H“×Ñ’S‘ÑT”’S•Âˆİ]KœİX›SØœÙ\˜][ÛœÈHÂˆ™]\›ˆİ]K›ØœÙ\˜][ÛœÈHPVÑ’S‘ÑT”’S•ÓĞ”ÑT•USÓ”ÂˆÈXÚ\Ú[Û‹•SQSÕUˆˆXÚ\Ú[Û‹•ĞRUÂˆBˆYˆ
-İ]K›\İš[™Ù\œš[OHš[™Ù\œš[
-HÂˆİ]KœİX›SØœÙ\˜][ÛœÊÊÎÂˆH[ÙHÂˆİ]K›\İš[™Ù\œš[Hš[™Ù\œš[Âˆİ]KœİX›SØœÙ\˜][ÛœÈHNÂˆBˆYˆ
-İ]KœİX›SØœÙ\˜][ÛœÈH‘TURT‘QÔÕP“WÓĞ”ÑT•USÓ”ÊHÂˆ™]\›ˆXÚ\Ú[Û‹”‘PQNÂˆBˆYˆ
-İ]K›ØœÙ\˜][ÛœÈHPVÑ’S‘ÑT”’S•ÓĞ”ÑT•USÓ”ÊHÂˆ™]\›ˆXÚ\Ú[Û‹•SQSÕUÂˆBˆ™]\›ˆXÚ\Ú[Û‹•ĞRUÂˆBˆB‚ˆX›XÈ›ÛÛX[ˆ\Ğİ\œ™[
-™\]Y\İ™\]Y\İ
-HÂˆ™]\›ˆİ\œ™[İ]J™\]Y\İ
-HOH[ÂˆB‚ˆX›XÈ›ÚYØ[˜Ù[
-URQ^Y\•]ZY
-HÂˆØš™XİËœ™\]Z\™S›Û“[
-^Y\•]ZYœ^Y\•]ZYŠNÂˆİ]\Ëœ™[[İ™J^Y\•]ZY
-NÂˆB‚ˆX›XÈ›ÚYØ[˜Ù[[
+package io.github.eariver.wayfarer.frontier.application;
 
-HÂˆİ]\Ë˜ÛX\Š
-NÂˆB‚ˆX›XÈÜ[Û˜[™\]Y\İˆİ\œ™[
-URQ^Y\•]ZY
-HÂˆØš™XİËœ™\]Z\™S›Û“[
-^Y\•]ZYœ^Y\•]ZYŠNÂˆİ]Hİ]HHİ]\Ë™Ù]
-^Y\•]ZY
-NÂˆYˆ
-İ]HOH[
-HÂˆ™]\›ˆÜ[Û˜[™[\J
-NÂˆBˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆ™]\›ˆİ]K™Ù[™\˜][ÛˆOHˆÈÜ[Û˜[™[\J
-BˆˆÜ[Û˜[›ÙŠ™]È™\]Y\İ
-^Y\•]ZYİ]K™Ù[™\˜][ÛŠJNÂˆBˆB‚ˆš]˜]Hİ]Hİ\œ™[İ]J™\]Y\İ™\]Y\İ
-HÂˆØš™XİËœ™\]Z\™S›Û“[
-™\]Y\İœ™\]Y\İŠNÂˆİ]Hİ]HHİ]\Ë™Ù]
-™\]Y\İœ^Y\•]ZY
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-JNÂˆYˆ
-İ]HOH[
-HÂˆ™]\›ˆ[ÂˆBˆŞ[˜Ú›Ûš^™Y
-İ]JHÂˆ™]\›ˆİ]K™Ù[™\˜][ÛˆOH™\]Y\İ™Ù[™\˜][ÛŠ
-HÈİ]Hˆ[ÂˆBˆB‚ˆX›XÈ[[HXÚ\Ú[ÛˆÂˆĞRUˆ‘PQKˆÕTT”ÑQQˆĞSÑSQˆSQSÕUˆB‚ˆX›XÈ™XÛÜ™™\]Y\İ
-URQ^Y\•]ZYÛ™ÈÙ[™\˜][ÛŠHÂˆX›XÈ™\]Y\İÂˆØš™XİËœ™\]Z\™S›Û“[
-^Y\•]ZYœ^Y\•]ZYŠNÂˆYˆ
-Ù[™\˜][ÛˆH
-HÂˆ›İÈ™]È[YØ[\™İ[Y[^Ù\[ÛŠ™Ù[™\˜][Ûˆ]\İ™HÜÚ]]™HŠNÂˆBˆBˆB‚ˆš]˜]Hİ]XÈš[˜[Û\ÜÈİ]HÂˆš]˜]HÛ™ÈÙ[™\˜][ÛÂˆš]˜]H›ÛÛX[ˆX›XÑ]™[ØœÙ\™YÂˆš]˜]H[ØœÙ\˜][ÛœÎÂˆš]˜]H[İX›SØœÙ\˜][ÛœÎÂˆš]˜]H[\İš[™Ù\œš[H“×Ñ’S‘ÑT”’S•ÂˆBŸB
+/**
+ * Bounded, per-player gate for Frontier entry delivery. A public MVI share
+ * event is treated as a pre-application signal; the caller must continue on
+ * the next main-thread turn. Without that signal, a finite fingerprint
+ * stabilization window is used and then fails closed.
+ */
+public final class SafeEntryReadiness {
+    private static final int REQUIRED_STABLE_OBSERVATIONS = 2;
+    public static final int MAX_FINGERPRINT_OBSERVATIONS = 40;
+    private static final int NO_FINGERPRINT = Integer.MIN_VALUE;
+
+    private final ConcurrentHashMap<UUID, State> states =
+        new ConcurrentHashMap<>();
+
+    public Request request(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        State state = states.computeIfAbsent(playerUuid, ignored -> new State());
+        synchronized (state) {
+            state.generation++;
+            state.observations = 0;
+            state.stableObservations = 0;
+            state.lastFingerprint = NO_FINGERPRINT;
+            return new Request(playerUuid, state.generation);
+        }
+    }
+
+    public Request currentOrRequest(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        State state = states.computeIfAbsent(playerUuid, ignored -> new State());
+        synchronized (state) {
+            if (state.generation == 0) {
+                state.generation = 1;
+            }
+            return new Request(playerUuid, state.generation);
+        }
+    }
+
+    public void markPublicShareEvent(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        State state = states.computeIfAbsent(playerUuid, ignored -> new State());
+        synchronized (state) {
+            state.publicEventObserved = true;
+        }
+    }
+
+    public boolean hasPublicShareEvent(Request request) {
+        State state = currentState(request);
+        if (state == null) {
+            return false;
+        }
+        synchronized (state) {
+            return state.publicEventObserved;
+        }
+    }
+
+    public void clearPublicShareEvent(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        State state = states.get(playerUuid);
+        if (state == null) {
+            return;
+        }
+        synchronized (state) {
+            state.publicEventObserved = false;
+        }
+    }
+
+    public Decision continueAfterPublicShareEvent(
+        Request request,
+        boolean onlineInExactWorld
+    ) {
+        State state = currentState(request);
+        if (state == null) {
+            return Decision.SUPERSEDED;
+        }
+        if (!onlineInExactWorld) {
+            return Decision.CANCELLED;
+        }
+        synchronized (state) {
+            if (!state.publicEventObserved) {
+                return Decision.WAIT;
+            }
+            state.publicEventObserved = false;
+            return Decision.READY;
+        }
+    }
+
+    public Decision observeFingerprint(
+        Request request,
+        boolean onlineInExactWorld,
+        int fingerprint
+    ) {
+        return observeFingerprint(
+            request,
+            onlineInExactWorld,
+            fingerprint,
+            0,
+            0
+        );
+    }
+
+    /**
+     * Observes a backend/MVI inventory fingerprint with an optional minimum
+     * count of managed items that must be visible before the fingerprint can
+     * stabilize. Existing durable active items make an empty restored profile
+     * unsafe: it must remain bounded WAIT rather than being treated as a
+     * legitimate empty first entry.
+     */
+    public Decision observeFingerprint(
+        Request request,
+        boolean onlineInExactWorld,
+        int fingerprint,
+        int managedItemCount,
+        int requiredManagedItems
+    ) {
+        if (managedItemCount < 0 || requiredManagedItems < 0) {
+            throw new IllegalArgumentException(
+                "Managed item counts cannot be negative"
+            );
+        }
+        State state = currentState(request);
+        if (state == null) {
+            return Decision.SUPERSEDED;
+        }
+        if (!onlineInExactWorld) {
+            return Decision.CANCELLED;
+        }
+        synchronized (state) {
+            if (state.publicEventObserved) {
+                return Decision.WAIT;
+            }
+            state.observations++;
+            if (managedItemCount < requiredManagedItems) {
+                state.lastFingerprint = NO_FINGERPRINT;
+                state.stableObservations = 0;
+                return state.observations >= MAX_FINGERPRINT_OBSERVATIONS
+                    ? Decision.TIMEOUT
+                    : Decision.WAIT;
+            }
+            if (state.lastFingerprint == fingerprint) {
+                state.stableObservations++;
+            } else {
+                state.lastFingerprint = fingerprint;
+                state.stableObservations = 1;
+            }
+            if (state.stableObservations >= REQUIRED_STABLE_OBSERVATIONS) {
+                return Decision.READY;
+            }
+            if (state.observations >= MAX_FINGERPRINT_OBSERVATIONS) {
+                return Decision.TIMEOUT;
+            }
+            return Decision.WAIT;
+        }
+    }
+
+    public boolean isCurrent(Request request) {
+        return currentState(request) != null;
+    }
+
+    public void cancel(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        states.remove(playerUuid);
+    }
+
+    public void cancelAll() {
+        states.clear();
+    }
+
+    public Optional<Request> current(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        State state = states.get(playerUuid);
+        if (state == null) {
+            return Optional.empty();
+        }
+        synchronized (state) {
+            return state.generation == 0
+                ? Optional.empty()
+                : Optional.of(new Request(playerUuid, state.generation));
+        }
+    }
+
+    private State currentState(Request request) {
+        Objects.requireNonNull(request, "request");
+        State state = states.get(request.playerUuid());
+        if (state == null) {
+            return null;
+        }
+        synchronized (state) {
+            return state.generation == request.generation() ? state : null;
+        }
+    }
+
+    public enum Decision {
+        WAIT,
+        READY,
+        SUPERSEDED,
+        CANCELLED,
+        TIMEOUT
+    }
+
+    public record Request(UUID playerUuid, long generation) {
+        public Request {
+            Objects.requireNonNull(playerUuid, "playerUuid");
+            if (generation <= 0) {
+                throw new IllegalArgumentException("generation must be positive");
+            }
+        }
+    }
+
+    private static final class State {
+        private long generation;
+        private boolean publicEventObserved;
+        private int observations;
+        private int stableObservations;
+        private int lastFingerprint = NO_FINGERPRINT;
+    }
+}

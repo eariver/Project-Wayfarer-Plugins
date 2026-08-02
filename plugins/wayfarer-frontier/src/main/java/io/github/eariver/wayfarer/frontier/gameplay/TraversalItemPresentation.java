@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠package io.github.eariver.wayfarer.frontier.gameplay;
+package io.github.eariver.wayfarer.frontier.gameplay;
 
 import io.github.eariver.wayfarer.frontier.domain.TraversalIdentity.ItemType;
 import net.kyori.adventure.text.Component;

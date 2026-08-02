@@ -1,4 +1,4 @@
-≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# Phase 10C-A Project Growth Tool Concept Sync
+# Phase 10C-A Project Growth Tool Concept Sync
 
 Status: `PROJECT_SIDE_SYNC_REQUIRED`
 
