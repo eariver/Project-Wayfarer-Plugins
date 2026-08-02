@@ -1,4 +1,4 @@
-# V0.0.2 Requirement Source
+≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# V0.0.2 Requirement Source
 
 ## Received artifact
 
@@ -89,3 +89,21 @@ The V001 files were inherited unchanged from `origin/main`. V002 and Main V003 a
 drafts in this branch. Isolated MariaDB tests cover empty schema, prior-version upgrade, repeat
 validation, failure, and Core/Main/Frontier location boundaries. ADR 0009 fixes module-local
 runtime ownership; Project deployment remains unauthorized.
+
+## Phase 10C-A Revision B provenance and amendment anchor
+
+The received Phase 10B-C Candidate-3 input set is preserved under the new work root and is
+treated as historical evidence, not as a mutable source of product authority:
+
+| Input | Immutable identity |
+|---|---|
+| Formal instruction used | `.ai-work/luna-gpt-5.6-v002/add_instructions/Luna_Max_Phase_10C_A_Candidate_4_Owner_Bind_and_Readiness_Instructions_Revision_B.md` (the requested v003 instruction file was not present in the repository at start), SHA-256 `B40CF5ED90CD1DEC5FFB82F8371D94977581E3B0A8BC313EE3000535283BCF2E` |
+| Independent review | `.ai-work/luna-gpt-5.6-v002/add_instructions/reference/PHASE_10B_C_CANDIDATE_3_INDEPENDENT_REVIEW_REVISION_B.md`, SHA-256 `E661025C9AB27B3110DD094D94FD99869A26CA87CAD6BBA711B08A444F28216B` |
+| Candidate-3 product source | `25200ad4745fdaae79c761a56083f6e648e9a06b` |
+| Candidate-3 Core artifact | SHA-256 `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2` |
+| Candidate-3 submission | ZIP SHA-256 `293f59881f244a565bf9385ea2d6b390ae4d86f41c9d4886758e2406990c13dc` |
+
+The Owner Amendment for Phase 10C-A Revision B is tracked in the decision register and
+traceability/client-acceptance documents. It does not rewrite the immutable requirement
+snapshot, migration history, Core artifact, or Project Runtime authority. Candidate-3 failure
+timing remains explicitly unresolved where poll-by-poll evidence was absent.

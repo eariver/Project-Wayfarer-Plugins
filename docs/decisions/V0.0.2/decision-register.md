@@ -1,4 +1,4 @@
-# V0.0.2 Decision Register
+≠rá^—f•ñÿ¶{Oly 'v√Æ∂õ≠# V0.0.2 Decision Register
 
 This register records the Owner-resolved Phase 01‚Äì06 outcomes and the Phase 08B remediation
 decisions separately from the immutable mainline requirement. It does not promote an Owner
@@ -26,9 +26,32 @@ Accepted product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
 | FRONT-D02 | The LeafGrapple adapter uses the reviewed public capability boundary and fails closed for unsafe/unavailable configuration. The exact Safe Tier Fixture is approved for the first Client Test only; production balance remains open after that test. | `ACCEPTED_WITH_LIMITATION` |
 | FRONT-D04 | Native Bukkit paths, public WorldGuard `RegionQuery`, and public WorldEdit `EditSession` paths are covered; unsupported bypassing tools are not claimed. | `ACCEPTED_WITH_LIMITATION` |
 | MAIN-D08 | Native repair boundaries and reviewed supported cancellable external boundaries are covered; unsupported external repair paths are not claimed. | `ACCEPTED_WITH_LIMITATION` |
-| Main death/reissue | Growth Tool/Broken Tool is removed from death drops; no automatic restore; Player may use paid reissue; pending physical delivery retries free. | `DONE` |
+| Main death/reissue | Growth Tool/Broken Tool remains a normal Death Drop. Death does not reopen delivery, rotate authority, change delivery status, or debit Waymark; Player paid reissue and free pending-delivery retry remain separate. | `SUPERSEDED_BY_PHASE_10C_A` |
 | Frontier death | Elytra, Grappling Hook, and Navigation use same-identity/epoch durable free redelivery; Launchpad and Rocket are excluded. | `DONE` |
 | Progress overflow | Positive addition saturates at `Long.MAX_VALUE`; terminal threshold evaluation is idempotent. | `DONE` |
+
+## Phase 10C-A Revision B Owner authority
+
+The following is the tracked Owner decision layer for Candidate-4. It amends the
+V0.0.2 Owner Bind and Frontier readiness behavior without rewriting the immutable
+mainline requirement or changing Project Wayfarer Runtime authority.
+
+| ID | Owner-resolved outcome | Status |
+|---|---|---|
+| MAIN-C4-OWNER-BIND | Owner may manually Drop/Pickup the managed Growth Tool, transfer it to another Player, move it through normal inventory and ordinary containers, and retain it through Death Drop. Non-owner physical possession and stale physical items remain physical items; use authorization is separate. | `ACCEPTED_FOR_CANDIDATE_4` |
+| MAIN-C4-HOLD-AUTH | Hold-time authorization is resolved asynchronously into a Main-thread Session Cache. The full Owner/Tool ID/Epoch/Schema/Status comparison runs on Main Hand or authority availability/change/rewrite boundaries; ordinary use reads only the cache and fails closed when unavailable. | `ACCEPTED_FOR_CANDIDATE_4` |
+| MAIN-C4-INVALID-USE | Non-owner or stale Break, Progress, GUI, Repair, Branch, and debug use is denied. Mending, external repair, Item Frame, and Armor Stand paths are denied. | `ACCEPTED_FOR_CANDIDATE_4` |
+| MAIN-C4-PROCESSING | Identity-changing processing inventories (Anvil, Grindstone, Smithing, Crafting repair, Stonecutter, Cartography, Loom, Enchanting, and Beacon) deny managed-item processing. Ordinary container movement remains allowed. | `ACCEPTED_FOR_CANDIDATE_4` |
+| MAIN-C4-DELIVERY-UX | Delivery success is announced only after physical insertion and durable `DELIVERED` commit. Exact message: `[Wayfarer] Growth Tool„ÄåWayfarer Growth Pickaxe„Äç„ÇíÂèó„ÅëÂèñ„Çä„Åæ„Åó„Åü„ÄÇ` No success message is emitted for present, pending, full, offline, wrong, conflict, or unknown outcomes. | `ACCEPTED_FOR_CANDIDATE_4` |
+| MAIN-C4-NAMES | The exact managed names are `Wayfarer Growth Pickaxe`, `Broken Wayfarer Growth Pickaxe`, `Beyond Wayfarer Elytra`, `Beyond Wayfarer Grappling Hook`, and `Beyond Wayfarer Navigation`. Presentation does not replace PDC/DB identity. | `ACCEPTED_FOR_CANDIDATE_4` |
+| FRONT-C4-READINESS | Safe Entry permits at most 40 bounded observations, requires two stable observations, and treats zero required items as stable only after two observations. One late MVI public event may restart the same external entry cycle after timeout; no recursion, repeating, or unbounded retry. | `ACCEPTED_FOR_CANDIDATE_4` |
+| FRONT-C4-CLEANUP | Frontier self-heal removes only exact-current duplicate Elytra, Grappling Hook, and Navigation identities. Launchpad, Rocket, ordinary items, lookalikes, and incomplete metadata are not cleanup targets. | `ACCEPTED_FOR_CANDIDATE_4` |
+| CANDIDATE-3-OUTCOME | Candidate-3 remains preserved as rejected evidence because Frontier duplicate self-heal did not complete and exact timing evidence was unavailable. | `REJECTED_PRESERVED` |
+| CANDIDATE-4-OUTCOME | Candidate-4 Product Code is required before another focused Client Test. Candidate-4 remains distinct from Candidate-3 artifact and metadata evidence. | `REQUIRED` |
+| FRONT-D02-RESOURCE-PACK | Resource Pack work is not part of this Candidate-4 scope. | `SKIPPED_OUT_OF_SCOPE_BY_OWNER` |
+
+The exact Candidate-3 input identities and failure chronology are recorded in
+`.ai-work/luna-gpt-5.6-v003/reports/PHASE_10C_A_INPUT_AND_C3_FAILURE_TIMELINE.md`.
 
 ## Phase 09B Frontier concrete Fixture authority
 
@@ -90,6 +113,21 @@ LeafGrapple first-test baseline: `RESOLVED / APPROVED`.
 LeafGrapple production balance: `OPEN_AFTER_CLIENT_TEST`.
 
 Waystone and the EM‚ÄìMVI adapter remain deferred/not authorized, not open V0.0.2 choices.
+
+## Phase 10C-A Revision B candidate state
+
+The Phase 09A/09B Candidate-1 record above is historical. The current handoff state is:
+
+| Gate | State | Boundary |
+|---|---|---|
+| Candidate-3 | `REJECTED_PRESERVED` | Frontier duplicate self-heal failed; exact timing cause is unresolved. |
+| Candidate-4 Product Code | `PREPARED` | Product tests, Module Test, `check`, and `clean assemble` are green at the Product Commit to be recorded in the handoff. |
+| Candidate-4 artifact | `PENDING_EXACT_HEAD_FIXATION` | Two clean builds, manifest, and checksum must be captured at the exact Product HEAD. |
+| Focused Client Test | `NOT_STARTED` | Owner-assisted Minecraft client operation is the next boundary. |
+| Full Client Acceptance | `NOT_COMPLETE` | No client scenarios have started. |
+| Production balance promotion | `HOLD` | Client and Project evidence are pending. |
+| Project acceptance | `PENDING` | Project-owned Runtime evidence is not inferred. |
+| Stable publication | `NOT_AUTHORIZED` | No tag/release/requirements clearance/dispatch is authorized. |
 
 ## Scope note
 
