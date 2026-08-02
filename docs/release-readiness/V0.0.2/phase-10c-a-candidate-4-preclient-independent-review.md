@@ -14,7 +14,7 @@ Branch:
 Candidate-4 Product HEAD:
   9fe86d2e787ab1f86dcf38a5abdba6168515a802
 
-Prepared metadata HEAD reviewed:
+Prepared metadata HEAD initially reviewed:
   9aa5f02d63406890302f6fde485769ac909e9fa4
 
 PR #14:
@@ -29,8 +29,7 @@ PR merge-ref trees. They do not override a later source-review blocker.
 
 ## 2. Confirmed blocking defect — Broken Tool branch mutation
 
-The Candidate-4 authorization model currently grants branch mutation to
-`VALID_BROKEN_OWNER`.
+The Candidate-4 authorization model grants Branch mutation to `VALID_BROKEN_OWNER`.
 
 Relevant source:
 
@@ -43,19 +42,19 @@ plugins/wayfarer-main/src/main/java/io/github/eariver/wayfarer/main/domain/
   GrowthTool.java
 ```
 
-Observed control path:
+Confirmed control path:
 
 1. `VALID_BROKEN_OWNER` reports `allowsBranchMutation() == true`.
-2. `switchBranch(...)` accepts the cached authorization and calls `GrowthTool.withBranch(...)`.
-3. `GrowthTool.withBranch(...)` retains the `BROKEN` authority status.
-4. The physical rewrite path applies normal evolution/presentation to the held item.
-5. The authority can remain `BROKEN` while the physical item is rewritten toward active Growth Tool
-   presentation/state.
-6. A later physical-claim validation can therefore produce `WRONG_ITEM_STATE` or an equivalent
+2. `MainGameplayRuntime.switchBranch(...)` accepts that cached authorization.
+3. `GrowthTool.withBranch(...)` changes Branch while retaining `BROKEN` authority status.
+4. `switchBranch(...)` then calls `applyEvolution(...)` on the held physical item.
+5. The physical rewrite can produce active Growth Tool presentation/state while authority remains
+   `BROKEN`.
+6. The next physical-claim comparison can therefore report `WRONG_ITEM_STATE` or an equivalent
    authority/physical mismatch.
 
-The accepted contract gives a broken owner GUI and Repair entry. It does not authorize Branch
-mutation while broken.
+The accepted contract gives a Broken owner GUI and Repair entry. It does not authorize Branch
+mutation while Broken.
 
 Required correction:
 
@@ -68,7 +67,7 @@ VALID_BROKEN_OWNER:
 
 Required regression evidence:
 
-- Broken Tool branch mutation is rejected.
+- Broken Tool Branch mutation is rejected.
 - No DB/session Branch mutation occurs.
 - The physical item remains `GRAY_DYE` / `BROKEN_GROWTH_TOOL`.
 - Tool ID, Item Instance, Epoch, Progress, and Delivery state remain unchanged.
@@ -76,51 +75,74 @@ Required regression evidence:
 
 This is a Product Code change after Candidate-4 artifact fixation.
 
-## 3. High-risk authorization-cache gap requiring closure
+## 3. Confirmed blocking defect — stale Held Authorization transition window
 
-Candidate-4 schedules full Main-Hand authorization after held-slot, hand-swap, inventory, drop, and
-pickup mutations. The current source review did not establish that the old cached result is always
-invalidated synchronously before the next managed action.
+The Candidate-4 Main runtime stores authorization by Player UUID and performs full authorization in
+`authorizeMainHand(Player)`. Inventory and held-item mutation handlers schedule that method on the
+next main-thread turn.
 
-Potential unsafe window:
+Confirmed source behavior:
+
+- `scheduleAuthorization(Player)` only schedules `authorizeMainHand(...)`.
+- It does not remove or replace the old cached result first.
+- `onHeldSlot(...)` and `onSwapHands(...)` likewise schedule next-tick authorization without
+  synchronous invalidation.
+- accepted `onInventoryClick(...)`, `onInventoryDrag(...)`, Drop, Pickup, and Respawn paths leave the
+  prior cache observable until the scheduled task runs.
+- `guardManagedBreak(...)` checks the actual current item with `wayfarerTool(item)`, but uses the old
+  cached `allowsBlockBreak()` result.
+
+Confirmed unsafe transitions:
 
 ```text
-old Main Hand:
-  cached VALID_ACTIVE_OWNER
+Case A:
+  old Main Hand = valid current Tool
+  cache = VALID_ACTIVE_OWNER
+  new Main Hand = stale / non-owner / old-epoch managed Tool
+  before next-tick authorization = Block Break guard can observe VALID_ACTIVE_OWNER
 
-inventory/hand mutation:
-  stale, non-owner, or old-epoch managed item enters Main Hand
-
-before next-tick full authorization:
-  old cached authorization remains observable
+Case B:
+  old Main Hand = ordinary item
+  cache = NO_MANAGED_ITEM
+  new Main Hand = any managed Tool
+  before next-tick authorization = NO_MANAGED_ITEM allows ordinary Block Break
 ```
 
-The inverse case is also unsafe when `NO_MANAGED_ITEM` remains cached while a managed item has
-entered Main Hand, because ordinary Block Break permission must not be applied to a managed item.
+The same stale cache can affect GUI, Repair, Branch, debug, Damage handling, and Progress checks that
+consult cached capabilities before the next full authorization.
 
-Candidate-5 must prove one of the following:
+Required correction:
 
-1. the existing event path synchronously replaces the cache with a fail-closed managed state before
-   any later use can run; or
-2. it must implement immediate invalidation/fail-closed replacement before scheduling the next-tick
-   full authorization.
+1. every event capable of changing Main Hand must synchronously replace the old authorization with a
+   fail-closed transition state before scheduling the next-tick full comparison;
+2. do not represent a managed transition as `NO_MANAGED_ITEM`;
+3. the Block Break guard must permit a managed item only for an authorization produced for the
+   current held physical item and current authority;
+4. Reissue, Revoke, authority refresh, status transition, and identity rewrite must invalidate the
+   old cache before exposing the changed authority/item to later actions.
 
-Required tests must cover at least:
+The implementation may use `AUTHORITY_UNAVAILABLE` as the transition state, or add a distinct
+fail-closed state, provided all managed capabilities are denied and ordinary non-managed behavior is
+not blocked after full reauthorization.
 
-- valid current Tool -> stale Tool hand transition;
-- non-managed item -> stale/non-owner managed Tool transition;
+Required tests:
+
+- valid current Tool -> stale Tool held-slot transition;
+- ordinary item -> stale/non-owner managed Tool transition;
 - swap-hand transition;
-- number-key or inventory-click transition;
-- no Block Break, Progress, GUI, Repair, or Branch action before reauthorization;
-- valid current Tool becomes usable after the full authorization completes.
+- number-key/inventory-click transition;
+- drag/drop/pickup transitions that alter Main Hand;
+- no Block Break, Progress, GUI, Repair, Branch, debug, or managed Damage action during transition;
+- valid current Tool becomes usable only after full authorization completes;
+- ordinary item remains ordinary after full authorization returns `NO_MANAGED_ITEM`.
 
-This finding is a source-level security-boundary risk. It must be resolved before real-client use;
-it is not recorded as an already reproduced client exploit.
+This is a confirmed source-level Product defect. It has not been reproduced through a Minecraft
+Client because Candidate-4 was stopped before Client Test.
 
 ## 4. Frontier late-MVI runtime-test gap
 
-The current `MviReadinessTest` primarily proves `EntryCycleRegistry` state consumption. It does not,
-by itself, prove the complete `FrontierGameplayRuntime` behavior required by the work order.
+The current `MviReadinessTest` proves `EntryCycleRegistry` state consumption, but does not prove the
+complete `FrontierGameplayRuntime` coordination required by the work order.
 
 Missing automated proof:
 
@@ -137,8 +159,9 @@ not intentionally force this branch.
 
 ## 5. Frontier timeout-diagnostic gap
 
-The Candidate-3 failure could not be localized because poll-by-poll visibility evidence was absent.
-The Candidate-4 timeout line still does not preserve the complete required terminal state.
+Candidate-3 could not be localized because poll-by-poll visibility evidence was absent. Candidate-4
+increased the finite window, but its final TIMEOUT line still omits the complete terminal state
+required by the Revision B instruction.
 
 The final bounded TIMEOUT evidence must contain:
 
@@ -152,9 +175,8 @@ fingerprint
 decision=TIMEOUT
 ```
 
-The log must remain sanitized and must not include raw Player UUID. Tests should verify the terminal
-snapshot construction or emitted diagnostic message without depending on full Paper log text where
-that would make the test brittle.
+The log must remain sanitized and must not include raw Player UUID. Prefer a pure immutable
+observation/snapshot value that can be unit-tested before formatting the log line.
 
 Changing runtime diagnostics changes Product bytes and therefore belongs to Candidate-5.
 
@@ -168,13 +190,13 @@ Candidate-5 must perform two fully qualified clean builds from the exact Candida
 Both Main and Frontier JARs must match by size and SHA-256 before fixation.
 
 Fresh runtime creation, Plugin Enable, Migration, and real backend preflight were not executed for
-Candidate-4. Candidate-5 must complete the authorized disposable runtime preparation outside the
-Project Runtime before any Minecraft Client connection.
+Candidate-4. Candidate-5 must complete authorized disposable runtime preparation outside Project
+Runtime before any Minecraft Client connection.
 
 ## 7. Local-only evidence boundary
 
 The Candidate-4 manifest, checksum file, reproducibility records, runtime-preflight record, and
-worksheets are recorded as ignored local files. They have not been independently reviewed through a
+worksheets were recorded as ignored local files. They were not independently reviewed through a
 complete Candidate-4 submission package.
 
 Candidate-5 must produce the complete sanitized submission ZIP and external sidecar required by the
@@ -189,11 +211,11 @@ PHASE 10C-A PRE-CLIENT INDEPENDENT REVIEW:
 CANDIDATE-4:
   REJECTED BEFORE CLIENT TEST
 
-PRIMARY CONFIRMED PRODUCT DEFECT:
+CONFIRMED PRODUCT DEFECT 1:
   BROKEN TOOL BRANCH MUTATION ALLOWED
 
-AUTHORIZATION SECURITY BOUNDARY:
-  REQUIRES FAIL-CLOSED CACHE-TRANSITION PROOF OR REMEDIATION
+CONFIRMED PRODUCT DEFECT 2:
+  STALE HELD AUTHORIZATION TRANSITION WINDOW
 
 FRONTIER LATE-MVI RUNTIME TEST:
   INSUFFICIENT
@@ -231,7 +253,8 @@ STABLE PUBLICATION:
 Candidate-5 must remain narrowly scoped to:
 
 1. deny Branch mutation for `VALID_BROKEN_OWNER` and add regressions;
-2. close or conclusively disprove the stale Held Authorization window;
+2. synchronously fail-close Held Authorization at every Main-Hand-changing boundary and add
+   transition tests;
 3. add real late-MVI restart coordination tests;
 4. add complete bounded TIMEOUT diagnostic state;
 5. rerun focused Main/Frontier tests, module tests, `check`, and `assemble`;
