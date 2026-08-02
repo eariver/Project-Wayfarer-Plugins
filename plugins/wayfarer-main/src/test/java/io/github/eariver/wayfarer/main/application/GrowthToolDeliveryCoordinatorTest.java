@@ -1,6 +1,7 @@
 package io.github.eariver.wayfarer.main.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.github.eariver.wayfarer.api.WayfarerAudit;
 import io.github.eariver.wayfarer.api.WayfarerTasks;
@@ -8,8 +9,10 @@ import io.github.eariver.wayfarer.main.domain.GrowthTool;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
@@ -65,6 +68,49 @@ final class GrowthToolDeliveryCoordinatorTest {
         assertEquals(
             GrowthToolDeliveryCoordinator.Outcome.ALREADY_DELIVERED,
             coordinator.onJoin(PLAYER).toCompletableFuture().join()
+        );
+    }
+
+    @Test
+    void recordsSanitizedCorrelationAndExactDeliveryStageOnFailure() {
+        FakeRepository repository = new FakeRepository(
+            tool(GrowthTool.DeliveryStatus.PENDING)
+        );
+        ListFailureSink sink = new ListFailureSink();
+        GrowthToolDeliveryCoordinator coordinator =
+            new GrowthToolDeliveryCoordinator(
+                repository,
+                new DirectTasks(),
+                event -> CompletableFuture.completedFuture(null),
+                ignored -> {
+                    throw new GrowthToolDeliveryCoordinator.DeliveryStageException(
+                        GrowthToolDeliveryCoordinator.DiagnosticStage.CREATE_AND_ANNOTATE_ITEM,
+                        new IllegalStateException("test failure")
+                    );
+                },
+                "main-test",
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                sink
+            );
+
+        assertEquals(
+            GrowthToolDeliveryCoordinator.Outcome.UNAVAILABLE,
+            coordinator.onJoin(PLAYER).toCompletableFuture().join()
+        );
+        assertEquals(1, sink.failures.size());
+        Failure failure = sink.failures.getFirst();
+        assertNotNull(UUID.fromString(failure.correlationId));
+        assertEquals(
+            GrowthToolDeliveryCoordinator.DiagnosticStage.CREATE_AND_ANNOTATE_ITEM,
+            failure.stage
+        );
+        assertEquals(
+            GrowthToolDeliveryCoordinator.DeliveryStageException.class.getName(),
+            failure.exceptionClass
+        );
+        assertEquals(
+            failure.correlationId,
+            coordinator.lastFailure(PLAYER).orElseThrow().correlationId()
         );
     }
 
@@ -142,6 +188,32 @@ final class GrowthToolDeliveryCoordinatorTest {
             return Optional.of(updated);
         }
     }
+
+    private static final class ListFailureSink
+        implements GrowthToolDeliveryCoordinator.DiagnosticSink {
+        private final CopyOnWriteArrayList<Failure> failures =
+            new CopyOnWriteArrayList<>();
+
+        @Override
+        public void failure(
+            UUID playerUuid,
+            String correlationId,
+            GrowthToolDeliveryCoordinator.DiagnosticStage stage,
+            Throwable failure
+        ) {
+            failures.add(new Failure(
+                correlationId,
+                stage,
+                failure.getClass().getName()
+            ));
+        }
+    }
+
+    private record Failure(
+        String correlationId,
+        GrowthToolDeliveryCoordinator.DiagnosticStage stage,
+        String exceptionClass
+    ) {}
 
     private static final class DirectTasks implements WayfarerTasks {
         @Override

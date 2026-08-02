@@ -22,6 +22,9 @@ import io.github.eariver.wayfarer.frontier.domain.TraversalLoadout;
 import io.github.eariver.wayfarer.frontier.identity.LaunchpadItemClaim;
 import io.github.eariver.wayfarer.frontier.integration.WorldGuardPlacementBridge;
 import io.github.eariver.wayfarer.frontier.integration.WorldEditLaunchpadProtection;
+import io.github.eariver.wayfarer.frontier.integration.MultiverseInventoriesReadinessListener;
+import io.github.eariver.wayfarer.frontier.integration.MviShareObservation;
+import io.github.eariver.wayfarer.frontier.application.SafeEntryReadiness;
 import io.github.eariver.wayfarer.common.SingleUseGate;
 import io.github.eariver.wayfarer.common.BoundItemTransferPolicy;
 import io.github.eariver.wayfarer.integration.leafgrapple.LeafGrappleBridge;
@@ -38,6 +41,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -82,6 +86,7 @@ import java.util.EnumSet;
 import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -131,6 +136,10 @@ public final class FrontierGameplayRuntime implements Listener {
     private final BukkitTask reconcileTask;
     private final WorldGuardPlacementBridge worldGuard;
     private final WorldEditLaunchpadProtection worldEditProtection;
+    private final SafeEntryReadiness entryReadiness = new SafeEntryReadiness();
+    private final ConcurrentHashMap<UUID, BukkitTask> entryReadinessTasks =
+        new ConcurrentHashMap<>();
+    private final Listener mviReadinessListener;
     private volatile FrontierPurchaseCoordinator purchaseCoordinator;
 
     public FrontierGameplayRuntime(
@@ -190,6 +199,18 @@ public final class FrontierGameplayRuntime implements Listener {
             )
             : null;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        if (plugin.getServer().getPluginManager()
+            .isPluginEnabled("Multiverse-Inventories")) {
+            mviReadinessListener = new MultiverseInventoriesReadinessListener(
+                this::onMviObservation
+            );
+            plugin.getServer().getPluginManager().registerEvents(
+                mviReadinessListener,
+                plugin
+            );
+        } else {
+            mviReadinessListener = null;
+        }
         long period = Math.max(
             20L,
             config.checkpointInterval().toSeconds() * 20L
@@ -221,6 +242,12 @@ public final class FrontierGameplayRuntime implements Listener {
     public void stop() {
         accepting.set(false);
         delivery.shutdown();
+        entryReadinessTasks.values().forEach(BukkitTask::cancel);
+        entryReadinessTasks.clear();
+        entryReadiness.cancelAll();
+        if (mviReadinessListener != null) {
+            org.bukkit.event.HandlerList.unregisterAll(mviReadinessListener);
+        }
         reconcileTask.cancel();
         cooldowns.clear();
         authorities.clear();
@@ -247,12 +274,25 @@ public final class FrontierGameplayRuntime implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        plugin.getLogger().info(
+            "PLAYER_JOIN; world=" + event.getPlayer().getWorld().getName()
+        );
         enter(event.getPlayer());
     }
 
     @EventHandler
     public void onWorldChanged(PlayerChangedWorldEvent event) {
+        plugin.getLogger().info(
+            "PLAYER_CHANGED_WORLD; from=" + event.getFrom().getName()
+                + "; to=" + event.getPlayer().getWorld().getName()
+        );
         enter(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        plugin.getLogger().info("PLAYER_QUIT; safe entry cancelled");
+        cancelEntry(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -800,11 +840,190 @@ public final class FrontierGameplayRuntime implements Listener {
         }
         UUID playerUuid = player.getUniqueId();
         if (!config.exactWorldName().equals(player.getWorld().getName())) {
+            cancelEntry(playerUuid);
             authorities.remove(playerUuid);
             return;
         }
-        delivery.onSafeEntry(playerUuid, player.getWorld().getName())
+        delivery.cancelSafeEntry(playerUuid);
+        SafeEntryReadiness.Request request = entryReadiness.request(playerUuid);
+        plugin.getLogger().info(
+            "WAYFARER_ENTRY_REQUESTED; world="
+                + config.exactWorldName()
+                + "; generation=" + request.generation()
+        );
+        scheduleEntryReadiness(player, request);
+    }
+
+    private void onMviObservation(
+        MviShareObservation observation
+    ) {
+        if (!accepting.get()) {
+            return;
+        }
+        String phase = observation.monitorPhase()
+            ? "MVI_SHARE_OBSERVED"
+            : "MVI_SHARE_BEGIN";
+        plugin.getLogger().info(
+            phase
+                + "; event=" + observation.eventName()
+                + "; from=" + String.valueOf(observation.fromWorld())
+                + "; to=" + String.valueOf(observation.toWorld())
+                + "; writeProfiles=" + observation.writeProfileCount()
+                + "; readProfiles=" + observation.readProfileCount()
+                + "; cancelled=" + observation.cancelled()
+        );
+        if (!observation.monitorPhase()
+            || observation.cancelled()
+            || !config.exactWorldName().equals(observation.toWorld())) {
+            return;
+        }
+        Player player = observation.player();
+        UUID playerUuid = player.getUniqueId();
+        entryReadiness.markPublicShareEvent(playerUuid);
+        SafeEntryReadiness.Request request = entryReadiness.currentOrRequest(
+            playerUuid
+        );
+        schedulePublicContinuation(player, request);
+    }
+
+    private void scheduleEntryReadiness(
+        Player player,
+        SafeEntryReadiness.Request request
+    ) {
+        cancelEntryTask(player.getUniqueId());
+        if (entryReadiness.hasPublicShareEvent(request)) {
+            schedulePublicContinuation(player, request);
+            return;
+        }
+        UUID playerUuid = player.getUniqueId();
+        plugin.getLogger().info(
+            "WAYFARER_ENTRY_STABILIZATION_BEGIN; source=BOUNDED_FINGERPRINT"
+                + "; generation=" + request.generation()
+        );
+        java.util.concurrent.atomic.AtomicReference<BukkitTask> taskRef =
+            new java.util.concurrent.atomic.AtomicReference<>();
+        BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(
+            plugin,
+            () -> {
+                BukkitTask currentTask = taskRef.get();
+                if (currentTask == null) {
+                    return;
+                }
+                Player online = plugin.getServer().getPlayer(playerUuid);
+                boolean inExactWorld = online != null
+                    && online.isOnline()
+                    && config.exactWorldName().equals(
+                        online.getWorld().getName()
+                    );
+                int fingerprint = online == null
+                    ? Integer.MIN_VALUE
+                    : managedInventoryFingerprint(online);
+                SafeEntryReadiness.Decision decision =
+                    entryReadiness.observeFingerprint(
+                        request,
+                        inExactWorld,
+                        fingerprint
+                    );
+                if (decision == SafeEntryReadiness.Decision.WAIT) {
+                    return;
+                }
+                currentTask.cancel();
+                entryReadinessTasks.remove(playerUuid, currentTask);
+                if (decision == SafeEntryReadiness.Decision.READY) {
+                    plugin.getLogger().info(
+                        "MVI_PROFILE_VISIBLE; Frontier safe entry stabilized;"
+                            + " generation=" + request.generation()
+                            + "; managedItems="
+                            + managedItemCount(online)
+                    );
+                    startReadyEntry(online, request, "FINGERPRINT_STABLE");
+                    return;
+                }
+                if (decision == SafeEntryReadiness.Decision.TIMEOUT) {
+                    plugin.getLogger().warning(
+                        "Frontier safe entry stabilization timed out; retry"
+                            + " later; generation=" + request.generation()
+                    );
+                }
+                entryReadiness.cancel(playerUuid);
+                delivery.cancelSafeEntry(playerUuid);
+            },
+            1L,
+            1L
+        );
+        taskRef.set(task);
+        entryReadinessTasks.put(playerUuid, task);
+    }
+
+    private void schedulePublicContinuation(
+        Player player,
+        SafeEntryReadiness.Request request
+    ) {
+        UUID playerUuid = player.getUniqueId();
+        cancelEntryTask(playerUuid);
+        BukkitTask task = plugin.getServer().getScheduler().runTask(
+            plugin,
+            () -> {
+                entryReadinessTasks.remove(playerUuid);
+                Player online = plugin.getServer().getPlayer(playerUuid);
+                boolean inExactWorld = online != null
+                    && online.isOnline()
+                    && config.exactWorldName().equals(
+                        online.getWorld().getName()
+                    );
+                SafeEntryReadiness.Decision decision =
+                    entryReadiness.continueAfterPublicShareEvent(
+                        request,
+                        inExactWorld
+                    );
+                if (decision == SafeEntryReadiness.Decision.READY) {
+                    plugin.getLogger().info(
+                        "MVI_PROFILE_VISIBLE; Frontier safe entry continuation"
+                            + " after public share event; generation="
+                            + request.generation()
+                    );
+                    startReadyEntry(online, request, "MVI_PUBLIC_EVENT");
+                } else if (decision != SafeEntryReadiness.Decision.WAIT) {
+                    entryReadiness.cancel(playerUuid);
+                    delivery.cancelSafeEntry(playerUuid);
+                }
+            }
+        );
+        entryReadinessTasks.put(playerUuid, task);
+    }
+
+    private void startReadyEntry(
+        Player player,
+        SafeEntryReadiness.Request request,
+        String readinessSource
+    ) {
+        if (player == null
+            || !player.isOnline()
+            || !accepting.get()
+            || !entryReadiness.isCurrent(request)
+            || !config.exactWorldName().equals(player.getWorld().getName())) {
+            return;
+        }
+        plugin.getLogger().info(
+            "WAYFARER_DELIVERY_BEGIN; source=" + readinessSource
+                + "; generation=" + request.generation()
+                + "; presentManagedItems=" + managedItemCount(player)
+        );
+        delivery.onSafeEntry(player.getUniqueId(), config.exactWorldName())
             .exceptionally(ignored -> null);
+    }
+
+    private void cancelEntry(UUID playerUuid) {
+        cancelEntryTask(playerUuid);
+        entryReadiness.cancel(playerUuid);
+        delivery.cancelSafeEntry(playerUuid);
+    }
+
+    private void cancelEntryTask(UUID playerUuid) {
+        BukkitTask task = entryReadinessTasks.remove(playerUuid);
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     private TraversalDeliveryCoordinator.DeliveryOutcome deliver(
@@ -1642,6 +1861,182 @@ public final class FrontierGameplayRuntime implements Listener {
         return present;
     }
 
+    private int cleanupExactCurrentDuplicates(
+        Player player,
+        TraversalLoadout authority
+    ) {
+        if (player == null
+            || !player.isOnline()
+            || !config.exactWorldName().equals(player.getWorld().getName())) {
+            return 0;
+        }
+        String before = physicalPresenceSummary(player, authority);
+        int removed = 0;
+        for (TraversalLoadout.LogicalItem logical : authority.permanentItems()) {
+            if (logical.state() != TraversalLoadout.LogicalItem.State.ACTIVE) {
+                continue;
+            }
+            List<PhysicalSlot> matches = exactCurrentSlots(player, logical);
+            if (matches.size() <= 1) {
+                continue;
+            }
+            matches.sort(Comparator
+                .comparingInt(PhysicalSlot::preference)
+                .thenComparingInt(PhysicalSlot::order));
+            for (int index = 1; index < matches.size(); index++) {
+                matches.get(index).clear().run();
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            plugin.getLogger().info(
+                "WAYFARER_DUPLICATE_SELF_HEAL; removed=" + removed
+                    + "; before=" + before
+                    + "; after=" + physicalPresenceSummary(player, authority)
+            );
+        }
+        return removed;
+    }
+
+    private static String physicalPresenceSummary(
+        Player player,
+        TraversalLoadout authority
+    ) {
+        StringBuilder summary = new StringBuilder();
+        for (TraversalIdentity.ItemType type
+            : TraversalIdentity.ItemType.values()) {
+            TraversalLoadout.LogicalItem logical = authority.permanentItems()
+                .stream()
+                .filter(item -> item.itemType() == type)
+                .findFirst()
+                .orElse(null);
+            int count = logical == null
+                ? 0
+                : exactCurrentCount(player, logical);
+            if (summary.length() > 0) {
+                summary.append(';');
+            }
+            summary.append(type.name())
+                .append('=').append(count)
+                .append(count > 0 ? "(EXACT_CURRENT)" : "(ABSENT_OR_NOT_CURRENT)");
+        }
+        return summary.toString();
+    }
+
+    private static int exactCurrentCount(
+        Player player,
+        TraversalLoadout.LogicalItem logical
+    ) {
+        int count = 0;
+        for (ItemStack item : allPlayerItems(player)) {
+            if (matchesExactCurrent(item, player.getUniqueId(), logical)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private List<PhysicalSlot> exactCurrentSlots(
+        Player player,
+        TraversalLoadout.LogicalItem logical
+    ) {
+        List<PhysicalSlot> matches = new ArrayList<>();
+        ItemStack[] storage = player.getInventory().getStorageContents();
+        int heldSlot = player.getInventory().getHeldItemSlot();
+        for (int slot = 0; slot < storage.length; slot++) {
+            if (matchesExactCurrent(storage[slot], player.getUniqueId(), logical)) {
+                int slotIndex = slot;
+                int preference = slot == heldSlot ? 1 : 3;
+                matches.add(new PhysicalSlot(
+                    preference,
+                    slot,
+                    () -> player.getInventory().setItem(slotIndex, null)
+                ));
+            }
+        }
+        ItemStack[] armor = player.getInventory().getArmorContents();
+        for (int slot = 0; slot < armor.length; slot++) {
+            if (matchesExactCurrent(armor[slot], player.getUniqueId(), logical)) {
+                int slotIndex = slot;
+                int preference = logical.itemType()
+                    == TraversalIdentity.ItemType.ELYTRA && slot == 2
+                    ? 0
+                    : 3;
+                matches.add(new PhysicalSlot(
+                    preference,
+                    100 + slot,
+                    () -> {
+                        ItemStack[] current =
+                            player.getInventory().getArmorContents();
+                        current[slotIndex] = null;
+                        player.getInventory().setArmorContents(current);
+                    }
+                ));
+            }
+        }
+        if (matchesExactCurrent(
+            player.getInventory().getItemInOffHand(),
+            player.getUniqueId(),
+            logical
+        )) {
+            matches.add(new PhysicalSlot(
+                1,
+                200,
+                () -> player.getInventory().setItemInOffHand(null)
+            ));
+        }
+        if (matchesExactCurrent(
+            player.getItemOnCursor(),
+            player.getUniqueId(),
+            logical
+        )) {
+            matches.add(new PhysicalSlot(
+                4,
+                300,
+                () -> player.setItemOnCursor(null)
+            ));
+        }
+        return matches;
+    }
+
+    private static int managedItemCount(Player player) {
+        if (player == null) {
+            return 0;
+        }
+        int count = 0;
+        for (ItemStack item : allPlayerItems(player)) {
+            if (parseCompleteManagedPermanent(item) != null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int managedInventoryFingerprint(Player player) {
+        List<String> identities = new ArrayList<>();
+        for (ItemStack item : allPlayerItems(player)) {
+            CompleteManagedPermanent managed =
+                parseCompleteManagedPermanent(item);
+            if (managed == null) {
+                continue;
+            }
+            identities.add(
+                managed.itemType.name()
+                    + "|" + managed.ownerUuid
+                    + "|" + managed.themeId
+                    + "|" + managed.itemInstanceId
+                    + "|" + managed.instanceEpoch
+                    + "|" + managed.schemaVersion
+            );
+        }
+        identities.sort(Comparator.naturalOrder());
+        int fingerprint = 1;
+        for (String identity : identities) {
+            fingerprint = 31 * fingerprint + identity.hashCode();
+        }
+        return fingerprint;
+    }
+
     private static List<ItemStack> allPlayerItems(Player player) {
         List<ItemStack> items = new ArrayList<>();
         ItemStack[] storage = player.getInventory().getStorageContents();
@@ -1719,6 +2114,12 @@ public final class FrontierGameplayRuntime implements Listener {
             && managed.ownerUuid.equals(identity.ownerUuid())
             && managed.themeId.equals(identity.themeId());
     }
+
+    private record PhysicalSlot(
+        int preference,
+        int order,
+        Runnable clear
+    ) {}
 
     private static boolean permanent(ItemStack item) {
         return parseCompleteManagedPermanent(item) != null
@@ -1811,6 +2212,20 @@ public final class FrontierGameplayRuntime implements Listener {
         }
 
         @Override
+        public int cleanupExactCurrentDuplicates(
+            UUID playerUuid,
+            TraversalLoadout loadout
+        ) {
+            Player player = plugin.getServer().getPlayer(playerUuid);
+            return player == null || !player.isOnline()
+                ? 0
+                : FrontierGameplayRuntime.this.cleanupExactCurrentDuplicates(
+                    player,
+                    loadout
+                );
+        }
+
+        @Override
         public EnumSet<TraversalIdentity.ItemType> currentPhysicalPresence(
             UUID playerUuid,
             TraversalLoadout loadout
@@ -1819,10 +2234,17 @@ public final class FrontierGameplayRuntime implements Listener {
             if (player == null || !player.isOnline()) {
                 return EnumSet.noneOf(TraversalIdentity.ItemType.class);
             }
-            return FrontierGameplayRuntime.this.currentPhysicalPresence(
+            EnumSet<TraversalIdentity.ItemType> present =
+                FrontierGameplayRuntime.this.currentPhysicalPresence(
                 player,
                 loadout
             );
+            plugin.getLogger().info(
+                "WAYFARER_PHYSICAL_PRESENCE_SCAN; "
+                    + physicalPresenceSummary(player, loadout)
+                    + "; presentTypes=" + present
+            );
+            return present;
         }
 
         @Override
@@ -1962,6 +2384,44 @@ public final class FrontierGameplayRuntime implements Listener {
         public void compensationFailure(UUID playerUuid) {
             plugin.getLogger().warning(
                 "Frontier delivery physical compensation failed."
+            );
+        }
+
+        @Override
+        public void duplicateSelfHealed(UUID playerUuid, int removed) {
+            services.audit().record(new WayfarerAudit.AuditEvent(
+                UUID.randomUUID(),
+                "FRONTIER_DUPLICATE_SELF_HEALED",
+                playerUuid,
+                "FRONTIER_LOADOUT",
+                "PERMANENT_CURRENT_ITEMS",
+                services.serverId(),
+                "{\"removed\":" + removed + "}",
+                clock.instant()
+            ));
+            plugin.getLogger().info(
+                "Frontier exact current duplicate self-heal applied; removed="
+                + removed
+            );
+        }
+
+        @Override
+        public void reopenAbsentPermanents(
+            EnumSet<TraversalIdentity.ItemType> absent
+        ) {
+            plugin.getLogger().info(
+                "WAYFARER_REOPEN_ABSENT; types=" + absent
+            );
+        }
+
+        @Override
+        public void deliveryCompleted(
+            PendingDelivery.ItemType itemType,
+            TraversalDeliveryCoordinator.DeliveryOutcome outcome
+        ) {
+            plugin.getLogger().info(
+                "WAYFARER_DELIVERY_COMPLETE; type=" + itemType
+                    + "; outcome=" + outcome
             );
         }
     }

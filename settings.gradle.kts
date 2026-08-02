@@ -35,6 +35,14 @@ dependencyResolutionManagement {
                 includeGroup("com.sk89q.worldguard.worldguard-libs")
             }
         }
+        maven {
+            name = "multiverse"
+            url = uri("https://repo.onarandombox.com/multiverse-releases")
+            content {
+                includeGroup("org.mvplugins.multiverse.inventories")
+                includeGroup("org.mvplugins.multiverse.core")
+            }
+        }
     }
 }
 

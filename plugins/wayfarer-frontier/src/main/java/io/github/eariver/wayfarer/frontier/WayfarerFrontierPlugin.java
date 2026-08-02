@@ -25,6 +25,7 @@ import java.time.Clock;
 import java.util.UUID;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public final class WayfarerFrontierPlugin extends JavaPlugin {
     private final AtomicBoolean accepting = new AtomicBoolean();
@@ -112,6 +113,14 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
             )
                 .exceptionally(ignored -> {
                     opened.close();
+                    Throwable initializationFailure = unwrap(ignored);
+                    getLogger().log(
+                        Level.WARNING,
+                        "Wayfarer_Frontier runtime initialization failed;"
+                            + " stage=FINISH_ENABLE; exception="
+                            + initializationFailure.getClass().getName(),
+                        initializationFailure
+                    );
                     scheduleFailClosed(
                         "Wayfarer_Frontier runtime initialization failed."
                     );
@@ -193,6 +202,16 @@ public final class WayfarerFrontierPlugin extends JavaPlugin {
 
     private void scheduleFailClosed(String message) {
         getServer().getScheduler().runTask(this, () -> failClosed(message));
+    }
+
+    private static Throwable unwrap(Throwable failure) {
+        Throwable current = failure;
+        while ((current instanceof java.util.concurrent.CompletionException
+            || current instanceof java.util.concurrent.ExecutionException)
+            && current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current;
     }
 
     private boolean handleCommand(

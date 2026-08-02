@@ -273,6 +273,48 @@ final class TraversalDeliveryCoordinatorTest {
     }
 
     @Test
+    void exactCurrentDuplicateSelfHealIsAuditedOnce() {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        FakeGateway gateway = new FakeGateway();
+        gateway.duplicateCleanupResults.set(2);
+        FakeAudit audit = new FakeAudit();
+        TraversalDeliveryCoordinator coordinator = new TraversalDeliveryCoordinator(
+            new FrontierWorldGate(Set.of(WORLD)),
+            repository,
+            new DirectTasks(),
+            gateway,
+            audit,
+            Clock.fixed(NOW, ZoneOffset.UTC)
+        );
+
+        coordinator.onSafeEntry(PLAYER, WORLD).toCompletableFuture().join();
+
+        assertEquals(2, audit.duplicateSelfHealed);
+    }
+
+    @Test
+    void cancelledSafeEntryCannotMutateAfterDatabaseReadiness() throws Exception {
+        FakeRepository repository = new FakeRepository();
+        repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
+        repository.findStarted = new CountDownLatch(1);
+        repository.releaseFind = new CountDownLatch(1);
+        FakeGateway gateway = new FakeGateway();
+        TraversalDeliveryCoordinator coordinator = coordinator(repository, gateway);
+
+        CompletionStage<TraversalDeliveryCoordinator.Result> safe =
+            coordinator.onSafeEntry(PLAYER, WORLD);
+        assertTrue(repository.findStarted.await(2, TimeUnit.SECONDS));
+        coordinator.cancelSafeEntry(PLAYER);
+        repository.releaseFind.countDown();
+
+        TraversalDeliveryCoordinator.Result result =
+            safe.toCompletableFuture().get(3, TimeUnit.SECONDS);
+        assertEquals(0, result.delivered());
+        assertEquals(0, gateway.deliverCalls);
+    }
+
+    @Test
     void repositoryFailureAwaitsCompensationBeforeNextOperation() throws Exception {
         FakeRepository repository = new FakeRepository();
         repository.seedLogical(PLAYER, TraversalIdentity.ItemType.ELYTRA, 1);
@@ -692,6 +734,7 @@ final class TraversalDeliveryCoordinatorTest {
         private int deliveryConflicts;
         private int deliveryUnknowns;
         private int compensationFailures;
+        private int duplicateSelfHealed;
 
         @Override
         public void deathTransition(
@@ -734,6 +777,11 @@ final class TraversalDeliveryCoordinatorTest {
         public void compensationFailure(UUID playerUuid) {
             compensationFailures++;
         }
+
+        @Override
+        public void duplicateSelfHealed(UUID playerUuid, int removed) {
+            duplicateSelfHealed += removed;
+        }
     }
 
     private static final class FakeGateway
@@ -750,6 +798,8 @@ final class TraversalDeliveryCoordinatorTest {
         private boolean forceUnknown;
         private boolean online = true;
         private boolean exactWorld = true;
+        private final AtomicInteger duplicateCleanupResults =
+            new AtomicInteger();
         private CountDownLatch compensateStarted;
         private CountDownLatch releaseCompensate;
         private CountDownLatch deliverStarted;
@@ -845,6 +895,14 @@ final class TraversalDeliveryCoordinatorTest {
         }
 
         @Override
+        public int cleanupExactCurrentDuplicates(
+            UUID playerUuid,
+            TraversalLoadout loadout
+        ) {
+            return duplicateCleanupResults.getAndSet(0);
+        }
+
+        @Override
         public EnumSet<TraversalIdentity.ItemType> currentPhysicalPresence(
             UUID playerUuid,
             TraversalLoadout loadout
@@ -928,6 +986,8 @@ final class TraversalDeliveryCoordinatorTest {
         private int consumableMarkCalls;
         private CountDownLatch markStarted;
         private CountDownLatch releaseMark;
+        private CountDownLatch findStarted;
+        private CountDownLatch releaseFind;
         private CountDownLatch reissueStarted;
         private final AtomicInteger reissueStartCount = new AtomicInteger();
         private Runnable onDeathStart;
@@ -983,6 +1043,12 @@ final class TraversalDeliveryCoordinatorTest {
 
         @Override
         public TraversalLoadout findOrCreate(UUID playerUuid, Instant now) {
+            if (findStarted != null) {
+                findStarted.countDown();
+            }
+            if (releaseFind != null) {
+                await(releaseFind);
+            }
             if (find(playerUuid).isEmpty()) {
                 for (TraversalIdentity.ItemType type
                     : TraversalIdentity.ItemType.values()) {

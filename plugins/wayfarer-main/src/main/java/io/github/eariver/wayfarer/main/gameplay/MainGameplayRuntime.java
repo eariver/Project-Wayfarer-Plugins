@@ -76,6 +76,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.logging.Level;
 
 public final class MainGameplayRuntime implements
     Listener,
@@ -140,7 +141,8 @@ public final class MainGameplayRuntime implements
             services.audit(),
             this::deliver,
             services.serverId(),
-            clock
+            clock,
+            this::logDeliveryFailure
         );
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         long period = Math.max(
@@ -919,8 +921,12 @@ public final class MainGameplayRuntime implements
             && outcome != GrowthToolDeliveryCoordinator.Outcome.UNAVAILABLE) {
             return CompletableFuture.completedFuture(null);
         }
+        String reference = delivery.lastFailure(playerUuid)
+            .map(snapshot -> " Reference: " + snapshot.correlationId() + ".")
+            .orElse("");
         plugin.getLogger().warning(
             "Growth Tool delivery remains pending; retry on join or by admin."
+                + reference
         );
         return services.tasks().mainThread(() -> {
             if (!accepting) {
@@ -931,9 +937,25 @@ public final class MainGameplayRuntime implements
                 online.sendMessage(
                     "Growth Tool delivery is pending; free inventory space "
                         + "and rejoin or ask an administrator to retry."
+                        + (reference.isEmpty() ? "" : reference)
                 );
             }
         });
+    }
+
+    private void logDeliveryFailure(
+        UUID ignoredPlayerUuid,
+        String correlationId,
+        GrowthToolDeliveryCoordinator.DiagnosticStage stage,
+        Throwable failure
+    ) {
+        plugin.getLogger().log(
+            Level.WARNING,
+            "Growth Tool delivery failed; correlation=" + correlationId
+                + "; stage=" + stage
+                + "; exception=" + failure.getClass().getName(),
+            failure
+        );
     }
 
     private void reconcileMainHand(Player player) {
@@ -1264,10 +1286,27 @@ public final class MainGameplayRuntime implements
         if (player.getInventory().firstEmpty() < 0) {
             return GrowthToolDeliveryCoordinator.Outcome.INVENTORY_FULL;
         }
-        ItemStack item = new ItemStack(Material.WOODEN_PICKAXE);
-        writeIdentity(item, tool, "GROWTH_TOOL");
-        applyEvolution(item, tool, false);
-        player.getInventory().addItem(item);
+        ItemStack item;
+        try {
+            item = new ItemStack(Material.WOODEN_PICKAXE);
+            writeIdentity(item, tool, "GROWTH_TOOL");
+            applyEvolution(item, tool, false);
+        } catch (RuntimeException failure) {
+            throw new GrowthToolDeliveryCoordinator.DeliveryStageException(
+                GrowthToolDeliveryCoordinator.DiagnosticStage.CREATE_AND_ANNOTATE_ITEM,
+                failure
+            );
+        }
+        try {
+            if (!player.getInventory().addItem(item).isEmpty()) {
+                return GrowthToolDeliveryCoordinator.Outcome.INVENTORY_FULL;
+            }
+        } catch (RuntimeException failure) {
+            throw new GrowthToolDeliveryCoordinator.DeliveryStageException(
+                GrowthToolDeliveryCoordinator.DiagnosticStage.INSERT_PHYSICAL_ITEM,
+                failure
+            );
+        }
         return GrowthToolDeliveryCoordinator.Outcome.DELIVERED;
     }
 

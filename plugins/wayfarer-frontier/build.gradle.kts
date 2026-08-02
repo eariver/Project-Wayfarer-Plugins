@@ -17,6 +17,7 @@ dependencies {
     compileOnly(libs.worldguard.core) {
         isTransitive = false
     }
+    compileOnly(libs.multiverse.inventories)
     compileOnly(project(":libraries:wayfarer-api"))
     implementation(project(":libraries:wayfarer-common"))
     implementation(libs.hikari)

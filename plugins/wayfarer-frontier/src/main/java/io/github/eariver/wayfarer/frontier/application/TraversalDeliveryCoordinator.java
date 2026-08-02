@@ -20,6 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class TraversalDeliveryCoordinator {
     private final FrontierWorldGate worldGate;
@@ -30,6 +31,8 @@ public final class TraversalDeliveryCoordinator {
     private final Clock clock;
     private final PlayerOperationSerializer serializer;
     private final Set<String> reportedDeliveryProblems = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<UUID, AtomicLong> entryGenerations =
+        new ConcurrentHashMap<>();
 
     public TraversalDeliveryCoordinator(
         FrontierWorldGate worldGate,
@@ -74,6 +77,7 @@ public final class TraversalDeliveryCoordinator {
 
     public void shutdown() {
         serializer.shutdown();
+        entryGenerations.clear();
         reportedDeliveryProblems.clear();
     }
 
@@ -114,11 +118,20 @@ public final class TraversalDeliveryCoordinator {
     public CompletionStage<Result> onSafeEntry(UUID playerUuid, String exactWorldName) {
         Objects.requireNonNull(playerUuid, "playerUuid");
         Objects.requireNonNull(exactWorldName, "exactWorldName");
+        long generation = nextEntryGeneration(playerUuid);
         if (!worldGate.allows(exactWorldName)) {
             return CompletableFuture.completedFuture(Result.rejectedWorld());
         }
-        return serializer.enqueue(playerUuid, () -> safeEntryOperation(playerUuid, exactWorldName))
+        return serializer.enqueue(
+            playerUuid,
+            () -> safeEntryOperation(playerUuid, exactWorldName, generation)
+        )
             .exceptionally(failure -> Result.unavailable());
+    }
+
+    public void cancelSafeEntry(UUID playerUuid) {
+        Objects.requireNonNull(playerUuid, "playerUuid");
+        nextEntryGeneration(playerUuid);
     }
 
     public CompletionStage<Boolean> adminReissueCritical(
@@ -151,8 +164,12 @@ public final class TraversalDeliveryCoordinator {
 
     private CompletionStage<Result> safeEntryOperation(
         UUID playerUuid,
-        String exactWorldName
+        String exactWorldName,
+        long generation
     ) {
+        if (!isCurrentEntry(playerUuid, generation)) {
+            return CompletableFuture.completedFuture(Result.empty());
+        }
         return tasks.database(() -> {
             TraversalLoadout loadout = repository.findOrCreate(
                 playerUuid,
@@ -161,19 +178,31 @@ public final class TraversalDeliveryCoordinator {
             repository.ensureInitialDeliveries(loadout, clock.instant());
             return repository.find(playerUuid).orElse(loadout);
         }).thenCompose(loadout -> {
+            if (!isCurrentEntry(playerUuid, generation)) {
+                return CompletableFuture.completedFuture(Result.empty());
+            }
             PresenceCapture capture = new PresenceCapture();
             return tasks.mainThread(() -> {
-                if (!gateway.isOnlineInExactWorld(playerUuid, exactWorldName)) {
+                if (!isCurrentEntry(playerUuid, generation)
+                    || !gateway.isOnlineInExactWorld(playerUuid, exactWorldName)) {
                     capture.leftOrOffline = true;
                     capture.offline = !gateway.isOnline(playerUuid);
                     return;
                 }
                 gateway.cleanupNonCurrentManaged(playerUuid, loadout);
+                gateway.applyAuthorityCache(playerUuid, loadout);
+                capture.duplicatesRemoved =
+                    gateway.cleanupExactCurrentDuplicates(playerUuid, loadout);
+                if (capture.duplicatesRemoved > 0) {
+                    audit.duplicateSelfHealed(
+                        playerUuid,
+                        capture.duplicatesRemoved
+                    );
+                }
                 capture.presentTypes = gateway.currentPhysicalPresence(
                     playerUuid,
                     loadout
                 );
-                gateway.applyAuthorityCache(playerUuid, loadout);
                 capture.loadout = loadout;
             }).thenCompose(ignored -> {
                 if (capture.leftOrOffline) {
@@ -183,10 +212,17 @@ public final class TraversalDeliveryCoordinator {
                     }
                     return CompletableFuture.completedFuture(empty.plusLeftTheme());
                 }
+                if (!isCurrentEntry(playerUuid, generation)) {
+                    return CompletableFuture.completedFuture(Result.empty());
+                }
                 EnumSet<TraversalIdentity.ItemType> absent =
                     EnumSet.allOf(TraversalIdentity.ItemType.class);
                 absent.removeAll(capture.presentTypes);
+                audit.reopenAbsentPermanents(EnumSet.copyOf(absent));
                 return tasks.database(() -> {
+                    if (!isCurrentEntry(playerUuid, generation)) {
+                        return List.<PendingDelivery>of();
+                    }
                     repository.reopenAbsentPermanents(
                         playerUuid,
                         absent,
@@ -194,13 +230,28 @@ public final class TraversalDeliveryCoordinator {
                     );
                     return repository.pending(playerUuid);
                 }).thenCompose(deliveries ->
-                    deliverSequentially(playerUuid, deliveries, Result.empty())
+                    deliverSequentially(
+                        playerUuid,
+                        deliveries,
+                        Result.empty(),
+                        generation
+                    )
                 ).thenCompose(result -> tasks.database(() ->
                     repository.find(playerUuid)
                 ).thenCompose(found -> tasks.mainThread(() -> {
+                    if (!isCurrentEntry(playerUuid, generation)) {
+                        return;
+                    }
                     found.ifPresent(latest -> {
                         gateway.applyAuthorityCache(playerUuid, latest);
                         gateway.cleanupNonCurrentManaged(playerUuid, latest);
+                        int duplicates = gateway.cleanupExactCurrentDuplicates(
+                            playerUuid,
+                            latest
+                        );
+                        if (duplicates > 0) {
+                            audit.duplicateSelfHealed(playerUuid, duplicates);
+                        }
                     });
                     gateway.notifySafeEntryResult(playerUuid, result);
                 }).thenApply(nothing -> result)));
@@ -211,12 +262,21 @@ public final class TraversalDeliveryCoordinator {
     private CompletionStage<Result> deliverSequentially(
         UUID playerUuid,
         List<PendingDelivery> deliveries,
-        Result seed
+        Result seed,
+        long generation
     ) {
         CompletionStage<Result> result = CompletableFuture.completedFuture(seed);
         for (PendingDelivery delivery : deliveries) {
-            result = result.thenCompose(current ->
-                deliverOne(playerUuid, delivery).thenApply(current::add)
+                result = result.thenCompose(current ->
+                !isCurrentEntry(playerUuid, generation)
+                    ? CompletableFuture.completedFuture(current)
+                    : deliverOne(playerUuid, delivery).thenApply(outcome -> {
+                        audit.deliveryCompleted(
+                            delivery.itemType(),
+                            outcome
+                        );
+                        return current.add(outcome);
+                    })
             );
         }
         return result;
@@ -404,6 +464,19 @@ public final class TraversalDeliveryCoordinator {
         };
     }
 
+    private long nextEntryGeneration(UUID playerUuid) {
+        return entryGenerations
+            .computeIfAbsent(playerUuid, ignored -> new AtomicLong())
+            .incrementAndGet();
+    }
+
+    private boolean isCurrentEntry(UUID playerUuid, long generation) {
+        AtomicLong current = entryGenerations.get(playerUuid);
+        return serializer.accepting()
+            && current != null
+            && current.get() == generation;
+    }
+
     public interface DeliveryGateway {
         DeliveryOutcome deliverIfStillEligible(UUID playerUuid, PendingDelivery delivery);
 
@@ -412,6 +485,13 @@ public final class TraversalDeliveryCoordinator {
         boolean isOnlineInExactWorld(UUID playerUuid, String exactWorldName);
 
         void cleanupNonCurrentManaged(UUID playerUuid, TraversalLoadout loadout);
+
+        default int cleanupExactCurrentDuplicates(
+            UUID playerUuid,
+            TraversalLoadout loadout
+        ) {
+            return 0;
+        }
 
         EnumSet<TraversalIdentity.ItemType> currentPhysicalPresence(
             UUID playerUuid,
@@ -441,6 +521,17 @@ public final class TraversalDeliveryCoordinator {
         void deliveryRepositoryFailure(UUID deliveryId);
 
         void compensationFailure(UUID playerUuid);
+
+        default void duplicateSelfHealed(UUID playerUuid, int removed) {}
+
+        default void reopenAbsentPermanents(
+            EnumSet<TraversalIdentity.ItemType> absent
+        ) {}
+
+        default void deliveryCompleted(
+            PendingDelivery.ItemType itemType,
+            DeliveryOutcome outcome
+        ) {}
     }
 
     public enum DeliveryOutcome {
@@ -651,5 +742,6 @@ public final class TraversalDeliveryCoordinator {
         private EnumSet<TraversalIdentity.ItemType> presentTypes =
             EnumSet.noneOf(TraversalIdentity.ItemType.class);
         private TraversalLoadout loadout;
+        private int duplicatesRemoved;
     }
 }
