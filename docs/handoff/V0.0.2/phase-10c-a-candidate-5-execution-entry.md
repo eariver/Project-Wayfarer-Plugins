@@ -1,146 +1,104 @@
 # Phase 10C-A Candidate-5 Execution Entry
 
+Revision: B  
 Recorded: 2026-08-03 JST
 
-## 1. Purpose
+## 1. Purpose and precedence
 
-This is the entry point for Luna to resume Product work after ChatGPT's Candidate-4 pre-client
-review.
+This is the sole entry point for Luna to resume Candidate-5 Product work.
 
-Read and apply these files in descending precedence:
+Apply these tracked files in order:
 
 1. this execution entry;
 2. `phase-10c-a-candidate-5-remediation-handoff.md`;
-3. `phase-10c-a-candidate-4-preclient-independent-review-addendum.md`;
-4. `phase-10c-a-candidate-4-preclient-independent-review.md`;
-5. historical Candidate-4 prepared records only as evidence.
+3. `../release-readiness/V0.0.2/phase-10c-a-candidate-4-preclient-independent-review-addendum.md`;
+4. `../release-readiness/V0.0.2/phase-10c-a-candidate-4-preclient-independent-review.md`.
 
-A lower-precedence historical record must not reopen Candidate-4 or authorize Client Test.
-
-## 2. Current state
+Candidate-4 prepared records are historical evidence only. They cannot authorize runtime or Client
+Test.
 
 ```text
-CANDIDATE-4:
-  REJECTED / PRESERVED
-
-CANDIDATE-5:
-  REQUIRED
-
-CLIENT TEST:
-  DO NOT START
-
-PR #14:
-  OPEN / DRAFT / UNMERGED
+CANDIDATE-4: REJECTED / PRESERVED
+CANDIDATE-5: REQUIRED
+CLIENT TEST: DO NOT START
+PR #14: OPEN / DRAFT / UNMERGED
 ```
 
-Required immutable ancestry includes:
+## 2. Safe local recovery
+
+The local checkout may be behind the remote branch because the independent review and handoff were
+pushed after Luna stopped.
+
+First obtain:
 
 ```text
-70b66e17b7308ae4c9529a1685f820e8a7773bfa
-b61be3dc5c69e22d507c027f4a3939d2da9330f3
-24684652b00ae6e5f9cd00215f8f2fe237cc9ef1
-3197039bc1b1ba7efd5c29e0fb143e952b8a37a2
+current branch
+worktree/index status
+local HEAD
+origin branch HEAD after fetch
+PR #14 HEAD and state
+local-vs-origin ahead/behind counts
 ```
 
-## 3. Safe local recovery and fast-forward
+A fast-forward is allowed only when:
 
-ChatGPT updated the remote branch after Luna's previous local stop. A clean local checkout may
-therefore be behind origin.
-
-Run read-only checks first:
-
-```bash
-git branch --show-current
-git status --porcelain=v1
-git diff --exit-code
-git diff --cached --exit-code
-git rev-parse HEAD
-git fetch origin
-git rev-parse origin/feature/V0.0.2-main-frontier
-git log --oneline --decorate --max-count=20
-git reflog --max-count=20
-```
-
-A fast-forward is authorized only when all are true:
-
-- branch is `feature/V0.0.2-main-frontier`;
+- the branch is `feature/V0.0.2-main-frontier`;
 - worktree and index are clean;
-- local HEAD is an ancestor of origin HEAD;
-- there is no local-only commit;
-- origin HEAD equals PR #14 head;
-- origin history contains all immutable ancestry commits above.
+- local is not ahead of origin and has not diverged;
+- origin HEAD equals PR #14 HEAD;
+- the current origin tree contains this execution entry, the Candidate-5 remediation handoff, and
+  both Candidate-4 independent-review files.
 
-Then run only:
+Then use only:
 
 ```bash
 git merge --ff-only origin/feature/V0.0.2-main-frontier
 ```
 
-Rerun the complete starting gate from the Candidate-5 remediation handoff afterward.
+Do not discard or rewrite state. Stop and report when the checkout is dirty, locally ahead,
+diverged, missing the required files, or inconsistent with PR #14.
 
-STOP without reset, clean, stash, rebase, amend, cherry-pick, force push, or deletion when:
+## 3. First Luna report
 
-- local HEAD is ahead of origin;
-- local and origin have diverged;
-- worktree/index is dirty;
-- an unexplained local artifact or restored IntelliJ change exists;
-- origin and PR head differ;
-- required ancestry is absent.
-
-## 4. First Luna report
-
-Before adding a test or changing Product code, report:
+Before adding tests or changing Product code, report only:
 
 ```text
 LOCAL HEAD
 ORIGIN HEAD
 PR HEAD
-FAST-FORWARD PERFORMED: YES/NO
-WORKTREE/INDEX: CLEAN
-REQUIRED REVIEW ANCESTRY: PASS/FAIL
-PR #14: OPEN/DRAFT/UNMERGED
-V0.0.2 TAG/RELEASE: ABSENT/PRESENT
-CANDIDATE-4 ARTIFACTS: PRESERVED
-CLIENT TEST: NOT STARTED
-NEXT ACTION: first focused RED test
+FAST-FORWARD: PERFORMED / NOT NEEDED / BLOCKED
+WORKTREE/INDEX: CLEAN / DIRTY
+PR #14: OPEN / DRAFT / UNMERGED or mismatch
+CANDIDATE-4 ARTIFACTS: PRESERVED / NOT VERIFIED
+CLIENT TEST: NOT STARTED / mismatch
+NEXT ACTION
 ```
 
-Do not continue when any authority check fails.
+Continue only when the recovery gate passes.
 
-## 5. Product execution authority
+## 4. Execution
 
-After the recovery gate passes, execute the complete Candidate-5 remediation handoff in order.
-
-The required scope is:
+Execute the Candidate-5 remediation handoff. Its scope is limited to:
 
 - Broken Tool Branch denial;
-- synchronous fail-closed Held Authorization transitions;
-- actual-held-item guards for managed operations;
-- late-MVI runtime coordination proof;
-- complete Frontier TIMEOUT diagnostics;
-- Tests-first RED evidence;
-- local focused/module/full validation;
-- Product commit and normal push;
-- CI/Headless SHA classification;
-- two formally qualified clean builds;
-- Candidate-5 fixation;
-- sanitized submission package and external sidecar;
-- tracked status and PR-body synchronization;
-- runtime handoff only.
+- fail-closed Held Authorization transitions and managed-action guards;
+- Frontier late-MVI coordination proof;
+- complete bounded Frontier TIMEOUT diagnostics;
+- focused and full validation;
+- Candidate-5 Product commit, CI/Headless evidence, two formal clean builds, artifact fixation,
+  submission package, truthful tracked status, and runtime handoff.
 
-Do not start a runtime or Minecraft Client from this Plugin repository context.
+Do not start MariaDB, Redis, Paper, a backend, or a Minecraft Client from this Plugin repository
+context.
 
-## 6. Stop state
+## 5. Stop state
 
 ```text
-PHASE 10C-A CANDIDATE-5 PRODUCT REMEDIATION:
-  PASS or FAIL based on actual evidence
-
 CANDIDATE-4:
   REJECTED / PRESERVED
 
 CANDIDATE-5:
-  PREPARED_FOR_RUNTIME_PREFLIGHT only after all Product gates pass
+  PREPARED_FOR_RUNTIME_PREFLIGHT only after every Product gate passes
 
 RUNTIME PREFLIGHT:
   NOT STARTED IN PLUGIN REPOSITORY CONTEXT
