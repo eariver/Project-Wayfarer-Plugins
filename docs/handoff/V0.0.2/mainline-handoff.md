@@ -1,61 +1,70 @@
 # V0.0.2 Mainline Handoff
 
-Draft PR #14 remains review-only. The Plugin implementation/test anchor is the immutable commit
-`7faf79081572df028a5ec19ccfbc820123180fc7`. The Phase 07 documentation revision is the current
-documentation commit recorded by Git history and PR #14.
+PR #14 remains Open / Draft / Unmerged. Phase 08B independent review is `PASS`. The first
+bounded Client Test Candidate is fixed as `V0.0.2-Client-Candidate-1` from the accepted product
+source commit `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`. The later candidate-fixation metadata
+HEAD is documentation-only; its immutable SHA is recorded in the Phase 09A result report and
+PR #14, and it does not change the candidate product bytes.
 
-Owner Amendments are documented separately from the immutable requirement. Phase 01–06 Plugin
-implementation/evidence is complete, and Phase 08B adds the focused unloaded-world expiration
-guard plus regression evidence. This remains pre-client review evidence: it is not a Client Test
-Candidate and does not represent Client or Project acceptance.
+## Fixed candidate artifacts
 
-## Phase 08B synchronized decisions
+| Component | Exact artifact | Size | SHA-256 / provenance |
+|---|---|---:|---|
+| Core | `Wayfarer_Core-V0.0.1.jar` | 11751447 | `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2`; published GitHub Release `V0.0.1`, reused unchanged |
+| Main | `wayfarer-main-0.0.2-SNAPSHOT.jar` | 4671368 | `730d56888001e9c76bd127b25c118a937f03a5dd95a0fa381c8c38fec2517113` |
+| Frontier | `wayfarer-frontier-0.0.2-SNAPSHOT.jar` | 4682233 | `f43829c7b6e06ea44549ffdd1ef26a567aef1563ba73a0808c47634742e9d3ec` |
 
-- FRONT-D01 is resolved for V0.0.2: the plugin stays enabled when `frontier_iris` is absent or
-  unloaded, never creates worlds, and defers Launchpad expiration until the world can be
-  classified. A later load and relevant Join, WorldChanged, or Respawn path restores the exact
-  case-sensitive player boundary. No health/degraded subsystem is added.
-- The exact V0.0.2 world name remains `frontier_iris`; future single-name configurability is
-  tracked by Issue #17 and is not implemented here.
-- FRONT-D02's Plugin adapter/fail-closed source boundary is accepted with limitation. A temporary
-  safe tier and bounded client motion test remain; final motion/range/balance is Mainline/Frontier-
-  owned and the temporary values are not a production recommendation.
-- FRONT-D04 and MAIN-D08 are accepted with limitation at the supported native/public or
-  cancellable boundaries described in the compliance and limitations documents.
-- The next gate is ChatGPT's independent review of this remediation. No Client Test Candidate,
-  Client/Project acceptance, tag, release, or `requirements_cleared` is fixed.
+The exact local staging path is
+`.ai-work/luna-gpt-5.6-v002/candidate/V0.0.2-Client-Candidate-1/`.
+The candidate JARs are ignored local handoff artifacts, not tracked or published. Core was not
+rebuilt as V0.0.2. Embedded descriptor identities and the checksum manifest are recorded in the
+local candidate manifest.
 
-## Review order
+## LeafGrapple test-only handoff
 
-1. Review the Phase 01–06 capability evidence, Phase 07 history, and Phase 08B remediation.
-2. Perform ChatGPT's independent review of the Phase 08B diff, focused regression, and exact-head
-   CI/Headless evidence.
-3. Fix a Client Test Candidate only after that review and later gate authorization; retain the
-   FRONT-D02 temporary safe-tier/client-motion boundary.
-4. Run bounded Client Acceptance, then perform any separately authorized correction and later
-   Stable publication.
+The pinned read-only artifact is `LeafGrapple.jar` version `1.0.2` / Maven `1.0.2-SNAPSHOT`,
+SHA-256 `FFE4B3305BB48737E1B6C373698FEFE7121B879FD5B9399F930F5023B5F78833`. The complete
+test-only `hooks.wayfarer` fragment is tracked at
+`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` and is byte-identical to the
+local candidate handoff. It copies the reviewed `hooks.wood` tier and changes only the tier key,
+durability enabled flag, entity-hook enabled flag, and all four entity target safety values to
+false. It is not a production balance recommendation and has not been applied to a server.
 
-## Project-owned follow-up
+## Mainline disposable-client preparation
 
-- Verify LuckPerms leaf behavior with temporary `wayfarer_admin` global `*`; Project OP remains
-  disabled.
-- Verify exact worlds, Main V004, restart/disable, Safe Entry, provider behavior, Portal boundary,
-  and End Gateway observation in a task-approved Project/client environment.
-- Own gate coordinates, safe arrival, seed/border/generation, MVI configuration, and any return
-  mechanism tracked by Issue #15.
-- Review unsupported external protection/repair boundaries and true orphan recovery Issue #16.
+Mainline may use the exact local candidate bytes and the tracked Safe Tier fixture to prepare its
+separate disposable environment. The test plan is
+`docs/testing/plans/V0.0.2-client-acceptance.md`.
 
-The later client result/handoff must record, without secrets or raw Player IDs:
+- The exact Frontier world name is `frontier_iris` (case-sensitive).
+- Multiverse owns world creation and loading. Wayfarer must not create the world.
+- Wayfarer must remain enabled when `frontier_iris` is absent or unloaded; it must fail closed at
+  the exact player/world boundary and resume the relevant Join, WorldChanged, or Respawn path after
+  a later load. Unloaded-world Launchpad expiration must defer before destructive transition.
+- Mainline should verify the canonical LeafGrapple capability/item boundary, durability-disabled
+  behavior, entity/player/mob/animal/monster-hooking-disabled behavior, and bounded canonical
+  motion using the copied tier.
+- Mainline owns client execution, server configuration, world operations, motion/range/feel/balance
+  observation, and the resulting client evidence.
 
-- exact LeafGrapple JAR filename, version, and SHA-256;
-- exact temporary tier/config values actually used, including movement/range/display values copied
-  from a reviewed LeafGrapple 1.0.2 standard tier;
-- durability disabled and entity/player/mob/animal/monster hooking disabled;
-- Wayfarer capability detection, canonical item creation/delivery, and identity/death/redelivery
-  results;
-- bounded client motion observation; and
-- an explicit statement that the temporary values are test-only and not a production balance
-  recommendation.
+Accepted product-head evidence remains Normal CI run `30713914057` (`success`) and Pre-client
+Headless Runtime run `30713914051` (`success`), both at product source
+`90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`. A later metadata-head Normal CI run is required after
+the documentation commit; any automatically triggered metadata-head Headless run is observation
+only and does not replace the accepted product-head runtime gate.
 
-Core V0.0.1 remains independently reused. No stable tag, release, deployment, migration, server
-restart, or roadmap completion is implied by this handoff.
+## Resolved and residual gates
+
+- `FRONT-D01`: resolved for V0.0.2.
+- `FRONT-D02`: Plugin public-capability/fail-closed boundary accepted with limitation; Safe Tier
+  handoff is complete, while bounded client motion remains required.
+- `FRONT-D04` and `MAIN-D08`: accepted with their supported-boundary limitations.
+- Client Test Candidate: fixed.
+- Client Acceptance: `NOT STARTED` / `CLIENT_TEST_REQUIRED`.
+- Project acceptance: pending and Project-owned.
+- Stable publication: not authorized.
+
+No Project Runtime, server, world, database, migration, secret, external original JAR, or
+production configuration was changed. No candidate JAR was attached to a Release. Do not mark PR
+#14 Ready for Review, merge it, create a tag or GitHub Release, dispatch a stable release workflow,
+or set/infer `requirements_cleared`.

@@ -292,3 +292,38 @@ Phase 08B local validation:
   `test-stable-publication-recovery.sh`, and `verify-v002-plugin-packaging.sh`.
 - Javadoc emitted the repository's existing non-fatal warning output; no unrelated source
   correction was made. No release workflow was dispatched.
+
+## Phase 09A candidate fixation (2026-08-02)
+
+The external ChatGPT independent review of Phase 08B is recorded as `PASS`. Phase 09A fixed the
+first bounded Client Test Candidate as `V0.0.2-Client-Candidate-1` from product-source commit
+`90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`. The later metadata HEAD is documentation-only and
+does not change the candidate product bytes.
+
+Exact local ignored candidate artifacts:
+
+- Core `Wayfarer_Core-V0.0.1.jar`, 11751447 bytes,
+  `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2`; exact published V0.0.1
+  GitHub Release asset, reused unchanged and not rebuilt as V0.0.2.
+- Main `wayfarer-main-0.0.2-SNAPSHOT.jar`, 4671368 bytes,
+  `730d56888001e9c76bd127b25c118a937f03a5dd95a0fa381c8c38fec2517113`.
+- Frontier `wayfarer-frontier-0.0.2-SNAPSHOT.jar`, 4682233 bytes,
+  `f43829c7b6e06ea44549ffdd1ef26a567aef1563ba73a0808c47634742e9d3ec`.
+
+The one required candidate build used Java `25.0.3`, Gradle `9.6.1`, and the prescribed
+Main/Frontier shadow-JAR command. `verify-v002-plugin-packaging.sh` returned `PASS`. The local
+candidate `SHA256SUMS.txt` verification returned `PASS`; its final SHA-256 and the final manifest
+SHA-256 are recorded in the ignored Phase 09A result report.
+
+The pinned read-only LeafGrapple artifact is `LeafGrapple.jar`, 56175 bytes, plugin version `1.0.2`,
+embedded Maven version `1.0.2-SNAPSHOT`, SHA-256
+`FFE4B3305BB48737E1B6C373698FEFE7121B879FD5B9399F930F5023B5F78833`. The complete reviewed
+`hooks.wood` tier was copied to the test-only `hooks.wayfarer` fixture. Only the tier key,
+durability enabled flag, entity-hook enabled flag, and the four explicit false entity target
+values differ; all other values are identical. Exact source transformation and local/tracked
+fixture byte comparisons passed. The tracked fixture is
+`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`.
+
+Client Acceptance has not started. Project acceptance is pending. No Project Runtime, server,
+world, database, migration, external original JAR, secret, tag, GitHub Release, merge, release
+workflow, or `requirements_cleared` value was changed or created.

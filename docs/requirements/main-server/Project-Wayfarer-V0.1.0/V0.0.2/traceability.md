@@ -1,8 +1,8 @@
 # V0.0.2 Requirement Traceability
 
-Classification: pre-client Plugin implementation/evidence at product anchor
-`7faf79081572df028a5ec19ccfbc820123180fc7` plus the Phase 08B focused remediation for Draft
-PR #14.
+Classification: Phase 09A Plugin candidate handoff at product-source anchor
+`90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce` for Draft PR #14. The later candidate-fixation
+metadata HEAD is documentation-only and does not change product bytes.
 
 The immutable mainline requirement SHA-256 is
 `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
@@ -25,14 +25,18 @@ requirement. `requirements_cleared` is absent and is not inferred.
 | FRONT-D02 | LeafGrapple 1.0.2 public capability boundary | Fail-closed capability tests | Temporary safe tier and client motion required | `ACCEPTED_WITH_LIMITATION` / `CLIENT_TEST_REQUIRED` | No fallback physics or private API claim; final motion/range/balance is Mainline/Frontier-owned. |
 | FRONT-D04 | WorldGuard/WorldEdit/public protection boundary | Native/public hook tests | Unsupported bypass paths remain outside the claim | `ACCEPTED_WITH_LIMITATION` | Coverage is limited to native Bukkit, public `RegionQuery`, and public `EditSession`. |
 | MAIN-D08 | External repair guard matrix | Native-first guard evidence | Unsupported external paths remain outside the claim | `ACCEPTED_WITH_LIMITATION` | External coverage requires a supported cancellable boundary. |
-| Phase 08B remediation review | Focused source/test correction and exact-head evidence | Local/CI/Headless evidence | ChatGPT independent review | `REVIEW_REQUIRED` | No Client Test Candidate or acceptance is claimed. |
+| Phase 08B remediation review | Focused source/test correction and exact-head evidence | Local/CI/Headless evidence | ChatGPT independent review | `PASS` | External decision; product-source anchor remains fixed. |
 | Waystone | No production Waystone behavior | Absence/config/package checks | Not authorized | `DEFERRED_BY_REQUIREMENT` | Not an open V0.0.2 choice. |
 | EM–MVI adapter | No module or artifact | Absence checks | Project decision required | `DEFERRED_BY_REQUIREMENT` | Create only after `ADAPTER_REQUIRED`. |
-| Client Test Candidate / acceptance | Client plan only | No candidate fixed | Bounded client run required | `CLIENT_TEST_REQUIRED` | Candidate and acceptance remain unclaimed. |
+| Client Test Candidate | Exact staged Core/Main/Frontier artifacts and candidate manifest | SHA-256, descriptor, and checksum evidence | Bounded client run required | `FIXED` | Label `V0.0.2-Client-Candidate-1`; Client Acceptance has not started. |
+| Client Acceptance | `docs/testing/plans/V0.0.2-client-acceptance.md` | Candidate and Safe Tier handoff | Mainline disposable client environment | `CLIENT_TEST_REQUIRED` | No client result has been produced. |
 | Project acceptance / Stable publication | Handoff and readiness docs | No release/tag/hash/dispatch | Project-owned | `PENDING` | No Client/Project acceptance, Stable Release, or `requirements_cleared`. |
 
 Evidence types are intentionally separated: source/test evidence, headless evidence, client
 observation, and Project acceptance are not interchangeable.
 
 The V0.0.2 world name is fixed to exact case-sensitive `frontier_iris`; future single-name
-configurability is tracked by Issue #17 and has no V0.0.2 implementation.
+configurability is tracked by Issue #17 and has no V0.0.2 implementation. The complete pinned
+LeafGrapple Safe Tier is tracked at
+`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`; it is test-only and not
+Project runtime configuration.

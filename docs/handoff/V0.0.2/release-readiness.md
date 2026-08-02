@@ -1,8 +1,10 @@
 # V0.0.2 Release Readiness
 
-- Product implementation anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`
-- Release readiness: `REVIEW_REQUIRED` for independent ChatGPT review of Phase 08B
-- Client Test Candidate: not fixed
+- Candidate product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
+- Phase 08B independent review: `PASS` (external decision)
+- Client Test Candidate: `V0.0.2-Client-Candidate-1` fixed
+- Mainline Client Environment Preparation: `GO`
+- Client Acceptance: `NOT STARTED` / `CLIENT_TEST_REQUIRED`
 - Stable tag/release: not authorized and not created
 - `requirements_cleared`: absent and not inferred
 - Project Runtime changed: No
@@ -18,12 +20,11 @@ Digest: sha256:218a363b71acaa93b8e55ee9b6a2215e98f94763f732e636edb38cd068065fef
 
 Remaining gates:
 
-1. ChatGPT independent review of the Phase 08B remediation and exact-head evidence.
-2. FRONT-D02 temporary safe-tier/client-motion gate (`CLIENT_TEST_REQUIRED`).
-3. Fix a Client Test Candidate only after review and authorization.
-4. Bounded Client Acceptance, Project acceptance, and later stable publication.
+1. FRONT-D02 bounded client motion gate (`CLIENT_TEST_REQUIRED`) using the fixed Safe Tier handoff.
+2. Bounded Client Acceptance in a separate disposable environment.
+3. Project acceptance and later stable publication.
 
 FRONT-D01 is resolved; FRONT-D04 and MAIN-D08 are accepted with limitation at supported
-boundaries. This Phase 08B state must not fix a Candidate, mark the PR Ready, merge, tag, release,
-dispatch a release workflow, set `requirements_cleared=true`, or claim Client/Project acceptance
-or Stable completion.
+boundaries. Candidate fixation authorizes only Mainline preparation and the bounded Client Test;
+it does not authorize Project deployment, production configuration, PR Ready status, merge, tag,
+release, release workflow dispatch, `requirements_cleared=true`, or Client/Project acceptance.

@@ -1,7 +1,7 @@
 # V0.0.2 Evidence Index
 
-Current Plugin implementation/test anchor:
-`7faf79081572df028a5ec19ccfbc820123180fc7`
+Accepted candidate product-source anchor:
+`90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
 
 Phase 01–06 capability evidence is distinct from client and Project acceptance:
 
@@ -14,7 +14,8 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | Phase 05 Main death/command/runtime | `.ai-work/luna-gpt-5.6-v002/reports/PHASE_05_MAIN_DEATH_COMMAND_RUNTIME_RESULT.md` | complete |
 | Phase 06 permission split | CI run `30701316290`; Headless run `30701316289`; `preclient-headless-evidence`; digest `sha256:218a363b71acaa93b8e55ee9b6a2215e98f94763f732e636edb38cd068065fef` | complete |
 | Phase 07 documentation/full validation | Documentation and local validation history; exact-final-head IDs belong in its retained report | complete |
-| Phase 08B remediation | Focused `FrontierGameplayRuntime` expiration guard and `LaunchpadExpirationDecisionTest`; exact-new-HEAD CI/Headless IDs belong in PR #14 and the local Phase 08B report | review required |
+| Phase 08B remediation | Focused `FrontierGameplayRuntime` expiration guard and `LaunchpadExpirationDecisionTest`; Normal CI `30713914057`; Pre-client Headless `30713914051` | independent review PASS |
+| Phase 09A candidate fixation | Candidate label `V0.0.2-Client-Candidate-1`; exact product source `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; local ignored candidate manifest and result report | fixed; Client Acceptance not started |
 
 | Evidence | Path / immutable identity | Result |
 |---|---|---|
@@ -44,11 +45,11 @@ Phase 01–06 capability evidence is distinct from client and Project acceptance
 | Second-review isolated Headless Paper | [run 30546252420](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252420) at `2114e3cd`; artifact `preclient-headless-evidence`, digest `sha256:ee736e69e5fad4225fc63512b4c7a756405e5863e55c5d526199117456bb26e8` | pass |
 | Requirement snapshot | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/Project_Wayfarer_Plugin_V0.0.2_Main_Frontier_Requirements.md` | SHA-256 `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F` fixed; `_REGENERATED` is not required |
 | Traceability | `docs/requirements/main-server/Project-Wayfarer-V0.1.0/V0.0.2/traceability.md` | terminal classifications |
-| Test report | `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md` | automated scope pass |
-| LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md` | unsafe default; Plugin boundary accepted, client safe-tier/motion remains |
+| Test report | `docs/reports/Project_Wayfarer_Plugin_Release_Test_Report_V0.0.2_2026-07-30.md` | automated scope and Phase 09A candidate-fixation record |
+| LeafGrapple assessment | `docs/reports/V0.0.2-leafgrapple-1.0.2-capability-assessment.md`; tracked fixture `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` | pinned 1.0.2 Safe Tier handoff PASS; client motion remains |
 | Node 24 assessment | `docs/reports/V0.0.2-node24-actions-assessment.md` | pass |
 | Client plan | `docs/testing/plans/V0.0.2-client-acceptance.md` | prepared / not run |
-| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | `REVIEW_REQUIRED` for ChatGPT Phase 08B review |
+| Readiness | `docs/handoff/V0.0.2/release-readiness.md` | candidate fixed; Client/Project/Stable gates remain |
 
 Build outputs, task databases, container state, Paper worlds, logs, and credentials are not
 version-controlled evidence.

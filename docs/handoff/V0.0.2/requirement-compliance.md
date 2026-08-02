@@ -1,6 +1,6 @@
 # V0.0.2 Requirement Compliance
 
-Product implementation anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`.
+Candidate product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`.
 Requirement SHA-256: `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
 Owner Amendments are a separate layer; the immutable requirement and `source.md` are unchanged.
 
@@ -17,11 +17,15 @@ Owner Amendments are a separate layer; the immutable requirement and `source.md`
 | FRONT-D02 | `ACCEPTED_WITH_LIMITATION` / `CLIENT_TEST_REQUIRED` | Public 1.0.2 adapter boundary is accepted; temporary safe tier and bounded client motion remain, with final motion/range/balance Mainline/Frontier-owned |
 | FRONT-D04 | `ACCEPTED_WITH_LIMITATION` | Native Bukkit, public WorldGuard `RegionQuery`, and public WorldEdit `EditSession`; unsupported bypasses excluded |
 | MAIN-D08 | `ACCEPTED_WITH_LIMITATION` | Native repair boundaries and supported cancellable external boundaries; unsupported external paths excluded |
-| Phase 08B remediation review | `REVIEW_REQUIRED` | ChatGPT independent review of the focused source/test correction and exact-head evidence |
-| Client Test Candidate / Client Acceptance | `CLIENT_TEST_REQUIRED` | Candidate not fixed; bounded client run remains later |
+| Phase 08B remediation review | `PASS` | External ChatGPT independent review accepted the focused correction and exact-head evidence |
+| Client Test Candidate | `FIXED` | `V0.0.2-Client-Candidate-1`; exact staged Core/Main/Frontier hashes are in the candidate handoff |
+| Client Acceptance | `CLIENT_TEST_REQUIRED` | Candidate fixed; bounded client run has not started |
 | Project acceptance | `PENDING` | Project Runtime evidence is outside this repository |
 | Stable publication | `NOT_AUTHORIZED` | No tag, release, artifact hash, workflow dispatch, or completion claim |
 
 Waystone and EM–MVI remain deferred/not authorized. The exact V0.0.2 world name remains
-`frontier_iris`; future configurability is Issue #17 and has no V0.0.2 implementation.
+`frontier_iris`; future configurability is Issue #17 and has no V0.0.2 implementation. The
+test-only LeafGrapple Safe Tier handoff passed and is recorded at
+`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`; it is not Project runtime
+configuration or a production balance recommendation.
 `requirements_cleared` is absent and not inferred. The row-level mapping is in `traceability.md`.

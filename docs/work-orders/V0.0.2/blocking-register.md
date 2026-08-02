@@ -1,8 +1,9 @@
 # V0.0.2 Blocking Register
 
 Owner-resolved Phase 01–06 outcomes are recorded as completed implementation/evidence work.
-Phase 08B resolved the unloaded-world expiration defect and synchronized the remaining
-external, client, Project, and later-release boundaries below.
+Phase 08B resolved the unloaded-world expiration defect. Phase 09A fixed the first bounded
+Client Test Candidate and synchronized the remaining external, client, Project, and later-release
+boundaries below.
 
 ## Resolved implementation boundaries
 
@@ -72,8 +73,12 @@ external, client, Project, and later-release boundaries below.
 
 ### Client / Project / publication
 
-- ChatGPT independent review of this remediation: `REVIEW_REQUIRED`.
-- Client Test Candidate: not fixed.
+- ChatGPT independent review of this remediation: `PASS` (external decision).
+- Client Test Candidate: `FIXED` as `V0.0.2-Client-Candidate-1` from product source
+  `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; exact local Core/Main/Frontier bytes and hashes are
+  recorded in the Phase 09A handoff.
+- LeafGrapple 1.0.2 pinned artifact and complete test-only `hooks.wayfarer` Safe Tier handoff:
+  `PASS`; tracked fixture is `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`.
 - Bounded Client Acceptance: `CLIENT_TEST_REQUIRED`.
 - Project acceptance: pending and Project-owned.
 - Stable V0.0.2 tag/release, release hashes, `requirements_cleared`, and release dispatch: not

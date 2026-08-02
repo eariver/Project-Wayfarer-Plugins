@@ -24,12 +24,14 @@ here.
   Copy movement/range/display values from a reviewed 1.0.2 standard tier, disable durability and
   entity/player/mob/animal/monster hooking, and do not treat the tier as a production balance
   recommendation.
-- Client Test Candidate: not fixed.
+- Client Test Candidate: `V0.0.2-Client-Candidate-1` fixed from product source
+  `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`; exact local artifact hashes and Safe Tier evidence
+  are recorded in the Phase 09A handoff.
 - Bounded Client Acceptance: `CLIENT_TEST_REQUIRED` after a later candidate is fixed.
 
 ## Project and publication
 
-- ChatGPT independent review of the Phase 08B remediation: `REVIEW_REQUIRED`.
+- ChatGPT independent review of the Phase 08B remediation: `PASS` (external decision).
 - Project acceptance: pending and Project-owned.
 - Stable V0.0.2 publication: not authorized in this task; no tag, release, release hash,
   `requirements_cleared`, or workflow dispatch is permitted here.

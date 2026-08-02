@@ -1,19 +1,26 @@
 # V0.0.2 Execution Status
 
-Status: Phase 01–06 Plugin implementation/evidence work is complete at the product anchor;
-Phase 08B remediation and pre-client finalization are complete for implementation and local
-evidence, pending independent ChatGPT review. This document does not declare a Client Test
-Candidate, Client/Project acceptance, or Stable Release.
+Status: Phase 01–06 Plugin implementation/evidence work and Phase 08B remediation are complete
+at the accepted product source. Phase 09A fixed the first bounded Client Test Candidate and
+prepared the Mainline handoff. Client Acceptance, Project acceptance, and Stable Release remain
+pending/not authorized.
 
 ## Fixed execution identity
 
 - Work branch: `feature/V0.0.2-main-frontier`
-- Product implementation anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`
+- Candidate product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
+- Client Test Candidate: `V0.0.2-Client-Candidate-1` (`FIXED`)
+- Candidate-fixation metadata HEAD: the later documentation-only commit recorded in the Phase 09A result report
 - Requirement SHA-256: `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`
 - Project Runtime changed: No
 - PR #14: Open / Draft / Unmerged
 - `requirements_cleared`: absent and not inferred
 - V0.0.2 exact Frontier world: `frontier_iris`; future single-name configurability is Issue #17
+- Core: exact published V0.0.1 runtime reused unchanged; not rebuilt as V0.0.2
+- Main/Frontier: exact staged runtime filenames, sizes, and SHA-256 values are recorded in the
+  candidate manifest and Mainline handoff
+- LeafGrapple: pinned 1.0.2 artifact and complete test-only Safe Tier handoff passed; tracked
+  fixture is `docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`
 
 ## Phase 01–06 capability evidence
 
@@ -47,12 +54,13 @@ Candidate, Client/Project acceptance, or Stable Release.
 
 ## Remaining gates
 
-- ChatGPT independent review of the Phase 08B remediation: `REVIEW_REQUIRED`.
-- FRONT-D02 client safe-tier/motion gate: `CLIENT_TEST_REQUIRED`.
-- Client Test Candidate: not fixed; bounded Client Acceptance: `CLIENT_TEST_REQUIRED`.
+- ChatGPT independent review of the Phase 08B remediation: `PASS` (external decision).
+- FRONT-D02 client motion gate: `CLIENT_TEST_REQUIRED`; Safe Tier preparation is complete.
+- Client Test Candidate: fixed; bounded Client Acceptance: `CLIENT_TEST_REQUIRED`.
 - Project acceptance: pending; Stable publication: not authorized in this task.
 - Waystone and EM–MVI remain deferred/not authorized.
 
-Phase 07's documentation-only history remains retained. Phase 08B changes only the focused
-Frontier source/test path and the required handoff documents; no migration, config, Gradle,
+Phase 07's documentation-only history remains retained. Phase 08B changed only the focused
+Frontier source/test path and required handoff documents. Phase 09A changes only candidate
+metadata, handoff documents, and one sanitized test fixture; no migration, config, Gradle,
 dependency, or Project Runtime change is part of this status update.
