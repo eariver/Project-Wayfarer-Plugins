@@ -317,4 +317,956 @@ public final class ReissueCoordinator {
                     )).thenCompose(reopened -> reopened
                         .map(this::pay)
                         .orElseGet(() -> CompletableFuture.completedFuture(
-             ï¾¸¶‰žËkºwµçl(€€€€€€€€€€€ôì(€€€€€€€ô¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”½µÁ±•Ñ¥½¹MÑ…”ñI•ÍÕ±Ðøµ…É­U¹­¹½Ý¸ (€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°(€€€€€€€UU%ÑÉ…¹Í…Ñ¥½¹%°(€€€€€€€MÑÉ¥¹œ™…¥±ÕÉ•½‘”(€€€€¤ì(€€€€€€€MÑÉ¥¹œ½‘”€ôÍ…¹¥Ñ¥é•…¥±ÕÉ”¡™…¥±ÕÉ•½‘”°€‰I%MMU}U9-9=]8ˆ¤ì(€€€€€€€½µÁ±•Ñ¥½¹MÑ…”ñ=ÁÑ¥½¹…°ñI•¥ÍÍÕ•=Á•É…Ñ¥½¸øøÍ…Ù•ì(€€€€€€€ÑÉäì(€€€€€€€€€€€Í…Ù•€ôÑ…Í­Ì¹‘…Ñ…‰…Í”  ¤€´ø½Á•É…Ñ¥½¹Ì¹Õ¹­¹½Ý¸ (€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹±½­Y•ÉÍ¥½¸ ¤°(€€€€€€€€€€€€€€€ÑÉ…¹Í…Ñ¥½¹%°(€€€€€€€€€€€€€€€½‘”°(€€€€€€€€€€€€€€€±½¬¹¥¹ÍÑ…¹Ð ¤(€€€€€€€€€€€€¤¤ì(€€€€€€€ô…Ñ €¡IÕ¹Ñ¥µ•á•ÁÑ¥½¸™…¥±ÕÉ”¤ì(€€€€€€€€€€€É•ÑÕÉ¸…Õ‘¥Ñ• (€€€€€€€€€€€€€€€I•ÍÕ±Ð¹Õ¹­¹½Ý¸¡½Á•É…Ñ¥½¸°½‘”¤°(€€€€€€€€€€€€€€€€‰I=]Q!}Q==1}I%MMU}U9-9=]8ˆ°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸(€€€€€€€€€€€€¤ì(€€€€€€€ô(€€€€€€€É•ÑÕÉ¸Í…Ù•¹Ñ¡•¹½µÁ½Í”¡Ù…±Õ”€´øÙ…±Õ”(€€€€€€€€€€€€¹µ…À¡ÕÁ‘…Ñ•€´ø…Õ‘¥Ñ• (€€€€€€€€€€€€€€€I•ÍÕ±Ð¹Õ¹­¹½Ý¸¡ÕÁ‘…Ñ•°½‘”¤°(€€€€€€€€€€€€€€€€‰I=]Q!}Q==1}I%MMU}U9-9=]8ˆ°(€€€€€€€€€€€€€€€ÕÁ‘…Ñ•(€€€€€€€€€€€€¤¤(€€€€€€€€€€€€¹½É±Í••Ð  ¤€´øÉ•Í½±Ù•…Í½¹™±¥Ð¡½Á•É…Ñ¥½¸°ÑÉ…¹Í…Ñ¥½¹%°½‘”¤¤(€€€€€€€€¤¹•á•ÁÑ¥½¹…±±ä¡¥¹½É•€´øI•ÍÕ±Ð¹Õ¹­¹½Ý¸¡½Á•É…Ñ¥½¸°½‘”¤¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”½µÁ±•Ñ¥½¹MÑ…”ñI•ÍÕ±ÐøÉ•Í½±Ù•…Í½¹™±¥Ð (€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°(€€€€€€€UU%É••¥Ù•‘QÉ…¹Í…Ñ¥½¹%°(€€€€€€€MÑÉ¥¹œ™…±±‰…­½‘”(€€€€¤ì(€€€€€€€É•ÑÕÉ¸Ñ…Í­Ì¹‘…Ñ…‰…Í”  ¤€´ø½Á•É…Ñ¥½¹Ì¹™¥¹¡½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤¤¤(€€€€€€€€€€€€¹Ñ¡•¹½µÁ½Í”¡™½Õ¹€´øì(€€€€€€€€€€€€€€€¥˜€¡™½Õ¹¹¥ÍµÁÑä ¤¤ì(€€€€€€€€€€€€€€€€€€€É•ÑÕÉ¸½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ” (€€€€€€€€€€€€€€€€€€€€€€€I•ÍÕ±Ð¹Õ¹­¹½Ý¸¡½Á•É…Ñ¥½¸°™…±±‰…­½‘”¤(€€€€€€€€€€€€€€€€€€€€¤ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸ÕÉÉ•¹Ð€ô™½Õ¹¹½É±Í•Q¡É½Ü ¤ì(€€€€€€€€€€€€€€€¥˜€¡É••¥Ù•‘QÉ…¹Í…Ñ¥½¹%€„ô¹Õ±°(€€€€€€€€€€€€€€€€€€€€˜˜ÕÉÉ•¹Ð¹ÑÉ…¹Í…Ñ¥½¹% ¤€„ô¹Õ±°(€€€€€€€€€€€€€€€€€€€€˜˜€…É••¥Ù•‘QÉ…¹Í…Ñ¥½¹%¹•ÅÕ…±Ì¡ÕÉÉ•¹Ð¹ÑÉ…¹Í…Ñ¥½¹% ¤¤¤ì(€€€€€€€€€€€€€€€€€€€É•ÑÕÉ¸µ…É­QÉ…¹Í…Ñ¥½¹½¹™±¥Ð¡ÕÉÉ•¹Ð¤ì(€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€É•ÑÕÉ¸‘ÕÉ…‰±•I•ÍÕ±Ð¡ÕÉÉ•¹Ð¤ì(€€€€€€€€€€€ô¤¹•á•ÁÑ¥½¹…±±ä¡¥¹½É•€´øI•ÍÕ±Ð¹Õ¹­¹½Ý¸¡½Á•É…Ñ¥½¸°™…±±‰…­½‘”¤¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”½µÁ±•Ñ¥½¹MÑ…”ñI•ÍÕ±Ðøµ…É­QÉ…¹Í…Ñ¥½¹½¹™±¥Ð¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸¤ì(€€€€€€€É•ÑÕÉ¸Ñ…Í­Ì¹‘…Ñ…‰…Í”  ¤€´ø½Á•É…Ñ¥½¹Ì¹Õ¹­¹½Ý¸ (€€€€€€€€€€€½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤°(€€€€€€€€€€€½Á•É…Ñ¥½¸¹±½­Y•ÉÍ¥½¸ ¤°(€€€€€€€€€€€¹Õ±°°(€€€€€€€€€€€€‰QI9MQ%=9}%}=91%Pˆ°(€€€€€€€€€€€±½¬¹¥¹ÍÑ…¹Ð ¤(€€€€€€€€¤¤¹Ñ¡•¹½µÁ½Í”¡Í…Ù•€´øÍ…Ù•(€€€€€€€€€€€€¹µ…À¡Ù…±Õ”€´ø½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ” (€€€€€€€€€€€€€€€I•ÍÕ±Ð¹Õ¹­¹½Ý¸¡Ù…±Õ”°€‰QI9MQ%=9}%}=91%Pˆ¤(€€€€€€€€€€€€¤¤(€€€€€€€€€€€€¹½É±Í••Ð  ¤€´ø½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ” (€€€€€€€€€€€€€€€I•ÍÕ±Ð¹Õ¹­¹½Ý¸¡½Á•É…Ñ¥½¸°€‰QI9MQ%=9}%}=91%Pˆ¤(€€€€€€€€€€€€¤¤(€€€€€€€€¤¹•á•ÁÑ¥½¹…±±ä¡¥¹½É•€´øI•ÍÕ±Ð¹Õ¹­¹½Ý¸ (€€€€€€€€€€€½Á•É…Ñ¥½¸°(€€€€€€€€€€€€‰QI9MQ%=9}%}=91%Pˆ(€€€€€€€€¤¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”½µÁ±•Ñ¥½¹MÑ…”ñI•ÍÕ±Ðø‘ÕÉ…‰±•™Ñ•É…Ì (€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°(€€€€€€€MÑÉ¥¹œ™…±±‰…­½‘”(€€€€¤ì(€€€€€€€É•ÑÕÉ¸Ñ…Í­Ì¹‘…Ñ…‰…Í”  ¤€´ø½Á•É…Ñ¥½¹Ì¹™¥¹¡½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤¤¤(€€€€€€€€€€€€¹Ñ¡•¹½µÁ½Í”¡™½Õ¹€´ø™½Õ¹¹µ…À¡Ñ¡¥Ìèé‘ÕÉ…‰±•I•ÍÕ±Ð¤(€€€€€€€€€€€€€€€€¹½É±Í••Ð  ¤€´ø½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ” (€€€€€€€€€€€€€€€€€€€I•ÍÕ±Ð¹Õ¹­¹½Ý¸¡½Á•É…Ñ¥½¸°™…±±‰…­½‘”¤(€€€€€€€€€€€€€€€€¤¤¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”½µÁ±•Ñ¥½¹MÑ…”ñI•ÍÕ±Ðø‘ÕÉ…‰±•I•ÍÕ±Ð¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸¤ì(€€€€€€€É•ÑÕÉ¸ÍÝ¥Ñ €¡½Á•É…Ñ¥½¸¹ÍÑ…Ñ” ¤¤ì(€€€€€€€€€€€…Í”Ae59Q}=55%QQ€´øÉ•ÍÕµ•I½Ñ…Ñ¥½¸¡½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤¤ì(€€€€€€€€€€€…Í”A9%9}1%YId€´ø½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ”¡I•ÍÕ±Ð¹Á•¹‘¥¹œ¡½Á•É…Ñ¥½¸¤¤ì(€€€€€€€€€€€…Í”1%YI€´ø½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ”¡I•ÍÕ±Ð¹‘•±¥Ù•É•¡½Á•É…Ñ¥½¸¤¤ì(€€€€€€€€€€€…Í”%1°	9=9€´ø½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ” (€€€€€€€€€€€€€€€I•ÍÕ±Ð¹™…¥±•¡½Á•É…Ñ¥½¸°™…¥±ÕÉ•½‘”¡½Á•É…Ñ¥½¸°€‰I%MMU}%1ˆ¤¤(€€€€€€€€€€€€¤ì(€€€€€€€€€€€…Í”U9-9=]8°AIAI°Ae59Q}A9%9€´ø½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ” (€€€€€€€€€€€€€€€I•ÍÕ±Ð¹Õ¹­¹½Ý¸¡½Á•É…Ñ¥½¸°™…¥±ÕÉ•½‘”¡½Á•É…Ñ¥½¸°€‰I=9%1}IEU%Iˆ¤¤(€€€€€€€€€€€€¤ì(€€€€€€€ôì(€€€ô((€€€ÁÉ¥Ù…Ñ”½µÁ±•Ñ¥½¹MÑ…”ñI•ÍÕ±Ðø…Õ‘¥Ñ• (€€€€€€€I•ÍÕ±ÐÉ•ÍÕ±Ð°(€€€€€€€MÑÉ¥¹œ•Ù•¹ÑQåÁ”°(€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸(€€€€¤ì(€€€€€€€½µÁ±•Ñ¥½¹MÑ…”ñY½¥øÉ•½É‘•ì(€€€€€€€ÑÉäì(€€€€€€€€€€€É•½É‘•€ô…Õ‘¥Ð¹É•½É¡¹•Ü]…å™…É•ÉÕ‘¥Ð¹Õ‘¥ÑÙ•¹Ð (€€€€€€€€€€€€€€€UU%¹É…¹‘½µUU% ¤°(€€€€€€€€€€€€€€€•Ù•¹ÑQåÁ”°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹Á±…å•ÉUÕ¥ ¤°(€€€€€€€€€€€€€€€MU	)Q}QeA°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹Ñ½½±% ¤¹Ñ½MÑÉ¥¹œ ¤°(€€€€€€€€€€€€€€€Í•ÉÙ•É%°(€€€€€€€€€€€€€€€…Õ‘¥Ñ•Ñ…¥±Ì¡É•ÍÕ±Ð¤°(€€€€€€€€€€€€€€€±½¬¹¥¹ÍÑ…¹Ð ¤(€€€€€€€€€€€€¤¤ì(€€€€€€€ô…Ñ €¡IÕ¹Ñ¥µ•á•ÁÑ¥½¸™…¥±ÕÉ”¤ì(€€€€€€€€€€€É•ÑÕÉ¸½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ”¡É•ÍÕ±Ð¤ì(€€€€€€€ô(€€€€€€€¥˜€¡É•½É‘•€ôô¹Õ±°¤ì(€€€€€€€€€€€É•ÑÕÉ¸½µÁ±•Ñ…‰±•ÕÑÕÉ”¹½µÁ±•Ñ•‘ÕÑÕÉ”¡É•ÍÕ±Ð¤ì(€€€€€€€ô(€€€€€€€É•ÑÕÉ¸É•½É‘•¹¡…¹‘±” ¡¥¹½É•°™…¥±ÕÉ”¤€´øÉ•ÍÕ±Ð¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒMÑÉ¥¹œ…Õ‘¥Ñ•Ñ…¥±Ì¡I•ÍÕ±ÐÉ•ÍÕ±Ð¤ì(€€€€€€€MÑÉ¥¹œ™…¥±ÕÉ”€ôÉ•ÍÕ±Ð¹™…¥±ÕÉ•½‘” ¤ì(€€€€€€€MÑÉ¥¹œÍ…™•…¥±ÕÉ”€ô™…¥±ÕÉ”€ôô¹Õ±°€ü€ˆˆ€èÍ…¹¥Ñ¥é•…¥±ÕÉ”¡™…¥±ÕÉ”°€‰U9-9=]8ˆ¤ì(€€€€€€€É•ÑÕÉ¸€‰íp‰ÍÑ…ÑÕÍpˆépˆˆ€¬É•ÍÕ±Ð¹ÍÑ…ÑÕÌ ¤¹¹…µ” ¤(€€€€€€€€€€€€¬€‰pˆ±p‰™…¥±ÕÉ•}½‘•pˆépˆˆ€¬Í…™•…¥±ÕÉ”€¬€‰p‰ôˆì(€€€ô((€€€ÁÉ¥Ù…Ñ”EÕ½Ñ•Ù…±Õ…Ñ¥½¸•Ù…±Õ…Ñ•EÕ½Ñ”¡UU%Á±…å•ÉUÕ¥¤ì(€€€€€€€=ÁÑ¥½¹…°ñÉ½ÝÑ¡Q½½°ø™½Õ¹€ôÉ½ÝÑ¡Q½½±Ì¹™¥¹‘	å=Ý¹•È¡Á±…å•ÉUÕ¥¤ì(€€€€€€€¥˜€¡™½Õ¹¹¥ÍµÁÑä ¤¤ì(€€€€€€€€€€€É•ÑÕÉ¸EÕ½Ñ•Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ” ‰Q==1}9=Q}=U9ˆ¤ì(€€€€€€€ô(€€€€€€€É½ÝÑ¡Q½½°Ñ½½°€ô™½Õ¹¹½É±Í•Q¡É½Ü ¤ì(€€€€€€€¥˜€¡Ñ½½°¹ÍÑ…ÑÕÌ ¤€ôôÉ½ÝÑ¡Q½½°¹MÑ…ÑÕÌ¹IY=-¤ì(€€€€€€€€€€€É•ÑÕÉ¸EÕ½Ñ•Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ” ‰Q==1}IY=-ˆ¤ì(€€€€€€€ô(€€€€€€€¥˜€¡Ñ½½°¹‘•±¥Ù•ÉåMÑ…ÑÕÌ ¤€ôôÉ½ÝÑ¡Q½½°¹•±¥Ù•ÉåMÑ…ÑÕÌ¹A9%9¤ì(€€€€€€€€€€€É•ÑÕÉ¸EÕ½Ñ•Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ” ‰1%YIe}A9%9ˆ¤ì(€€€€€€€ô(€€€€€€€¥˜€¡½Á•É…Ñ¥½¹Ì¹™¥¹‘Ñ¥Ù•	åQ½½°¡Ñ½½°¹Ñ½½±% ¤¤¹¥ÍAÉ•Í•¹Ð ¤¤ì(€€€€€€€€€€€É•ÑÕÉ¸EÕ½Ñ•Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ” ‰%9}1%!Pˆ¤ì(€€€€€€€ô(€€€€€€€¥¹Ð•Ù½±ÕÑ¥½¹½Õ¹Ð€ô•Ù½±ÕÑ¥½¹½Õ¹Ð¡Ñ½½°¤ì(€€€€€€€±½¹œ…µ½Õ¹Ðì(€€€€€€€ÑÉäì(€€€€€€€€€€€I•Á…¥ÉAÉ¥¥¹EÕ½Ñ”ÅÕ½Ñ”€ô¹•ÜI•Á…¥ÉAÉ¥¥¹EÕ½Ñ”¡ÁÉ¥¥¹œ¹ÅÕ½Ñ”¡•Ù½±ÕÑ¥½¹½Õ¹Ð¤¤ì(€€€€€€€€€€€…µ½Õ¹Ð€ôÅÕ½Ñ”¹…µ½Õ¹Ñ]…åµ…É¬ ¤ì(€€€€€€€ô…Ñ €¡É¥Ñ¡µ•Ñ¥á•ÁÑ¥½¸ð%±±•…±ÉÕµ•¹Ñá•ÁÑ¥½¸™…¥±ÕÉ”¤ì(€€€€€€€€€€€É•ÑÕÉ¸EÕ½Ñ•Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ” ‰AI%%9}%9Y1%ˆ¤ì(€€€€€€€ô(€€€€€€€É•ÑÕÉ¸EÕ½Ñ•Ù…±Õ…Ñ¥½¸¹ÍÕ•ÍÌ¡Ñ½½°°•Ù½±ÕÑ¥½¹½Õ¹Ð°…µ½Õ¹Ð¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”AÉ•Á…É•‘Ù…±Õ…Ñ¥½¸ÁÉ•Á…É•É½µEÕ½Ñ”¡UU%Á±…å•ÉUÕ¥°I•¥ÍÍÕ•EÕ½Ñ”ÅÕ½Ñ”¤ì(€€€€€€€EÕ½Ñ•Ù…±Õ…Ñ¥½¸•Ù…±Õ…Ñ¥½¸€ô•Ù…±Õ…Ñ•EÕ½Ñ”¡Á±…å•ÉUÕ¥¤ì(€€€€€€€¥˜€¡•Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ•½‘” ¤€„ô¹Õ±°¤ì(€€€€€€€€€€€É•ÑÕÉ¸AÉ•Á…É•‘Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ”¡•Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ•½‘” ¤¤ì(€€€€€€€ô(€€€€€€€¥˜€ …ÅÕ½Ñ”¹µ…Ñ¡•ÍM¹…ÁÍ¡½Ð (€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹Ñ½½° ¤°(€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹•Ù½±ÕÑ¥½¹½Õ¹Ð ¤°(€€€€€€€€€€€½¹™¥I•Ù¥Í¥½¸°(€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹…µ½Õ¹Ñ]…åµ…É¬ ¤°(€€€€€€€€€€€±½¬¹¥¹ÍÑ…¹Ð ¤(€€€€€€€€¤¤ì(€€€€€€€€€€€É•ÑÕÉ¸AÉ•Á…É•‘Ù…±Õ…Ñ¥½¸¹™…¥±ÕÉ” ‰EU=Q}!9ˆ¤ì(€€€€€€€ô(€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸€ô¹•ÜI•¥ÍÍÕ•=Á•É…Ñ¥½¸ (€€€€€€€€€€€UU%¹É…¹‘½µUU% ¤°(€€€€€€€€€€€€‰µ…¥¸µÉ•¥ÍÍÕ”èˆ€¬ÅÕ½Ñ”¹ÅÕ½Ñ•% ¤°(€€€€€€€€€€€Á±…å•ÉUÕ¥°(€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹Ñ½½° ¤¹Ñ½½±% ¤°(€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹Ñ½½° ¤¹¥Ñ•µ%¹ÍÑ…¹•% ¤°(€€€€€€€€€€€UU%¹É…¹‘½µUU% ¤°(€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹Ñ½½° ¤¹¥¹ÍÑ…¹•Á½  ¤°(€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹•Ù½±ÕÑ¥½¹½Õ¹Ð ¤°(€€€€€€€€€€€½¹™¥I•Ù¥Í¥½¸°(€€€€€€€€€€€•Ù…±Õ…Ñ¥½¸¹…µ½Õ¹Ñ]…åµ…É¬ ¤°(€€€€€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸¹MÑ…Ñ”¹AIAI°(€€€€€€€€€€€¹Õ±°°(€€€€€€€€€€€¹Õ±°°(€€€€€€€€€€€¹Õ±°°(€€€€€€€€€€€€À(€€€€€€€€¤ì(€€€€€€€É•ÑÕÉ¸AÉ•Á…É•‘Ù…±Õ…Ñ¥½¸¹ÍÕ•ÍÌ¡½Á•É…Ñ¥½¹Ì¹ÁÉ•Á…É”¡½Á•É…Ñ¥½¸°±½¬¹¥¹ÍÑ…¹Ð ¤¤¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”¥¹Ð•Ù½±ÕÑ¥½¹½Õ¹Ð¡É½ÝÑ¡Q½½°Ñ½½°¤ì(€€€€€€€É•ÑÕÉ¸•Ù½±ÕÑ¥½¹A±…¸¹•Ù…±Õ…Ñ” (€€€€€€€€€€€Ñ½½°¹ÕµÕ±…Ñ¥Ù•AÉ½É•ÍÍU¹¥ÑÌ ¤°(€€€€€€€€€€€Ñ½½°¹‰É…¹  ¤°(€€€€€€€€€€€•¹¡…¹Ñµ•¹Ñ…ÁÌ(€€€€€€€€¤¹•Ù½±ÕÑ¥½¹½Õ¹Ð ¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒMÑÉ¥¹œÍ¹…ÁÍ¡½ÑI•©•Ñ¥½¸ (€€€€€€€I•¥ÍÍÕ•±¥¥‰¥±¥ÑåM¹…ÁÍ¡½ÐÍ¹…ÁÍ¡½Ð°(€€€€€€€UU%Á±…å•ÉUÕ¥(€€€€¤ì(€€€€€€€¥˜€¡Í¹…ÁÍ¡½Ð€ôô¹Õ±°ñð€…Á±…å•ÉUÕ¥¹•ÅÕ…±Ì¡Í¹…ÁÍ¡½Ð¹Á±…å•ÉUÕ¥ ¤¤¤ì(€€€€€€€€€€€É•ÑÕÉ¸€‰1%%	%1%Qe}U9Y%1	1ˆì(€€€€€€€ô(€€€€€€€¥˜€ …Í¹…ÁÍ¡½Ð¹Á±…å•É=¹±¥¹” ¤¤ì(€€€€€€€€€€€É•ÑÕÉ¸€‰A1eI}=1%9ˆì(€€€€€€€ô(€€€€€€€¥˜€ …Í¹…ÁÍ¡½Ð¹Ý½É±‘±±½Ý• ¤(€€€€€€€€€€€ñð€…I•¥ÍÍÕ•±¥¥‰¥±¥ÑåA½±¥ä¹¥Í±±½Ý•‘]½É±¡Í¹…ÁÍ¡½Ð¹•á…Ñ]½É±‘9…µ” ¤¤¤ì(€€€€€€€€€€€É•ÑÕÉ¸€‰]=I1}9=Q}11=]ˆì(€€€€€€€ô(€€€€€€€¥˜€¡Í¹…ÁÍ¡½Ð¹ÕÉÉ•¹Ñ%Ñ•µAÉ•Í•¹Ð ¤¤ì(€€€€€€€€€€€É•ÑÕÉ¸€‰UII9Q}%Q5}AIM9Pˆì(€€€€€€€ô(€€€€€€€É•ÑÕÉ¸¹Õ±°ì(€€€ô((€€€ÁÉ¥Ù…Ñ”‰½½±•…¸ÑÉ…¹Í…Ñ¥½¹•Ñ…¥±Í5…Ñ  (€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°(€€€€€€€]…å™…É•ÉQÉ…¹Í…Ñ¥½¹Ì¹QÉ…¹Í…Ñ¥½¹•Ñ…¥±Ì‘•Ñ…¥±Ì(€€€€¤ì(€€€€€€€É•ÑÕÉ¸½Á•É…Ñ¥½¸¹ÑÉ…¹Í…Ñ¥½¹% ¤¹•ÅÕ…±Ì¡‘•Ñ…¥±Ì¹ÑÉ…¹Í…Ñ¥½¹% ¤¤(€€€€€€€€€€€€˜˜µ…Ñ¡•Í%™AÉ•Í•¹Ð¡½É•%‘•µÁ½Ñ•¹å-•ä¡½Á•É…Ñ¥½¸¤°‘•Ñ…¥±Ì¹¥‘•µÁ½Ñ•¹å-•ä ¤¤(€€€€€€€€€€€€˜˜µ…Ñ¡•Í%™AÉ•Í•¹Ð¡QI9MQ%=9}QeA°‘•Ñ…¥±Ì¹ÑÉ…¹Í…Ñ¥½¹QåÁ” ¤¤(€€€€€€€€€€€€˜˜µ…Ñ¡•Í%™AÉ•Í•¹Ð¡½Á•É…Ñ¥½¸¹Á±…å•ÉUÕ¥ ¤°‘•Ñ…¥±Ì¹…Ñ½ÉUÕ¥ ¤¤(€€€€€€€€€€€€˜˜µ…Ñ¡•Í%™AÉ•Í•¹Ð¡MU	)Q}QeA°‘•Ñ…¥±Ì¹ÍÕ‰©•ÑQåÁ” ¤¤(€€€€€€€€€€€€˜˜µ…Ñ¡•Í%™AÉ•Í•¹Ð¡½Á•É…Ñ¥½¸¹Ñ½½±% ¤¹Ñ½MÑÉ¥¹œ ¤°‘•Ñ…¥±Ì¹ÍÕ‰©•Ñ% ¤¤(€€€€€€€€€€€€˜˜€¡‘•Ñ…¥±Ì¹…µ½Õ¹Ñ]…åµ…É¬ ¤€ôô€À(€€€€€€€€€€€€€€€ñð‘•Ñ…¥±Ì¹…µ½Õ¹Ñ]…åµ…É¬ ¤€ôô½Á•É…Ñ¥½¸¹…µ½Õ¹Ñ]…åµ…É¬ ¤¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥Œ‰½½±•…¸µ…Ñ¡•Í%™AÉ•Í•¹Ð¡=‰©•Ð•áÁ•Ñ•°=‰©•Ð…ÑÕ…°¤ì(€€€€€€€É•ÑÕÉ¸…ÑÕ…°€ôô¹Õ±°ñð•áÁ•Ñ•¹•ÅÕ…±Ì¡…ÑÕ…°¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥Œ‰½½±•…¸…±É•…‘åI½Ñ…Ñ• (€€€€€€€É½ÝÑ¡Q½½°ÕÉÉ•¹Ð°(€€€€€€€I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸(€€€€¤ì(€€€€€€€É•ÑÕÉ¸ÕÉÉ•¹Ð¹¥Ñ•µ%¹ÍÑ…¹•% ¤¹•ÅÕ…±Ì¡½Á•É…Ñ¥½¸¹¹•Ý%Ñ•µ%¹ÍÑ…¹•% ¤¤(€€€€€€€€€€€€˜˜ÕÉÉ•¹Ð¹¥¹ÍÑ…¹•Á½  ¤€ôô½Á•É…Ñ¥½¸¹¥¹ÍÑ…¹•Á½  ¤€¬€Ä(€€€€€€€€€€€€˜˜ÕÉÉ•¹Ð¹ÍÑ…ÑÕÌ ¤€ôôÉ½ÝÑ¡Q½½°¹MÑ…ÑÕÌ¹Q%Yì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒMÑÉ¥¹œ½É•%‘•µÁ½Ñ•¹å-•ä¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸¤ì(€€€€€€€É•ÑÕÉ¸€‰µ…¥¸µÉ•¥ÍÍÕ”èˆ€¬½Á•É…Ñ¥½¸¹¥‘•µÁ½Ñ•¹å-•ä ¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒMÑÉ¥¹œÁ…å±½…‘½È¡UU%É•¥ÍÍÕ•%¤ì(€€€€€€€É•ÑÕÉ¸€‰íp‰É•¥ÍÍÕ•}¥‘pˆépˆˆ€¬É•¥ÍÍÕ•%€¬€‰p‰ôˆì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒMÑÉ¥¹œ™…¥±ÕÉ•½‘”¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°MÑÉ¥¹œ™…±±‰…¬¤ì(€€€€€€€É•ÑÕÉ¸½Á•É…Ñ¥½¸¹™…¥±ÕÉ•½‘” ¤€ôô¹Õ±°€ü™…±±‰…¬€è½Á•É…Ñ¥½¸¹™…¥±ÕÉ•½‘” ¤ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒMÑÉ¥¹œÍ…¹¥Ñ¥é•…¥±ÕÉ”¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”°MÑÉ¥¹œ™…±±‰…¬¤ì(€€€€€€€É•ÑÕÉ¸™…¥±ÕÉ•½‘”€„ô¹Õ±°€˜˜™…¥±ÕÉ•½‘”¹µ…Ñ¡•Ì ‰mµhÀ´å}uìÌ°äÙôˆ¤(€€€€€€€€€€€€ü™…¥±ÕÉ•½‘”(€€€€€€€€€€€€è™…±±‰…¬ì(€€€ô((€€€ÁÕ‰±¥ŒÉ•½ÉEÕ½Ñ•I•ÍÕ±Ð¡EÕ½Ñ•MÑ…ÑÕÌÍÑ…ÑÕÌ°I•¥ÍÍÕ•EÕ½Ñ”ÅÕ½Ñ”°MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒEÕ½Ñ•I•ÍÕ±Ð¥ÍÍÕ•¡I•¥ÍÍÕ•EÕ½Ñ”ÅÕ½Ñ”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜEÕ½Ñ•I•ÍÕ±Ð¡EÕ½Ñ•MÑ…ÑÕÌ¹%MMU°ÅÕ½Ñ”°¹Õ±°¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒEÕ½Ñ•I•ÍÕ±ÐÉ•©•Ñ•¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜEÕ½Ñ•I•ÍÕ±Ð¡EÕ½Ñ•MÑ…ÑÕÌ¹I)Q°¹Õ±°°™…¥±ÕÉ•½‘”¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒEÕ½Ñ•I•ÍÕ±ÐÕ¹…Ù…¥±…‰±”¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜEÕ½Ñ•I•ÍÕ±Ð¡EÕ½Ñ•MÑ…ÑÕÌ¹U9Y%1	1°¹Õ±°°™…¥±ÕÉ•½‘”¤ì(€€€€€€€ô(€€€ô((€€€ÁÕ‰±¥Œ•¹Õ´EÕ½Ñ•MÑ…ÑÕÌì(€€€€€€€%MMU°(€€€€€€€I)Q°(€€€€€€€U9Y%1	1(€€€ô((€€€ÁÕ‰±¥ŒÉ•½ÉI•ÍÕ±Ð (€€€€€€€MÑ…ÑÕÌÍÑ…ÑÕÌ°(€€€€€€€UU%É•¥ÍÍÕ•%°(€€€€€€€UU%ÑÉ…¹Í…Ñ¥½¹%°(€€€€€€€MÑÉ¥¹œ™…¥±ÕÉ•½‘”(€€€€¤ì(€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI•ÍÕ±Ð‘•±¥Ù•É•¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI•ÍÕ±Ð¡MÑ…ÑÕÌ¹1%YI°½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤°½Á•É…Ñ¥½¸¹ÑÉ…¹Í…Ñ¥½¹% ¤°¹Õ±°¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI•ÍÕ±ÐÁ•¹‘¥¹œ¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI•ÍÕ±Ð¡MÑ…ÑÕÌ¹A9%9°½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤°½Á•É…Ñ¥½¸¹ÑÉ…¹Í…Ñ¥½¹% ¤°¹Õ±°¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI•ÍÕ±ÐÁ•¹‘¥¹œ¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI•ÍÕ±Ð (€€€€€€€€€€€€€€€MÑ…ÑÕÌ¹A9%9°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹ÑÉ…¹Í…Ñ¥½¹% ¤°(€€€€€€€€€€€€€€€™…¥±ÕÉ•½‘”(€€€€€€€€€€€€¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI•ÍÕ±Ð™…¥±•¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI•ÍÕ±Ð (€€€€€€€€€€€€€€€MÑ…ÑÕÌ¹%1°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹ÑÉ…¹Í…Ñ¥½¹% ¤°(€€€€€€€€€€€€€€€™…¥±ÕÉ•½‘”(€€€€€€€€€€€€¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI•ÍÕ±ÐÕ¹­¹½Ý¸¡I•¥ÍÍÕ•=Á•É…Ñ¥½¸½Á•É…Ñ¥½¸°MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI•ÍÕ±Ð (€€€€€€€€€€€€€€€MÑ…ÑÕÌ¹U9-9=]8°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹É•¥ÍÍÕ•% ¤°(€€€€€€€€€€€€€€€½Á•É…Ñ¥½¸¹ÑÉ…¹Í…Ñ¥½¹% ¤°(€€€€€€€€€€€€€€€™…¥±ÕÉ•½‘”(€€€€€€€€€€€€¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI•ÍÕ±ÐÉ•©•Ñ•¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI•ÍÕ±Ð¡MÑ…ÑÕÌ¹I)Q°¹Õ±°°¹Õ±°°™…¥±ÕÉ•½‘”¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI•ÍÕ±ÐÕ¹…Ù…¥±…‰±”¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI•ÍÕ±Ð¡MÑ…ÑÕÌ¹U9Y%1	1°¹Õ±°°¹Õ±°°™…¥±ÕÉ•½‘”¤ì(€€€€€€€ô(€€€ô((€€€ÁÕ‰±¥Œ•¹Õ´MÑ…ÑÕÌì(€€€€€€€1%YI°(€€€€€€€A9%9°(€€€€€€€%1°(€€€€€€€U9-9=]8°(€€€€€€€I)Q°(€€€€€€€U9Y%1	1(€€€ô((€€€ÁÉ¥Ù…Ñ”É•½ÉEÕ½Ñ•Ù…±Õ…Ñ¥½¸ (€€€€€€€É½ÝÑ¡Q½½°Ñ½½°°(€€€€€€€¥¹Ð•Ù½±ÕÑ¥½¹½Õ¹Ð°(€€€€€€€±½¹œ…µ½Õ¹Ñ]…åµ…É¬°(€€€€€€€MÑÉ¥¹œ™…¥±ÕÉ•½‘”(€€€€¤ì(€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒEÕ½Ñ•Ù…±Õ…Ñ¥½¸ÍÕ•ÍÌ (€€€€€€€€€€€É½ÝÑ¡Q½½°Ñ½½°°(€€€€€€€€€€€¥¹Ð•Ù½±ÕÑ¥½¹½Õ¹Ð°(€€€€€€€€€€€±½¹œ…µ½Õ¹Ñ]…åµ…É¬(€€€€€€€€¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜEÕ½Ñ•Ù…±Õ…Ñ¥½¸¡Ñ½½°°•Ù½±ÕÑ¥½¹½Õ¹Ð°…µ½Õ¹Ñ]…åµ…É¬°¹Õ±°¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒEÕ½Ñ•Ù…±Õ…Ñ¥½¸™…¥±ÕÉ”¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜEÕ½Ñ•Ù…±Õ…Ñ¥½¸¡¹Õ±°°€À°€À°™…¥±ÕÉ•½‘”¤ì(€€€€€€€ô(€€€ô((€€€ÁÉ¥Ù…Ñ”É•½ÉAÉ•Á…É•‘Ù…±Õ…Ñ¥½¸ (€€€€€€€AÉ•Á…É•=ÕÑ½µ”½ÕÑ½µ”°(€€€€€€€MÑÉ¥¹œ™…¥±ÕÉ•½‘”(€€€€¤ì(€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒAÉ•Á…É•‘Ù…±Õ…Ñ¥½¸ÍÕ•ÍÌ¡AÉ•Á…É•=ÕÑ½µ”½ÕÑ½µ”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜAÉ•Á…É•‘Ù…±Õ…Ñ¥½¸¡½ÕÑ½µ”°¹Õ±°¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒAÉ•Á…É•‘Ù…±Õ…Ñ¥½¸™…¥±ÕÉ”¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜAÉ•Á…É•‘Ù…±Õ…Ñ¥½¸¡¹Õ±°°™…¥±ÕÉ•½‘”¤ì(€€€€€€€ô(€€€ô((€€€ÁÉ¥Ù…Ñ”É•½ÉI½Ñ…Ñ¥½¹•¥Í¥½¸¡É½ÝÑ¡Q½½°Ñ½½°°MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI½Ñ…Ñ¥½¹•¥Í¥½¸ÍÕ•ÍÌ¡É½ÝÑ¡Q½½°Ñ½½°¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI½Ñ…Ñ¥½¹•¥Í¥½¸¡Ñ½½°°¹Õ±°¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥ŒI½Ñ…Ñ¥½¹•¥Í¥½¸™…¥±ÕÉ”¡MÑÉ¥¹œ™…¥±ÕÉ•½‘”¤ì(€€€€€€€€€€€É•ÑÕÉ¸¹•ÜI½Ñ…Ñ¥½¹•¥Í¥½¸¡¹Õ±°°™…¥±ÕÉ•½‘”¤ì(€€€€€€€ô(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥Œ™¥¹…°±…ÍÌM¹…ÁÍ¡½Ñ…ÁÑÕÉ”ì(€€€€€€€ÁÉ¥Ù…Ñ”I•¥ÍÍÕ•±¥¥‰¥±¥ÑåM¹…ÁÍ¡½ÐÍ¹…ÁÍ¡½Ðì(€€€€€€€ÁÉ¥Ù…Ñ”I•¥ÍÍÕ•EÕ½Ñ”ÅÕ½Ñ”ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥Œ™¥¹…°±…ÍÌEÕ½Ñ•…ÁÑÕÉ”ì(€€€€€€€ÁÉ¥Ù…Ñ”I•¥ÍÍÕ•EÕ½Ñ”ÅÕ½Ñ”ì(€€€ô((€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥Œ™¥¹…°±…ÍÌ•±¥Ù•Éå…ÁÑÕÉ”ì(€€€€€€€ÁÉ¥Ù…Ñ”•±¥Ù•Éå=ÕÑ½µ”½ÕÑ½µ”ì(€€€ô((€€€ÁÉ¥Ù…Ñ”É•½ÉI•Á…¥ÉAÉ¥¥¹EÕ½Ñ”¡±½¹œ…µ½Õ¹Ñ]…åµ…É¬¤ì(€€€€€€€ÁÉ¥Ù…Ñ”I•Á…¥ÉAÉ¥¥¹EÕ½Ñ”¡¥¼¹¥Ñ¡Õˆ¹•…É¥Ù•È¹Ý…å™…É•È¹µ…¥¸¹‘½µ…¥¸¹I•Á…¥ÉAÉ¥¥¹œ¹EÕ½Ñ”ÅÕ½Ñ”¤ì(€€€€€€€€€€€Ñ¡¥Ì¡É•ÅÕ¥É•Ù…¥±…‰±”¡ÅÕ½Ñ”¤¤ì(€€€€€€€ô((€€€€€€€ÁÉ¥Ù…Ñ”ÍÑ…Ñ¥Œ±½¹œÉ•ÅÕ¥É•Ù…¥±…‰±” (€€€€€€€€€€€¥¼¹¥Ñ¡Õˆ¹•…É¥Ù•È¹Ý…å™…É•È¹µ…¥¸¹‘½µ…¥¸¹I•Á…¥ÉAÉ¥¥¹œ¹EÕ½Ñ”ÅÕ½Ñ”(€€€€€€€€¤ì(€€€€€€€€€€€¥˜€ …ÅÕ½Ñ”¹…Ù…¥±…‰±” ¤ñðÅÕ½Ñ”¹…µ½Õ¹Ñ]…åµ…É¬ ¤€ðô€À¤ì(€€€€€€€€€€€€€€€Ñ¡É½Ü¹•ÜÉ¥Ñ¡µ•Ñ¥á•ÁÑ¥½¸ ‰I•¥ÍÍÕ”ÅÕ½Ñ”¥ÌÕ¹…Ù…¥±…‰±”ˆ¤ì(€€€€€€€€€€€ô(€€€€€€€€€€€É•ÑÕÉ¸ÅÕ½Ñ”¹…µ½Õ¹Ñ]…åµ…É¬ ¤ì(€€€€€€€ô(€€€ô)ô(
+                            Result.unknown(operation, "PAYMENT_REOPEN_CONFLICT")
+                        )));
+                }
+                if (operation.state() == ReissueOperation.State.PAYMENT_PENDING
+                    && operation.transactionId() == null
+                    && operation.paymentCommittedAt() == null) {
+                    return pay(operation);
+                }
+                return CompletableFuture.completedFuture(
+                    Result.rejected("WRONG_PAYMENT_PHASE")
+                );
+            }).exceptionally(ignored -> Result.unavailable("REISSUE_UNAVAILABLE"));
+        return result.handle((value, failure) -> {
+            resumePaymentInFlight.remove(reissueId);
+            return failure == null ? value : Result.unavailable("REISSUE_UNAVAILABLE");
+        });
+    }
+
+    /** Confirms a saved Core transaction and resumes rotation without execute(). */
+    public CompletionStage<Result> confirmPaymentAndResumeRotation(UUID reissueId) {
+        Objects.requireNonNull(reissueId, "reissueId");
+        return tasks.database(() -> operations.find(reissueId)).thenCompose(found -> {
+            if (found.isEmpty()) {
+                return CompletableFuture.completedFuture(Result.rejected("OPERATION_NOT_FOUND"));
+            }
+            ReissueOperation operation = found.orElseThrow();
+            if (operation.state() != ReissueOperation.State.UNKNOWN) {
+                return resumeRotation(reissueId);
+            }
+            if (operation.transactionId() == null) {
+                return CompletableFuture.completedFuture(
+                    Result.rejected("RESUME_PAYMENT_REQUIRED")
+                );
+            }
+            if (operation.paymentCommittedAt() != null) {
+                return CompletableFuture.completedFuture(Result.rejected("WRONG_PHASE"));
+            }
+            CompletionStage<WayfarerTransactions.TransactionDetails> inspected;
+            try {
+                inspected = transactions.inspect(operation.transactionId());
+            } catch (RuntimeException failure) {
+                return CompletableFuture.completedFuture(
+                    Result.unavailable("CORE_INSPECT_UNAVAILABLE")
+                );
+            }
+            if (inspected == null) {
+                return CompletableFuture.completedFuture(
+                    Result.unavailable("CORE_INSPECT_UNAVAILABLE")
+                );
+            }
+            return inspected.handle((details, failure) ->
+                failure == null ? details : null
+            ).thenCompose(details -> confirmInspectedPayment(operation, details));
+        }).exceptionally(ignored -> Result.unavailable("CORE_INSPECT_UNAVAILABLE"));
+    }
+
+    public CompletionStage<Result> failByAdmin(UUID reissueId, String failureCode) {
+        Objects.requireNonNull(reissueId, "reissueId");
+        String code = sanitizeFailure(failureCode, "ADMIN_FAILED");
+        return tasks.database(() -> operations.find(reissueId)).thenCompose(found -> {
+            if (found.isEmpty()) {
+                return CompletableFuture.completedFuture(Result.rejected("OPERATION_NOT_FOUND"));
+            }
+            ReissueOperation operation = found.orElseThrow();
+            if (operation.state() != ReissueOperation.State.UNKNOWN
+                || operation.paymentCommittedAt() != null) {
+                return CompletableFuture.completedFuture(
+                    Result.unknown(operation, "WRONG_FAILURE_PHASE")
+                );
+            }
+            return tasks.database(() -> operations.failFromUnknown(
+                operation.reissueId(),
+                operation.lockVersion(),
+                code,
+                clock.instant()
+            )).thenCompose(saved -> saved
+                .map(value -> audited(
+                    Result.failed(value, code),
+                    "GROWTH_TOOL_REISSUE_FAILED",
+                    value
+                ))
+                .orElseGet(() -> CompletableFuture.completedFuture(
+                    Result.unknown(operation, "FAILURE_COMMIT_UNKNOWN")
+                )));
+        }).exceptionally(ignored -> Result.unavailable("REISSUE_UNAVAILABLE"));
+    }
+
+    /** Performs only safe restart actions; it never debits automatically. */
+    public CompletionStage<Integer> recoverAfterRestart() {
+        return tasks.database(operations::findRecoveryCandidates)
+            .thenCompose(this::recoverCandidates);
+    }
+
+    private CompletionStage<Integer> recoverCandidates(List<ReissueOperation> candidates) {
+        CompletionStage<Integer> chain = CompletableFuture.completedFuture(0);
+        for (ReissueOperation operation : candidates) {
+            chain = chain.thenCompose(count -> recoverCandidate(operation)
+                .thenApply(changed -> count + (changed ? 1 : 0)));
+        }
+        return chain;
+    }
+
+    private CompletionStage<Boolean> recoverCandidate(ReissueOperation operation) {
+        return switch (operation.state()) {
+            case PREPARED -> tasks.database(() -> operations.abandoned(
+                operation.reissueId(),
+                operation.lockVersion(),
+                clock.instant()
+            )).thenCompose(saved -> saved
+                .map(value -> audited(
+                    Result.failed(value, "REISSUE_ABANDONED"),
+                    "GROWTH_TOOL_REISSUE_ABANDONED",
+                    value
+                ).thenApply(ignored -> true))
+                .orElseGet(() -> CompletableFuture.completedFuture(false)));
+            case PAYMENT_COMMITTED -> resumeRotation(operation.reissueId())
+                .thenApply(result -> result != null
+                    && (result.status() == Status.PENDING
+                        || result.status() == Status.DELIVERED));
+            case PENDING_DELIVERY -> tasks.database(() ->
+                growthTools.findByOwner(operation.playerUuid())
+            ).thenCompose(tool -> {
+                if (tool.isEmpty() || tool.orElseThrow().deliveryStatus()
+                    != GrowthTool.DeliveryStatus.DELIVERED) {
+                    return CompletableFuture.completedFuture(false);
+                }
+                return tasks.database(() -> operations.delivered(
+                    operation.reissueId(),
+                    operation.lockVersion(),
+                    clock.instant()
+                ));
+            });
+            case PAYMENT_PENDING, UNKNOWN, DELIVERED, FAILED, ABANDONED ->
+                CompletableFuture.completedFuture(false);
+        };
+    }
+
+    private CompletionStage<Result> continueOperation(ReissueOperation operation) {
+        return switch (operation.state()) {
+            case PREPARED -> claimAndPay(operation);
+            case PAYMENT_PENDING -> CompletableFuture.completedFuture(
+                Result.unknown(operation, "PAYMENT_RECONCILE_REQUIRED")
+            );
+            case PAYMENT_COMMITTED -> resumeRotation(operation.reissueId());
+            case PENDING_DELIVERY -> audited(
+                Result.pending(operation),
+                "GROWTH_TOOL_REISSUE_PENDING",
+                operation
+            );
+            case DELIVERED -> audited(
+                Result.delivered(operation),
+                "GROWTH_TOOL_REISSUE_DELIVERED",
+                operation
+            );
+            case FAILED -> audited(
+                Result.failed(operation, failureCode(operation, "REISSUE_FAILED")),
+                "GROWTH_TOOL_REISSUE_FAILED",
+                operation
+            );
+            case ABANDONED -> audited(
+                Result.failed(operation, "REISSUE_ABANDONED"),
+                "GROWTH_TOOL_REISSUE_ABANDONED",
+                operation
+            );
+            case UNKNOWN -> audited(
+                Result.unknown(operation,
+                    failureCode(operation, "RECONCILE_REQUIRED")),
+                "GROWTH_TOOL_REISSUE_UNKNOWN",
+                operation
+            );
+        };
+    }
+
+    private CompletionStage<Result> claimAndPay(ReissueOperation operation) {
+        CompletionStage<Optional<ReissueOperation>> claimed;
+        try {
+            claimed = tasks.database(() -> operations.claimPayment(
+                operation.reissueId(),
+                operation.lockVersion(),
+                clock.instant()
+            ));
+        } catch (RuntimeException failure) {
+            return markUnknown(operation, null, "PAYMENT_CLAIM_UNKNOWN");
+        }
+        return claimed.thenCompose(value -> value
+            .map(this::pay)
+            .orElseGet(() -> durableAfterCas(operation, "PAYMENT_ALREADY_CLAIMED"))
+        ).exceptionallyCompose(failure -> markUnknown(
+            operation,
+            null,
+            "PAYMENT_CLAIM_UNKNOWN"
+        ));
+    }
+
+    private CompletionStage<Result> pay(ReissueOperation claimed) {
+        WayfarerTransactions.TransactionRequest payment = new WayfarerTransactions.TransactionRequest(
+            coreIdempotencyKey(claimed),
+            TRANSACTION_TYPE,
+            claimed.playerUuid(),
+            SUBJECT_TYPE,
+            claimed.toolId().toString(),
+            claimed.amountWaymark(),
+            payloadFor(claimed.reissueId())
+        );
+        CompletionStage<WayfarerTransactions.TransactionResult> stage;
+        try {
+            stage = transactions.execute(payment);
+        } catch (RuntimeException failure) {
+            return markUnknown(claimed, null, "TRANSACTION_UNAVAILABLE");
+        }
+        if (stage == null) {
+            return markUnknown(claimed, null, "TRANSACTION_UNAVAILABLE");
+        }
+        return stage.handle((result, failure) -> failure == null ? result : null)
+            .thenCompose(result -> paymentResult(claimed, result));
+    }
+
+    private CompletionStage<Result> paymentResult(
+        ReissueOperation claimed,
+        WayfarerTransactions.TransactionResult transaction
+    ) {
+        if (transaction == null || transaction.state() == null) {
+            return markUnknown(claimed, null, "PAYMENT_UNKNOWN");
+        }
+        UUID transactionId = transaction.transactionId();
+        if (transaction.state() == WayfarerTransactions.State.COMMITTED
+            || transaction.state() == WayfarerTransactions.State.RECONCILED_COMMITTED) {
+            if (transactionId == null) {
+                return markUnknown(claimed, null, "PAYMENT_COMMIT_UNKNOWN");
+            }
+            return savePaymentCommitted(claimed, transactionId);
+        }
+        if (transaction.state() == WayfarerTransactions.State.FAILED
+            || transaction.state() == WayfarerTransactions.State.REFUNDED
+            || transaction.state() == WayfarerTransactions.State.RECONCILED_REFUNDED) {
+            String code = sanitizeFailure(transaction.failureCode(), "PAYMENT_FAILED");
+            return saveFailed(claimed, transactionId, code);
+        }
+        String code = transaction.state() == WayfarerTransactions.State.UNKNOWN
+            ? "PAYMENT_UNKNOWN"
+            : "PAYMENT_IN_FLIGHT";
+        return markUnknown(claimed, transactionId, code);
+    }
+
+    private CompletionStage<Result> savePaymentCommitted(
+        ReissueOperation claimed,
+        UUID transactionId
+    ) {
+        CompletionStage<Optional<ReissueOperation>> saved;
+        try {
+            saved = tasks.database(() -> operations.paymentCommitted(
+                claimed.reissueId(),
+                transactionId,
+                claimed.lockVersion(),
+                clock.instant()
+            ));
+        } catch (RuntimeException failure) {
+            return markUnknown(claimed, transactionId, "PAYMENT_COMMIT_UNKNOWN");
+        }
+        return saved.thenCompose(value -> value
+            .map(operation -> resumeRotation(operation.reissueId()))
+            .orElseGet(() -> resolveCasConflict(
+                claimed,
+                transactionId,
+                "PAYMENT_COMMIT_UNKNOWN"
+            ))
+        ).exceptionallyCompose(failure -> markUnknown(
+            claimed,
+            transactionId,
+            "PAYMENT_COMMIT_UNKNOWN"
+        ));
+    }
+
+    private CompletionStage<Result> saveFailed(
+        ReissueOperation claimed,
+        UUID transactionId,
+        String failureCode
+    ) {
+        CompletionStage<Optional<ReissueOperation>> saved;
+        try {
+            saved = tasks.database(() -> operations.failed(
+                claimed.reissueId(),
+                transactionId,
+                claimed.lockVersion(),
+                failureCode,
+                clock.instant()
+            ));
+        } catch (RuntimeException failure) {
+            return markUnknown(claimed, transactionId, "PAYMENT_FAILURE_COMMIT_UNKNOWN");
+        }
+        return saved.thenCompose(value -> value
+            .map(operation -> audited(
+                Result.failed(operation, failureCode),
+                "GROWTH_TOOL_REISSUE_FAILED",
+                operation
+            ))
+            .orElseGet(() -> resolveCasConflict(
+                claimed,
+                transactionId,
+                "PAYMENT_FAILURE_COMMIT_UNKNOWN"
+            ))
+        ).exceptionallyCompose(failure -> markUnknown(
+            claimed,
+            transactionId,
+            "PAYMENT_FAILURE_COMMIT_UNKNOWN"
+        ));
+    }
+
+    private CompletionStage<Result> rotateAndCheckpoint(ReissueOperation operation) {
+        CompletionStage<RotationDecision> rotation;
+        try {
+            rotation = tasks.database(() -> rotate(operation));
+        } catch (RuntimeException failure) {
+            return markUnknown(operation, operation.transactionId(), "ROTATION_CONFLICT_UNKNOWN");
+        }
+        return rotation.thenCompose(decision -> {
+            if (decision.failureCode() != null) {
+                return markUnknown(operation, operation.transactionId(), decision.failureCode());
+            }
+            return tasks.database(() -> operations.pendingDelivery(
+                operation.reissueId(),
+                operation.lockVersion(),
+                clock.instant()
+            )).thenCompose(pending -> pending
+                .map(value -> deliver(value, decision.tool()))
+                .orElseGet(() -> resolveRotationCheckpoint(operation, decision.tool())
+                )
+            );
+        }).exceptionallyCompose(failure -> markUnknown(
+            operation,
+            operation.transactionId(),
+            "ROTATION_COMMIT_UNKNOWN"
+        ));
+    }
+
+    private RotationDecision rotate(ReissueOperation operation) {
+        Optional<GrowthTool> found = growthTools.findByOwner(operation.playerUuid());
+        if (found.isEmpty()) {
+            return RotationDecision.failure("TOOL_NOT_FOUND");
+        }
+        GrowthTool current = found.orElseThrow();
+        if (alreadyRotated(current, operation)) {
+            return RotationDecision.success(current);
+        }
+        if (!operation.expectedItemInstanceId().equals(current.itemInstanceId())
+            || operation.instanceEpoch() != current.instanceEpoch()
+            || current.status() == GrowthTool.Status.REVOKED) {
+            return RotationDecision.failure("ROTATION_CONFLICT_UNKNOWN");
+        }
+        GrowthTool next = current.reissued(operation.newItemInstanceId(), clock.instant());
+        Optional<GrowthTool> replaced = growthTools.replaceAuthority(
+            next,
+            current.lockVersion(),
+            clock.instant()
+        );
+        if (replaced.isPresent()) {
+            return RotationDecision.success(replaced.orElseThrow());
+        }
+        Optional<GrowthTool> afterConflict = growthTools.findByOwner(operation.playerUuid());
+        return afterConflict.isPresent() && alreadyRotated(afterConflict.orElseThrow(), operation)
+            ? RotationDecision.success(afterConflict.orElseThrow())
+            : RotationDecision.failure("ROTATION_CONFLICT_UNKNOWN");
+    }
+
+    private CompletionStage<Result> deliver(
+        ReissueOperation pending,
+        GrowthTool rotated
+    ) {
+        DeliveryCapture capture = new DeliveryCapture();
+        CompletionStage<Void> deliveryStage;
+        try {
+            deliveryStage = tasks.mainThread(() ->
+                capture.outcome = deliveryGateway.deliverReissued(rotated)
+            );
+        } catch (RuntimeException failure) {
+            return pendingResult(pending, "UNAVAILABLE");
+        }
+        return deliveryStage.handle((ignored, failure) ->
+            failure == null && capture.outcome != null
+                ? capture.outcome
+                : DeliveryOutcome.UNAVAILABLE
+        ).thenCompose(outcome -> {
+            if (outcome != DeliveryOutcome.DELIVERED
+                && outcome != DeliveryOutcome.ALREADY_PRESENT) {
+                return pendingResult(pending, outcome.name());
+            }
+            return tasks.database(() -> growthTools.markDelivered(
+                rotated.toolId(),
+                rotated.lockVersion(),
+                clock.instant()
+            )).thenCompose(marked -> {
+                if (!marked) {
+                    return tasks.database(() -> growthTools.findByOwner(rotated.ownerUuid()))
+                        .thenCompose(current -> current.isPresent()
+                            && current.orElseThrow().deliveryStatus()
+                                == GrowthTool.DeliveryStatus.DELIVERED
+                            ? closeDelivered(pending, outcome == DeliveryOutcome.DELIVERED)
+                            : pendingResult(pending, "DELIVERY_CONFLICT"));
+                }
+                return closeDelivered(pending, outcome == DeliveryOutcome.DELIVERED);
+            });
+        }).exceptionallyCompose(failure -> pendingResult(pending, "UNAVAILABLE"));
+    }
+
+    private CompletionStage<Result> closeDelivered(
+        ReissueOperation pending,
+        boolean physicalInserted
+    ) {
+        return tasks.database(() -> operations.delivered(
+            pending.reissueId(),
+            pending.lockVersion(),
+            clock.instant()
+        )).thenCompose(closed -> {
+            CompletionStage<Result> result;
+            if (closed) {
+                result = audited(
+                    Result.delivered(pending),
+                    "GROWTH_TOOL_REISSUE_DELIVERED",
+                    pending
+                );
+            } else {
+                result = tasks.database(() -> operations.find(pending.reissueId()))
+                    .thenCompose(found -> found.isPresent()
+                    && found.orElseThrow().state() == ReissueOperation.State.DELIVERED
+                    ? audited(
+                        Result.delivered(found.orElseThrow()),
+                        "GROWTH_TOOL_REISSUE_DELIVERED",
+                        found.orElseThrow()
+                    )
+                    : pendingResult(pending, "DELIVERY_COMMIT_UNKNOWN"));
+            }
+            if (!physicalInserted) {
+                return result;
+            }
+            return result.thenCompose(value ->
+                tasks.mainThread(() ->
+                    deliveryGateway.notifyReissueDelivered(pending.playerUuid())
+                ).thenApply(ignored -> value)
+            );
+        });
+    }
+
+    private CompletionStage<Result> pendingResult(
+        ReissueOperation operation,
+        String outcome
+    ) {
+        return audited(
+            Result.pending(operation, sanitizeFailure(outcome, "DELIVERY_PENDING")),
+            "GROWTH_TOOL_REISSUE_PENDING",
+            operation
+        );
+    }
+
+    private CompletionStage<Result> resolveRotationCheckpoint(
+        ReissueOperation operation,
+        GrowthTool rotated
+    ) {
+        return tasks.database(() -> operations.find(operation.reissueId()))
+            .thenCompose(found -> {
+                if (found.isEmpty()) {
+                    return CompletableFuture.completedFuture(
+                        Result.unknown(operation, "ROTATION_COMMIT_UNKNOWN")
+                    );
+                }
+                ReissueOperation current = found.orElseThrow();
+                if (current.state() == ReissueOperation.State.PENDING_DELIVERY) {
+                    return deliver(current, rotated);
+                }
+                if (current.state() == ReissueOperation.State.DELIVERED) {
+                    return CompletableFuture.completedFuture(Result.delivered(current));
+                }
+                return markUnknown(current, current.transactionId(), "ROTATION_COMMIT_UNKNOWN");
+            });
+    }
+
+    private CompletionStage<Result> confirmInspectedPayment(
+        ReissueOperation operation,
+        WayfarerTransactions.TransactionDetails details
+    ) {
+        if (details == null) {
+            return CompletableFuture.completedFuture(
+                Result.unavailable("CORE_INSPECT_UNAVAILABLE")
+            );
+        }
+        if (!transactionDetailsMatch(operation, details)) {
+            return CompletableFuture.completedFuture(
+                Result.unknown(operation, "TRANSACTION_DETAILS_MISMATCH")
+            );
+        }
+        if (details.state() == WayfarerTransactions.State.COMMITTED
+            || details.state() == WayfarerTransactions.State.RECONCILED_COMMITTED) {
+            return tasks.database(() -> operations.confirmPaymentCommittedFromUnknown(
+                operation.reissueId(),
+                operation.transactionId(),
+                operation.lockVersion(),
+                clock.instant(),
+                clock.instant()
+            )).thenCompose(saved -> saved
+                .map(value -> resumeRotation(value.reissueId()))
+                .orElseGet(() -> resolveConfirmationConflict(operation))
+            );
+        }
+        if (details.state() == WayfarerTransactions.State.FAILED
+            || details.state() == WayfarerTransactions.State.REFUNDED
+            || details.state() == WayfarerTransactions.State.RECONCILED_REFUNDED) {
+            return CompletableFuture.completedFuture(
+                Result.unknown(operation, "CORE_PAYMENT_FAILED")
+            );
+        }
+        String code = details.state() == WayfarerTransactions.State.UNKNOWN
+            ? "PAYMENT_UNKNOWN"
+            : "PAYMENT_IN_FLIGHT";
+        return CompletableFuture.completedFuture(Result.unknown(operation, code));
+    }
+
+    private CompletionStage<Result> resolveConfirmationConflict(ReissueOperation operation) {
+        return tasks.database(() -> operations.find(operation.reissueId())).thenCompose(found -> {
+            if (found.isEmpty()) {
+                return CompletableFuture.completedFuture(
+                    Result.unknown(operation, "PAYMENT_CONFIRM_CONFLICT")
+                );
+            }
+            ReissueOperation current = found.orElseThrow();
+            if (!Objects.equals(current.transactionId(), operation.transactionId())) {
+                return CompletableFuture.completedFuture(
+                    Result.unknown(current, "TRANSACTION_ID_CONFLICT")
+                );
+            }
+            return switch (current.state()) {
+                case PAYMENT_COMMITTED -> resumeRotation(current.reissueId());
+                case PENDING_DELIVERY -> CompletableFuture.completedFuture(Result.pending(current));
+                case DELIVERED -> CompletableFuture.completedFuture(Result.delivered(current));
+                default -> CompletableFuture.completedFuture(
+                    Result.unknown(current, "PAYMENT_CONFIRM_CONFLICT")
+                );
+            };
+        });
+    }
+
+    private CompletionStage<Result> markUnknown(
+        ReissueOperation operation,
+        UUID transactionId,
+        String failureCode
+    ) {
+        String code = sanitizeFailure(failureCode, "REISSUE_UNKNOWN");
+        CompletionStage<Optional<ReissueOperation>> saved;
+        try {
+            saved = tasks.database(() -> operations.unknown(
+                operation.reissueId(),
+                operation.lockVersion(),
+                transactionId,
+                code,
+                clock.instant()
+            ));
+        } catch (RuntimeException failure) {
+            return audited(
+                Result.unknown(operation, code),
+                "GROWTH_TOOL_REISSUE_UNKNOWN",
+                operation
+            );
+        }
+        return saved.thenCompose(value -> value
+            .map(updated -> audited(
+                Result.unknown(updated, code),
+                "GROWTH_TOOL_REISSUE_UNKNOWN",
+                updated
+            ))
+            .orElseGet(() -> resolveCasConflict(operation, transactionId, code))
+        ).exceptionally(ignored -> Result.unknown(operation, code));
+    }
+
+    private CompletionStage<Result> resolveCasConflict(
+        ReissueOperation operation,
+        UUID receivedTransactionId,
+        String fallbackCode
+    ) {
+        return tasks.database(() -> operations.find(operation.reissueId()))
+            .thenCompose(found -> {
+                if (found.isEmpty()) {
+                    return CompletableFuture.completedFuture(
+                        Result.unknown(operation, fallbackCode)
+                    );
+                }
+                ReissueOperation current = found.orElseThrow();
+                if (receivedTransactionId != null
+                    && current.transactionId() != null
+                    && !receivedTransactionId.equals(current.transactionId())) {
+                    return markTransactionConflict(current);
+                }
+                return durableResult(current);
+            }).exceptionally(ignored -> Result.unknown(operation, fallbackCode));
+    }
+
+    private CompletionStage<Result> markTransactionConflict(ReissueOperation operation) {
+        return tasks.database(() -> operations.unknown(
+            operation.reissueId(),
+            operation.lockVersion(),
+            null,
+            "TRANSACTION_ID_CONFLICT",
+            clock.instant()
+        )).thenCompose(saved -> saved
+            .map(value -> CompletableFuture.completedFuture(
+                Result.unknown(value, "TRANSACTION_ID_CONFLICT")
+            ))
+            .orElseGet(() -> CompletableFuture.completedFuture(
+                Result.unknown(operation, "TRANSACTION_ID_CONFLICT")
+            ))
+        ).exceptionally(ignored -> Result.unknown(
+            operation,
+            "TRANSACTION_ID_CONFLICT"
+        ));
+    }
+
+    private CompletionStage<Result> durableAfterCas(
+        ReissueOperation operation,
+        String fallbackCode
+    ) {
+        return tasks.database(() -> operations.find(operation.reissueId()))
+            .thenCompose(found -> found.map(this::durableResult)
+                .orElseGet(() -> CompletableFuture.completedFuture(
+                    Result.unknown(operation, fallbackCode)
+                )));
+    }
+
+    private CompletionStage<Result> durableResult(ReissueOperation operation) {
+        return switch (operation.state()) {
+            case PAYMENT_COMMITTED -> resumeRotation(operation.reissueId());
+            case PENDING_DELIVERY -> CompletableFuture.completedFuture(Result.pending(operation));
+            case DELIVERED -> CompletableFuture.completedFuture(Result.delivered(operation));
+            case FAILED, ABANDONED -> CompletableFuture.completedFuture(
+                Result.failed(operation, failureCode(operation, "REISSUE_FAILED"))
+            );
+            case UNKNOWN, PREPARED, PAYMENT_PENDING -> CompletableFuture.completedFuture(
+                Result.unknown(operation, failureCode(operation, "RECONCILE_REQUIRED"))
+            );
+        };
+    }
+
+    private CompletionStage<Result> audited(
+        Result result,
+        String eventType,
+        ReissueOperation operation
+    ) {
+        CompletionStage<Void> recorded;
+        try {
+            recorded = audit.record(new WayfarerAudit.AuditEvent(
+                UUID.randomUUID(),
+                eventType,
+                operation.playerUuid(),
+                SUBJECT_TYPE,
+                operation.toolId().toString(),
+                serverId,
+                auditDetails(result),
+                clock.instant()
+            ));
+        } catch (RuntimeException failure) {
+            return CompletableFuture.completedFuture(result);
+        }
+        if (recorded == null) {
+            return CompletableFuture.completedFuture(result);
+        }
+        return recorded.handle((ignored, failure) -> result);
+    }
+
+    private static String auditDetails(Result result) {
+        String failure = result.failureCode();
+        String safeFailure = failure == null ? "" : sanitizeFailure(failure, "UNKNOWN");
+        return "{\"status\":\"" + result.status().name()
+            + "\",\"failure_code\":\"" + safeFailure + "\"}";
+    }
+
+    private QuoteEvaluation evaluateQuote(UUID playerUuid) {
+        Optional<GrowthTool> found = growthTools.findByOwner(playerUuid);
+        if (found.isEmpty()) {
+            return QuoteEvaluation.failure("TOOL_NOT_FOUND");
+        }
+        GrowthTool tool = found.orElseThrow();
+        if (tool.status() == GrowthTool.Status.REVOKED) {
+            return QuoteEvaluation.failure("TOOL_REVOKED");
+        }
+        if (tool.deliveryStatus() == GrowthTool.DeliveryStatus.PENDING) {
+            return QuoteEvaluation.failure("DELIVERY_PENDING");
+        }
+        if (operations.findActiveByTool(tool.toolId()).isPresent()) {
+            return QuoteEvaluation.failure("IN_FLIGHT");
+        }
+        int evolutionCount = evolutionCount(tool);
+        long amount;
+        try {
+            RepairPricingQuote quote = new RepairPricingQuote(pricing.quote(evolutionCount));
+            amount = quote.amountWaymark();
+        } catch (ArithmeticException | IllegalArgumentException failure) {
+            return QuoteEvaluation.failure("PRICING_INVALID");
+        }
+        return QuoteEvaluation.success(tool, evolutionCount, amount);
+    }
+
+    private PreparedEvaluation prepareFromQuote(UUID playerUuid, ReissueQuote quote) {
+        QuoteEvaluation evaluation = evaluateQuote(playerUuid);
+        if (evaluation.failureCode() != null) {
+            return PreparedEvaluation.failure(evaluation.failureCode());
+        }
+        if (!quote.matchesSnapshot(
+            evaluation.tool(),
+            evaluation.evolutionCount(),
+            configRevision,
+            evaluation.amountWaymark(),
+            clock.instant()
+        )) {
+            return PreparedEvaluation.failure("QUOTE_CHANGED");
+        }
+        ReissueOperation operation = new ReissueOperation(
+            UUID.randomUUID(),
+            "main-reissue:" + quote.quoteId(),
+            playerUuid,
+            evaluation.tool().toolId(),
+            evaluation.tool().itemInstanceId(),
+            UUID.randomUUID(),
+            evaluation.tool().instanceEpoch(),
+            evaluation.evolutionCount(),
+            configRevision,
+            evaluation.amountWaymark(),
+            ReissueOperation.State.PREPARED,
+            null,
+            null,
+            null,
+            0
+        );
+        return PreparedEvaluation.success(operations.prepare(operation, clock.instant()));
+    }
+
+    private int evolutionCount(GrowthTool tool) {
+        return evolutionPlan.evaluate(
+            tool.cumulativeProgressUnits(),
+            tool.branch(),
+            enchantmentCaps
+        ).evolutionCount();
+    }
+
+    private static String snapshotRejection(
+        ReissueEligibilitySnapshot snapshot,
+        UUID playerUuid
+    ) {
+        if (snapshot == null || !playerUuid.equals(snapshot.playerUuid())) {
+            return "ELIGIBILITY_UNAVAILABLE";
+        }
+        if (!snapshot.playerOnline()) {
+            return "PLAYER_OFFLINE";
+        }
+        if (!snapshot.worldAllowed()
+            || !ReissueEligibilityPolicy.isAllowedWorld(snapshot.exactWorldName())) {
+            return "WORLD_NOT_ALLOWED";
+        }
+        if (snapshot.currentItemPresent()) {
+            return "CURRENT_ITEM_PRESENT";
+        }
+        return null;
+    }
+
+    private boolean transactionDetailsMatch(
+        ReissueOperation operation,
+        WayfarerTransactions.TransactionDetails details
+    ) {
+        return operation.transactionId().equals(details.transactionId())
+            && matchesIfPresent(coreIdempotencyKey(operation), details.idempotencyKey())
+            && matchesIfPresent(TRANSACTION_TYPE, details.transactionType())
+            && matchesIfPresent(operation.playerUuid(), details.actorUuid())
+            && matchesIfPresent(SUBJECT_TYPE, details.subjectType())
+            && matchesIfPresent(operation.toolId().toString(), details.subjectId())
+            && (details.amountWaymark() == 0
+                || details.amountWaymark() == operation.amountWaymark());
+    }
+
+    private static boolean matchesIfPresent(Object expected, Object actual) {
+        return actual == null || expected.equals(actual);
+    }
+
+    private static boolean alreadyRotated(
+        GrowthTool current,
+        ReissueOperation operation
+    ) {
+        return current.itemInstanceId().equals(operation.newItemInstanceId())
+            && current.instanceEpoch() == operation.instanceEpoch() + 1
+            && current.status() == GrowthTool.Status.ACTIVE;
+    }
+
+    private static String coreIdempotencyKey(ReissueOperation operation) {
+        return "main-reissue:" + operation.idempotencyKey();
+    }
+
+    private static String payloadFor(UUID reissueId) {
+        return "{\"reissue_id\":\"" + reissueId + "\"}";
+    }
+
+    private static String failureCode(ReissueOperation operation, String fallback) {
+        return operation.failureCode() == null ? fallback : operation.failureCode();
+    }
+
+    private static String sanitizeFailure(String failureCode, String fallback) {
+        return failureCode != null && failureCode.matches("[A-Z0-9_]{3,96}")
+            ? failureCode
+            : fallback;
+    }
+
+    public record QuoteResult(QuoteStatus status, ReissueQuote quote, String failureCode) {
+        private static QuoteResult issued(ReissueQuote quote) {
+            return new QuoteResult(QuoteStatus.ISSUED, quote, null);
+        }
+
+        private static QuoteResult rejected(String failureCode) {
+            return new QuoteResult(QuoteStatus.REJECTED, null, failureCode);
+        }
+
+        private static QuoteResult unavailable(String failureCode) {
+            return new QuoteResult(QuoteStatus.UNAVAILABLE, null, failureCode);
+        }
+    }
+
+    public enum QuoteStatus {
+        ISSUED,
+        REJECTED,
+        UNAVAILABLE
+    }
+
+    public record Result(
+        Status status,
+        UUID reissueId,
+        UUID transactionId,
+        String failureCode
+    ) {
+        private static Result delivered(ReissueOperation operation) {
+            return new Result(Status.DELIVERED, operation.reissueId(), operation.transactionId(), null);
+        }
+
+        private static Result pending(ReissueOperation operation) {
+            return new Result(Status.PENDING, operation.reissueId(), operation.transactionId(), null);
+        }
+
+        private static Result pending(ReissueOperation operation, String failureCode) {
+            return new Result(
+                Status.PENDING,
+                operation.reissueId(),
+                operation.transactionId(),
+                failureCode
+            );
+        }
+
+        private static Result failed(ReissueOperation operation, String failureCode) {
+            return new Result(
+                Status.FAILED,
+                operation.reissueId(),
+                operation.transactionId(),
+                failureCode
+            );
+        }
+
+        private static Result unknown(ReissueOperation operation, String failureCode) {
+            return new Result(
+                Status.UNKNOWN,
+                operation.reissueId(),
+                operation.transactionId(),
+                failureCode
+            );
+        }
+
+        private static Result rejected(String failureCode) {
+            return new Result(Status.REJECTED, null, null, failureCode);
+        }
+
+        private static Result unavailable(String failureCode) {
+            return new Result(Status.UNAVAILABLE, null, null, failureCode);
+        }
+    }
+
+    public enum Status {
+        DELIVERED,
+        PENDING,
+        FAILED,
+        UNKNOWN,
+        REJECTED,
+        UNAVAILABLE
+    }
+
+    private record QuoteEvaluation(
+        GrowthTool tool,
+        int evolutionCount,
+        long amountWaymark,
+        String failureCode
+    ) {
+        private static QuoteEvaluation success(
+            GrowthTool tool,
+            int evolutionCount,
+            long amountWaymark
+        ) {
+            return new QuoteEvaluation(tool, evolutionCount, amountWaymark, null);
+        }
+
+        private static QuoteEvaluation failure(String failureCode) {
+            return new QuoteEvaluation(null, 0, 0, failureCode);
+        }
+    }
+
+    private record PreparedEvaluation(
+        PrepareOutcome outcome,
+        String failureCode
+    ) {
+        private static PreparedEvaluation success(PrepareOutcome outcome) {
+            return new PreparedEvaluation(outcome, null);
+        }
+
+        private static PreparedEvaluation failure(String failureCode) {
+            return new PreparedEvaluation(null, failureCode);
+        }
+    }
+
+    private record RotationDecision(GrowthTool tool, String failureCode) {
+        private static RotationDecision success(GrowthTool tool) {
+            return new RotationDecision(tool, null);
+        }
+
+        private static RotationDecision failure(String failureCode) {
+            return new RotationDecision(null, failureCode);
+        }
+    }
+
+    private static final class SnapshotCapture {
+        private ReissueEligibilitySnapshot snapshot;
+        private ReissueQuote quote;
+    }
+
+    private static final class QuoteCapture {
+        private ReissueQuote quote;
+    }
+
+    private static final class DeliveryCapture {
+        private DeliveryOutcome outcome;
+    }
+
+    private record RepairPricingQuote(long amountWaymark) {
+        private RepairPricingQuote(io.github.eariver.wayfarer.main.domain.RepairPricing.Quote quote) {
+            this(requireAvailable(quote));
+        }
+
+        private static long requireAvailable(
+            io.github.eariver.wayfarer.main.domain.RepairPricing.Quote quote
+        ) {
+            if (!quote.available() || quote.amountWaymark() <= 0) {
+                throw new ArithmeticException("Reissue quote is unavailable");
+            }
+            return quote.amountWaymark();
+        }
+    }
+}

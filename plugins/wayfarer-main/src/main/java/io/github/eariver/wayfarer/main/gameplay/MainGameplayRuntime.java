@@ -370,4 +370,1362 @@ public final class MainGameplayRuntime implements
         if (event.getView().getTopInventory().getHolder()
             instanceof GrowthToolGuiHolder holder) {
             event.setCancelled(true);
-            handleGuiClick(player, event.getRawSlot(), ×]üîÚ$z{-®éÜj×’’°¢öæÆ–æRç6VæDÖW76vR€¢f–ÇW&RÓÒçVÆÀ¢ò$w&÷wF‚FööÂ&W—#¢"²&W7VÇBç7FGW2‚¢¢$w&÷wF‚FööÂ&W—"—2Væf–Æ&ÆRâ ¢“°¢Ð¢Ò¢“°¢Ð ¢&—fFR7FF–2—FVÕ7F6²æÖVB€¢ÖFW&–ÂÖFW&–ÂÀ¢7G&–æræÖRÀ¢Æ—7CÅ7G&–æsâÆ÷&P¢’°¢—FVÕ7F6²—FVÒÒæWr—FVÕ7F6²†ÖFW&–Â“°¢—FVÔÖWFÖWFÒ—FVÒævWD—FVÔÖWF‚“°¢ÖWFæF—7Æ”æÖR†æWBæ·–÷&’æGfVçGW&RçFW‡Bä6ö×öæVçBçFW‡B†æÖR’“°¢ÖWFæÆ÷&R†Æ÷&Rç7G&VÒ‚¢æÖ†æWBæ·–÷&’æGfVçGW&RçFW‡Bä6ö×öæVçC£§FW‡B¢çFôÆ—7B‚’“°¢—FVÒç6WD—FVÔÖWF†ÖWF“°¢&WGW&â—FVÓ°¢Ð ¢&—fFR6ö×ÆWF–öå7FvSÅfö–Câ&V6÷&DFÖ–â€¢w&÷wF…FööÂFööÂÀ¢7G&–ærWfVçEG—P¢’°¢&WGW&â6W'f–6W2æVF—B‚’ç&V6÷&B†æWrv–f&W$VF—BäVF—DWfVçB€¢UT”Bç&æFöÕUT”B‚’À¢WfVçEG—RÀ¢FööÂæ÷væW%WV–B‚’À¢$u$õuD…õDôôÂ"À¢FööÂçFööÄ–B‚’çFõ7G&–ær‚’À¢6W'f–6W2ç6W'fW$–B‚’À¢'µÂ'&W7VÇEÂ#¥Â$Ä”TEÂ'Ò"À¢6Æö6²æ–ç7FçB‚¢’“°¢Ð ¢&—fFRw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"ä÷WF6öÖRFVÆ—fW"„w&÷wF…FööÂFööÂ’°¢–b‚66WF–ær’°¢&WGW&âw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"ä÷WF6öÖRåTäd”Ä$ÄS°¢Ð¢Æ–W"Æ–W"ÒÇVv–âævWE6W'fW"‚’ævWEÆ–W"‡FööÂæ÷væW%WV–B‚’“°¢–b‡Æ–W"ÓÒçVÆÂÇÂÆ–W"æ—4öæÆ–æR‚’’°¢&WGW&âw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"ä÷WF6öÖRåÄ”U%ôôddÄ”äS°¢Ð¢–b†6÷VçD7W'&VçB‡Æ–W"ÂFööÂæ÷væW%WV–B‚’ÂFööÂ’â’°¢&WGW&âw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"ä÷WF6öÖRäÅ$TE•õ$U4TåC°¢Ð¢–b‡Æ–W"ævWD–çfVçF÷'’‚’æf—'7DV×G’‚’Â’°¢&WGW&âw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"ä÷WF6öÖRä”ådTåDõ%•ôeTÄÃ°¢Ð¢—FVÕ7F6²—FVÓ°¢G'’°¢—FVÒÒæWr—FVÕ7F6²„ÖFW&–ÂåtôôDTåõ”4´„R“°¢w&—FT–FVçF—G’†—FVÒÂFööÂÂ$u$õuD…õDôôÂ"“°¢Ç”WföÇWF–öâ†—FVÒÂFööÂÂfÇ6R“°¢Ò6F6‚…'VçF–ÖTW†6WF–öâf–ÇW&R’°¢F‡&÷ræWrw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"äFVÆ—fW'•7FvTW†6WF–öâ€¢w&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"äF–væ÷7F–57FvRä5$TDUôäEôääõDDUô•DTÒÀ¢f–ÇW&P¢“°¢Ð¢G'’°¢–b‚Æ–W"ævWD–çfVçF÷'’‚’æFD—FVÒ†—FVÒ’æ—4V×G’‚’’°¢&WGW&âw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"ä÷WF6öÖRä”ådTåDõ%•ôeTÄÃ°¢Ð¢Ò6F6‚…'VçF–ÖTW†6WF–öâf–ÇW&R’°¢F‡&÷ræWrw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"äFVÆ—fW'•7FvTW†6WF–öâ€¢w&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"äF–væ÷7F–57FvRä”å4U%Eõ…•4”4Åô•DTÒÀ¢f–ÇW&P¢“°¢Ð¢&WGW&âw&÷wF…FööÄFVÆ—fW'”6ö÷&F–æF÷"ä÷WF6öÖRäDTÄ•dU$TC°¢Ð ¢7W&W75v&æ–æw2‚&FW&V6F–öâ"¢&—fFRfö–BÇ”WföÇWF–öâ„—FVÕ7F6²—FVÒÂw&÷wF…FööÂFööÂ’°¢Ç”WföÇWF–öâ†—FVÒÂFööÂÂfÇ6R“°¢Ð ¢7W&W75v&æ–æw2‚&FW&V6F–öâ"¢&—fFRfö–BÇ”WföÇWF–öâ€¢—FVÕ7F6²—FVÒÀ¢w&÷wF…FööÂFööÂÀ¢&ööÆVâWföÇWF–öä6÷VçD–æ7&V6V@¢’°¢WföÇWF–öåÆâäWföÇWF–öå6æ6†÷B6æ6†÷BÒ6öæf–ræWföÇWF–öåÆâ‚’æWfÇVFR€¢FööÂæ7V×VÆF—fU&öw&W75Væ—G2‚’À¢FööÂæ'&æ6‚‚’À¢6öæf–ræVæ6†çFÖVçD62‚¢“°¢ÖFW&–ÂW‡V7FVDÖFW&–ÂÒ7v—F6‚‡6æ6†÷BæÖFW&–Â‚’’°¢66RtôôBÓâÖFW&–ÂåtôôDTåõ”4´„S°¢66R5DôäRÓâÖFW&–Âå5DôäUõ”4´„S°¢66R•$ôâÓâÖFW&–Âä•$ôåõ”4´„S°¢66RD”ÔôäBÓâÖFW&–ÂäD”ÔôäEõ”4´„S°¢Ó°¢–çBöÆDÖ†–×VÒÒÖF‚æÖ‚ƒÂ—FVÒævWEG—R‚’ævWDÖ„GW&&–Æ—G’‚’“°¢–çBöÆDFÖvRÒ—FVÒævWD—FVÔÖWF‚’–ç7Fæ6VöbFÖvV&ÆRFÖvV&ÆP¢òFÖvV&ÆRævWDFÖvR‚¢¢°¢&ööÆVâÖFW&–Ä6†ævVBÒ—FVÒævWEG—R‚’ÒW‡V7FVDÖFW&–Ã°¢&ööÆVâVæ6†çFÖVçG46†ævVBÐ¢—FVÒævWDVæ6†çFÖVçDÆWfVÂ„Væ6†çFÖVçBäTdd”4”Tä5’¢Ò6æ6†÷BæVff–6–Væ7’‚¢ÇÂ—FVÒævWDVæ6†çFÖVçDÆWfVÂ„Væ6†çFÖVçBåTä%$T´”är¢Ò6æ6†÷BçVæ'&V¶–ær‚¢ÇÂ—FVÒævWDVæ6†çFÖVçDÆWfVÂ„Væ6†çFÖVçBädõ%ETäR¢Ò6æ6†÷Bæf÷'GVæR‚¢ÇÂ—FVÒævWDVæ6†çFÖVçDÆWfVÂ„Væ6†çFÖVçBå4”ÄµõDõT4‚¢Ò6æ6†÷Bç6–ÆµF÷V6‚‚“°¢&ööÆVâ&W6VçFF–öä6†ævVBÒ†4W‡V7FVDF—7Æ”æÖR€¢—FVÒÀ¢w&÷wF…FööÄFVÆ—fW'•&W6VçFF–öâæF—7Æ”æÖR€¢w&÷wF…FööÅ‡—6–6Ä6Æ–Òä—FVÕG—Räu$õuD…õDôôÀ¢¢“°¢–b‚ÖFW&–Ä6†ævVBbbVæ6†çFÖVçG46†ævV@¢bbWföÇWF–öä6÷VçD–æ7&V6V@¢bb&W6VçFF–öä6†ævV@¢bb6æöæ–6Ä–FVçF—G’†—FVÒÂFööÂ’’°¢&WGW&ã°¢Ð¢–b†ÖFW&–Ä6†ævVB’°¢—FVÒç6WEG—R†W‡V7FVDÖFW&–Â“°¢Ð¢—FVÒç&VÖ÷fTVæ6†çFÖVçB„Væ6†çFÖVçBäTdd”4”Tä5’“°¢—FVÒç&VÖ÷fTVæ6†çFÖVçB„Væ6†çFÖVçBåTä%$T´”är“°¢—FVÒç&VÖ÷fTVæ6†çFÖVçB„Væ6†çFÖVçBädõ%ETäR“°¢—FVÒç&VÖ÷fTVæ6†çFÖVçB„Væ6†çFÖVçBå4”ÄµõDõT4‚“°¢FB†—FVÒÂVæ6†çFÖVçBäTdd”4”Tä5’Â6æ6†÷BæVff–6–Væ7’‚’“°¢FB†—FVÒÂVæ6†çFÖVçBåTä%$T´”ärÂ6æ6†÷BçVæ'&V¶–ær‚’“°¢FB†—FVÒÂVæ6†çFÖVçBädõ%ETäRÂ6æ6†÷Bæf÷'GVæR‚’“°¢FB†—FVÒÂVæ6†çFÖVçBå4”ÄµõDõT4‚Â6æ6†÷Bç6–ÆµF÷V6‚‚’“°¢–b†—FVÒævWD—FVÔÖWF‚’–ç7Fæ6VöbFÖvV&ÆRFÖvV&ÆR’°¢–çBÖ†–×VÒÒÖF‚æÖ‚ƒÂ—FVÒævWEG—R‚’ævWDÖ„GW&&–Æ—G’‚’“°¢–çBFÖvS°¢–b†WföÇWF–öä6÷VçD–æ7&V6VB’°¢FÖvRÒGW&&–Æ—G•6VÖçF–72ægFW$WföÇWF–öâ€¢öÆDFÖvRÀ¢G'VP¢“°¢ÒVÇ6R–b†ÖFW&–Ä6†ævVBbböÆDFÖvRÂöÆDÖ†–×VÒ’°¢FÖvRÒGW&&–Æ—G•6VÖçF–72ç&V6öæ6–ÆT7F—fR€¢öÆDÖ†–×VÒÀ¢öÆDFÖvRÀ¢Ö†–×VÐ¢“°¢ÒVÇ6R°¢FÖvRÒÖF‚æÖ–â†öÆDFÖvRÂÖ†–×VÒÒ“°¢Ð¢FÖvV&ÆRç6WDFÖvR†FÖvR“°¢—FVÒç6WD—FVÔÖWF†FÖvV&ÆR“°¢Ð¢w&—FT–FVçF—G’†—FVÒÂFööÂÂ$u$õuD…õDôôÂ"“°¢Ð ¢&—fFR7FF–2&ööÆVâ6æöæ–6Ä–FVçF—G’„—FVÕ7F6²—FVÒÂw&÷wF…FööÂFööÂ’°¢w&÷wF…FööÅ‡—6–6Ä6Æ–Ò'6VBÒ6Æ–Ò†—FVÒ’æ÷$VÇ6R†çVÆÂ“°¢&WGW&â'6VBÒçVÆÀ¢bb'6VBçfÆ–FFR‡FööÂæ÷væW%WV–B‚’ÂFööÂ¢ÓÒw&÷wF…FööÅ‡—6–6Ä6Æ–ÒåfÆ–FF–öâådÄ”C°¢Ð ¢&—fFR7FF–2&ööÆVâ7W'&VçE‡—6–6Â€¢—FVÕ7F6²—FVÒÀ¢UT”B÷væW%WV–BÀ¢w&÷wF…FööÂWF†÷&—G¢’°¢&WGW&â—FVÒÒçVÆÀ¢bb6æöæ–6Ä–FVçF—G’†—FVÒÂWF†÷&—G’¢bbWF†÷&—G’æ÷væW%WV–B‚’æWVÇ2†÷væW%WV–B“°¢Ð ¢&—fFR7FF–2–çB6÷VçD7W'&VçB€¢Æ–W"Æ–W"À¢UT”B÷væW%WV–BÀ¢w&÷wF…FööÂWF†÷&—G¢’°¢–çB6÷VçBÒ°¢f÷"„—FVÕ7F6²—FVÒ¢Æ–W"ævWD–çfVçF÷'’‚’ævWE7F÷&vT6öçFVçG2‚’’°¢–b†7W'&VçE‡—6–6Â†—FVÒÂ÷væW%WV–BÂWF†÷&—G’’’°¢6÷VçB²³°¢Ð¢Ð¢f÷"„—FVÕ7F6²—FVÒ¢Æ–W"ævWD–çfVçF÷'’‚’ævWD&Ö÷$6öçFVçG2‚’’°¢–b†7W'&VçE‡—6–6Â†—FVÒÂ÷væW%WV–BÂWF†÷&—G’’’°¢6÷VçB²³°¢Ð¢Ð¢–b†7W'&VçE‡—6–6Â€¢Æ–W"ævWD–çfVçF÷'’‚’ævWD—FVÔ–äöfd†æB‚’À¢÷væW%WV–BÀ¢WF†÷&—G¢’’°¢6÷VçB²³°¢Ð¢–b†7W'&VçE‡—6–6Â€¢Æ–W"ævWD÷Vä–çfVçF÷'’‚’ævWD7W'6÷"‚’À¢÷væW%WV–BÀ¢WF†÷&—G¢’’°¢6÷VçB²³°¢Ð¢&WGW&â6÷VçC°¢Ð ¢&—fFR7FF–2fö–BFB„—FVÕ7F6²—FVÒÂVæ6†çFÖVçBVæ6†çFÖVçBÂ–çBÆWfVÂ’°¢–b†ÆWfVÂâ’°¢—FVÒæFEVç6fTVæ6†çFÖVçB†Væ6†çFÖVçBÂÆWfVÂ“°¢Ð¢Ð ¢&—fFR7FF–2&ööÆVâ6öçF–ç5v–f&W%FööÂ„—FVÕ7F6µµÒ6öçFVçG2’°¢f÷"„—FVÕ7F6²—FVÒ¢6öçFVçG2’°¢–b‡v–f&W%FööÂ†—FVÒ’’°¢&WGW&âG'VS°¢Ð¢Ð¢&WGW&âfÇ6S°¢Ð ¢&—fFR7FF–2&ööÆVâv–f&W%FööÂ„—FVÕ7F6²—FVÒ’°¢–b†—FVÒÓÒçVÆÂ’°¢&WGW&âfÇ6S°¢Ð¢&WGW&â—4ÖævVDFVF…G—R‡FW‡B†—FVÒÂ•DTÕõE•R’“°¢Ð ¢7FF–2&ööÆVâ—4ÖævVDFVF…G—R…7G&–ær—FVÕG—R’°¢&WGW&â$u$õuD…õDôôÂ"æWVÇ2†—FVÕG—R¢ÇÂ$%$ô´Tåôu$õuD…õDôôÂ"æWVÇ2†—FVÕG—R“°¢Ð ¢&—fFR7FF–2fö–Bw&—FT–FVçF—G’€¢—FVÕ7F6²—FVÒÀ¢w&÷wF…FööÂFööÂÀ¢7G&–ær—FVÕG—P¢’°¢w&—FT–FVçF—G’€¢—FVÒÀ¢&V—77VTFVÆ—fW'•öÆ–7’æ–FVçF—G’‡FööÂ’À¢FööÂÀ¢—FVÕG—P¢“°¢Ð ¢&—fFR7FF–2fö–Bw&—FT–FVçF—G’€¢—FVÕ7F6²—FVÒÀ¢&V—77VTFVÆ—fW'•öÆ–7’å&V—77VTFVÆ—fW'”–FVçF—G’–FVçF—G’À¢w&÷wF…FööÂFööÂÀ¢7G&–ær—FVÕG—P¢’°¢—FVÔÖWFÖWFÒ—FVÒævWD—FVÔÖWF‚“°¢W'6—7FVçDFF6öçF–æW"F2ÒÖWFævWEW'6—7FVçDFF6öçF–æW"‚“°¢F2ç6WB„•DTÕõE•RÂW'6—7FVçDFFG—Rå5E$”ärÂ—FVÕG—R“°¢F2ç6WB€¢•DTÕô”å5Dä4Uô”BÀ¢W'6—7FVçDFFG—Rå5E$”ärÀ¢–FVçF—G’æ—FVÔ–ç7Fæ6T–B‚’çFõ7G&–ær‚¢“°¢F2ç6WB…DôôÅô”BÂW'6—7FVçDFFG—Rå5E$”ärÂFööÂçFööÄ–B‚’çFõ7G&–ær‚’“°¢F2ç6WB„õtäU%ô”BÂW'6—7FVçDFFG—Rå5E$”ärÂFööÂæ÷væW%WV–B‚’çFõ7G&–ær‚’“°¢F2ç6WB…DôôÅõE•RÂW'6—7FVçDFFG—Rå5E$”ärÂw&÷wF…FööÂåDôôÅõE•R“°¢F2ç6WB„Uô4‚ÂW'6—7FVçDFFG—RäÄôärÂ–FVçF—G’æ–ç7Fæ6TWö6‚‚’“°¢F2ç6WB…44„TÔÂW'6—7FVçDFFG—Rä”åDTtU"ÂFööÂç66†VÖfW'6–öâ‚’“°¢F2ç6WB…$Ud•4”ôâÂW'6—7FVçDFFG—RäÄôärÂFööÂæF—7Æ•&Wf—6–öâ‚’“°¢w&÷wF…FööÅ‡—6–6Ä6Æ–Òä—FVÕG—R&W6VçFF–öåG—RÐ¢$%$ô´Tåôu$õuD…õDôôÂ"æWVÇ2†—FVÕG—R¢òw&÷wF…FööÅ‡—6–6Ä6Æ–Òä—FVÕG—Rä%$ô´Tåôu$õuD…õDôôÀ¢¢$u$õuD…õDôôÂ"æWVÇ2†—FVÕG—R¢òw&÷wF…FööÅ‡—6–6Ä6Æ–Òä—FVÕG—Räu$õuD…õDôôÀ¢¢çVÆÃ°¢–b‡&W6VçFF–öåG—RÒçVÆÂ’°¢ÖWFæF—7Æ”æÖR€¢w&÷wF…FööÄFVÆ—fW'•&W6VçFF–öâæF—7Æ”æÖR‡&W6VçFF–öåG—R¢“°¢Ð¢—FVÒç6WD—FVÔÖWF†ÖWF“°¢Ð ¢&—fFR7FF–2÷F–öæÃÄw&÷wF…FööÅ‡—6–6Ä6Æ–Óâ6Æ–Ò„—FVÕ7F6²—FVÒ’°¢&WGW&â6Æ–Õ&W7VÇB†—FVÒ’æ6Æ–Ò‚“°¢Ð ¢&—fFR7FF–2w&÷wF…FööÅ‡—6–6Ä6Æ–Òå'6U&W7VÇB6Æ–Õ&W7VÇB€¢—FVÕ7F6²—FVÐ¢’°¢¦fçWF–ÂäÖÅ7G&–ærÂ7G&–æsâ&rÒæWr¦fçWF–Âä†6„ÖÃâ‚“°¢WB‡&rÂ&—FVÕ÷G—R"ÂFW‡B†—FVÒÂ•DTÕõE•R’“°¢WB‡&rÂ&—FVÕö–ç7Fæ6Uö–B"ÂFW‡B†—FVÒÂ•DTÕô”å5Dä4Uô”B’“°¢WB‡&rÂ'FööÅö–B"ÂFW‡B†—FVÒÂDôôÅô”B’“°¢WB‡&rÂ&÷væW%÷WV–B"ÂFW‡B†—FVÒÂõtäU%ô”B’“°¢WB‡&rÂ'FööÅ÷G—R"ÂFW‡B†—FVÒÂDôôÅõE•R’“°¢WB‡&rÂ&–ç7Fæ6UöWö6‚"ÂçVÖW&–5FW‡B†—FVÒÂUô4‚’“°¢WB‡&rÂ'66†VÖ÷fW'6–öâ"ÂçVÖW&–5FW‡B†—FVÒÂ44„TÔ’“°¢WB‡&rÂ&F—7Æ•÷&Wf—6–öâ"ÂçVÖW&–5FW‡B†—FVÒÂ$Ud•4”ôâ’“°¢&WGW&âw&÷wF…FööÅ‡—6–6Ä6Æ–Òç'6R‡&r“°¢Ð ¢&—fFR7FF–2&ööÆVâ†4W‡V7FVDF—7Æ”æÖR€¢—FVÕ7F6²—FVÒÀ¢æWBæ·–÷&’æGfVçGW&RçFW‡Bä6ö×öæVçBW‡V7FV@¢’°¢&WGW&âW‡V7FVBÒçVÆÀ¢bb—FVÒÒçVÆÀ¢bb—FVÒæ†4—FVÔÖWF‚¢bb¦fçWF–Âäö&¦V7G2æWVÇ2†—FVÒævWD—FVÔÖWF‚’æF—7Æ”æÖR‚’ÂW‡V7FVB“°¢Ð ¢&—fFR7FF–2fö–BWB€¢¦fçWF–ÂäÖÅ7G&–ærÂ7G&–æsâfÇVW2À¢7G&–ær¶W’À¢7G&–ærfÇVP¢’°¢–b‡fÇVRÒçVÆÂ’°¢fÇVW2çWB†¶W’ÂfÇVR“°¢Ð¢Ð ¢&—fFR7FF–27G&–ærçVÖW&–5FW‡B„—FVÕ7F6²—FVÒÂæÖW76VD¶W’¶W’’°¢ÆöærfÇVRÒçVÖ&W"†—FVÒÂ¶W’“°¢&WGW&âfÇVRÓÒÆöæräÔ”åõdÅTRòçVÆÂ¢ÆöærçFõ7G&–ær‡fÇVR“°¢Ð ¢&—fFR7FF–27G&–ærFW‡B„—FVÕ7F6²—FVÒÂæÖW76VD¶W’¶W’’°¢–b†—FVÒÓÒçVÆÂÇÂ—FVÒæ†4—FVÔÖWF‚’’°¢&WGW&âçVÆÃ°¢Ð¢&WGW&â—FVÒævWD—FVÔÖWF‚’ævWEW'6—7FVçDFF6öçF–æW"‚’ævWB€¢¶W’À¢W'6—7FVçDFFG—Rå5E$”äp¢“°¢Ð ¢&—fFR7FF–2ÆöærçVÖ&W"„—FVÕ7F6²—FVÒÂæÖW76VD¶W’¶W’’°¢–b†—FVÒÓÒçVÆÂÇÂ—FVÒæ†4—FVÔÖWF‚’’°¢&WGW&âÆöæräÔ”åõdÅTS°¢Ð¢W'6—7FVçDFF6öçF–æW"F2Ð¢—FVÒævWD—FVÔÖWF‚’ævWEW'6—7FVçDFF6öçF–æW"‚“°¢&WGW&âçVÖ&W"‡F2Â¶W’“°¢Ð ¢7FF–2ÆöærçVÖ&W"…W'6—7FVçDFF6öçF–æW"F2ÂæÖW76VD¶W’¶W’’°¢–b‡F2æ†2†¶W’ÂW'6—7FVçDFFG—RäÄôär’’°¢ÆöærÆöæufÇVRÒF2ævWB†¶W’ÂW'6—7FVçDFFG—RäÄôär“°¢–b†ÆöæufÇVRÒçVÆÂ’°¢&WGW&âÆöæufÇVS°¢Ð¢Ð¢–b‡F2æ†2†¶W’ÂW'6—7FVçDFFG—Rä”åDTtU"’’°¢–çFVvW"–çFVvW"ÒF2ævWB†¶W’ÂW'6—7FVçDFFG—Rä”åDTtU"“°¢–b†–çFVvW"ÒçVÆÂ’°¢&WGW&â–çFVvW"æÆöæufÇVR‚“°¢Ð¢Ð¢&WGW&âÆöæräÔ”åõdÅTS°¢Ð ¢&—fFR7FF–27G&–ær÷&Tw&÷W„ÖFW&–ÂÖFW&–Â’°¢7G&–æræÖRÒÖFW&–ÂææÖR‚’çFõWW$66R„Æö6ÆRå$ôõB“°¢–b†æÖRæWVÇ2‚$äUD„U%õT%E¥ôõ$R"’’°¢&WGW&â$äUD„U%õT%E¢#°¢Ð¢–b†æÖRæWVÇ2‚$äUD„U%ôtôÄEôõ$R"’’°¢&WGW&â$äUD„U%ôtôÄB#°¢Ð¢–b†æÖRæWVÇ2‚$ä4”TåEôDT%$•2"’’°¢&WGW&â$ä4”TåEôDT%$•2#°¢Ð¢7G&–ær6–×Æ–f–VBÒæÖP¢ç&WÆ6R‚$DTU4ÄDUò"Â""¢ç&WÆ6R‚%ôõ$R"Â""“°¢&WGW&â7v—F6‚‡6–×Æ–f–VB’°¢66R$4ôÂ"Â$4õU""Â%$TE5DôäR"Â$•$ôâ"Â$Ä•2"Â$tôÄB"À¢$D”ÔôäB"Â$TÔU$ÄB"Óâ6–×Æ–f–VC°¢FVfVÇBÓâçVÆÃ°¢Ó°¢Ð ¢&—fFRfö–B6†V6·ö–çDÆÂ‚’°¢f÷"…UT”BÆ–W$–B¢6W76–öç2æ÷væW%WV–G2‚’’°¢6†V6·ö–çG2æ6†V6·ö–çB‡Æ–W$–B“°¢Ð¢Ð ¢V&Æ–2&V6÷&B&W—%6æ6†÷B†–çBFÖvRÂ–çBÖ†–×VÔGW&&–Æ—G’’·Ð ¢V&Æ–2VçVÒFÖ–ä×WFF–öâ°¢Ä”TBÀ¢äõô4„ätRÀ¢äõEôdõTäBÀ¢4ôädÄ”5BÀ¢Täd”Ä$ÄP¢Ð ¢&—fFR&V6÷&BWF†÷&—G”×WFF–öâ€¢w&÷wF…FööÂFööÂÀ¢FÖ–ä×WFF–öâ&W7VÇ@¢’·Ð ¢&—fFRVçVÒwV”ÖöFR°¢Ô”âÀ¢$U•%õ$Ud”Up¢Ð ¢&—fFR7FF–2f–æÂ6Æ72w&÷wF…FööÄwV”†öÆFW ¢–×ÆVÖVçG2–çfVçF÷'”†öÆFW"°¢&—fFRf–æÂwV”ÖöFRÖöFS°¢&—fFRf–æÂUT”BFö¶Vã°¢&—fFR–çfVçF÷'’–çfVçF÷'“° ¢&—fFRw&÷wF…FööÄwV”†öÆFW"„wV”ÖöFRÖöFRÂUT”BFö¶Vâ’°¢F†—2æÖöFRÒÖöFS°¢F†—2çFö¶VâÒFö¶Vã°¢Ð ¢&—fFRwV”ÖöFRÖöFR‚’°¢&WGW&âÖöFS°¢Ð ¢&—fFRUT”BFö¶Vâ‚’°¢&WGW&âFö¶Vã°¢Ð ¢÷fW'&–FP¢V&Æ–2–çfVçF÷'’vWD–çfVçF÷'’‚’°¢&WGW&â–çfVçF÷'“°¢Ð¢Ð ¢&—fFR&V6÷&B&W—$wV•6W76–öâ€¢UT”BFö¶VâÀ¢UT”BFööÄ–BÀ¢UT”B—FVÔ–ç7Fæ6T–BÀ¢Æöær–ç7Fæ6TWö6‚À¢ÆöærF—7Æ•&Wf—6–öâÀ¢–çBFÖvRÀ¢–çBÖ†–×VÔGW&&–Æ—G’À¢ÆöærÖ÷VçEv–Ö&²À¢6–ævÆUW6TvFR66WFV@¢’·Ð§Ð 
+            handleGuiClick(player, event.getRawSlot(), holder);
+            return;
+        }
+        ItemStack current = event.getCurrentItem();
+        ItemStack cursor = event.getCursor();
+        InventoryType type = event.getView().getTopInventory().getType();
+        ItemStack hotbar = event.getHotbarButton() >= 0
+            ? player.getInventory().getItem(event.getHotbarButton())
+            : null;
+        boolean clickedTop = event.getClickedInventory()
+            == event.getView().getTopInventory();
+        boolean processing = GrowthToolInventoryPolicy.isProcessingInventory(type)
+            && (type != InventoryType.CRAFTING || clickedTop);
+        if (processing && (wayfarerTool(current)
+            || wayfarerTool(cursor)
+            || wayfarerTool(hotbar))) {
+            event.setCancelled(true);
+            return;
+        }
+        plugin.getServer().getScheduler().runTask(
+            plugin,
+            () -> authorizeMainHand(player)
+        );
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (event.getView().getTopInventory().getHolder()
+            instanceof GrowthToolGuiHolder) {
+            event.setCancelled(true);
+            return;
+        }
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        int topSize = event.getView().getTopInventory().getSize();
+        InventoryType type = event.getView().getTopInventory().getType();
+        boolean clickedTop = event.getRawSlots().stream()
+            .anyMatch(slot -> slot < topSize);
+        boolean processing = GrowthToolInventoryPolicy.isProcessingInventory(type)
+            && (type != InventoryType.CRAFTING || clickedTop);
+        boolean managed = wayfarerTool(event.getOldCursor())
+            || event.getNewItems().values().stream().anyMatch(MainGameplayRuntime::wayfarerTool);
+        if (processing && clickedTop && managed) {
+            event.setCancelled(true);
+        }
+        scheduleAuthorization(player);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onHangingPlace(HangingPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (player != null && event.getHand() != null
+            && wayfarerTool(player.getInventory().getItem(event.getHand()))) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onArmorStand(PlayerArmorStandManipulateEvent event) {
+        if (wayfarerTool(event.getPlayerItem())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityInteract(PlayerInteractEntityEvent event) {
+        if (!(event.getRightClicked() instanceof ItemFrame
+            || event.getRightClicked() instanceof ArmorStand)) {
+            return;
+        }
+        ItemStack item = event.getPlayer().getInventory().getItem(event.getHand());
+        if (wayfarerTool(item)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHeldSlot(PlayerItemHeldEvent event) {
+        plugin.getServer().getScheduler().runTask(
+            plugin,
+            () -> authorizeMainHand(event.getPlayer())
+        );
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSwapHands(PlayerSwapHandItemsEvent event) {
+        plugin.getServer().getScheduler().runTask(
+            plugin,
+            () -> authorizeMainHand(event.getPlayer())
+        );
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onRespawn(PlayerRespawnEvent event) {
+        scheduleAuthorization(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player player)
+            || !(event.getInventory().getHolder()
+                instanceof GrowthToolGuiHolder holder)
+            || holder.mode() != GuiMode.REPAIR_PREVIEW) {
+            return;
+        }
+        repairGuiSessions.computeIfPresent(
+            player.getUniqueId(),
+            (ignored, session) ->
+                session.token().equals(holder.token()) ? null : session
+        );
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_AIR
+            || event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
+            return;
+        }
+        ItemStack held = event.getPlayer().getInventory().getItemInMainHand();
+        HeldGrowthToolAuthorization authorization =
+            authorization(event.getPlayer().getUniqueId());
+        GrowthTool tool = sessions.current(event.getPlayer().getUniqueId()).orElse(null);
+        if (tool == null || !authorization.allowsGui()) {
+            return;
+        }
+        event.setCancelled(true);
+        openMainGui(event.getPlayer(), tool, held);
+    }
+
+    public CompletionStage<Integer> stopAndFlush() {
+        accepting = false;
+        checkpointTask.cancel();
+        repairGuiSessions.clear();
+        repairInFlight.clear();
+        evolutionRestorePending.clear();
+        heldAuthorizations.clear();
+        return checkpoints.stopAndFlush();
+    }
+
+    public void bindRepairCoordinator(RepairCoordinator coordinator) {
+        if (repairCoordinator != null) {
+            throw new IllegalStateException(
+                "Repair coordinator is already bound"
+            );
+        }
+        repairCoordinator = java.util.Objects.requireNonNull(
+            coordinator,
+            "coordinator"
+        );
+    }
+
+    public Optional<GrowthTool> current(UUID playerUuid) {
+        return sessions.current(playerUuid);
+    }
+
+    /**
+     * Captures only Main Thread Bukkit state for the paid reissue boundary.
+     * No repository, MVI, or container lookup is allowed here.
+     */
+    @Override
+    public ReissueEligibilitySnapshot snapshot(UUID playerUuid) {
+        java.util.Objects.requireNonNull(playerUuid, "playerUuid");
+        Player player = plugin.getServer().getPlayer(playerUuid);
+        if (!accepting || player == null || !player.isOnline()) {
+            return new ReissueEligibilitySnapshot(
+                playerUuid,
+                false,
+                "",
+                false,
+                new PhysicalItemPresence(false, false, false, false)
+            );
+        }
+        String worldName = player.getWorld().getName();
+        boolean allowed = ReissueEligibilityPolicy.isAllowedWorld(worldName);
+        GrowthTool authority = sessions.current(playerUuid).orElse(null);
+        if (authority == null) {
+            // No loaded authority means physical presence cannot be proven
+            // safely; reject the paid path fail-closed.
+            return new ReissueEligibilitySnapshot(
+                playerUuid,
+                true,
+                worldName,
+                allowed,
+                ReissueEligibilityPolicy.failClosedPresence()
+            );
+        }
+        return new ReissueEligibilitySnapshot(
+            playerUuid,
+            true,
+            worldName,
+            allowed,
+            ReissueEligibilityPolicy.scan(
+                player.getInventory().getStorageContents(),
+                player.getInventory().getArmorContents(),
+                player.getInventory().getItemInOffHand(),
+                player.getOpenInventory().getCursor(),
+                item -> currentPhysical(item, playerUuid, authority)
+            )
+        );
+    }
+
+    /**
+     * Main Thread physical delivery for the rotated durable authority.
+     * This method never performs persistence or rolls authority back.
+     */
+    @Override
+    public DeliveryOutcome deliverReissued(GrowthTool rotatedTool) {
+        if (!accepting || rotatedTool == null
+            || rotatedTool.status() != GrowthTool.Status.ACTIVE
+            || rotatedTool.deliveryStatus() != GrowthTool.DeliveryStatus.PENDING) {
+            return DeliveryOutcome.UNAVAILABLE;
+        }
+        Player player = plugin.getServer().getPlayer(rotatedTool.ownerUuid());
+        if (player == null || !player.isOnline()) {
+            return ReissueDeliveryPolicy.classify(
+                true,
+                false,
+                false,
+                0,
+                false
+            );
+        }
+        if (!ReissueEligibilityPolicy.isAllowedWorld(
+            player.getWorld().getName()
+        )) {
+            return ReissueDeliveryPolicy.classify(
+                true,
+                true,
+                false,
+                0,
+                false
+            );
+        }
+
+        sessions.open(rotatedTool);
+        authorizeMainHand(player);
+        int currentCount = countCurrent(
+            player,
+            rotatedTool.ownerUuid(),
+            rotatedTool
+        );
+        DeliveryOutcome classification = ReissueDeliveryPolicy.classify(
+            true,
+            true,
+            true,
+            currentCount,
+            player.getInventory().firstEmpty() >= 0
+        );
+        if (!ReissueDeliveryPolicy.createsOneItem(classification)) {
+            return classification;
+        }
+
+        int emptySlot = player.getInventory().firstEmpty();
+        ReissueDeliveryPolicy.ReissueDeliveryIdentity identity =
+            ReissueDeliveryPolicy.identity(rotatedTool);
+        ItemStack item = new ItemStack(Material.WOODEN_PICKAXE);
+        applyEvolution(item, rotatedTool, false);
+        if (item.getItemMeta() instanceof Damageable damageable) {
+            damageable.setDamage(identity.damage());
+            item.setItemMeta(damageable);
+        }
+        writeIdentity(item, identity, rotatedTool, "GROWTH_TOOL");
+        player.getInventory().setItem(emptySlot, item);
+        authorizeMainHand(player);
+        return DeliveryOutcome.DELIVERED;
+    }
+
+    @Override
+    public void notifyReissueDelivered(UUID playerUuid) {
+        notifyDeliverySuccess(playerUuid);
+    }
+
+    public CompletionStage<Void> refreshSessionFromAuthority(UUID playerUuid) {
+        return refreshSession(playerUuid);
+    }
+
+    public CompletionStage<Optional<GrowthTool>> inspect(UUID playerUuid) {
+        return services.tasks().database(() ->
+            repository.findByOwner(playerUuid)
+        );
+    }
+
+    public CompletionStage<GrowthToolDeliveryCoordinator.Outcome> retryDelivery(
+        UUID playerUuid
+    ) {
+        return delivery.onJoin(playerUuid).thenCompose(outcome ->
+            notifyDelivery(playerUuid, outcome)
+                .thenCompose(ignored -> refreshSession(playerUuid))
+                .thenApply(ignored -> outcome)
+        );
+    }
+
+    public CompletionStage<AdminMutation> revoke(UUID playerUuid) {
+        return replaceAuthority(playerUuid, false);
+    }
+
+    public CompletionStage<AdminMutation> reissue(UUID playerUuid) {
+        return replaceAuthority(playerUuid, true).thenCompose(result -> {
+            if (result != AdminMutation.APPLIED) {
+                return CompletableFuture.completedFuture(result);
+            }
+            return delivery.onJoin(playerUuid)
+                .thenCompose(outcome -> notifyDelivery(playerUuid, outcome))
+                .thenCompose(ignored -> refreshSession(playerUuid))
+                .thenApply(ignored -> result);
+        });
+    }
+
+    public Optional<RepairSnapshot> repairSnapshot(Player player, GrowthTool tool) {
+        ItemStack item = player.getInventory().getItemInMainHand();
+        HeldGrowthToolAuthorization cached = authorization(player.getUniqueId());
+        if (tool.status() == GrowthTool.Status.BROKEN) {
+            if (cached.state()
+                != HeldGrowthToolAuthorization.State.VALID_BROKEN_OWNER) {
+                return Optional.empty();
+            }
+        } else if (cached.state()
+            != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
+            return Optional.empty();
+        }
+        if (tool.status() == GrowthTool.Status.BROKEN) {
+            int maximum = Math.max(1, tool.storedDamage());
+            return Optional.of(new RepairSnapshot(maximum, maximum));
+        }
+        if (!(item.getItemMeta() instanceof Damageable damageable)) {
+            return Optional.empty();
+        }
+        return Optional.of(new RepairSnapshot(
+            damageable.getDamage(),
+            Math.max(1, item.getType().getMaxDurability())
+        ));
+    }
+
+    public boolean applyFullRepair(
+        UUID playerUuid,
+        UUID toolId,
+        long instanceEpoch,
+        UUID repairId
+    ) {
+        if (!accepting) {
+            return false;
+        }
+        Player player = plugin.getServer().getPlayer(playerUuid);
+        GrowthTool current = sessions.current(playerUuid).orElse(null);
+        if (player == null || current == null
+            || !current.toolId().equals(toolId)
+            || current.instanceEpoch() != instanceEpoch
+            || current.status() == GrowthTool.Status.REVOKED
+            || !authorization(playerUuid).allowsRepair()) {
+            return false;
+        }
+        ItemStack target = player.getInventory().getItemInMainHand();
+        GrowthTool repaired = sessions.update(
+            playerUuid,
+            value -> value.repaired(clock.instant())
+        );
+        applyEvolution(target, repaired);
+        if (target.getItemMeta() instanceof Damageable damageable) {
+            damageable.setDamage(0);
+            target.setItemMeta(damageable);
+        }
+        authorizeMainHand(player);
+        checkpoints.checkpoint(playerUuid);
+        return true;
+    }
+
+    public boolean switchBranch(Player player, GrowthTool.Branch branch) {
+        GrowthTool current = sessions.current(player.getUniqueId()).orElse(null);
+        ItemStack held = player.getInventory().getItemInMainHand();
+        if (current == null
+            || !authorization(player.getUniqueId()).allowsBranchMutation()) {
+            return false;
+        }
+        GrowthTool updated = sessions.update(
+            player.getUniqueId(),
+            tool -> tool.withBranch(branch, clock.instant())
+        );
+        applyEvolution(held, updated);
+        authorizeMainHand(player);
+        checkpoints.checkpoint(player.getUniqueId());
+        return true;
+    }
+
+    public boolean debug(Player player, String action) {
+        GrowthTool current = sessions.current(player.getUniqueId()).orElse(null);
+        ItemStack held = player.getInventory().getItemInMainHand();
+        if (current == null
+            || !authorization(player.getUniqueId()).allowsBranchMutation()) {
+            return false;
+        }
+        boolean applied = switch (action) {
+            case "progress-next" -> {
+                EvolutionPlan.EvolutionSnapshot snapshot =
+                    config.evolutionPlan().evaluate(
+                        current.cumulativeProgressUnits(),
+                        current.branch(),
+                        config.enchantmentCaps()
+                    );
+                Long next = snapshot.nextThresholdUnits();
+                if (next == null || next <= current.cumulativeProgressUnits()) {
+                    yield false;
+                }
+                GrowthTool updated = sessions.addProgress(
+                    player.getUniqueId(),
+                    Math.subtractExact(
+                        next,
+                        current.cumulativeProgressUnits()
+                    ),
+                    clock.instant()
+                );
+                applyEvolution(held, updated);
+                authorizeMainHand(player);
+                checkpoints.checkpoint(player.getUniqueId());
+                yield true;
+            }
+            case "durability-one" -> {
+                if (!(held.getItemMeta() instanceof Damageable damageable)) {
+                    yield false;
+                }
+                damageable.setDamage(
+                    Math.max(0, held.getType().getMaxDurability() - 1)
+                );
+                held.setItemMeta(damageable);
+                yield true;
+            }
+            case "repair-free" -> applyFullRepair(
+                player.getUniqueId(),
+                current.toolId(),
+                current.instanceEpoch(),
+                UUID.randomUUID()
+            );
+            default -> false;
+        };
+        if (applied) {
+            authorizeMainHand(player);
+            recordAdmin(current, "GROWTH_TOOL_DEBUG_MUTATION")
+                .exceptionally(ignored -> null);
+        }
+        return applied;
+    }
+
+    @Override
+    public void close() {
+        stopAndFlush();
+    }
+
+    private void open(Player player) {
+        UUID playerUuid = player.getUniqueId();
+        authorizeMainHand(player);
+        delivery.onJoin(playerUuid)
+            .thenCompose(outcome -> notifyDelivery(playerUuid, outcome))
+            .thenCompose(ignored -> services.tasks().database(() ->
+                repository.findOrCreate(playerUuid, clock.instant())
+            ))
+            .thenCompose(tool -> services.tasks().mainThread(() -> {
+                if (!accepting) {
+                    return;
+                }
+                Player online = plugin.getServer().getPlayer(playerUuid);
+                if (online == null || !online.isOnline()) {
+                    return;
+                }
+                sessions.open(tool);
+                reconcileInventory(online, tool);
+                authorizeMainHand(online);
+            }))
+            .exceptionally(ignored -> null);
+    }
+
+    private CompletionStage<AdminMutation> replaceAuthority(
+        UUID playerUuid,
+        boolean reissue
+    ) {
+        return services.tasks().database(() -> {
+            GrowthTool current = repository.findByOwner(playerUuid).orElse(null);
+            if (current == null) {
+                return new AuthorityMutation(null, AdminMutation.NOT_FOUND);
+            }
+            GrowthTool next = reissue
+                ? current.reissued(clock.instant())
+                : current.revoked(clock.instant());
+            if (next == current) {
+                return new AuthorityMutation(current, AdminMutation.NO_CHANGE);
+            }
+            Optional<GrowthTool> persisted = repository.replaceAuthority(
+                next,
+                current.lockVersion(),
+                clock.instant()
+            );
+            return persisted
+                .map(value -> new AuthorityMutation(value, AdminMutation.APPLIED))
+                .orElseGet(() ->
+                    new AuthorityMutation(null, AdminMutation.CONFLICT)
+                );
+        }).thenCompose(mutation -> {
+            if (mutation.tool() == null) {
+                return CompletableFuture.completedFuture(mutation.result());
+            }
+            return services.tasks().mainThread(() -> {
+                if (!accepting) {
+                    return;
+                }
+                Player online = plugin.getServer().getPlayer(playerUuid);
+                if (online != null && online.isOnline()) {
+                    sessions.open(mutation.tool());
+                    authorizeMainHand(online);
+                }
+            }).thenCompose(ignored -> recordAdmin(
+                mutation.tool(),
+                reissue ? "GROWTH_TOOL_REISSUED" : "GROWTH_TOOL_REVOKED"
+            ).handle((recorded, failure) -> mutation.result()));
+        }).exceptionally(ignored -> AdminMutation.UNAVAILABLE);
+    }
+
+    private CompletionStage<Void> refreshSession(UUID playerUuid) {
+        if (!accepting) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return services.tasks().database(() ->
+            repository.findByOwner(playerUuid)
+        ).thenCompose(found -> services.tasks().mainThread(() -> {
+            if (!accepting) {
+                return;
+            }
+            Player online = plugin.getServer().getPlayer(playerUuid);
+            if (online != null && online.isOnline()) {
+                found.ifPresent(tool -> {
+                    sessions.open(tool);
+                    reconcileInventory(online, tool);
+                    authorizeMainHand(online);
+                });
+            }
+        }));
+    }
+
+    private CompletionStage<Void> notifyDelivery(
+        UUID playerUuid,
+        GrowthToolDeliveryCoordinator.Outcome outcome
+    ) {
+        if (outcome == GrowthToolDeliveryCoordinator.Outcome.DELIVERED) {
+            return notifyDeliverySuccessStage(playerUuid);
+        }
+        if (outcome != GrowthToolDeliveryCoordinator.Outcome.INVENTORY_FULL
+            && outcome != GrowthToolDeliveryCoordinator.Outcome.PLAYER_OFFLINE
+            && outcome != GrowthToolDeliveryCoordinator.Outcome.CONFLICT
+            && outcome != GrowthToolDeliveryCoordinator.Outcome.UNAVAILABLE) {
+            return CompletableFuture.completedFuture(null);
+        }
+        String reference = delivery.lastFailure(playerUuid)
+            .map(snapshot -> " Reference: " + snapshot.correlationId() + ".")
+            .orElse("");
+        plugin.getLogger().warning(
+            "Growth Tool delivery remains pending; retry on join or by admin."
+                + reference
+        );
+        return services.tasks().mainThread(() -> {
+            if (!accepting) {
+                return;
+            }
+            Player online = plugin.getServer().getPlayer(playerUuid);
+            if (online != null && online.isOnline()) {
+                online.sendMessage(
+                    "Growth Tool delivery is pending; free inventory space "
+                        + "and rejoin or ask an administrator to retry."
+                        + (reference.isEmpty() ? "" : reference)
+                );
+            }
+        });
+    }
+
+    private CompletionStage<Void> notifyDeliverySuccessStage(UUID playerUuid) {
+        return services.tasks().mainThread(() -> notifyDeliverySuccess(playerUuid));
+    }
+
+    private void notifyDeliverySuccess(UUID playerUuid) {
+        if (!accepting) {
+            return;
+        }
+        Player online = plugin.getServer().getPlayer(playerUuid);
+        if (online != null && online.isOnline()) {
+            online.sendMessage(GrowthToolDeliveryPresentation.SUCCESS_MESSAGE);
+        }
+    }
+
+    private void logDeliveryFailure(
+        UUID ignoredPlayerUuid,
+        String correlationId,
+        GrowthToolDeliveryCoordinator.DiagnosticStage stage,
+        Throwable failure
+    ) {
+        plugin.getLogger().log(
+            Level.WARNING,
+            "Growth Tool delivery failed; correlation=" + correlationId
+                + "; stage=" + stage
+                + "; exception=" + failure.getClass().getName(),
+            failure
+        );
+    }
+
+    private void authorizeMainHand(Player player) {
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+        UUID playerUuid = player.getUniqueId();
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (!wayfarerTool(item)) {
+            heldAuthorizations.put(
+                playerUuid,
+                new HeldGrowthToolAuthorization(
+                    HeldGrowthToolAuthorization.State.NO_MANAGED_ITEM
+                )
+            );
+            return;
+        }
+        GrowthTool tool = sessions.current(player.getUniqueId()).orElse(null);
+        heldAuthorizations.put(
+            playerUuid,
+            HeldGrowthToolAuthorizer.authorize(
+                true,
+                claimResult(item),
+                playerUuid,
+                tool
+            )
+        );
+        if (tool != null
+            && authorization(playerUuid).state()
+                == HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
+            applyEvolution(item, tool, false);
+        }
+    }
+
+    private void scheduleAuthorization(Player player) {
+        plugin.getServer().getScheduler().runTask(
+            plugin,
+            () -> authorizeMainHand(player)
+        );
+    }
+
+    private HeldGrowthToolAuthorization authorization(UUID playerUuid) {
+        return heldAuthorizations.getOrDefault(
+            playerUuid,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE
+            )
+        );
+    }
+
+    @SuppressWarnings("deprecation")
+    private void reconcileInventory(Player player, GrowthTool tool) {
+        if (tool.status() == GrowthTool.Status.REVOKED) {
+            return;
+        }
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null || !canonicalIdentity(item, tool)) {
+                continue;
+            }
+            if (tool.status() == GrowthTool.Status.ACTIVE) {
+                applyEvolution(item, tool, false);
+            } else if (tool.status() == GrowthTool.Status.BROKEN) {
+                if (item.getType() != Material.GRAY_DYE) {
+                    item.setType(Material.GRAY_DYE);
+                }
+                writeIdentity(item, tool, "BROKEN_GROWTH_TOOL");
+            }
+        }
+    }
+
+    private void openMainGui(
+        Player player,
+        GrowthTool tool,
+        ItemStack physicalItem
+    ) {
+        GrowthToolGuiHolder holder = new GrowthToolGuiHolder(
+            GuiMode.MAIN,
+            UUID.randomUUID()
+        );
+        Inventory inventory = org.bukkit.Bukkit.createInventory(
+            holder,
+            27,
+            net.kyori.adventure.text.Component.text("Growth Tool")
+        );
+        holder.inventory = inventory;
+        EvolutionPlan.EvolutionSnapshot evolution =
+            config.evolutionPlan().evaluate(
+                tool.cumulativeProgressUnits(),
+                tool.branch(),
+                config.enchantmentCaps()
+            );
+        RepairSnapshot repair = repairSnapshot(player, tool).orElse(null);
+        String durability = repair == null
+            ? "Unavailable"
+            : (repair.maximumDurability() - repair.damage())
+                + "/" + repair.maximumDurability();
+        long remaining = evolution.nextThresholdUnits() == null
+            ? 0
+            : Math.max(
+                0,
+                evolution.nextThresholdUnits()
+                    - tool.cumulativeProgressUnits()
+            );
+        inventory.setItem(4, physicalItem.clone());
+        inventory.setItem(10, named(
+            Material.BOOK,
+            "Tool Status",
+            List.of(
+                "Type: " + GrowthTool.TOOL_TYPE,
+                "Status: " + tool.status(),
+                "Material: " + physicalItem.getType(),
+                "Evolution: " + evolution.evolutionCount()
+            )
+        ));
+        inventory.setItem(12, named(
+            Material.EXPERIENCE_BOTTLE,
+            "Progress",
+            List.of(
+                "Cumulative: " + tool.cumulativeProgressUnits(),
+                "Until next: " + remaining,
+                "Branch: " + tool.branch()
+            )
+        ));
+        inventory.setItem(14, named(
+            Material.ANVIL,
+            "Repair Preview",
+            List.of(
+                "Durability: " + durability,
+                "Open preview and confirmation"
+            )
+        ));
+        inventory.setItem(16, named(
+            Material.PAPER,
+            "Help / Effective State",
+            List.of(
+                "Efficiency: " + evolution.efficiency(),
+                "Unbreaking: " + evolution.unbreaking(),
+                "Fortune: " + evolution.fortune(),
+                "Silk Touch: " + evolution.silkTouch(),
+                "Config clamp: active"
+            )
+        ));
+        player.openInventory(inventory);
+    }
+
+    private void openRepairPreview(Player player) {
+        GrowthTool tool = sessions.current(player.getUniqueId()).orElse(null);
+        RepairCoordinator repairs = repairCoordinator;
+        if (tool == null || repairs == null || repairInFlight.contains(
+            player.getUniqueId()
+        )) {
+            player.sendMessage("Growth Tool repair is unavailable.");
+            return;
+        }
+        RepairSnapshot snapshot = repairSnapshot(player, tool).orElse(null);
+        if (snapshot == null) {
+            player.sendMessage("Your current bound Growth Tool is unavailable.");
+            return;
+        }
+        int evolutionCount = config.evolutionPlan().evaluate(
+            tool.cumulativeProgressUnits(),
+            tool.branch(),
+            config.enchantmentCaps()
+        ).evolutionCount();
+        var quote = config.repairPricing().quote(
+            tool.status(),
+            evolutionCount,
+            snapshot.damage(),
+            snapshot.maximumDurability()
+        );
+        if (!quote.available()) {
+            player.sendMessage("Growth Tool repair is not required.");
+            return;
+        }
+        UUID token = UUID.randomUUID();
+        RepairGuiSession session = new RepairGuiSession(
+            token,
+            tool.toolId(),
+            tool.itemInstanceId(),
+            tool.instanceEpoch(),
+            tool.displayRevision(),
+            snapshot.damage(),
+            snapshot.maximumDurability(),
+            quote.amountWaymark(),
+            new SingleUseGate()
+        );
+        repairGuiSessions.put(player.getUniqueId(), session);
+        GrowthToolGuiHolder holder = new GrowthToolGuiHolder(
+            GuiMode.REPAIR_PREVIEW,
+            token
+        );
+        Inventory inventory = org.bukkit.Bukkit.createInventory(
+            holder,
+            27,
+            net.kyori.adventure.text.Component.text("Growth Tool Repair")
+        );
+        holder.inventory = inventory;
+        inventory.setItem(11, named(
+            Material.LIME_CONCRETE,
+            "Confirm Repair",
+            List.of(
+                "Cost: " + quote.amountWaymark() + " WM",
+                "Damage: " + snapshot.damage() + "/"
+                    + snapshot.maximumDurability()
+            )
+        ));
+        inventory.setItem(13, named(
+            Material.ANVIL,
+            "Repair Quote",
+            List.of(
+                "Status: " + tool.status(),
+                "Evolution: " + evolutionCount,
+                "This quote is revalidated on confirm"
+            )
+        ));
+        inventory.setItem(15, named(
+            Material.BARRIER,
+            "Cancel",
+            List.of("No Waymark will be charged")
+        ));
+        player.openInventory(inventory);
+    }
+
+    private void handleGuiClick(
+        Player player,
+        int rawSlot,
+        GrowthToolGuiHolder holder
+    ) {
+        if (rawSlot < 0 || rawSlot >= 27) {
+            return;
+        }
+        if (holder.mode() == GuiMode.MAIN) {
+            switch (GrowthToolGuiAction.main(rawSlot)) {
+                case OPEN_REPAIR_PREVIEW -> openRepairPreview(player);
+                case HELP -> player.sendMessage(
+                    "Progress evolves the bound tool; repair requires "
+                        + "preview and confirmation."
+                );
+                default -> {
+                    // Display-only slot.
+                }
+            }
+            return;
+        }
+        switch (GrowthToolGuiAction.repairPreview(rawSlot)) {
+            case CANCEL -> {
+                repairGuiSessions.remove(player.getUniqueId());
+                player.closeInventory();
+                return;
+            }
+            case CONFIRM_REPAIR -> {
+                // Continue through the authoritative session checks below.
+            }
+            default -> {
+                return;
+            }
+        }
+        RepairGuiSession session = repairGuiSessions.get(
+            player.getUniqueId()
+        );
+        GrowthTool tool = sessions.current(player.getUniqueId()).orElse(null);
+        RepairCoordinator repairs = repairCoordinator;
+        if (session == null || tool == null || repairs == null
+            || !session.token().equals(holder.token())
+            || !session.toolId().equals(tool.toolId())
+            || !session.itemInstanceId().equals(tool.itemInstanceId())
+            || session.instanceEpoch() != tool.instanceEpoch()
+            || session.displayRevision() != tool.displayRevision()
+            || !session.accepted().tryAcquire()) {
+            player.sendMessage("Growth Tool repair quote expired.");
+            return;
+        }
+        RepairSnapshot current = repairSnapshot(player, tool).orElse(null);
+        if (current == null || current.damage() != session.damage()
+            || current.maximumDurability() != session.maximumDurability()) {
+            repairGuiSessions.remove(player.getUniqueId(), session);
+            player.sendMessage("Growth Tool repair quote changed; reopen it.");
+            return;
+        }
+        var quote = config.repairPricing().quote(
+            tool.status(),
+            config.evolutionPlan().evaluate(
+                tool.cumulativeProgressUnits(),
+                tool.branch(),
+                config.enchantmentCaps()
+            ).evolutionCount(),
+            current.damage(),
+            current.maximumDurability()
+        );
+        if (!quote.available() || quote.amountWaymark() != session.amountWaymark()
+            || !repairInFlight.add(player.getUniqueId())) {
+            repairGuiSessions.remove(player.getUniqueId(), session);
+            player.sendMessage("Growth Tool repair quote is unavailable.");
+            return;
+        }
+        repairGuiSessions.remove(player.getUniqueId(), session);
+        player.closeInventory();
+        String key = "main-repair:" + tool.toolId() + ":"
+            + tool.itemInstanceId() + ":" + tool.instanceEpoch() + ":"
+            + tool.displayRevision() + ":" + current.damage();
+        repairs.repair(new RepairCoordinator.Request(
+            key,
+            player.getUniqueId(),
+            tool.toolId(),
+            tool.instanceEpoch(),
+            quote.amountWaymark()
+        )).whenComplete((result, failure) ->
+            services.tasks().mainThread(() -> {
+                repairInFlight.remove(player.getUniqueId());
+                Player online = plugin.getServer().getPlayer(
+                    player.getUniqueId()
+                );
+                if (online != null && online.isOnline()) {
+                    online.sendMessage(
+                        failure == null
+                            ? "Growth Tool repair: " + result.status()
+                            : "Growth Tool repair is unavailable."
+                    );
+                }
+            })
+        );
+    }
+
+    private static ItemStack named(
+        Material material,
+        String name,
+        List<String> lore
+    ) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(net.kyori.adventure.text.Component.text(name));
+        meta.lore(lore.stream()
+            .map(net.kyori.adventure.text.Component::text)
+            .toList());
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private CompletionStage<Void> recordAdmin(
+        GrowthTool tool,
+        String eventType
+    ) {
+        return services.audit().record(new WayfarerAudit.AuditEvent(
+            UUID.randomUUID(),
+            eventType,
+            tool.ownerUuid(),
+            "GROWTH_TOOL",
+            tool.toolId().toString(),
+            services.serverId(),
+            "{\"result\":\"APPLIED\"}",
+            clock.instant()
+        ));
+    }
+
+    private GrowthToolDeliveryCoordinator.Outcome deliver(GrowthTool tool) {
+        if (!accepting) {
+            return GrowthToolDeliveryCoordinator.Outcome.UNAVAILABLE;
+        }
+        Player player = plugin.getServer().getPlayer(tool.ownerUuid());
+        if (player == null || !player.isOnline()) {
+            return GrowthToolDeliveryCoordinator.Outcome.PLAYER_OFFLINE;
+        }
+        if (countCurrent(player, tool.ownerUuid(), tool) > 0) {
+            return GrowthToolDeliveryCoordinator.Outcome.ALREADY_PRESENT;
+        }
+        if (player.getInventory().firstEmpty() < 0) {
+            return GrowthToolDeliveryCoordinator.Outcome.INVENTORY_FULL;
+        }
+        ItemStack item;
+        try {
+            item = new ItemStack(Material.WOODEN_PICKAXE);
+            writeIdentity(item, tool, "GROWTH_TOOL");
+            applyEvolution(item, tool, false);
+        } catch (RuntimeException failure) {
+            throw new GrowthToolDeliveryCoordinator.DeliveryStageException(
+                GrowthToolDeliveryCoordinator.DiagnosticStage.CREATE_AND_ANNOTATE_ITEM,
+                failure
+            );
+        }
+        try {
+            if (!player.getInventory().addItem(item).isEmpty()) {
+                return GrowthToolDeliveryCoordinator.Outcome.INVENTORY_FULL;
+            }
+        } catch (RuntimeException failure) {
+            throw new GrowthToolDeliveryCoordinator.DeliveryStageException(
+                GrowthToolDeliveryCoordinator.DiagnosticStage.INSERT_PHYSICAL_ITEM,
+                failure
+            );
+        }
+        return GrowthToolDeliveryCoordinator.Outcome.DELIVERED;
+    }
+
+    @SuppressWarnings("deprecation")
+    private void applyEvolution(ItemStack item, GrowthTool tool) {
+        applyEvolution(item, tool, false);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void applyEvolution(
+        ItemStack item,
+        GrowthTool tool,
+        boolean evolutionCountIncreased
+    ) {
+        EvolutionPlan.EvolutionSnapshot snapshot = config.evolutionPlan().evaluate(
+            tool.cumulativeProgressUnits(),
+            tool.branch(),
+            config.enchantmentCaps()
+        );
+        Material expectedMaterial = switch (snapshot.material()) {
+            case WOOD -> Material.WOODEN_PICKAXE;
+            case STONE -> Material.STONE_PICKAXE;
+            case IRON -> Material.IRON_PICKAXE;
+            case DIAMOND -> Material.DIAMOND_PICKAXE;
+        };
+        int oldMaximum = Math.max(1, item.getType().getMaxDurability());
+        int oldDamage = item.getItemMeta() instanceof Damageable damageable
+            ? damageable.getDamage()
+            : 0;
+        boolean materialChanged = item.getType() != expectedMaterial;
+        boolean enchantmentsChanged =
+            item.getEnchantmentLevel(Enchantment.EFFICIENCY)
+                != snapshot.efficiency()
+                || item.getEnchantmentLevel(Enchantment.UNBREAKING)
+                != snapshot.unbreaking()
+                || item.getEnchantmentLevel(Enchantment.FORTUNE)
+                != snapshot.fortune()
+                || item.getEnchantmentLevel(Enchantment.SILK_TOUCH)
+                != snapshot.silkTouch();
+        boolean presentationChanged = !hasExpectedDisplayName(
+            item,
+            GrowthToolDeliveryPresentation.displayName(
+                GrowthToolPhysicalClaim.ItemType.GROWTH_TOOL
+            )
+        );
+        if (!materialChanged && !enchantmentsChanged
+            && !evolutionCountIncreased
+            && !presentationChanged
+            && canonicalIdentity(item, tool)) {
+            return;
+        }
+        if (materialChanged) {
+            item.setType(expectedMaterial);
+        }
+        item.removeEnchantment(Enchantment.EFFICIENCY);
+        item.removeEnchantment(Enchantment.UNBREAKING);
+        item.removeEnchantment(Enchantment.FORTUNE);
+        item.removeEnchantment(Enchantment.SILK_TOUCH);
+        add(item, Enchantment.EFFICIENCY, snapshot.efficiency());
+        add(item, Enchantment.UNBREAKING, snapshot.unbreaking());
+        add(item, Enchantment.FORTUNE, snapshot.fortune());
+        add(item, Enchantment.SILK_TOUCH, snapshot.silkTouch());
+        if (item.getItemMeta() instanceof Damageable damageable) {
+            int maximum = Math.max(1, item.getType().getMaxDurability());
+            int damage;
+            if (evolutionCountIncreased) {
+                damage = DurabilitySemantics.afterEvolution(
+                    oldDamage,
+                    true
+                );
+            } else if (materialChanged && oldDamage < oldMaximum) {
+                damage = DurabilitySemantics.reconcileActive(
+                    oldMaximum,
+                    oldDamage,
+                    maximum
+                );
+            } else {
+                damage = Math.min(oldDamage, maximum - 1);
+            }
+            damageable.setDamage(damage);
+            item.setItemMeta(damageable);
+        }
+        writeIdentity(item, tool, "GROWTH_TOOL");
+    }
+
+    private static boolean canonicalIdentity(ItemStack item, GrowthTool tool) {
+        GrowthToolPhysicalClaim parsed = claim(item).orElse(null);
+        return parsed != null
+            && parsed.validate(tool.ownerUuid(), tool)
+                == GrowthToolPhysicalClaim.Validation.VALID;
+    }
+
+    private static boolean currentPhysical(
+        ItemStack item,
+        UUID ownerUuid,
+        GrowthTool authority
+    ) {
+        return item != null
+            && canonicalIdentity(item, authority)
+            && authority.ownerUuid().equals(ownerUuid);
+    }
+
+    private static int countCurrent(
+        Player player,
+        UUID ownerUuid,
+        GrowthTool authority
+    ) {
+        int count = 0;
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+            if (currentPhysical(item, ownerUuid, authority)) {
+                count++;
+            }
+        }
+        for (ItemStack item : player.getInventory().getArmorContents()) {
+            if (currentPhysical(item, ownerUuid, authority)) {
+                count++;
+            }
+        }
+        if (currentPhysical(
+            player.getInventory().getItemInOffHand(),
+            ownerUuid,
+            authority
+        )) {
+            count++;
+        }
+        if (currentPhysical(
+            player.getOpenInventory().getCursor(),
+            ownerUuid,
+            authority
+        )) {
+            count++;
+        }
+        return count;
+    }
+
+    private static void add(ItemStack item, Enchantment enchantment, int level) {
+        if (level > 0) {
+            item.addUnsafeEnchantment(enchantment, level);
+        }
+    }
+
+    private static boolean containsWayfarerTool(ItemStack[] contents) {
+        for (ItemStack item : contents) {
+            if (wayfarerTool(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean wayfarerTool(ItemStack item) {
+        if (item == null) {
+            return false;
+        }
+        return isManagedDeathType(text(item, ITEM_TYPE));
+    }
+
+    static boolean isManagedDeathType(String itemType) {
+        return "GROWTH_TOOL".equals(itemType)
+            || "BROKEN_GROWTH_TOOL".equals(itemType);
+    }
+
+    private static void writeIdentity(
+        ItemStack item,
+        GrowthTool tool,
+        String itemType
+    ) {
+        writeIdentity(
+            item,
+            ReissueDeliveryPolicy.identity(tool),
+            tool,
+            itemType
+        );
+    }
+
+    private static void writeIdentity(
+        ItemStack item,
+        ReissueDeliveryPolicy.ReissueDeliveryIdentity identity,
+        GrowthTool tool,
+        String itemType
+    ) {
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(ITEM_TYPE, PersistentDataType.STRING, itemType);
+        pdc.set(
+            ITEM_INSTANCE_ID,
+            PersistentDataType.STRING,
+            identity.itemInstanceId().toString()
+        );
+        pdc.set(TOOL_ID, PersistentDataType.STRING, tool.toolId().toString());
+        pdc.set(OWNER_ID, PersistentDataType.STRING, tool.ownerUuid().toString());
+        pdc.set(TOOL_TYPE, PersistentDataType.STRING, GrowthTool.TOOL_TYPE);
+        pdc.set(EPOCH, PersistentDataType.LONG, identity.instanceEpoch());
+        pdc.set(SCHEMA, PersistentDataType.INTEGER, tool.schemaVersion());
+        pdc.set(REVISION, PersistentDataType.LONG, tool.displayRevision());
+        GrowthToolPhysicalClaim.ItemType presentationType =
+            "BROKEN_GROWTH_TOOL".equals(itemType)
+                ? GrowthToolPhysicalClaim.ItemType.BROKEN_GROWTH_TOOL
+                : "GROWTH_TOOL".equals(itemType)
+                    ? GrowthToolPhysicalClaim.ItemType.GROWTH_TOOL
+                    : null;
+        if (presentationType != null) {
+            meta.displayName(
+                GrowthToolDeliveryPresentation.displayName(presentationType)
+            );
+        }
+        item.setItemMeta(meta);
+    }
+
+    private static Optional<GrowthToolPhysicalClaim> claim(ItemStack item) {
+        return claimResult(item).claim();
+    }
+
+    private static GrowthToolPhysicalClaim.ParseResult claimResult(
+        ItemStack item
+    ) {
+        java.util.Map<String, String> raw = new java.util.HashMap<>();
+        put(raw, "item_type", text(item, ITEM_TYPE));
+        put(raw, "item_instance_id", text(item, ITEM_INSTANCE_ID));
+        put(raw, "tool_id", text(item, TOOL_ID));
+        put(raw, "owner_uuid", text(item, OWNER_ID));
+        put(raw, "tool_type", text(item, TOOL_TYPE));
+        put(raw, "instance_epoch", numericText(item, EPOCH));
+        put(raw, "schema_version", numericText(item, SCHEMA));
+        put(raw, "display_revision", numericText(item, REVISION));
+        return GrowthToolPhysicalClaim.parse(raw);
+    }
+
+    private static boolean hasExpectedDisplayName(
+        ItemStack item,
+        net.kyori.adventure.text.Component expected
+    ) {
+        return expected != null
+            && item != null
+            && item.hasItemMeta()
+            && java.util.Objects.equals(item.getItemMeta().displayName(), expected);
+    }
+
+    private static void put(
+        java.util.Map<String, String> values,
+        String key,
+        String value
+    ) {
+        if (value != null) {
+            values.put(key, value);
+        }
+    }
+
+    private static String numericText(ItemStack item, NamespacedKey key) {
+        long value = number(item, key);
+        return value == Long.MIN_VALUE ? null : Long.toString(value);
+    }
+
+    private static String text(ItemStack item, NamespacedKey key) {
+        if (item == null || !item.hasItemMeta()) {
+            return null;
+        }
+        return item.getItemMeta().getPersistentDataContainer().get(
+            key,
+            PersistentDataType.STRING
+        );
+    }
+
+    private static long number(ItemStack item, NamespacedKey key) {
+        if (item == null || !item.hasItemMeta()) {
+            return Long.MIN_VALUE;
+        }
+        PersistentDataContainer pdc =
+            item.getItemMeta().getPersistentDataContainer();
+        return number(pdc, key);
+    }
+
+    static long number(PersistentDataContainer pdc, NamespacedKey key) {
+        if (pdc.has(key, PersistentDataType.LONG)) {
+            Long longValue = pdc.get(key, PersistentDataType.LONG);
+            if (longValue != null) {
+                return longValue;
+            }
+        }
+        if (pdc.has(key, PersistentDataType.INTEGER)) {
+            Integer integer = pdc.get(key, PersistentDataType.INTEGER);
+            if (integer != null) {
+                return integer.longValue();
+            }
+        }
+        return Long.MIN_VALUE;
+    }
+
+    private static String oreGroup(Material material) {
+        String name = material.name().toUpperCase(Locale.ROOT);
+        if (name.equals("NETHER_QUARTZ_ORE")) {
+            return "NETHER_QUARTZ";
+        }
+        if (name.equals("NETHER_GOLD_ORE")) {
+            return "NETHER_GOLD";
+        }
+        if (name.equals("ANCIENT_DEBRIS")) {
+            return "ANCIENT_DEBRIS";
+        }
+        String simplified = name
+            .replace("DEEPSLATE_", "")
+            .replace("_ORE", "");
+        return switch (simplified) {
+            case "COAL", "COPPER", "REDSTONE", "IRON", "LAPIS", "GOLD",
+                 "DIAMOND", "EMERALD" -> simplified;
+            default -> null;
+        };
+    }
+
+    private void checkpointAll() {
+        for (UUID playerId : sessions.ownerUuids()) {
+            checkpoints.checkpoint(playerId);
+        }
+    }
+
+    public record RepairSnapshot(int damage, int maximumDurability) {}
+
+    public enum AdminMutation {
+        APPLIED,
+        NO_CHANGE,
+        NOT_FOUND,
+        CONFLICT,
+        UNAVAILABLE
+    }
+
+    private record AuthorityMutation(
+        GrowthTool tool,
+        AdminMutation result
+    ) {}
+
+    private enum GuiMode {
+        MAIN,
+        REPAIR_PREVIEW
+    }
+
+    private static final class GrowthToolGuiHolder
+        implements InventoryHolder {
+        private final GuiMode mode;
+        private final UUID token;
+        private Inventory inventory;
+
+        private GrowthToolGuiHolder(GuiMode mode, UUID token) {
+            this.mode = mode;
+            this.token = token;
+        }
+
+        private GuiMode mode() {
+            return mode;
+        }
+
+        private UUID token() {
+            return token;
+        }
+
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+    }
+
+    private record RepairGuiSession(
+        UUID token,
+        UUID toolId,
+        UUID itemInstanceId,
+        long instanceEpoch,
+        long displayRevision,
+        int damage,
+        int maximumDurability,
+        long amountWaymark,
+        SingleUseGate accepted
+    ) {}
+}
