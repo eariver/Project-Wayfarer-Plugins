@@ -1,11 +1,11 @@
 # V0.0.2 Execution Status
 
 Status: Phase 01–06 Plugin implementation/evidence work, Phase 08B remediation, Phase 10B-B
-client-failure remediation, and Phase 10C-A Candidate-5 Product remediation are complete at the
-fixed Product HEAD `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`. Candidate-4 was rejected before
-Client Test and remains immutable historical evidence. Candidate-5 Product gates, local
-validation, Normal CI, and Pre-client Headless passed; Client Test has not started. Full Client
-Acceptance, Project acceptance, and Stable Release remain pending/not authorized.
+client-failure remediation, and Phase 10C-A Candidate-7 Product remediation are complete at the
+fixed Product HEAD `980eda20921a5f3ae1f795a2b9a23b92f53ac8e2`. Candidate-4 and Candidate-5 remain
+immutable historical evidence. Candidate-7 Product gates, local validation, Normal CI, and
+Pre-client Headless passed; independent Product review, Server-side Runtime Preflight, Client Test,
+Project acceptance, and Stable Release remain pending/not authorized.
 
 ## Fixed execution identity
 
@@ -15,6 +15,7 @@ Acceptance, Project acceptance, and Stable Release remain pending/not authorized
 - Candidate-4 historical Product HEAD: `9fe86d2e787ab1f86dcf38a5abdba6168515a802`
   (`REJECTED_BEFORE_CLIENT_TEST`, immutable evidence retained)
 - Candidate-5 Product HEAD: `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`
+- Candidate-7 Product HEAD: `980eda20921a5f3ae1f795a2b9a23b92f53ac8e2`
 - Client Test Candidate-5: `V0.0.2-Client-Candidate-5`
   (`PRODUCT_FIXED_CLIENT_TEST_NOT_STARTED`)
 - Candidate-1 fixation / Fixture commit: `521a41bbcc4d4e0e58111deeb663f52bf1c6e1af`
@@ -30,6 +31,9 @@ Acceptance, Project acceptance, and Stable Release remain pending/not authorized
 - Project Runtime changed: No
 - PR #14: Open / Draft / Unmerged; Product CI run `30774052884` PASS; Pre-client Headless run
   `30774053040` PASS
+- Candidate-7 Product CI run `30831784629` PASS after allowed failed-job rerun; Pre-client Headless
+  run `30831782928` PASS; both validated Product HEAD `980eda20921a5f3ae1f795a2b9a23b92f53ac8e2`
+- Candidate-7 staging path: `.ai-work/luna-gpt-5.6-v003/candidate/V0.0.2-Client-Candidate-7/`
 - `requirements_cleared`: absent and not inferred
 - V0.0.2 exact Frontier world: `frontier_iris`; future single-name configurability is Issue #17
 - Core: exact published V0.0.1 runtime reused unchanged; not rebuilt as V0.0.2
@@ -79,8 +83,11 @@ Acceptance, Project acceptance, and Stable Release remain pending/not authorized
 - Phase 09A/09B historical evidence: retained; Candidate-1 is rejected after Phase 10B-A
   Client Test failure.
 - Candidate-4 Product remediation: `REJECTED_BEFORE_CLIENT_TEST` / preserved historical evidence.
-- Candidate-5 Product remediation: `PASS`; Product HEAD, local validation, Normal CI, and
-  Pre-client Headless evidence are fixed in the Candidate-5 result.
+- Candidate-5 Product remediation: historical evidence only; its prior result is superseded.
+- Candidate-7 Product remediation: `PASS`; Product HEAD, local validation, Normal CI, Pre-client
+  Headless, exact-head artifact hashes, and current Git/PR relation are fixed in the Candidate-7
+  tracked result.
+- Candidate-7 independent Product review: `PENDING`; do not start Server-side Runtime Preflight.
 - Candidate-5 focused Client retest: `CLIENT_TEST_REQUIRED` / `NOT_STARTED`.
 - FRONT-D02 client motion gate: `CLIENT_TEST_REQUIRED`; Safe Tier preparation is complete.
 - Resource Pack: `SKIPPED_OUT_OF_SCOPE_BY_OWNER`.
@@ -98,3 +105,7 @@ focused regression coverage in product commit `f2281093a03c17be0b0e69004059dd7cc
 10C-A Candidate-5 changed only the Main/Frontier product remediation and focused tests in
 Product commit `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`; it prepared a fresh local-only
 evidence/handoff package. It does not claim Client Acceptance or change Project Runtime.
+Phase 10C-A Candidate-7 changed only the Main Product remediation and focused tests in Product
+commit `980eda20921a5f3ae1f795a2b9a23b92f53ac8e2`; its tracked result and Runtime Handoff are
+metadata records only and do not authorize Project Runtime or Client execution. Candidate-7 did
+not create a duplicate serializer, second formal clean build, evidence ZIP, or sidecar.
