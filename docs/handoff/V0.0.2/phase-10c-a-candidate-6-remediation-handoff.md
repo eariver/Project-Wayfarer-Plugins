@@ -1,6 +1,6 @@
 # Phase 10C-A Candidate-6 Remediation Handoff
 
-Revision: B  
+Revision: C  
 Recorded: 2026-08-03 JST
 
 ## 1. Purpose and authority
@@ -9,9 +9,24 @@ Candidate-5 was rejected before Runtime Preflight by:
 
 `docs/release-readiness/V0.0.2/phase-10c-a-candidate-5-independent-review.md`
 
-This handoff authorizes one narrow Candidate-6 Product remediation. It does not authorize Runtime
-creation, MariaDB/Redis mutation, Paper start, plugin installation, migration, Minecraft Client
-connection, PR merge/Ready transition, tag, Release, Project Issue #4 change, Fixture change, or
+This handoff authorizes one narrow Candidate-6 Product remediation.
+
+Owner clarification on 2026-08-03:
+
+- only Minecraft Client connection and client-driven scenarios are deferred;
+- MariaDB/Redis connectivity, integration tests, migrations in disposable test environments,
+  GitHub Actions service containers, Headless Paper, plugin enable/migration verification, and
+  server-side preflight are not prohibited merely because they use DB/Redis/Paper;
+- repository/runtime ownership boundaries still apply: do not mutate production or unrelated Project
+  Runtime state from an unauthorized context.
+
+The current Product task may therefore run all non-client validation needed to fix, verify, build,
+classify, and package Candidate-6. After independent Product/package review passes, a separately
+runtime-authorized task may complete fresh server-side Runtime Preflight and must stop immediately
+before the first Minecraft Client connection.
+
+This task does not authorize Minecraft Client connection, client-driven test scenarios, PR
+merge/Ready transition, tag, Release, Project Issue #4 change, Fixture change, or
 `requirements_cleared`.
 
 ```text
@@ -21,11 +36,14 @@ CANDIDATE-5:
 CANDIDATE-6:
   REQUIRED
 
-RUNTIME PREFLIGHT:
-  DO NOT START
+NON-CLIENT VALIDATION:
+  AUTHORIZED
 
-CLIENT TEST:
-  DO NOT START
+SERVER-SIDE RUNTIME PREFLIGHT:
+  AUTHORIZED AFTER INDEPENDENT PRODUCT/PACKAGE REVIEW
+
+MINECRAFT CLIENT TEST:
+  DEFERRED / DO NOT START
 ```
 
 ## 2. Recovery gate
@@ -60,7 +78,7 @@ FAST-FORWARD: PERFORMED / NOT NEEDED / BLOCKED
 WORKTREE/INDEX: CLEAN / DIRTY
 PR #14: OPEN / DRAFT / UNMERGED or mismatch
 CANDIDATE-5 ARTIFACTS: PRESERVED / NOT VERIFIED
-RUNTIME AND CLIENT TEST: NOT STARTED / mismatch
+MINECRAFT CLIENT TEST: NOT STARTED / mismatch
 NEXT ACTION
 ```
 
@@ -78,8 +96,12 @@ Candidate-6 is limited to:
 6. preserve every accepted Candidate-5 behavior;
 7. update only tracked status/contracts made false by Candidate-6.
 
-No balance, migration, permission, ordinary inventory-ownership, Resource Pack, Fixture, or unrelated
-refactor is authorized.
+No balance, migration definition, permission, ordinary inventory-ownership, Resource Pack, Fixture,
+or unrelated refactor is authorized.
+
+Database migrations may be executed against disposable validation schemas when required by existing
+integration or pre-client workflows. Do not alter migration definitions unless a Candidate-6 Product
+defect actually requires it.
 
 ## 4. Tests first
 
@@ -165,10 +187,15 @@ Stop at the first failure:
 4. focused Frontier cancellation tests;
 5. full Main module tests;
 6. full Frontier module tests;
-7. repository `check`;
-8. `clean assemble`;
-9. release/package validators applicable to Candidate-6;
-10. `git diff --check` and changed-file/scope review.
+7. MariaDB/Redis-backed integration tests required by the repository validation profile;
+8. repository `check`;
+9. `clean assemble`;
+10. release/package validators applicable to Candidate-6;
+11. `git diff --check` and changed-file/scope review.
+
+GitHub Actions may start disposable MariaDB/Redis service containers and Headless Paper. Local or
+separate test workspaces may also start disposable MariaDB/Redis/Paper when required for authorized
+non-client validation. These are not Minecraft Client tests and are not prohibited.
 
 Record commands/results, Java and Gradle identity, test totals, failures/errors, and skipped totals. Do
 not skip, disable, quarantine, or weaken tests to obtain green.
@@ -212,8 +239,8 @@ Prepare a complete sanitized Candidate-6 submission ZIP and external sidecar con
 - CI/Headless SHA classification;
 - two-build evidence;
 - final Git/PR state;
-- a runtime handoff marked `NOT_STARTED`;
-- explicit Runtime/Client `NOT_STARTED` records.
+- a server-side runtime handoff marked `PENDING INDEPENDENT REVIEW`;
+- explicit Minecraft Client Test `NOT_STARTED` records.
 
 A full repository patch, complete raw test log, or duplicate copy of tracked source is not required
 because the exact Product commit is independently accessible. Include a patch only when it is needed
@@ -224,16 +251,17 @@ identifiers in the review ZIP.
 
 Validate ZIP integrity, complete internal SHA-256 coverage, every referenced file, and the external
 sidecar against the final ZIP bytes. Report the exact local package path, filename, size, and SHA-256.
-The actual ZIP and sidecar bytes must be supplied to the independent reviewer before Runtime
-Preflight is authorized.
+The actual ZIP and sidecar bytes must be supplied to the independent reviewer before fresh
+server-side Runtime Preflight begins.
 
-The `NOT_STARTED` runtime handoff may reserve proposed Candidate-6-specific schema/prefix/server IDs
-and ports for later review. Those values are provisional only: do not create, apply, or describe them
-as authorized Runtime state before the independent review passes.
+The runtime handoff may reserve proposed Candidate-6-specific schema/prefix/server IDs and ports for
+later review. After independent Product/package review passes, those values may be created and used in
+a fresh isolated runtime task without waiting for Minecraft Client availability. That task must
+complete all server-side checks and stop before the first Minecraft Client connection.
 
 ## 8. Final state
 
-Successful execution stops with:
+Successful Product/package execution stops with:
 
 ```text
 PHASE 10C-A CANDIDATE-6 PRODUCT REMEDIATION:
@@ -245,11 +273,14 @@ CANDIDATE-5:
 CANDIDATE-6:
   FIXED / PENDING INDEPENDENT REVIEW
 
-RUNTIME PREFLIGHT:
-  NOT STARTED
+NON-CLIENT CI / INTEGRATION / HEADLESS VALIDATION:
+  COMPLETE
 
-CLIENT TEST:
-  NOT STARTED
+SERVER-SIDE RUNTIME PREFLIGHT:
+  PENDING INDEPENDENT PRODUCT/PACKAGE REVIEW
+
+MINECRAFT CLIENT TEST:
+  NOT STARTED / DEFERRED
 
 FULL CLIENT ACCEPTANCE:
   NOT COMPLETE
