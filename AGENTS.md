@@ -15,6 +15,24 @@
     Handoff references must use immutable commit SHAs or release tags; conversation-only
     decisions and mutable branch URLs are not sufficient evidence.
 
+## Specification and implementation authority
+
+- The Project Owner and the current ChatGPT-authored tracked phase handoff own requirements,
+  Product behavior, architecture choices, error semantics, acceptance criteria, and the required
+  validation sequence for that phase.
+- Codex/Luna is the implementation and execution agent. When the current phase handoff specifies an
+  exact design or exact tests, Codex/Luna must implement that design and run those tests; it must not
+  choose a substitute algorithm, broaden or narrow Product scope, reinterpret the acceptance rule,
+  or create a different evidence contract.
+- Codex/Luna may make only mechanical adjustments that do not alter the specified semantics, such as
+  imports, formatting, local helper-fixture plumbing, or compiler-required generic typing.
+- When the prescribed design conflicts with existing authority, cannot be implemented without an
+  unapproved Product decision, or a prescribed command cannot be executed as written, Codex/Luna
+  must stop before the conflicting Product change and report the exact conflict. It must not silently
+  resolve the conflict or continue with an alternative design.
+- Codex/Luna test results and completion claims are evidence, not final acceptance. Independent
+  ChatGPT review and Owner acceptance remain required where the phase handoff says so.
+
 ## GitHub Actions release operations
 
 - Codex may inspect CI runs, workflow runs, tags, releases, logs, and release assets using GitHub CLI.
