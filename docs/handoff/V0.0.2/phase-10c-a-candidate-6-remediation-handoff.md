@@ -1,6 +1,6 @@
 # Phase 10C-A Candidate-6 Remediation Handoff
 
-Revision: A  
+Revision: B  
 Recorded: 2026-08-03 JST
 
 ## 1. Purpose and authority
@@ -38,8 +38,8 @@ Product edit:
 2. verify the branch is `feature/V0.0.2-main-frontier`;
 3. verify Candidate-5 Product HEAD
    `3ba94dd561e2f845fd7726329bd89cdbfb51d51a` is an ancestor of Origin HEAD;
-4. verify the Candidate-5 independent review, retired Candidate-5 runtime handoff, and this file are
-   present in the Origin tree;
+4. verify the Candidate-5 independent review, retired Candidate-5 runtime handoff, Candidate-5 package
+   audit, and this file are present in the Origin tree;
 5. when the worktree/index is clean, Local is not ahead or diverged, and Origin HEAD equals PR HEAD,
    fast-forward only with:
 
@@ -50,7 +50,7 @@ git merge --ff-only origin/feature/V0.0.2-main-frontier
 Stop without reset, clean, stash, rebase, amend, cherry-pick, force push, or deletion when the gate
 is not cleanly satisfied.
 
-Before changing tests or Product code, report:
+Before changing tests or Product code, report only:
 
 ```text
 LOCAL HEAD
@@ -70,7 +70,8 @@ Candidate-6 is limited to:
 
 1. close the asynchronous Reissue/Revoke/refresh Held Authorization ordering defect;
 2. restore exact current authorization after success, conflict, no-change, or failure;
-3. add representative Main tests for the changed handler families and managed-action boundary;
+3. add the minimum Main tests needed to prove that ordering and any still-uncovered changed handler
+   family or managed-action invariant;
 4. add Frontier runtime-level tests for late-MVI cancellation on quit, actual world leave, newer
    external entry, and plugin/runtime stop;
 5. change Frontier Product code only when those tests expose a real defect;
@@ -82,56 +83,58 @@ refactor is authorized.
 
 ## 4. Tests first
 
-Add focused tests before Product changes and preserve intended RED evidence for the confirmed async
-ordering defect.
+Add focused tests before Product changes and preserve one intended RED run for the confirmed async
+ordering defect. Do not manufacture RED evidence for Frontier cancellation when the existing Product
+already behaves correctly.
 
-### 4.1 Required async-authority tests
+### 4.1 Required async-authority proof
 
 Tests must control or hold the database stage incomplete and prove:
 
-- calling Reissue/Revoke makes the old cached authorization unusable before the database mutation can
+- Reissue/Revoke makes the old cached authorization unusable before the database mutation can
   complete;
-- calling a refresh whose purpose is to observe potentially changed authority makes the old cache
-  unusable before the authoritative read can complete;
-- a successful mutation installs and authorizes the new Instance/Epoch/status;
-- a `NO_CHANGE` result restores/retains correct current authorization;
-- a replace conflict reloads the winning authoritative row and does not retain the losing old cache;
-- a database failure restores authorization from the actual current authority when available, or
+- refresh makes the old cache unusable before the authoritative read can complete when refresh is
+  intended to observe potentially changed authority;
+- success installs and authorizes the new Instance/Epoch/status;
+- `NO_CHANGE` restores or retains the correct current authorization;
+- conflict reloads the winning authoritative row and does not retain the losing old cache;
+- database failure restores authorization from the actual current authority when available, or
   remains safely fail-closed when authority cannot be established;
 - an older Item Instance/Epoch cache is never restored;
 - an online Player is not left permanently unavailable after a recoverable conflict or failure.
 
-The RED run must fail because Candidate-5 invalidates after the database work rather than before it,
-not because of compilation or test setup failure.
+The RED run must fail on the Candidate-5 ordering behavior, not on compilation or fixture setup.
 
-### 4.2 Required Main regression coverage
+### 4.2 Main regression coverage
 
-Use bounded representative or parameterized tests rather than an exhaustive Cartesian product.
-Collectively prove:
+Existing Candidate-5 tests may satisfy accepted behavior. Add only the missing representative tests
+needed so that the combined suite covers:
 
 - held-slot and hand-swap transition fail-close;
 - accepted inventory click/number-key and drag transition fail-close;
 - Drop/Pickup/Respawn transition fail-close;
 - cancelled operations that do not change Main Hand do not leave permanent denial;
 - ordinary items remain ordinary after full `NO_MANAGED_ITEM` authorization;
-- a stale valid cache cannot authorize a different managed item at Block Break, GUI/interaction,
-  Branch, Repair, debug, or Damage boundaries;
-- Broken Tool Branch mutation remains denied and accepted Candidate-5 behavior remains green.
+- stale valid cache cannot authorize a different managed item at the distinct Block Break,
+  GUI/interaction, Branch, Repair, debug, or Damage boundaries;
+- Broken Tool Branch mutation remains denied.
 
-A single test may cover multiple related handler families when the assertions remain explicit.
+Do not create an event-by-capability Cartesian test matrix. One test may prove multiple closely
+related handler families when the assertions are explicit.
 
-### 4.3 Required Frontier proof
+### 4.3 Frontier proof
 
-Add runtime-level tests around the actual `FrontierGameplayRuntime` coordination proving that a
-pending late-MVI restart is cancelled or rendered obsolete by:
+Add focused runtime-level tests around the actual `FrontierGameplayRuntime` coordination proving that
+a pending late-MVI restart is cancelled or rendered obsolete by:
 
 - Player quit;
 - actual Frontier world leave;
 - a newer external entry cycle; and
 - plugin/runtime stop.
 
-Retain proof for one next-tick restart, duplicate coalescing, same-cycle reuse, no unbounded retry,
-and the native path when MVI is absent/disabled. Registry-only assertions are insufficient.
+Existing Candidate-5 tests continue to provide the positive restart, duplicate coalescing, same-cycle
+reuse, bounded retry, and native-no-MVI evidence. Do not duplicate those tests unless the new test
+fixture requires a small consolidation. Registry-only assertions are insufficient.
 
 Do not modify Frontier Product code when the new tests pass against the existing implementation.
 
@@ -142,54 +145,47 @@ For Reissue, Revoke, and refresh that can expose changed authority:
 1. on the main thread, make the old cached authorization unusable before dispatching asynchronous
    database work;
 2. perform no synchronous database or Redis access in Bukkit handlers;
-3. on successful completion, install the exact authoritative Session state and fully authorize the
-   actual Main-Hand item;
-4. on conflict, no-change, cancellation, or failure, read or retain the actual still-authoritative
-   state and fully reauthorize it before completing the recoverable operation;
+3. on success, install the exact authoritative Session state and fully authorize the actual Main-Hand
+   item;
+4. on conflict, no-change, cancellation, or recoverable failure, read or retain the actual
+   still-authoritative state and fully reauthorize it;
 5. when authority cannot be established, remain fail-closed and return a truthful unavailable result;
-6. do not expose an authorization generated for an older Item Instance or Epoch.
+6. never expose an authorization generated for an older Item Instance or Epoch.
 
 The implementation structure is not prescribed. Reuse existing task and Session abstractions where
-safe, and avoid unrelated architectural changes.
+safe and avoid unrelated architectural changes.
 
-## 6. Validation
+## 6. Validation and Product fixation
 
 Stop at the first failure:
 
-1. focused RED evidence;
+1. focused RED evidence for the async defect;
 2. focused async-authority tests;
-3. focused Main handler/action regressions;
-4. focused Frontier late-MVI cancellation tests;
+3. only the missing Main handler/action regressions;
+4. focused Frontier cancellation tests;
 5. full Main module tests;
 6. full Frontier module tests;
 7. repository `check`;
 8. `clean assemble`;
-9. currently required release/package validators;
+9. release/package validators applicable to Candidate-6;
 10. `git diff --check` and changed-file/scope review.
 
-Record exact commands/results, Java and Gradle identity, test totals, failure/error totals, and skipped
-totals. Do not skip, disable, quarantine, or weaken tests to obtain green.
-
-## 7. Product commit and workflow evidence
+Record commands/results, Java and Gradle identity, test totals, failures/errors, and skipped totals. Do
+not skip, disable, quarantine, or weaken tests to obtain green.
 
 After local PASS:
 
-- create a clearly identified Candidate-6 Product commit containing Product code, tests, and only
-  defining contract updates;
+- create a clearly identified Candidate-6 Product commit;
 - push normally by fast-forward;
 - record exact Candidate-6 Product HEAD;
-- monitor the new Normal CI and Pre-client Headless Runtime to completion;
-- record event/head SHA, actual checkout SHA, PR merge-ref SHA when used, relation to Candidate-6
-  Product HEAD, and conclusion.
-
-A merge-ref success is PR merge-ref evidence, not a direct Product-HEAD checkout. Stop on any failed
-or unexplained workflow.
-
-## 8. Candidate-6 fixation
+- monitor Normal CI and Pre-client Headless Runtime to completion;
+- record event/head SHA, checkout SHA, PR merge-ref SHA when used, relation to Product HEAD, and
+  conclusion.
 
 After CI and Headless PASS, perform two independently recorded clean builds from exact Candidate-6
-Product HEAD. Each requires a proven clean checkout, exact command, Java/Gradle identity, start/end
-time, and Main/Frontier filename, size, SHA-256, and binary comparison.
+Product HEAD. Each requires a clean checkout, exact command, Java/Gradle identity, and Main/Frontier
+filename, size, SHA-256, and binary comparison. A timestamp or run identifier sufficient to
+distinguish the two builds is required; exact start/end timestamps are not a separate Gate.
 
 Both Main builds and both Frontier builds must be byte-identical before fixation.
 
@@ -205,21 +201,25 @@ Never overwrite Candidate-5. A Product code/resource change after Candidate-6 fi
 requires Candidate-7. Metadata or package corrections that do not change fixed Product bytes do not
 by themselves require Candidate-7.
 
-## 9. Evidence package and review handoff
+## 7. Evidence package and runtime handoff
 
 Prepare a complete sanitized Candidate-6 submission ZIP and external sidecar containing:
 
-- result report and Candidate-5 review acknowledgement;
-- RED and green evidence;
-- changed-file list/stat/patch;
+- Candidate-6 manifest and artifact checksums;
+- result report and Candidate-5 review/package-audit acknowledgement;
+- focused RED evidence and concise green command/result records;
+- changed-file list and change summary with the exact Product commit/range;
 - CI/Headless SHA classification;
 - two-build evidence;
-- Candidate-6 manifest and artifact checksums;
 - final Git/PR state;
-- a new runtime handoff marked `NOT_STARTED`;
-- explicit placeholders for Runtime/Client evidence not authorized in this task.
+- a runtime handoff marked `NOT_STARTED`;
+- explicit Runtime/Client `NOT_STARTED` records.
 
-Do not include JARs, worlds, DB/Redis data, unsanitized full logs, secrets, credentials, or raw Player
+A full repository patch, complete raw test log, or duplicate copy of tracked source is not required
+because the exact Product commit is independently accessible. Include a patch only when it is needed
+to explain an untracked/local-only change, which should normally not exist.
+
+Do not include JARs, worlds, DB/Redis data, unsanitized logs, secrets, credentials, or raw Player
 identifiers in the review ZIP.
 
 Validate ZIP integrity, complete internal SHA-256 coverage, every referenced file, and the external
@@ -227,7 +227,11 @@ sidecar against the final ZIP bytes. Report the exact local package path, filena
 The actual ZIP and sidecar bytes must be supplied to the independent reviewer before Runtime
 Preflight is authorized.
 
-## 10. Final state
+The `NOT_STARTED` runtime handoff may reserve proposed Candidate-6-specific schema/prefix/server IDs
+and ports for later review. Those values are provisional only: do not create, apply, or describe them
+as authorized Runtime state before the independent review passes.
+
+## 8. Final state
 
 Successful execution stops with:
 
@@ -260,5 +264,4 @@ STABLE PUBLICATION:
   NOT AUTHORIZED
 ```
 
-PR #14 must remain Open, Draft, and Unmerged. Do not create Candidate-6 Runtime authority values until
-the independent Product/package review passes.
+PR #14 must remain Open, Draft, and Unmerged.
