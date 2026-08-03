@@ -25,6 +25,7 @@ The package passes the mechanical integrity checks:
 - internal `SHA256SUMS` has valid lowercase 64-character hashes with two spaces;
 - `SHA256SUMS` covers every other archive entry exactly once;
 - every internal checksum matches;
+- however, the authority requires the internal checksum file to be named `SHA256SUMS.txt`; the supplied archive uses `SHA256SUMS` without the required suffix;
 - no unlisted or missing archive entry exists.
 
 ## 3. Sanitization review
@@ -65,6 +66,7 @@ The Candidate-5 remediation handoff required a complete sanitized review package
 
 The supplied archive does not contain the required independently reviewable evidence set. In particular, it omits:
 
+- the authority-required `SHA256SUMS.txt` filename;
 - a Candidate-5 manifest;
 - Product changed-file list/stat/patch or equivalent change summary;
 - the complete Candidate-5 result report;
