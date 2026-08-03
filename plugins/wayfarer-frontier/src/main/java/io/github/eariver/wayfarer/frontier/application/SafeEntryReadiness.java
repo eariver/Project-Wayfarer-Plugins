@@ -27,6 +27,10 @@ public final class SafeEntryReadiness {
             state.observations = 0;
             state.stableObservations = 0;
             state.lastFingerprint = NO_FINGERPRINT;
+            state.lastObservedFingerprint = NO_FINGERPRINT;
+            state.lastVisibleManagedItems = 0;
+            state.lastRequiredManagedItems = 0;
+            state.timedOut = false;
             return new Request(playerUuid, state.generation);
         }
     }
@@ -132,16 +136,24 @@ public final class SafeEntryReadiness {
             return Decision.CANCELLED;
         }
         synchronized (state) {
+            if (state.timedOut) {
+                return Decision.TIMEOUT;
+            }
             if (state.publicEventObserved) {
                 return Decision.WAIT;
             }
             state.observations++;
+            state.lastObservedFingerprint = fingerprint;
+            state.lastVisibleManagedItems = managedItemCount;
+            state.lastRequiredManagedItems = requiredManagedItems;
             if (managedItemCount < requiredManagedItems) {
                 state.lastFingerprint = NO_FINGERPRINT;
                 state.stableObservations = 0;
-                return state.observations >= MAX_FINGERPRINT_OBSERVATIONS
-                    ? Decision.TIMEOUT
-                    : Decision.WAIT;
+                if (state.observations >= MAX_FINGERPRINT_OBSERVATIONS) {
+                    state.timedOut = true;
+                    return Decision.TIMEOUT;
+                }
+                return Decision.WAIT;
             }
             if (state.lastFingerprint == fingerprint) {
                 state.stableObservations++;
@@ -153,9 +165,39 @@ public final class SafeEntryReadiness {
                 return Decision.READY;
             }
             if (state.observations >= MAX_FINGERPRINT_OBSERVATIONS) {
+                state.timedOut = true;
                 return Decision.TIMEOUT;
             }
             return Decision.WAIT;
+        }
+    }
+
+    /**
+     * Returns the terminal bounded observation for a timed out request.
+     * Player identity is intentionally not part of this evidence.
+     */
+    public Optional<TimeoutObservation> timeoutObservation(
+        Request request,
+        String source
+    ) {
+        Objects.requireNonNull(source, "source");
+        State state = currentState(request);
+        if (state == null) {
+            return Optional.empty();
+        }
+        synchronized (state) {
+            if (!state.timedOut) {
+                return Optional.empty();
+            }
+            return Optional.of(new TimeoutObservation(
+                source,
+                request.generation(),
+                state.observations,
+                state.lastVisibleManagedItems,
+                state.lastRequiredManagedItems,
+                state.lastObservedFingerprint,
+                Decision.TIMEOUT
+            ));
         }
     }
 
@@ -213,11 +255,36 @@ public final class SafeEntryReadiness {
         }
     }
 
+    public record TimeoutObservation(
+        String source,
+        long generation,
+        int pollCount,
+        int visibleManagedItems,
+        int requiredManagedItems,
+        int fingerprint,
+        Decision decision
+    ) {
+        public TimeoutObservation {
+            Objects.requireNonNull(source, "source");
+            if (source.isBlank() || generation <= 0 || pollCount <= 0
+                || visibleManagedItems < 0 || requiredManagedItems < 0
+                || decision != Decision.TIMEOUT) {
+                throw new IllegalArgumentException(
+                    "Invalid timeout observation"
+                );
+            }
+        }
+    }
+
     private static final class State {
         private long generation;
         private boolean publicEventObserved;
         private int observations;
         private int stableObservations;
         private int lastFingerprint = NO_FINGERPRINT;
+        private int lastObservedFingerprint = NO_FINGERPRINT;
+        private int lastVisibleManagedItems;
+        private int lastRequiredManagedItems;
+        private boolean timedOut;
     }
 }

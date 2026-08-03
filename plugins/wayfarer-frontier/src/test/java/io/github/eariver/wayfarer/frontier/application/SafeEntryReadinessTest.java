@@ -97,6 +97,41 @@ final class SafeEntryReadinessTest {
     }
 
     @Test
+    void timeoutRetainsSanitizedTerminalObservationAndDoesNotAdvance() {
+        SafeEntryReadiness readiness = new SafeEntryReadiness();
+        SafeEntryReadiness.Request request = readiness.request(PLAYER);
+
+        for (int poll = 1; poll <= 40; poll++) {
+            assertEquals(
+                poll == 40
+                    ? SafeEntryReadiness.Decision.TIMEOUT
+                    : SafeEntryReadiness.Decision.WAIT,
+                readiness.observeFingerprint(request, true, 17, 1, 3)
+            );
+        }
+
+        SafeEntryReadiness.TimeoutObservation observation = readiness
+            .timeoutObservation(request, "BOUNDED_FINGERPRINT")
+            .orElseThrow();
+        assertEquals("BOUNDED_FINGERPRINT", observation.source());
+        assertEquals(request.generation(), observation.generation());
+        assertEquals(40, observation.pollCount());
+        assertEquals(1, observation.visibleManagedItems());
+        assertEquals(3, observation.requiredManagedItems());
+        assertEquals(17, observation.fingerprint());
+        assertEquals(SafeEntryReadiness.Decision.TIMEOUT, observation.decision());
+        assertEquals(
+            SafeEntryReadiness.Decision.TIMEOUT,
+            readiness.observeFingerprint(request, true, 99, 0, 3)
+        );
+        assertEquals(
+            observation,
+            readiness.timeoutObservation(request, "BOUNDED_FINGERPRINT")
+                .orElseThrow()
+        );
+    }
+
+    @Test
     void zeroRequiredItemsStillNeedsTwoStableObservationsWithoutFixedDelay() {
         SafeEntryReadiness readiness = new SafeEntryReadiness();
         SafeEntryReadiness.Request request = readiness.request(PLAYER);

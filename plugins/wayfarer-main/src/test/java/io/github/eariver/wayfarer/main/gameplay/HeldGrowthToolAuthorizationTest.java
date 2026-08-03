@@ -47,7 +47,7 @@ final class HeldGrowthToolAuthorizationTest {
         assertFalse(authorization.allowsProgress());
         assertTrue(authorization.allowsGui());
         assertTrue(authorization.allowsRepair());
-        assertTrue(authorization.allowsBranchMutation());
+        assertFalse(authorization.allowsBranchMutation());
     }
 
     @Test

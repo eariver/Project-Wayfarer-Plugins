@@ -1112,11 +1112,22 @@ public final class FrontierGameplayRuntime implements Listener {
                     return;
                 }
                 if (decision == SafeEntryReadiness.Decision.TIMEOUT) {
+                    SafeEntryReadiness.TimeoutObservation observation =
+                        entryReadiness.timeoutObservation(request, source)
+                            .orElseThrow(() -> new IllegalStateException(
+                                "Timeout decision has no terminal observation"
+                            ));
                     plugin.getLogger().warning(
                         "Frontier safe entry stabilization timed out; retry"
-                            + " later; generation=" + request.generation()
-                            + "; maxObservations="
-                            + SafeEntryReadiness.MAX_FINGERPRINT_OBSERVATIONS
+                            + " later; source=" + observation.source()
+                            + "; generation=" + observation.generation()
+                            + "; pollCount=" + observation.pollCount()
+                            + "; visibleManagedItems="
+                            + observation.visibleManagedItems()
+                            + "; requiredManagedItems="
+                            + observation.requiredManagedItems()
+                            + "; fingerprint=" + observation.fingerprint()
+                            + "; decision=" + observation.decision()
                     );
                     lateEntryContexts.put(
                         playerUuid,

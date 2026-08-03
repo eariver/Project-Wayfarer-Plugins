@@ -42,8 +42,7 @@ public final class HeldGrowthToolAuthorization {
     }
 
     public boolean allowsBranchMutation() {
-        return state == State.VALID_ACTIVE_OWNER
-            || state == State.VALID_BROKEN_OWNER;
+        return state == State.VALID_ACTIVE_OWNER;
     }
 
     public enum State {

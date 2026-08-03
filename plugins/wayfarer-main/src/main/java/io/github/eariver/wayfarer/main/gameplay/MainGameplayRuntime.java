@@ -185,7 +185,8 @@ public final class MainGameplayRuntime implements
         }
         ItemStack item = player.getInventory().getItemInMainHand();
         if (wayfarerTool(item)
-            && !authorization(player.getUniqueId()).allowsBlockBreak()) {
+            && authorization(player.getUniqueId()).state()
+                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
             event.setCancelled(true);
         }
     }
@@ -201,7 +202,8 @@ public final class MainGameplayRuntime implements
         }
         ItemStack item = player.getInventory().getItemInMainHand();
         GrowthTool tool = sessions.current(player.getUniqueId()).orElse(null);
-        if (tool == null
+        if (!wayfarerTool(item)
+            || tool == null
             || authorization(player.getUniqueId()).state()
                 != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
             || !authorization(player.getUniqueId()).allowsProgress()) {
@@ -311,7 +313,7 @@ public final class MainGameplayRuntime implements
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDrop(PlayerDropItemEvent event) {
-        scheduleAuthorization(event.getPlayer());
+        invalidateAndScheduleAuthorization(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -319,7 +321,7 @@ public final class MainGameplayRuntime implements
         if (!(event.getEntity() instanceof Player player)) {
             return;
         }
-        scheduleAuthorization(player);
+        invalidateAndScheduleAuthorization(player);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -389,10 +391,7 @@ public final class MainGameplayRuntime implements
             event.setCancelled(true);
             return;
         }
-        plugin.getServer().getScheduler().runTask(
-            plugin,
-            () -> authorizeMainHand(player)
-        );
+        invalidateAndScheduleAuthorization(player);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -415,8 +414,9 @@ public final class MainGameplayRuntime implements
             || event.getNewItems().values().stream().anyMatch(MainGameplayRuntime::wayfarerTool);
         if (processing && clickedTop && managed) {
             event.setCancelled(true);
+            return;
         }
-        scheduleAuthorization(player);
+        invalidateAndScheduleAuthorization(player);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -449,23 +449,17 @@ public final class MainGameplayRuntime implements
 
     @EventHandler(ignoreCancelled = true)
     public void onHeldSlot(PlayerItemHeldEvent event) {
-        plugin.getServer().getScheduler().runTask(
-            plugin,
-            () -> authorizeMainHand(event.getPlayer())
-        );
+        invalidateAndScheduleAuthorization(event.getPlayer());
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onSwapHands(PlayerSwapHandItemsEvent event) {
-        plugin.getServer().getScheduler().runTask(
-            plugin,
-            () -> authorizeMainHand(event.getPlayer())
-        );
+        invalidateAndScheduleAuthorization(event.getPlayer());
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onRespawn(PlayerRespawnEvent event) {
-        scheduleAuthorization(event.getPlayer());
+        invalidateAndScheduleAuthorization(event.getPlayer());
     }
 
     @EventHandler
@@ -493,7 +487,11 @@ public final class MainGameplayRuntime implements
         HeldGrowthToolAuthorization authorization =
             authorization(event.getPlayer().getUniqueId());
         GrowthTool tool = sessions.current(event.getPlayer().getUniqueId()).orElse(null);
-        if (tool == null || !authorization.allowsGui()) {
+        if (!wayfarerTool(held)) {
+            return;
+        }
+        if (tool == null || !allowsForStatus(authorization, tool.status())) {
+            event.setCancelled(true);
             return;
         }
         event.setCancelled(true);
@@ -605,6 +603,7 @@ public final class MainGameplayRuntime implements
             );
         }
 
+        invalidateAuthorization(player.getUniqueId());
         sessions.open(rotatedTool);
         authorizeMainHand(player);
         int currentCount = countCurrent(
@@ -682,13 +681,7 @@ public final class MainGameplayRuntime implements
     public Optional<RepairSnapshot> repairSnapshot(Player player, GrowthTool tool) {
         ItemStack item = player.getInventory().getItemInMainHand();
         HeldGrowthToolAuthorization cached = authorization(player.getUniqueId());
-        if (tool.status() == GrowthTool.Status.BROKEN) {
-            if (cached.state()
-                != HeldGrowthToolAuthorization.State.VALID_BROKEN_OWNER) {
-                return Optional.empty();
-            }
-        } else if (cached.state()
-            != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
+        if (!wayfarerTool(item) || !allowsForStatus(cached, tool.status())) {
             return Optional.empty();
         }
         if (tool.status() == GrowthTool.Status.BROKEN) {
@@ -719,7 +712,8 @@ public final class MainGameplayRuntime implements
             || !current.toolId().equals(toolId)
             || current.instanceEpoch() != instanceEpoch
             || current.status() == GrowthTool.Status.REVOKED
-            || !authorization(playerUuid).allowsRepair()) {
+            || !wayfarerTool(player.getInventory().getItemInMainHand())
+            || !allowsForStatus(authorization(playerUuid), current.status())) {
             return false;
         }
         ItemStack target = player.getInventory().getItemInMainHand();
@@ -741,7 +735,10 @@ public final class MainGameplayRuntime implements
         GrowthTool current = sessions.current(player.getUniqueId()).orElse(null);
         ItemStack held = player.getInventory().getItemInMainHand();
         if (current == null
-            || !authorization(player.getUniqueId()).allowsBranchMutation()) {
+            || current.status() != GrowthTool.Status.ACTIVE
+            || !wayfarerTool(held)
+            || authorization(player.getUniqueId()).state()
+                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
             return false;
         }
         GrowthTool updated = sessions.update(
@@ -757,8 +754,21 @@ public final class MainGameplayRuntime implements
     public boolean debug(Player player, String action) {
         GrowthTool current = sessions.current(player.getUniqueId()).orElse(null);
         ItemStack held = player.getInventory().getItemInMainHand();
-        if (current == null
-            || !authorization(player.getUniqueId()).allowsBranchMutation()) {
+        if (current == null) {
+            return false;
+        }
+        if ("repair-free".equals(action)) {
+            return applyFullRepair(
+                player.getUniqueId(),
+                current.toolId(),
+                current.instanceEpoch(),
+                UUID.randomUUID()
+            );
+        }
+        if (current.status() != GrowthTool.Status.ACTIVE
+            || !wayfarerTool(held)
+            || authorization(player.getUniqueId()).state()
+                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
             return false;
         }
         boolean applied = switch (action) {
@@ -796,12 +806,6 @@ public final class MainGameplayRuntime implements
                 held.setItemMeta(damageable);
                 yield true;
             }
-            case "repair-free" -> applyFullRepair(
-                player.getUniqueId(),
-                current.toolId(),
-                current.instanceEpoch(),
-                UUID.randomUUID()
-            );
             default -> false;
         };
         if (applied) {
@@ -833,6 +837,7 @@ public final class MainGameplayRuntime implements
                 if (online == null || !online.isOnline()) {
                     return;
                 }
+                invalidateAuthorization(playerUuid);
                 sessions.open(tool);
                 reconcileInventory(online, tool);
                 authorizeMainHand(online);
@@ -875,6 +880,7 @@ public final class MainGameplayRuntime implements
                 }
                 Player online = plugin.getServer().getPlayer(playerUuid);
                 if (online != null && online.isOnline()) {
+                    invalidateAuthorization(playerUuid);
                     sessions.open(mutation.tool());
                     authorizeMainHand(online);
                 }
@@ -898,6 +904,7 @@ public final class MainGameplayRuntime implements
             Player online = plugin.getServer().getPlayer(playerUuid);
             if (online != null && online.isOnline()) {
                 found.ifPresent(tool -> {
+                    invalidateAuthorization(playerUuid);
                     sessions.open(tool);
                     reconcileInventory(online, tool);
                     authorizeMainHand(online);
@@ -1009,6 +1016,23 @@ public final class MainGameplayRuntime implements
         );
     }
 
+    private void invalidateAndScheduleAuthorization(Player player) {
+        if (player == null) {
+            return;
+        }
+        invalidateAuthorization(player.getUniqueId());
+        scheduleAuthorization(player);
+    }
+
+    private void invalidateAuthorization(UUID playerUuid) {
+        heldAuthorizations.put(
+            playerUuid,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE
+            )
+        );
+    }
+
     private HeldGrowthToolAuthorization authorization(UUID playerUuid) {
         return heldAuthorizations.getOrDefault(
             playerUuid,
@@ -1016,6 +1040,22 @@ public final class MainGameplayRuntime implements
                 HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE
             )
         );
+    }
+
+    private static boolean allowsForStatus(
+        HeldGrowthToolAuthorization authorization,
+        GrowthTool.Status status
+    ) {
+        if (authorization == null || status == null) {
+            return false;
+        }
+        return switch (status) {
+            case ACTIVE -> authorization.state()
+                == HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER;
+            case BROKEN -> authorization.state()
+                == HeldGrowthToolAuthorization.State.VALID_BROKEN_OWNER;
+            case REVOKED -> false;
+        };
     }
 
     @SuppressWarnings("deprecation")
