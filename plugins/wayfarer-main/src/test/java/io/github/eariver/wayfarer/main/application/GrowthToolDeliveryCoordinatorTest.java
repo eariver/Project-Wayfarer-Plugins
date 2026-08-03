@@ -2,6 +2,10 @@ package io.github.eariver.wayfarer.main.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import io.github.eariver.wayfarer.api.WayfarerAudit;
 import io.github.eariver.wayfarer.api.WayfarerTasks;
@@ -52,6 +56,21 @@ final class GrowthToolDeliveryCoordinatorTest {
             GrowthToolDeliveryCoordinator.Outcome.INVENTORY_FULL,
             coordinator.onJoin(PLAYER).toCompletableFuture().join()
         );
+        assertEquals(0, repository.markCalls);
+    }
+
+    @Test
+    void rejectedDeliveryAdmissionSkipsGatewayAndMarkDelivered() {
+        FakeRepository repository = new FakeRepository(tool(GrowthTool.DeliveryStatus.PENDING));
+        GrowthToolDeliveryCoordinator.DeliveryGateway gateway =
+            mock(GrowthToolDeliveryCoordinator.DeliveryGateway.class);
+        GrowthToolDeliveryCoordinator coordinator = coordinator(repository, gateway);
+
+        assertEquals(
+            GrowthToolDeliveryCoordinator.Outcome.SUPERSEDED,
+            coordinator.onJoin(PLAYER, ignored -> false).toCompletableFuture().join()
+        );
+        verify(gateway, never()).deliverIfEligible(any(GrowthTool.class));
         assertEquals(0, repository.markCalls);
     }
 

@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 public final class GrowthToolDeliveryCoordinator {
     private final GrowthToolRepository repository;
@@ -60,7 +61,15 @@ public final class GrowthToolDeliveryCoordinator {
     }
 
     public CompletionStage<Outcome> onJoin(UUID playerUuid) {
+        return onJoin(playerUuid, ignored -> true);
+    }
+
+    public CompletionStage<Outcome> onJoin(
+        UUID playerUuid,
+        Predicate<GrowthTool> deliveryAdmission
+    ) {
         Objects.requireNonNull(playerUuid, "playerUuid");
+        Objects.requireNonNull(deliveryAdmission, "deliveryAdmission");
         lastFailures.remove(playerUuid);
         Attempt attempt = new Attempt();
         return tasks.database(() -> repository.findOrCreate(playerUuid, clock.instant()))
@@ -71,7 +80,13 @@ public final class GrowthToolDeliveryCoordinator {
                 }
                 DeliveryCapture capture = new DeliveryCapture(tool);
                 attempt.stage = DiagnosticStage.MAIN_THREAD_DELIVERY_GATE;
-                return tasks.mainThread(() -> capture.outcome = gateway.deliverIfEligible(tool))
+                return tasks.mainThread(() -> {
+                    if (!deliveryAdmission.test(tool)) {
+                        capture.outcome = Outcome.SUPERSEDED;
+                        return;
+                    }
+                    capture.outcome = gateway.deliverIfEligible(tool);
+                })
                     .thenCompose(ignored -> completeDelivery(capture, attempt));
             }).exceptionally(failure -> {
                 Throwable cause = unwrap(failure);
@@ -104,6 +119,9 @@ public final class GrowthToolDeliveryCoordinator {
         Attempt attempt
     ) {
         Outcome outcome = capture.outcome;
+        if (outcome == Outcome.SUPERSEDED) {
+            return CompletableFuture.completedFuture(Outcome.SUPERSEDED);
+        }
         if (outcome != Outcome.DELIVERED && outcome != Outcome.ALREADY_PRESENT) {
             attempt.stage = DiagnosticStage.AUDIT_RESULT;
             return record(capture.tool, "GROWTH_TOOL_DELIVERY_PENDING", outcome.name())
@@ -157,6 +175,7 @@ public final class GrowthToolDeliveryCoordinator {
         PLAYER_OFFLINE,
         WRONG_BACKEND,
         CONFLICT,
+        SUPERSEDED,
         UNAVAILABLE
     }
 

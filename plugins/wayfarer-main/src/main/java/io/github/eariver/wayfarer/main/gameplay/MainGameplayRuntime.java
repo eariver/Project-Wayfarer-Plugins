@@ -1110,7 +1110,10 @@ public final class MainGameplayRuntime implements
             started = new AtomicReference<>();
         return services.tasks().mainThread(() -> {
             if (isCurrent(request)) {
-                started.set(delivery.onJoin(playerUuid));
+                started.set(delivery.onJoin(
+                    playerUuid,
+                    ignoredTool -> isCurrent(request)
+                ));
             }
         }).thenCompose(ignored -> {
             CompletionStage<GrowthToolDeliveryCoordinator.Outcome> stage =

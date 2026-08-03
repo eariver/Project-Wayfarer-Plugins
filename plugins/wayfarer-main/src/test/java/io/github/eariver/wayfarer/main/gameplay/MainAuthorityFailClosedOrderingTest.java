@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.github.eariver.wayfarer.api.WayfarerAudit;
 import io.github.eariver.wayfarer.api.WayfarerServices;
 import io.github.eariver.wayfarer.api.WayfarerTasks;
+import io.github.eariver.wayfarer.main.application.GrowthToolDeliveryCoordinator;
 import io.github.eariver.wayfarer.main.application.GrowthToolRepository;
 import io.github.eariver.wayfarer.main.application.GrowthSessionStore;
 import io.github.eariver.wayfarer.main.config.MainModuleConfig;
@@ -139,6 +140,69 @@ final class MainAuthorityFailClosedOrderingTest {
         assertEquals(
             HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE,
             fixture.authorizations().get(PLAYER).state()
+        );
+    }
+
+    @Test
+    void deliveryStartedThenSupersededBeforeGatewaySkipsPhysicalMutation()
+        throws Exception {
+        Fixture fixture = fixture();
+        replaceDelivery(fixture.runtime(), new GrowthToolDeliveryCoordinator(
+            fixture.repository(),
+            fixture.tasks(),
+            event -> CompletableFuture.completedFuture(null),
+            ignored -> {
+                fixture.player().getInventory().addItem(mock(ItemStack.class));
+                return GrowthToolDeliveryCoordinator.Outcome.DELIVERED;
+            },
+            "test-main",
+            java.time.Clock.systemUTC()
+        ));
+        GrowthTool oldAuthority = tool(
+            OLD_INSTANCE,
+            1,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        GrowthTool rotated = oldAuthority.reissued(NEW_INSTANCE, NOW);
+        fixture.held().set(null);
+        fixture.sessions().open(oldAuthority);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        when(fixture.repository().findByOwner(PLAYER))
+            .thenReturn(Optional.of(oldAuthority));
+        when(fixture.repository().replaceAuthority(
+            any(GrowthTool.class),
+            anyLong(),
+            any(Instant.class)
+        )).thenReturn(Optional.of(rotated));
+        when(fixture.repository().findOrCreate(
+            any(UUID.class),
+            any(Instant.class)
+        )).thenReturn(rotated);
+
+        CompletionStage<MainGameplayRuntime.AdminMutation> olderReissue =
+            fixture.runtime().reissue(PLAYER);
+        fixture.tasks().completeNext();
+        fixture.runtime().revoke(PLAYER);
+
+        fixture.tasks().completeNext();
+        if (fixture.tasks().pendingCount() == 2) {
+            fixture.tasks().completeLast();
+        }
+
+        assertEquals(
+            MainGameplayRuntime.AdminMutation.SUPERSEDED,
+            olderReissue.toCompletableFuture().join()
+        );
+        verify(fixture.player().getInventory(), never()).addItem(any(ItemStack.class));
+        verify(fixture.repository(), never()).markDelivered(
+            any(UUID.class),
+            anyLong(),
+            any(Instant.class)
         );
     }
 
@@ -808,6 +872,15 @@ final class MainAuthorityFailClosedOrderingTest {
         }
     }
 
+    private static void replaceDelivery(
+        MainGameplayRuntime runtime,
+        GrowthToolDeliveryCoordinator replacement
+    ) throws Exception {
+        var field = MainGameplayRuntime.class.getDeclaredField("delivery");
+        field.setAccessible(true);
+        field.set(runtime, replacement);
+    }
+
     private static void invokePrivate(
         MainGameplayRuntime runtime,
         String name,
@@ -936,6 +1009,13 @@ final class MainAuthorityFailClosedOrderingTest {
                 throw new AssertionError("No database operation is pending");
             }
             pending.removeFirst().complete();
+        }
+
+        void completeLast() {
+            if (pending.isEmpty()) {
+                throw new AssertionError("No database operation is pending");
+            }
+            pending.removeLast().complete();
         }
 
         void failNext(Throwable failure) {
