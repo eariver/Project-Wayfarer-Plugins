@@ -1,12 +1,36 @@
 # Phase 10C-A Candidate-5 Runtime Handoff
 
-Status: `HANDOFF_ONLY_NOT_EXECUTED`.
+Status: `SUPERSEDED_DO_NOT_EXECUTE`.
 
-This document is not authorization to change Project Runtime or to start MariaDB, Redis, Paper,
-plugin installation, migrations, server restarts, or Minecraft Client Test. It records fresh,
-Candidate-5-specific values for a later separately authorized disposable environment.
+Candidate-5 was rejected by the independent review before Runtime Preflight. Do not install its
+artifacts, create its database/Redis authority, start Paper, or connect a Minecraft Client.
 
-## Fixed input
+Authoritative review:
+
+`docs/release-readiness/V0.0.2/phase-10c-a-candidate-5-independent-review.md`
+
+```text
+CANDIDATE-5:
+  REJECTED / PRESERVED
+
+CANDIDATE-6:
+  REQUIRED
+
+RUNTIME PREFLIGHT:
+  DO NOT START
+
+CLIENT TEST:
+  DO NOT START
+```
+
+The remainder of this file is retained only as the historical, unexecuted Candidate-5 runtime plan.
+Its identifiers must not be reused for Candidate-6.
+
+---
+
+Historical status: `HANDOFF_ONLY_NOT_EXECUTED`.
+
+## Historical fixed input
 
 - Product HEAD: `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`
 - Candidate: `V0.0.2-Client-Candidate-5`
@@ -21,21 +45,21 @@ Candidate-5-specific values for a later separately authorized disposable environ
   `521a41bbcc4d4e0e58111deeb663f52bf1c6e1af`, SHA-256
   `ed210f8e56db26315f91fecb9e1d35d686c8fe647480498b7588467a6fa2448a`
 
-## Fresh disposable identifiers
+## Historical disposable identifiers — retired
 
 ```text
 MariaDB schema: wayfarer_client_v002_c5
 Redis prefix: wf-v002-client-c5
 Main server ID: wayfarer-client-c5-main
 Frontier server ID: wayfarer-client-c5-frontier
-Suggested ports: 25572 / 25573, subject to Owner availability approval
-World boundary: exact case-sensitive frontier_iris; no world creation by Wayfarer
+Suggested ports: 25572 / 25573
+World boundary: frontier_iris
 ```
 
-## Execution boundary
+These values were never executed and are now retired. Candidate-6 must use a new, separately
+specified authority only after Product remediation and independent review pass.
 
-The operation record is `NOT_STARTED`: no Project Runtime, database, Redis, Paper, plugin
-installation, migration, configuration, restart, world, credential, Player, or Minecraft Client
-Test operation was performed from this repository. Later execution must use the bounded plan at
-`docs/testing/plans/V0.0.2-client-acceptance.md`, a fresh disposable environment, and explicit
-Owner authorization. Project acceptance and stable publication remain outside this handoff.
+## Execution record
+
+No Project Runtime, database, Redis, Paper, plugin installation, migration, configuration, restart,
+world, credential, Player, or Minecraft Client Test operation was performed for Candidate-5.
