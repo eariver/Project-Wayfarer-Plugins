@@ -1,6 +1,8 @@
 # V0.0.2 Requirement Compliance
 
-Candidate product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`.
+Candidate-5 product-source anchor: `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`.
+Candidate-4 Product HEAD `9fe86d2e787ab1f86dcf38a5abdba6168515a802` is rejected before Client
+Test and retained as historical evidence.
 Requirement SHA-256: `2AD3CFB8AE54CA2149D8EABA44CBBC32470383787C35DB7C458704F87C67167F`.
 Owner Amendments are a separate layer; the immutable requirement and `source.md` are unchanged.
 
@@ -18,8 +20,9 @@ Owner Amendments are a separate layer; the immutable requirement and `source.md`
 | FRONT-D04 | `ACCEPTED_WITH_LIMITATION` | Native Bukkit, public WorldGuard `RegionQuery`, and public WorldEdit `EditSession`; unsupported bypasses excluded |
 | MAIN-D08 | `ACCEPTED_WITH_LIMITATION` | Native repair boundaries and supported cancellable external boundaries; unsupported external paths excluded |
 | Phase 08B remediation review | `PASS` | External ChatGPT independent review accepted the focused correction and exact-head evidence |
-| Client Test Candidate | `FIXED` | `V0.0.2-Client-Candidate-1`; exact staged Core/Main/Frontier hashes are in the candidate handoff |
-| Client Acceptance | `CLIENT_TEST_REQUIRED` | Candidate fixed; bounded client run has not started |
+| Candidate-5 Product remediation | `PRODUCT_PASS` | Tests-first RED/green, local validation, two clean builds, Normal CI `30774052884`, and Pre-client Headless `30774053040` at Product HEAD `3ba94dd` |
+| Client Test Candidate | `PREPARED_FOR_FOCUSED_CLIENT_RETEST` | `V0.0.2-Client-Candidate-5`; exact staged Core/Main/Frontier hashes are in the Candidate-5 handoff; Client Test has not started |
+| Client Acceptance | `CLIENT_TEST_REQUIRED` | Candidate-5 fixed; bounded client run has not started |
 | Project acceptance | `PENDING` | Project Runtime evidence is outside this repository |
 | Stable publication | `NOT_AUTHORIZED` | No tag, release, artifact hash, workflow dispatch, or completion claim |
 

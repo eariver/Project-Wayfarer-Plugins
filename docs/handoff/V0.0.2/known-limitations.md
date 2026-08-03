@@ -37,6 +37,12 @@
   `WORLD_DOWN`, `DEGRADED`, or new health/status subsystem is added.
 - The V0.0.2 world name is fixed to exact case-sensitive `frontier_iris`. Future single-name
   configurability is tracked by Issue #17 and is not implemented here.
+- Candidate-5 Main hold-time authorization is intentionally fail-closed after every Main-Hand
+  changing handler family and requires the exact managed-item/status/authority state for use;
+  cancelled operations that leave the Main Hand unchanged do not permanently invalidate it.
+- Candidate-5 Frontier timeout diagnostics retain only bounded, sanitized terminal observations;
+  they include source, generation, pollCount, visible/required managed counts, fingerprint, and
+  `decision=TIMEOUT`, without raw Player identifiers.
 - Launchpad uses the current Player view direction at use time. Current config controls performance;
   persisted yaw is reserved/non-authoritative. A separate physical-material or full immutable
   performance snapshot is not claimed. When expiration classification is `UNKNOWN`, the
@@ -52,16 +58,18 @@
 ## Deferred and acceptance boundaries
 
 - Phase 10B-A Candidate-1 failed Main first delivery and Frontier exact-world reconnect
-  scenarios. Candidate-2 adds stage-specific Main delivery diagnostics, MVI-aware bounded
-  readiness, coalescing/cancellation, and exact-current duplicate self-heal, but focused Client
-  retest is still required; no Client Acceptance pass is claimed.
+  scenarios. Candidate-2 and Candidate-3 are rejected historical evidence; Candidate-4 was
+  rejected before Client Test. Candidate-5 adds the focused Main authorization/action guards and
+  Frontier terminal diagnostics/late-MVI coverage, but focused Client retest is still required;
+  no Client Acceptance pass is claimed.
 - Resource Pack rendering is `SKIPPED_OUT_OF_SCOPE_BY_OWNER` for this remediation phase.
 - Waystone behavior and the EM–MVI adapter are absent/deferred; the adapter requires a Project
   decision of `ADAPTER_REQUIRED` before creation.
 - FRONT-D01 is resolved for V0.0.2. FRONT-D02 remains a bounded client safe-tier/motion gate;
   FRONT-D04 and MAIN-D08 are accepted with the supported-boundary limitations above.
-- No full Client Acceptance, Project acceptance, or Stable Release is claimed. Candidate-1 is
-  rejected for promotion; Candidate-2 is prepared for focused Client retest only.
+- No full Client Acceptance, Project acceptance, or Stable Release is claimed. Candidate-1
+  through Candidate-4 are rejected/preserved; Candidate-5 Product is fixed for focused Client
+  retest only.
 - Project Runtime, permissions groups, configuration, worlds, databases, migrations, and servers
   were not changed by this repository task.
 

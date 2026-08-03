@@ -1,9 +1,9 @@
 # V0.0.2 Project Acceptance Input
 
-Status: pending; not ready for Project Runtime acceptance. Candidate-1, Candidate-2, and
-Candidate-3 are retained rejected evidence. Candidate-4 is prepared for focused Client retest
-from Product HEAD `9fe86d2e787ab1f86dcf38a5abdba6168515a802`; full Client Acceptance has not
-passed.
+Status: pending; not ready for Project Runtime acceptance. Candidate-1 through Candidate-4 are
+retained rejected evidence. Candidate-5 Product remediation is prepared for focused Client
+retest from Product HEAD `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`; Client Test has not started
+and full Client Acceptance has not passed.
 
 After the bounded Client Test, Project/client evidence should cover:
 
@@ -15,12 +15,12 @@ After the bounded Client Test, Project/client evidence should cover:
 - Approved temporary test-only LeafGrapple safe tier and bounded client motion; final
   motion/range/balance remains Mainline/Frontier-owned and the temporary values are not a
   production recommendation.
-- Exact Candidate-4 artifacts: `Wayfarer_Core-V0.0.1.jar` SHA-256
+- Exact Candidate-5 artifacts: `Wayfarer_Core-V0.0.1.jar` SHA-256
   `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2`,
   `wayfarer-main-0.0.2-SNAPSHOT.jar` SHA-256
-  `c263f6957c69bf958b6374e37efbf0cff7cc0e21d27530acf7faa46cd1b54522`, and
+  `391ea0b1beae8ff4e7ed1e8428179ff5b5166ff85fdd1c67d0fdff6062b82079`, and
   `wayfarer-frontier-0.0.2-SNAPSHOT.jar` SHA-256
-  `7897c31bdc69e05112e286235658364d2771ab875113f9410341b6d9910e1bac`.
+  `dda3ac825ddde024046e9c72c9954cf3af59ceb1e8643aeb44571ea7f9a312b8`.
 - Launchpad current-view direction, Sneak behavior, cooldown, uses, auto-Elytra, current config,
   restart/reconcile, and supported protection behavior.
 - Phase 06 permission leaves through LuckPerms, authorized/denied routes, no top-level command

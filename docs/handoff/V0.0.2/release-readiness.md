@@ -1,10 +1,11 @@
 # V0.0.2 Release Readiness
 
-Current Phase 10C-A Revision B state:
+Current Phase 10C-A Candidate-5 state:
 
 ```text
-PHASE 10C-A EXECUTION: PREPARED_WAITING_FOR_OPERATOR
-CANDIDATE-4: PREPARED_FOR_FOCUSED_CLIENT_RETEST
+PHASE 10C-A EXECUTION: PRODUCT_REMEDIATION_PASS
+CANDIDATE-4: REJECTED_BEFORE_CLIENT_TEST_PRESERVED
+CANDIDATE-5: PRODUCT_FIXED_RUNTIME_HANDOFF_PREPARED
 CLIENT TEST: NOT STARTED
 FULL CLIENT ACCEPTANCE: NOT COMPLETE
 PRODUCTION BALANCE PROMOTION: HOLD
@@ -12,20 +13,22 @@ PROJECT ACCEPTANCE: PENDING
 STABLE PUBLICATION: NOT AUTHORIZED
 ```
 
-- Candidate-4 Product HEAD: `9fe86d2e787ab1f86dcf38a5abdba6168515a802`.
-- Candidate-3: rejected and preserved as historical failure evidence.
-- Candidate-4 Main／Frontier／Fixture: two-clean-build byte-identical evidence fixed;
+- Candidate-5 Product HEAD: `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`.
+- Candidate-4 Product HEAD `9fe86d2e787ab1f86dcf38a5abdba6168515a802`: rejected before Client
+  Test; its documents and artifacts remain preserved historical evidence.
+- Candidate-5 Main／Frontier／Fixture: two-clean-build byte-identical evidence fixed;
   Published V0.0.1 Core authority verified separately.
-- Current PR remains Open / Draft / Unmerged; no Client Scenario has started.
+- Normal CI `30774052884` and Pre-client Headless `30774053040`: PASS at Candidate-5 Product
+  HEAD; current PR remains Open / Draft / Unmerged; no Client Scenario has started.
 
 - Candidate-1 historical product-source anchor: `90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`
 - Candidate-2 product-source anchor: `f2281093a03c17be0b0e69004059dd7ccb072b1c`
 - Phase 09A independent review: `PASS`
 - Phase 09B executor evidence: historical; Candidate-1 client result is `FAIL`
 - Client Test Candidate-1: rejected for promotion; evidence retained immutable
-- Client Test Candidate-2: historical and superseded by Candidate-4 preparation
-- Mainline Disposable Client Test Preparation: fresh two-backend environment prepared;
-  focused retest pending independent review
+- Client Test Candidate-2 and Candidate-3: historical rejected evidence
+- Mainline Disposable Client Test Preparation: fresh two-backend environment prepared for
+  Candidate-5; focused retest has not started
 - Client Acceptance: `NOT COMPLETE` / `CLIENT_TEST_REQUIRED`
 - Resource Pack: `SKIPPED_OUT_OF_SCOPE_BY_OWNER`
 - Stable tag/release: not authorized and not created
@@ -49,7 +52,7 @@ https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809 (ID
 
 ```text
 Candidate:
-  V0.0.2-Client-Candidate-4
+  V0.0.2-Client-Candidate-5
 
 Pre-test balance changes:
   NONE
@@ -75,7 +78,7 @@ Candidate-1 failed before the LeafGrapple motion/balance scenarios, so balance r
 
 Remaining gates:
 
-1. Candidate-4 focused Main/Frontier client gates using the fixed Fixture.
+1. Candidate-5 focused Main/Frontier client gates using the fixed Fixture.
 2. FRONT-D02 bounded client motion gate (`CLIENT_TEST_REQUIRED`) using the fixed Fixture.
 3. Bounded Client Acceptance in the separate disposable environment.
 4. Project acceptance and later stable publication.

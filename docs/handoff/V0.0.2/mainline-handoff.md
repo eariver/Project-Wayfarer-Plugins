@@ -1,23 +1,24 @@
 # V0.0.2 Mainline Handoff
 
 PR #14 remains Open / Draft / Unmerged. Phase 10B-A Candidate-1 failed the first mandatory Main
-and Frontier client scenarios and is rejected for promotion; Candidate-2 and Candidate-3 are
-also historical rejected candidates with preserved evidence. Candidate-4 Product remediation
-is complete at `9fe86d2e787ab1f86dcf38a5abdba6168515a802`, and Candidate-4 is prepared for
-focused Client retest. Independent review and focused Client execution are still required.
-Prepared metadata commits do not change Candidate-4 product bytes.
+and Frontier client scenarios and is rejected for promotion; Candidate-2, Candidate-3, and
+Candidate-4 are historical rejected candidates with preserved evidence. Candidate-5 Product
+remediation is complete at `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`; Candidate-5 is prepared
+for a focused Client retest, which has not started. Prepared/status metadata commits do not
+change the Candidate-5 Product bytes.
 
 ## Fixed candidate artifacts
 
 | Component | Exact artifact | Size | SHA-256 / provenance |
 |---|---|---:|---|
 | Core | `Wayfarer_Core-V0.0.1.jar` | 11751447 | `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2`; published GitHub Release `V0.0.1`, reused unchanged |
-| Main | `wayfarer-main-0.0.2-SNAPSHOT.jar` | 4690292 | `c263f6957c69bf958b6374e37efbf0cff7cc0e21d27530acf7faa46cd1b54522` |
-| Frontier | `wayfarer-frontier-0.0.2-SNAPSHOT.jar` | 4710866 | `7897c31bdc69e05112e286235658364d2771ab875113f9410341b6d9910e1bac` |
+| Main | `wayfarer-main-0.0.2-SNAPSHOT.jar` | 4690577 | `391ea0b1beae8ff4e7ed1e8428179ff5b5166ff85fdd1c67d0fdff6062b82079` |
+| Frontier | `wayfarer-frontier-0.0.2-SNAPSHOT.jar` | 4713179 | `dda3ac825ddde024046e9c72c9954cf3af59ceb1e8643aeb44571ea7f9a312b8` |
 
 The exact local staging path is
-`.ai-work/luna-gpt-5.6-v003/candidate/V0.0.2-Client-Candidate-4/`. The Candidate-4 JARs are
-ignored local handoff artifacts, not tracked or published. Core was not rebuilt as V0.0.2.
+`.ai-work/luna-gpt-5.6-v003/candidate/V0.0.2-Client-Candidate-5/`. The Candidate-5 JARs are
+ignored local handoff artifacts, not tracked or published; only hash/size evidence is retained
+in the submission package. Core was not reattached as V0.0.2.
 Historical Candidate-1 Main/Frontier hashes are `730d56888001e9c76bd127b25c118a937f03a5dd95a0fa381c8c38fec2517113`
 and `f43829c7b6e06ea44549ffdd1ef26a567aef1563ba73a0808c47634742e9d3ec`; both remediation
 module hashes changed.
@@ -39,7 +40,7 @@ First Client Test baseline:
   APPROVED
 
 Candidate:
-  V0.0.2-Client-Candidate-4
+  V0.0.2-Client-Candidate-5
 
 Use:
   Client Test only
@@ -105,16 +106,16 @@ Elytra/Grappling Hook/Navigation duplicates after authoritative readiness. Launc
 malformed items, and unrelated items are not removed.
 
 The historical Candidate-2 gates are retained in the Client Acceptance Plan. The current
-Candidate-4 gates and local worksheet are under the V003 Candidate-4 handoff. Full Client
+Candidate-5 gates and local worksheet are under the V003 Candidate-5 handoff. Full Client
 Acceptance remains incomplete.
 
 ## Mainline disposable-client preparation
 
-Candidate-4 disposable Client Test worksheets are prepared under
-`.ai-work/luna-gpt-5.6-v003/client-test/V0.0.2-Client-Candidate-4-Focused/`.
+Candidate-5 disposable Client Test worksheets are prepared under
+`.ai-work/luna-gpt-5.6-v003/client-test/V0.0.2-Client-Candidate-5-Focused/`.
 Project Runtime creation and server/world setup were not executed from this repository because
 the repository authority boundary prohibits Project Runtime changes. Any later authorized
-environment must use the exact fixed Candidate-4 bytes and immutable test-only Fixture; it must
+environment must use the exact fixed Candidate-5 bytes and immutable test-only Fixture; it must
 not use Project Runtime, Project worlds, Project data, credentials, or Player UUIDs.
 
 The exact detailed procedure is solely
@@ -144,7 +145,8 @@ unambiguous result each. A single major failure remains material.
   authority above.
 - LeafGrapple production balance: `OPEN_AFTER_CLIENT_TEST`.
 - Candidate-1 Client Test: `FAIL`; rejected for promotion.
-- Candidate-4 focused Client retest: `PREPARED_WAITING_FOR_OPERATOR` / `NOT_STARTED`.
+- Candidate-4: `REJECTED_BEFORE_CLIENT_TEST` / preserved historical evidence.
+- Candidate-5 focused Client retest: `PREPARED_WAITING_FOR_OPERATOR` / `NOT_STARTED`.
 - Client Acceptance: `NOT COMPLETE`.
 - Resource Pack: `SKIPPED_OUT_OF_SCOPE_BY_OWNER`.
 - Project acceptance: `PENDING` and Project-owned.
