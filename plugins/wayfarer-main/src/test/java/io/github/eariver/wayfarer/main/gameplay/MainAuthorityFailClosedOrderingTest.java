@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -40,6 +42,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
@@ -99,6 +102,252 @@ final class MainAuthorityFailClosedOrderingTest {
             HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE,
             fixture.authorizations().get(PLAYER).state()
         );
+    }
+
+    @Test
+    void newerRequestSupersedesOlderRefreshCompletion() {
+        Fixture fixture = fixture();
+        GrowthTool olderAuthority = tool(
+            OLD_INSTANCE,
+            1,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        GrowthTool latestAuthority = tool(
+            NEW_INSTANCE,
+            2,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        fixture.held().set(null);
+        fixture.sessions().open(latestAuthority);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        when(fixture.repository().findByOwner(PLAYER))
+            .thenReturn(Optional.of(olderAuthority));
+
+        CompletionStage<Void> olderRefresh =
+            fixture.runtime().refreshSessionFromAuthority(PLAYER);
+        fixture.runtime().revoke(PLAYER);
+
+        fixture.tasks().completeNext();
+        olderRefresh.toCompletableFuture().join();
+
+        assertEquals(latestAuthority, fixture.runtime().current(PLAYER).orElseThrow());
+        assertEquals(
+            HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE,
+            fixture.authorizations().get(PLAYER).state()
+        );
+    }
+
+    @Test
+    void supersededAppliedMutationSkipsRuntimeApplyAndDelivery() {
+        Fixture fixture = fixture();
+        GrowthTool oldAuthority = tool(
+            OLD_INSTANCE,
+            1,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        GrowthTool latestAuthority = tool(
+            NEW_INSTANCE,
+            2,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        GrowthTool rotated = oldAuthority.reissued(NEW_INSTANCE, NOW);
+        fixture.held().set(null);
+        fixture.sessions().open(latestAuthority);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        when(fixture.repository().findByOwner(PLAYER))
+            .thenReturn(Optional.of(oldAuthority));
+        when(fixture.repository().replaceAuthority(
+            any(GrowthTool.class),
+            anyLong(),
+            any(Instant.class)
+        )).thenReturn(Optional.of(rotated));
+
+        CompletionStage<MainGameplayRuntime.AdminMutation> olderReissue =
+            fixture.runtime().reissue(PLAYER);
+        fixture.runtime().revoke(PLAYER);
+
+        fixture.tasks().completeNext();
+
+        assertEquals(
+            MainGameplayRuntime.AdminMutation.SUPERSEDED,
+            olderReissue.toCompletableFuture().join()
+        );
+        assertEquals(
+            latestAuthority,
+            fixture.runtime().current(PLAYER).orElseThrow()
+        );
+        assertEquals(
+            HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE,
+            fixture.authorizations().get(PLAYER).state()
+        );
+        assertEquals(1, fixture.tasks().pendingCount());
+        verify(fixture.repository(), never()).findOrCreate(
+            any(UUID.class),
+            any(Instant.class)
+        );
+    }
+
+    @Test
+    void latestRecoveryRestoresCurrentDatabaseAuthority() {
+        Fixture fixture = fixture();
+        GrowthTool oldAuthority = tool(
+            OLD_INSTANCE,
+            1,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        GrowthTool latestAuthority = tool(
+            NEW_INSTANCE,
+            2,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        fixture.held().set(null);
+        fixture.sessions().open(oldAuthority);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        when(fixture.repository().findByOwner(PLAYER))
+            .thenReturn(Optional.of(latestAuthority));
+
+        CompletionStage<MainGameplayRuntime.AdminMutation> mutation =
+            fixture.runtime().revoke(PLAYER);
+        fixture.tasks().failNext(new IllegalStateException("database unavailable"));
+        fixture.tasks().completeNext();
+
+        assertEquals(
+            MainGameplayRuntime.AdminMutation.UNAVAILABLE,
+            mutation.toCompletableFuture().join()
+        );
+        assertEquals(
+            latestAuthority,
+            fixture.runtime().current(PLAYER).orElseThrow()
+        );
+        assertEquals(
+            HeldGrowthToolAuthorization.State.NO_MANAGED_ITEM,
+            fixture.authorizations().get(PLAYER).state()
+        );
+    }
+
+    @Test
+    void staleRecoveryCannotCloseOrOverwriteLatestSession() {
+        Fixture fixture = fixture();
+        GrowthTool oldAuthority = tool(
+            OLD_INSTANCE,
+            1,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        GrowthTool latestAuthority = tool(
+            NEW_INSTANCE,
+            2,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        fixture.held().set(null);
+        fixture.sessions().open(oldAuthority);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        when(fixture.repository().findByOwner(PLAYER))
+            .thenReturn(Optional.of(oldAuthority));
+        when(fixture.repository().replaceAuthority(
+            any(GrowthTool.class),
+            anyLong(),
+            any(Instant.class)
+        )).thenReturn(Optional.of(latestAuthority));
+
+        CompletionStage<Void> olderRefresh =
+            fixture.runtime().refreshSessionFromAuthority(PLAYER);
+        CompletionStage<MainGameplayRuntime.AdminMutation> latestMutation =
+            fixture.runtime().revoke(PLAYER);
+
+        fixture.tasks().failNext(new IllegalStateException("older read failed"));
+        fixture.tasks().completeNext();
+        fixture.tasks().completeNext();
+
+        olderRefresh.toCompletableFuture().join();
+        assertEquals(
+            MainGameplayRuntime.AdminMutation.APPLIED,
+            latestMutation.toCompletableFuture().join()
+        );
+        assertEquals(
+            latestAuthority,
+            fixture.runtime().current(PLAYER).orElseThrow()
+        );
+        assertEquals(
+            HeldGrowthToolAuthorization.State.NO_MANAGED_ITEM,
+            fixture.authorizations().get(PLAYER).state()
+        );
+    }
+
+    @Test
+    void quitObsoletesOutstandingAuthorityCompletion() {
+        Fixture fixture = fixture();
+        GrowthTool oldAuthority = tool(
+            OLD_INSTANCE,
+            1,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        fixture.sessions().open(oldAuthority);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+
+        CompletionStage<Void> outstandingRefresh =
+            fixture.runtime().refreshSessionFromAuthority(PLAYER);
+        when(fixture.player().isOnline()).thenReturn(false);
+        fixture.runtime().onQuit(new PlayerQuitEvent(
+            fixture.player(),
+            Component.empty(),
+            PlayerQuitEvent.QuitReason.DISCONNECTED
+        ));
+        fixture.tasks().completeNext();
+
+        outstandingRefresh.toCompletableFuture().join();
+        assertEquals(Optional.empty(), fixture.runtime().current(PLAYER));
+        assertFalse(fixture.authorizations().containsKey(PLAYER));
+    }
+
+    @Test
+    void stopObsoletesOutstandingAuthorityCompletion() {
+        Fixture fixture = fixture();
+        GrowthTool oldAuthority = tool(
+            OLD_INSTANCE,
+            1,
+            GrowthTool.DeliveryStatus.DELIVERED
+        );
+        fixture.sessions().open(oldAuthority);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+
+        CompletionStage<Void> outstandingRefresh =
+            fixture.runtime().refreshSessionFromAuthority(PLAYER);
+        assertEquals(0, fixture.runtime().stopAndFlush().toCompletableFuture().join());
+        fixture.tasks().completeNext();
+
+        outstandingRefresh.toCompletableFuture().join();
+        assertEquals(oldAuthority, fixture.runtime().current(PLAYER).orElseThrow());
+        assertFalse(fixture.authorizations().containsKey(PLAYER));
     }
 
     @Test
@@ -230,7 +479,7 @@ final class MainAuthorityFailClosedOrderingTest {
     void conflictReloadsWinningAuthorityWithoutRestoringOldEpoch() {
         Fixture fixture = fixture();
         GrowthTool oldTool = tool(OLD_INSTANCE, 1, GrowthTool.DeliveryStatus.DELIVERED);
-        GrowthTool winner = oldTool.reissued(NEW_INSTANCE, NOW);
+        GrowthTool winner = tool(NEW_INSTANCE, 2, GrowthTool.DeliveryStatus.DELIVERED);
         fixture.held().set(null);
         fixture.sessions().open(oldTool);
         fixture.authorizations().put(
@@ -694,6 +943,10 @@ final class MainAuthorityFailClosedOrderingTest {
                 throw new AssertionError("No database operation is pending");
             }
             pending.removeFirst().fail(failure);
+        }
+
+        int pendingCount() {
+            return pending.size();
         }
 
         @Override

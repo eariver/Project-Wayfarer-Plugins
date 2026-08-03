@@ -74,6 +74,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.Optional;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -115,6 +118,9 @@ public final class MainGameplayRuntime implements
         ConcurrentHashMap.newKeySet();
     private final ConcurrentHashMap<UUID, HeldGrowthToolAuthorization>
         heldAuthorizations = new ConcurrentHashMap<>();
+    private final AtomicLong authorityRequestSequence = new AtomicLong();
+    private final ConcurrentHashMap<UUID, Long> currentAuthorityRequests =
+        new ConcurrentHashMap<>();
     private volatile boolean accepting = true;
     private volatile RepairCoordinator repairCoordinator;
 
@@ -170,9 +176,16 @@ public final class MainGameplayRuntime implements
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID playerId = event.getPlayer().getUniqueId();
+        long generation = authorityRequestSequence.incrementAndGet();
+        currentAuthorityRequests.put(playerId, generation);
         heldAuthorizations.remove(playerId);
         checkpoints.checkpoint(playerId).whenComplete((ignored, failure) ->
-            sessions.close(playerId)
+            services.tasks().mainThread(() -> {
+                Player online = plugin.getServer().getPlayer(playerId);
+                if (online == null || !online.isOnline()) {
+                    sessions.close(playerId);
+                }
+            })
         );
     }
 
@@ -497,6 +510,7 @@ public final class MainGameplayRuntime implements
 
     public CompletionStage<Integer> stopAndFlush() {
         accepting = false;
+        currentAuthorityRequests.clear();
         checkpointTask.cancel();
         repairGuiSessions.clear();
         repairInFlight.clear();
@@ -660,18 +674,56 @@ public final class MainGameplayRuntime implements
     }
 
     public CompletionStage<AdminMutation> revoke(UUID playerUuid) {
-        return replaceAuthority(playerUuid, false);
+        return beginAuthorityRequest(playerUuid).thenCompose(request -> {
+            if (request.isEmpty()) {
+                return CompletableFuture.completedFuture(
+                    AdminMutation.UNAVAILABLE
+                );
+            }
+            return replaceAuthority(request.orElseThrow(), false);
+        });
     }
 
     public CompletionStage<AdminMutation> reissue(UUID playerUuid) {
-        return replaceAuthority(playerUuid, true).thenCompose(result -> {
-            if (result != AdminMutation.APPLIED) {
-                return CompletableFuture.completedFuture(result);
+        return beginAuthorityRequest(playerUuid).thenCompose(request -> {
+            if (request.isEmpty()) {
+                return CompletableFuture.completedFuture(
+                    AdminMutation.UNAVAILABLE
+                );
             }
-            return delivery.onJoin(playerUuid)
-                .thenCompose(outcome -> notifyDelivery(playerUuid, outcome))
-                .thenCompose(ignored -> refreshSession(playerUuid))
-                .thenApply(ignored -> result);
+            AuthorityRequest authorityRequest = request.orElseThrow();
+            return replaceAuthority(authorityRequest, true)
+                .thenCompose(result -> {
+                    if (result != AdminMutation.APPLIED) {
+                        return CompletableFuture.completedFuture(result);
+                    }
+                    return startAdminDelivery(authorityRequest, playerUuid)
+                        .thenCompose(started -> {
+                            if (started.isEmpty()) {
+                                return CompletableFuture.completedFuture(
+                                    AdminMutation.SUPERSEDED
+                                );
+                            }
+                            return notifyDelivery(
+                                playerUuid,
+                                started.orElseThrow(),
+                                authorityRequest
+                            ).thenCompose(notified -> {
+                                if (!notified) {
+                                    return CompletableFuture.completedFuture(
+                                        AdminMutation.SUPERSEDED
+                                    );
+                                }
+                                return refreshSession(authorityRequest)
+                                    .thenCompose(ignored ->
+                                        currentOnMainThread(authorityRequest)
+                                    )
+                                    .thenApply(current -> current
+                                        ? AdminMutation.APPLIED
+                                        : AdminMutation.SUPERSEDED);
+                            });
+                        });
+                });
         });
     }
 
@@ -841,11 +893,11 @@ public final class MainGameplayRuntime implements
     }
 
     private CompletionStage<AdminMutation> replaceAuthority(
-        UUID playerUuid,
+        AuthorityRequest request,
         boolean reissue
     ) {
-        return invalidateBeforeAuthorityRead(playerUuid)
-            .thenCompose(ignored -> services.tasks().database(() -> {
+        UUID playerUuid = request.playerUuid();
+        return services.tasks().database(() -> {
                 GrowthTool current = repository.findByOwner(playerUuid).orElse(null);
                 if (current == null) {
                     return new AuthorityMutation(null, AdminMutation.NOT_FOUND);
@@ -866,82 +918,123 @@ public final class MainGameplayRuntime implements
                     .orElseGet(() ->
                         new AuthorityMutation(null, AdminMutation.CONFLICT)
                     );
-            }))
+            })
             .thenCompose(mutation -> applyAuthorityMutation(
-                playerUuid,
+                request,
                 mutation,
                 reissue
             ))
             .exceptionallyCompose(ignored ->
-                recoverAuthoritativeState(playerUuid, false)
-                    .thenApply(recovered -> AdminMutation.UNAVAILABLE)
+                recoverAuthoritativeState(request, false)
+                    .thenApply(recovered -> recovered
+                        ? AdminMutation.UNAVAILABLE
+                        : AdminMutation.SUPERSEDED)
             );
     }
 
     private CompletionStage<Void> refreshSession(UUID playerUuid) {
-        if (!accepting) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return invalidateBeforeAuthorityRead(playerUuid)
-            .thenCompose(ignored -> services.tasks().database(() ->
-                repository.findByOwner(playerUuid)
-            ))
-            .thenCompose(found -> applyAuthoritativeState(
-                playerUuid,
-                found == null ? Optional.empty() : found,
-                true
-            ))
-            .exceptionallyCompose(ignored ->
-                recoverAuthoritativeState(playerUuid, true)
-            );
-    }
-
-    /**
-     * The cache transition is deliberately a main-thread operation. No
-     * authority read or mutation may be dispatched while the previous held
-     * capability remains usable.
-     */
-    private CompletionStage<Void> invalidateBeforeAuthorityRead(UUID playerUuid) {
-        return services.tasks().mainThread(() -> {
-            if (accepting) {
-                invalidateAuthorization(playerUuid);
+        return beginAuthorityRequest(playerUuid).thenCompose(request -> {
+            if (request.isEmpty()) {
+                return CompletableFuture.completedFuture(null);
             }
+            return refreshSession(request.orElseThrow());
         });
     }
 
+    private CompletionStage<Void> refreshSession(AuthorityRequest request) {
+        UUID playerUuid = request.playerUuid();
+        return services.tasks().database(() ->
+            repository.findByOwner(playerUuid)
+        )
+            .thenCompose(found -> applyAuthoritativeState(
+                request,
+                found == null ? Optional.empty() : found,
+                true
+            ))
+            .thenApply(ignored -> (Void) null)
+            .exceptionallyCompose(ignored ->
+                recoverAuthoritativeState(request, true)
+                    .thenApply(ignoredRecovery -> null)
+            );
+    }
+
+    private CompletionStage<Optional<AuthorityRequest>> beginAuthorityRequest(
+        UUID playerUuid
+    ) {
+        java.util.Objects.requireNonNull(playerUuid, "playerUuid");
+        AtomicReference<Optional<AuthorityRequest>> request =
+            new AtomicReference<>(Optional.empty());
+        return services.tasks().mainThread(() -> {
+            if (!accepting) {
+                return;
+            }
+            long generation = authorityRequestSequence.incrementAndGet();
+            currentAuthorityRequests.put(playerUuid, generation);
+            invalidateAuthorization(playerUuid);
+            request.set(Optional.of(new AuthorityRequest(
+                playerUuid,
+                generation
+            )));
+        }).thenApply(ignored -> request.get());
+    }
+
+    private boolean isCurrent(AuthorityRequest request) {
+        Long current = currentAuthorityRequests.get(request.playerUuid());
+        return accepting
+            && current != null
+            && current.longValue() == request.requestGeneration();
+    }
+
+    private CompletionStage<Boolean> currentOnMainThread(
+        AuthorityRequest request
+    ) {
+        AtomicBoolean current = new AtomicBoolean();
+        return services.tasks().mainThread(() ->
+            current.set(isCurrent(request))
+        ).thenApply(ignored -> current.get());
+    }
+
     private CompletionStage<AdminMutation> applyAuthorityMutation(
-        UUID playerUuid,
+        AuthorityRequest request,
         AuthorityMutation mutation,
         boolean reissue
     ) {
         if (mutation.tool() == null
             && mutation.result() == AdminMutation.CONFLICT) {
-            return recoverAuthoritativeState(playerUuid, false)
-                .thenApply(ignored -> mutation.result());
+            return recoverAuthoritativeState(request, false)
+                .thenApply(current -> current
+                    ? mutation.result()
+                    : AdminMutation.SUPERSEDED);
         }
         if (mutation.tool() == null) {
             return applyAuthoritativeState(
-                playerUuid,
+                request,
                 Optional.empty(),
                 false
-            ).thenApply(ignored -> mutation.result());
+            ).thenApply(current -> current
+                ? mutation.result()
+                : AdminMutation.SUPERSEDED);
         }
         return applyAuthoritativeState(
-            playerUuid,
+            request,
             Optional.of(mutation.tool()),
             false
-        ).thenCompose(ignored -> recordAdmin(
+        ).thenCompose(current -> recordAdmin(
             mutation.tool(),
             reissue ? "GROWTH_TOOL_REISSUED" : "GROWTH_TOOL_REVOKED"
-        ).handle((recorded, failure) -> mutation.result()));
+        ).handle((recorded, failure) -> current
+            ? mutation.result()
+            : AdminMutation.SUPERSEDED));
     }
 
-    private CompletionStage<Void> recoverAuthoritativeState(
-        UUID playerUuid,
+    private CompletionStage<Boolean> recoverAuthoritativeState(
+        AuthorityRequest request,
         boolean reconcile
     ) {
         CompletionStage<Optional<GrowthTool>> load =
-            services.tasks().database(() -> repository.findByOwner(playerUuid));
+            services.tasks().database(() ->
+                repository.findByOwner(request.playerUuid())
+            );
         return load
             .handle((found, failure) ->
                 failure == null && found != null
@@ -949,25 +1042,28 @@ public final class MainGameplayRuntime implements
                     : Optional.<GrowthTool>empty()
             )
             .thenCompose(found -> applyAuthoritativeState(
-                playerUuid,
+                request,
                 found,
                 reconcile
             ))
-            .exceptionally(ignored -> (Void) null);
+            .exceptionally(ignored -> false);
     }
 
-    private CompletionStage<Void> applyAuthoritativeState(
-        UUID playerUuid,
+    private CompletionStage<Boolean> applyAuthoritativeState(
+        AuthorityRequest request,
         Optional<GrowthTool> found,
         boolean reconcile
     ) {
         Optional<GrowthTool> authoritative = found == null
             ? Optional.empty()
             : found;
+        AtomicBoolean current = new AtomicBoolean();
         return services.tasks().mainThread(() -> {
-            if (!accepting) {
+            if (!isCurrent(request)) {
                 return;
             }
+            current.set(true);
+            UUID playerUuid = request.playerUuid();
             Player online = plugin.getServer().getPlayer(playerUuid);
             if (authoritative.isEmpty()) {
                 sessions.close(playerUuid);
@@ -982,12 +1078,98 @@ public final class MainGameplayRuntime implements
                 return;
             }
             GrowthTool tool = authoritative.orElseThrow();
+            GrowthTool loaded = sessions.current(playerUuid).orElse(null);
+            if (loaded != null
+                && loaded.lockVersion() > tool.lockVersion()) {
+                authorizeMainHand(online);
+                return;
+            }
+            if (loaded != null
+                && loaded.lockVersion() == tool.lockVersion()) {
+                if (!sameAuthorityFields(loaded, tool)) {
+                    invalidateAuthorization(playerUuid);
+                    return;
+                }
+                authorizeMainHand(online);
+                return;
+            }
             sessions.open(tool);
             if (reconcile) {
                 reconcileInventory(online, tool);
             }
             authorizeMainHand(online);
+        }).thenApply(ignored -> current.get());
+    }
+
+    private CompletionStage<Optional<GrowthToolDeliveryCoordinator.Outcome>>
+        startAdminDelivery(
+            AuthorityRequest request,
+            UUID playerUuid
+        ) {
+        AtomicReference<CompletionStage<GrowthToolDeliveryCoordinator.Outcome>>
+            started = new AtomicReference<>();
+        return services.tasks().mainThread(() -> {
+            if (isCurrent(request)) {
+                started.set(delivery.onJoin(playerUuid));
+            }
+        }).thenCompose(ignored -> {
+            CompletionStage<GrowthToolDeliveryCoordinator.Outcome> stage =
+                started.get();
+            if (stage == null) {
+                return CompletableFuture.completedFuture(Optional.empty());
+            }
+            return stage.thenApply(Optional::of);
         });
+    }
+
+    private CompletionStage<Boolean> notifyDelivery(
+        UUID playerUuid,
+        GrowthToolDeliveryCoordinator.Outcome outcome,
+        AuthorityRequest request
+    ) {
+        AtomicBoolean current = new AtomicBoolean();
+        return services.tasks().mainThread(() -> {
+            if (!isCurrent(request)) {
+                return;
+            }
+            current.set(true);
+            if (outcome == GrowthToolDeliveryCoordinator.Outcome.DELIVERED) {
+                notifyDeliverySuccess(playerUuid);
+                return;
+            }
+            if (outcome != GrowthToolDeliveryCoordinator.Outcome.INVENTORY_FULL
+                && outcome
+                    != GrowthToolDeliveryCoordinator.Outcome.PLAYER_OFFLINE
+                && outcome != GrowthToolDeliveryCoordinator.Outcome.CONFLICT
+                && outcome != GrowthToolDeliveryCoordinator.Outcome.UNAVAILABLE) {
+                return;
+            }
+            String reference = delivery.lastFailure(playerUuid)
+                .map(snapshot -> " Reference: " + snapshot.correlationId() + ".")
+                .orElse("");
+            plugin.getLogger().warning(
+                "Growth Tool delivery remains pending; retry on join or by admin."
+                    + reference
+            );
+            Player online = plugin.getServer().getPlayer(playerUuid);
+            if (online != null && online.isOnline()) {
+                online.sendMessage(
+                    "Growth Tool delivery is pending; free inventory space "
+                        + "and rejoin or ask an administrator to retry."
+                        + (reference.isEmpty() ? "" : reference)
+                );
+            }
+        }).thenApply(ignored -> current.get());
+    }
+
+    private static boolean sameAuthorityFields(
+        GrowthTool first,
+        GrowthTool second
+    ) {
+        return first.toolId().equals(second.toolId())
+            && first.itemInstanceId().equals(second.itemInstanceId())
+            && first.instanceEpoch() == second.instanceEpoch()
+            && first.status() == second.status();
     }
 
     private CompletionStage<Void> notifyDelivery(
@@ -1827,8 +2009,14 @@ public final class MainGameplayRuntime implements
         NO_CHANGE,
         NOT_FOUND,
         CONFLICT,
+        SUPERSEDED,
         UNAVAILABLE
     }
+
+    private record AuthorityRequest(
+        UUID playerUuid,
+        long requestGeneration
+    ) {}
 
     private record AuthorityMutation(
         GrowthTool tool,
