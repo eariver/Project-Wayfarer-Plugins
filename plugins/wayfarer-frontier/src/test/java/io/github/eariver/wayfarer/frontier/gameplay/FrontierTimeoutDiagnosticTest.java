@@ -1,10 +1,12 @@
 package io.github.eariver.wayfarer.frontier.gameplay;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,6 +47,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.Test;
 
 final class FrontierTimeoutDiagnosticTest {
@@ -187,6 +192,149 @@ final class FrontierTimeoutDiagnosticTest {
         )).isEmpty());
     }
 
+    @Test
+    void playerQuitCancelsPendingLateMviRestart() throws Exception {
+        AtomicReference<Runnable> polling = new AtomicReference<>();
+        Fixture fixture = fixture(
+            polling,
+            Logger.getLogger(FrontierTimeoutDiagnosticTest.class.getName() + ".quit")
+        );
+        long cycleId = prepareLateRestart(fixture, polling);
+
+        fixture.runtime().onQuit(
+            new PlayerQuitEvent(
+                fixture.player(),
+                Component.empty(),
+                PlayerQuitEvent.QuitReason.DISCONNECTED
+            )
+        );
+
+        assertFalse(fixture.entryCycles().isCurrent(PLAYER, cycleId));
+        assertTrue(((Map<?, ?>) field(
+            fixture.runtime(),
+            "lateMviRestartTasks"
+        )).isEmpty());
+        verify(fixture.task(), atLeastOnce()).cancel();
+    }
+
+    @Test
+    void actualFrontierWorldLeaveCancelsPendingLateMviRestart() throws Exception {
+        AtomicReference<Runnable> polling = new AtomicReference<>();
+        Fixture fixture = fixture(
+            polling,
+            Logger.getLogger(FrontierTimeoutDiagnosticTest.class.getName() + ".leave")
+        );
+        long cycleId = prepareLateRestart(fixture, polling);
+        World outside = mock(World.class);
+        when(outside.getName()).thenReturn("resource");
+        when(fixture.player().getWorld()).thenReturn(outside);
+
+        fixture.runtime().onWorldChanged(new PlayerChangedWorldEvent(
+            fixture.player(),
+            fixture.frontierWorld()
+        ));
+
+        assertFalse(fixture.entryCycles().isCurrent(PLAYER, cycleId));
+        assertTrue(((Map<?, ?>) field(
+            fixture.runtime(),
+            "lateEntryContexts"
+        )).isEmpty());
+        assertTrue(((Map<?, ?>) field(
+            fixture.runtime(),
+            "lateMviRestartTasks"
+        )).isEmpty());
+    }
+
+    @Test
+    void newerExternalEntryMakesOlderLateMviRestartObsolete() throws Exception {
+        AtomicReference<Runnable> polling = new AtomicReference<>();
+        Fixture fixture = fixture(
+            polling,
+            Logger.getLogger(FrontierTimeoutDiagnosticTest.class.getName() + ".newer")
+        );
+        long oldCycle = prepareLateRestart(fixture, polling);
+        Runnable oldRestart = fixture.lateRestart().get();
+
+        fixture.runtime().onWorldChanged(new PlayerChangedWorldEvent(
+            fixture.player(),
+            fixture.frontierWorld()
+        ));
+        oldRestart.run();
+
+        assertFalse(fixture.entryCycles().isCurrent(PLAYER, oldCycle));
+        assertTrue(((Map<?, ?>) field(
+            fixture.runtime(),
+            "lateEntryContexts"
+        )).isEmpty());
+    }
+
+    @Test
+    void runtimeStopCancelsPendingLateMviRestart() throws Exception {
+        AtomicReference<Runnable> polling = new AtomicReference<>();
+        Fixture fixture = fixture(
+            polling,
+            Logger.getLogger(FrontierTimeoutDiagnosticTest.class.getName() + ".stop")
+        );
+        prepareLateRestart(fixture, polling);
+
+        fixture.runtime().stop();
+
+        assertTrue(((Map<?, ?>) field(
+            fixture.runtime(),
+            "lateMviRestartTasks"
+        )).isEmpty());
+        assertTrue(((Map<?, ?>) field(
+            fixture.runtime(),
+            "lateEntryContexts"
+        )).isEmpty());
+        verify(fixture.task(), atLeastOnce()).cancel();
+    }
+
+    private static long prepareLateRestart(
+        Fixture fixture,
+        AtomicReference<Runnable> polling
+    ) throws Exception {
+        SafeEntryReadiness.Request request =
+            fixture.readiness().request(PLAYER);
+        long cycleId = fixture.entryCycles().beginExternalEntry(PLAYER);
+        putEntryContext(fixture.runtime(), request, cycleId);
+        invokePrivate(
+            fixture.runtime(),
+            "scheduleFingerprintReadiness",
+            new Class<?>[] {
+                Player.class,
+                SafeEntryReadiness.Request.class,
+                int.class,
+                String.class
+            },
+            fixture.player(),
+            request,
+            3,
+            "BOUNDED_FINGERPRINT"
+        );
+        for (int poll = 0; poll < SafeEntryReadiness.MAX_FINGERPRINT_OBSERVATIONS;
+            poll++) {
+            polling.get().run();
+        }
+        MviShareObservation observation = new MviShareObservation(
+            fixture.player(),
+            "ReadOnlyShareHandlingEvent",
+            "resource",
+            "frontier_iris",
+            0,
+            1,
+            false,
+            true
+        );
+        invokePrivate(
+            fixture.runtime(),
+            "onMviObservation",
+            new Class<?>[] {MviShareObservation.class},
+            observation
+        );
+        return cycleId;
+    }
+
     private static Fixture fixture(
         AtomicReference<Runnable> polling,
         Logger logger
@@ -241,6 +389,10 @@ final class FrontierTimeoutDiagnosticTest {
                 invocation.<java.util.function.Supplier<?>>getArgument(0).get()
             )
         );
+        when(tasks.mainThread(any(Runnable.class))).thenAnswer(invocation -> {
+            invocation.<Runnable>getArgument(0).run();
+            return CompletableFuture.completedFuture(null);
+        });
         when(player.getUniqueId()).thenReturn(PLAYER);
         when(player.isOnline()).thenReturn(true);
         when(player.getWorld()).thenReturn(world);
@@ -266,7 +418,9 @@ final class FrontierTimeoutDiagnosticTest {
             field(runtime, "entryReadiness"),
             field(runtime, "entryCycles"),
             scheduler,
-            lateRestart
+            lateRestart,
+            task,
+            world
         );
     }
 
@@ -348,6 +502,8 @@ final class FrontierTimeoutDiagnosticTest {
         SafeEntryReadiness readiness,
         EntryCycleRegistry entryCycles,
         BukkitScheduler scheduler,
-        AtomicReference<Runnable> lateRestart
+        AtomicReference<Runnable> lateRestart,
+        BukkitTask task,
+        World frontierWorld
     ) {}
 }

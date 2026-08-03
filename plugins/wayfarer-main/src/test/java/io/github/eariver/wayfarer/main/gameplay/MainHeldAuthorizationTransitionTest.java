@@ -22,13 +22,22 @@ import java.util.logging.Logger;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.Test;
+import java.util.Set;
 
 final class MainHeldAuthorizationTransitionTest {
     private static final UUID PLAYER =
@@ -51,6 +60,132 @@ final class MainHeldAuthorizationTransitionTest {
 
         fixture.runtime().onHeldSlot(new PlayerItemHeldEvent(player, 0, 1));
 
+        assertEquals(
+            HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE,
+            fixture.authorizations().get(PLAYER).state()
+        );
+    }
+
+    @Test
+    void handSwapFailsClosedBeforeDeferredAuthorizationRuns() {
+        Fixture fixture = fixture();
+        Player player = player();
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+
+        PlayerSwapHandItemsEvent event = mock(PlayerSwapHandItemsEvent.class);
+        when(event.getPlayer()).thenReturn(player);
+        fixture.runtime().onSwapHands(event);
+
+        assertUnavailable(fixture);
+    }
+
+    @Test
+    void acceptedInventoryClickFailsClosedBeforeDeferredAuthorizationRuns() {
+        Fixture fixture = fixture();
+        Player player = player();
+        InventoryView view = mock(InventoryView.class);
+        Inventory top = mock(Inventory.class);
+        InventoryClickEvent event = mock(InventoryClickEvent.class);
+        when(event.getWhoClicked()).thenReturn(player);
+        when(event.getView()).thenReturn(view);
+        when(view.getTopInventory()).thenReturn(top);
+        when(top.getHolder()).thenReturn(null);
+        when(top.getType()).thenReturn(null);
+        when(event.getCurrentItem()).thenReturn(null);
+        when(event.getCursor()).thenReturn(null);
+        when(event.getHotbarButton()).thenReturn(-1);
+        when(event.getClickedInventory()).thenReturn(null);
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+
+        fixture.runtime().onInventoryClick(event);
+
+        assertUnavailable(fixture);
+    }
+
+    @Test
+    void acceptedInventoryDragFailsClosedBeforeDeferredAuthorizationRuns() {
+        Fixture fixture = fixture();
+        Player player = player();
+        InventoryView view = mock(InventoryView.class);
+        Inventory top = mock(Inventory.class);
+        InventoryDragEvent event = mock(InventoryDragEvent.class);
+        when(event.getWhoClicked()).thenReturn(player);
+        when(event.getView()).thenReturn(view);
+        when(view.getTopInventory()).thenReturn(top);
+        when(top.getHolder()).thenReturn(null);
+        when(top.getType()).thenReturn(null);
+        when(top.getSize()).thenReturn(27);
+        when(event.getRawSlots()).thenReturn(Set.of());
+        when(event.getOldCursor()).thenReturn(null);
+        when(event.getNewItems()).thenReturn(Map.of());
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+
+        fixture.runtime().onInventoryDrag(event);
+
+        assertUnavailable(fixture);
+    }
+
+    @Test
+    void dropPickupAndRespawnTransitionsFailClosed() {
+        Fixture fixture = fixture();
+        Player player = player();
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        PlayerDropItemEvent drop = mock(PlayerDropItemEvent.class);
+        when(drop.getPlayer()).thenReturn(player);
+        fixture.runtime().onDrop(drop);
+        assertUnavailable(fixture);
+
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        EntityPickupItemEvent pickup = mock(EntityPickupItemEvent.class);
+        when(pickup.getEntity()).thenReturn(player);
+        fixture.runtime().onPickup(pickup);
+        assertUnavailable(fixture);
+
+        fixture.authorizations().put(
+            PLAYER,
+            new HeldGrowthToolAuthorization(
+                HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
+            )
+        );
+        PlayerRespawnEvent respawn = mock(PlayerRespawnEvent.class);
+        when(respawn.getPlayer()).thenReturn(player);
+        fixture.runtime().onRespawn(respawn);
+        assertUnavailable(fixture);
+    }
+
+    private static Player player() {
+        Player player = mock(Player.class);
+        when(player.getUniqueId()).thenReturn(PLAYER);
+        when(player.isOnline()).thenReturn(true);
+        return player;
+    }
+
+    private static void assertUnavailable(Fixture fixture) {
         assertEquals(
             HeldGrowthToolAuthorization.State.AUTHORITY_UNAVAILABLE,
             fixture.authorizations().get(PLAYER).state()

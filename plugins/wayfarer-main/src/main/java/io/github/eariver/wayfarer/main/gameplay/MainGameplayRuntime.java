@@ -185,8 +185,7 @@ public final class MainGameplayRuntime implements
         }
         ItemStack item = player.getInventory().getItemInMainHand();
         if (wayfarerTool(item)
-            && authorization(player.getUniqueId()).state()
-                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
+            && !currentMainHandAllows(player, GrowthTool.Status.ACTIVE)) {
             event.setCancelled(true);
         }
     }
@@ -204,9 +203,7 @@ public final class MainGameplayRuntime implements
         GrowthTool tool = sessions.current(player.getUniqueId()).orElse(null);
         if (!wayfarerTool(item)
             || tool == null
-            || authorization(player.getUniqueId()).state()
-                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER
-            || !authorization(player.getUniqueId()).allowsProgress()) {
+            || !currentMainHandAllows(player, GrowthTool.Status.ACTIVE)) {
             return;
         }
         long units;
@@ -281,8 +278,7 @@ public final class MainGameplayRuntime implements
             return;
         }
         if (wayfarerTool(item)
-            && authorization(player.getUniqueId()).state()
-                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
+            && !currentMainHandAllows(player, GrowthTool.Status.ACTIVE)) {
             event.setCancelled(true);
             return;
         }
@@ -490,7 +486,8 @@ public final class MainGameplayRuntime implements
         if (!wayfarerTool(held)) {
             return;
         }
-        if (tool == null || !allowsForStatus(authorization, tool.status())) {
+        if (tool == null
+            || !currentMainHandAllows(event.getPlayer(), tool.status())) {
             event.setCancelled(true);
             return;
         }
@@ -680,8 +677,8 @@ public final class MainGameplayRuntime implements
 
     public Optional<RepairSnapshot> repairSnapshot(Player player, GrowthTool tool) {
         ItemStack item = player.getInventory().getItemInMainHand();
-        HeldGrowthToolAuthorization cached = authorization(player.getUniqueId());
-        if (!wayfarerTool(item) || !allowsForStatus(cached, tool.status())) {
+        if (!wayfarerTool(item)
+            || !currentMainHandAllows(player, tool.status())) {
             return Optional.empty();
         }
         if (tool.status() == GrowthTool.Status.BROKEN) {
@@ -713,7 +710,7 @@ public final class MainGameplayRuntime implements
             || current.instanceEpoch() != instanceEpoch
             || current.status() == GrowthTool.Status.REVOKED
             || !wayfarerTool(player.getInventory().getItemInMainHand())
-            || !allowsForStatus(authorization(playerUuid), current.status())) {
+            || !currentMainHandAllows(player, current.status())) {
             return false;
         }
         ItemStack target = player.getInventory().getItemInMainHand();
@@ -737,8 +734,7 @@ public final class MainGameplayRuntime implements
         if (current == null
             || current.status() != GrowthTool.Status.ACTIVE
             || !wayfarerTool(held)
-            || authorization(player.getUniqueId()).state()
-                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
+            || !currentMainHandAllows(player, GrowthTool.Status.ACTIVE)) {
             return false;
         }
         GrowthTool updated = sessions.update(
@@ -767,8 +763,7 @@ public final class MainGameplayRuntime implements
         }
         if (current.status() != GrowthTool.Status.ACTIVE
             || !wayfarerTool(held)
-            || authorization(player.getUniqueId()).state()
-                != HeldGrowthToolAuthorization.State.VALID_ACTIVE_OWNER) {
+            || !currentMainHandAllows(player, GrowthTool.Status.ACTIVE)) {
             return false;
         }
         boolean applied = switch (action) {
@@ -849,68 +844,150 @@ public final class MainGameplayRuntime implements
         UUID playerUuid,
         boolean reissue
     ) {
-        return services.tasks().database(() -> {
-            GrowthTool current = repository.findByOwner(playerUuid).orElse(null);
-            if (current == null) {
-                return new AuthorityMutation(null, AdminMutation.NOT_FOUND);
-            }
-            GrowthTool next = reissue
-                ? current.reissued(clock.instant())
-                : current.revoked(clock.instant());
-            if (next == current) {
-                return new AuthorityMutation(current, AdminMutation.NO_CHANGE);
-            }
-            Optional<GrowthTool> persisted = repository.replaceAuthority(
-                next,
-                current.lockVersion(),
-                clock.instant()
-            );
-            return persisted
-                .map(value -> new AuthorityMutation(value, AdminMutation.APPLIED))
-                .orElseGet(() ->
-                    new AuthorityMutation(null, AdminMutation.CONFLICT)
+        return invalidateBeforeAuthorityRead(playerUuid)
+            .thenCompose(ignored -> services.tasks().database(() -> {
+                GrowthTool current = repository.findByOwner(playerUuid).orElse(null);
+                if (current == null) {
+                    return new AuthorityMutation(null, AdminMutation.NOT_FOUND);
+                }
+                GrowthTool next = reissue
+                    ? current.reissued(clock.instant())
+                    : current.revoked(clock.instant());
+                if (next == current) {
+                    return new AuthorityMutation(current, AdminMutation.NO_CHANGE);
+                }
+                Optional<GrowthTool> persisted = repository.replaceAuthority(
+                    next,
+                    current.lockVersion(),
+                    clock.instant()
                 );
-        }).thenCompose(mutation -> {
-            if (mutation.tool() == null) {
-                return CompletableFuture.completedFuture(mutation.result());
-            }
-            return services.tasks().mainThread(() -> {
-                if (!accepting) {
-                    return;
-                }
-                Player online = plugin.getServer().getPlayer(playerUuid);
-                if (online != null && online.isOnline()) {
-                    invalidateAuthorization(playerUuid);
-                    sessions.open(mutation.tool());
-                    authorizeMainHand(online);
-                }
-            }).thenCompose(ignored -> recordAdmin(
-                mutation.tool(),
-                reissue ? "GROWTH_TOOL_REISSUED" : "GROWTH_TOOL_REVOKED"
-            ).handle((recorded, failure) -> mutation.result()));
-        }).exceptionally(ignored -> AdminMutation.UNAVAILABLE);
+                return persisted
+                    .map(value -> new AuthorityMutation(value, AdminMutation.APPLIED))
+                    .orElseGet(() ->
+                        new AuthorityMutation(null, AdminMutation.CONFLICT)
+                    );
+            }))
+            .thenCompose(mutation -> applyAuthorityMutation(
+                playerUuid,
+                mutation,
+                reissue
+            ))
+            .exceptionallyCompose(ignored ->
+                recoverAuthoritativeState(playerUuid, false)
+                    .thenApply(recovered -> AdminMutation.UNAVAILABLE)
+            );
     }
 
     private CompletionStage<Void> refreshSession(UUID playerUuid) {
         if (!accepting) {
             return CompletableFuture.completedFuture(null);
         }
-        return services.tasks().database(() ->
-            repository.findByOwner(playerUuid)
-        ).thenCompose(found -> services.tasks().mainThread(() -> {
+        return invalidateBeforeAuthorityRead(playerUuid)
+            .thenCompose(ignored -> services.tasks().database(() ->
+                repository.findByOwner(playerUuid)
+            ))
+            .thenCompose(found -> applyAuthoritativeState(
+                playerUuid,
+                found == null ? Optional.empty() : found,
+                true
+            ))
+            .exceptionallyCompose(ignored ->
+                recoverAuthoritativeState(playerUuid, true)
+            );
+    }
+
+    /**
+     * The cache transition is deliberately a main-thread operation. No
+     * authority read or mutation may be dispatched while the previous held
+     * capability remains usable.
+     */
+    private CompletionStage<Void> invalidateBeforeAuthorityRead(UUID playerUuid) {
+        return services.tasks().mainThread(() -> {
+            if (accepting) {
+                invalidateAuthorization(playerUuid);
+            }
+        });
+    }
+
+    private CompletionStage<AdminMutation> applyAuthorityMutation(
+        UUID playerUuid,
+        AuthorityMutation mutation,
+        boolean reissue
+    ) {
+        if (mutation.tool() == null
+            && mutation.result() == AdminMutation.CONFLICT) {
+            return recoverAuthoritativeState(playerUuid, false)
+                .thenApply(ignored -> mutation.result());
+        }
+        if (mutation.tool() == null) {
+            return applyAuthoritativeState(
+                playerUuid,
+                Optional.empty(),
+                false
+            ).thenApply(ignored -> mutation.result());
+        }
+        return applyAuthoritativeState(
+            playerUuid,
+            Optional.of(mutation.tool()),
+            false
+        ).thenCompose(ignored -> recordAdmin(
+            mutation.tool(),
+            reissue ? "GROWTH_TOOL_REISSUED" : "GROWTH_TOOL_REVOKED"
+        ).handle((recorded, failure) -> mutation.result()));
+    }
+
+    private CompletionStage<Void> recoverAuthoritativeState(
+        UUID playerUuid,
+        boolean reconcile
+    ) {
+        CompletionStage<Optional<GrowthTool>> load =
+            services.tasks().database(() -> repository.findByOwner(playerUuid));
+        return load
+            .handle((found, failure) ->
+                failure == null && found != null
+                    ? found
+                    : Optional.<GrowthTool>empty()
+            )
+            .thenCompose(found -> applyAuthoritativeState(
+                playerUuid,
+                found,
+                reconcile
+            ))
+            .exceptionally(ignored -> (Void) null);
+    }
+
+    private CompletionStage<Void> applyAuthoritativeState(
+        UUID playerUuid,
+        Optional<GrowthTool> found,
+        boolean reconcile
+    ) {
+        Optional<GrowthTool> authoritative = found == null
+            ? Optional.empty()
+            : found;
+        return services.tasks().mainThread(() -> {
             if (!accepting) {
                 return;
             }
             Player online = plugin.getServer().getPlayer(playerUuid);
-            if (online != null && online.isOnline()) {
-                found.ifPresent(tool -> {
+            if (authoritative.isEmpty()) {
+                sessions.close(playerUuid);
+                if (online != null && online.isOnline()) {
                     invalidateAuthorization(playerUuid);
-                    sessions.open(tool);
-                    reconcileInventory(online, tool);
-                    authorizeMainHand(online);
-                });
+                } else {
+                    heldAuthorizations.remove(playerUuid);
+                }
+                return;
             }
-        }));
+            if (online == null || !online.isOnline()) {
+                return;
+            }
+            GrowthTool tool = authoritative.orElseThrow();
+            sessions.open(tool);
+            if (reconcile) {
+                reconcileInventory(online, tool);
+            }
+            authorizeMainHand(online);
+        });
     }
 
     private CompletionStage<Void> notifyDelivery(
@@ -1056,6 +1133,37 @@ public final class MainGameplayRuntime implements
                 == HeldGrowthToolAuthorization.State.VALID_BROKEN_OWNER;
             case REVOKED -> false;
         };
+    }
+
+    /**
+     * Re-checks the immutable physical claim at security-sensitive Main
+     * entry points. The held capability remains a fast cache, but it must
+     * agree with the item actually present in Main Hand before a mutation or
+     * GUI action can proceed.
+     */
+    private boolean currentMainHandAllows(
+        Player player,
+        GrowthTool.Status status
+    ) {
+        if (player == null || status == null) {
+            return false;
+        }
+        GrowthTool current = sessions.current(player.getUniqueId()).orElse(null);
+        if (current == null || current.status() != status) {
+            return false;
+        }
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (!wayfarerTool(item)) {
+            return false;
+        }
+        HeldGrowthToolAuthorization actual = HeldGrowthToolAuthorizer.authorize(
+            true,
+            claimResult(item),
+            player.getUniqueId(),
+            current
+        );
+        return allowsForStatus(actual, status)
+            && actual.state() == authorization(player.getUniqueId()).state();
     }
 
     @SuppressWarnings("deprecation")
