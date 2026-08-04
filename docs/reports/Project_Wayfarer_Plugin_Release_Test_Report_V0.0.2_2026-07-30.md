@@ -1,0 +1,329 @@
+# Project Wayfarer Plugin V0.0.2 Release Test Report
+
+Report date: 2026-07-30
+
+Historical second-review implementation/evidence commit: `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`
+
+Current Plugin implementation/test anchor: `7faf79081572df028a5ec19ccfbc820123180fc7`
+
+Phase 07 documentation revision: current Phase 07 documentation commit; see Git history and PR #14.
+
+Release candidate: not fixed
+
+Readiness: `REVIEW_REQUIRED` for independent ChatGPT review of Phase 08B
+
+## Passed
+
+- Normal Gradle `check`, including Core Redis/MariaDB, Main MariaDB and Frontier MariaDB
+  Testcontainers suites.
+- V0.0.1 public API executable compatibility and immutable migration hashes.
+- Main/Frontier empty schema, prior-version upgrade, repeated migration and intentionally broken
+  migration failure behavior. Main V003 physical-instance authority is included.
+- Main repair and Frontier shop idempotency; ambiguous effect becomes `UNKNOWN`, is not
+  automatically retried, and a repair whose physical effect may exist is not refunded.
+- LeafGrapple missing/version/public-API/capability probes.
+- V0.0.x stable/correction grammar, exact release scopes, scoped collection/package/runtime
+  manifest, V0.0.1 package compatibility and publication recovery.
+- Official Node 24 action-major static gate.
+- `assemble` and Main/Frontier shaded-JAR boundary verification.
+- Main physical-claim/reissue and shared owner-bound container/drag guard tests.
+- Main functional repair GUI session, single-use confirmation, evolution-only durability restore,
+  and config remaining-ratio tests.
+- Frontier permanent-item metadata/guard, unbreakable Elytra, flight-duration-3 rocket,
+  navigation action, launchpad identity/replay/policy/active-index/public-break tests.
+- Core+Main and Core+Frontier same-schema migration histories, repeat-zero behavior, ownership
+  boundaries, and JDBC saga CAS integration tests.
+- Local `clean check assemble` after the second-review correction: PASS, including available
+  MariaDB and Redis integration tasks. A timed-out wrapper invocation left Windows file locks;
+  after stopping only those residual Gradle workers, the complete task graph finished and
+  `check assemble --no-build-cache` confirmed all 79 tasks successful/up-to-date.
+- Corrected normal CI:
+  [30509795935](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509795935),
+  commit `ddc6711e358067414d180d0780eac490faf00dff`: PASS.
+- Corrected isolated Headless Paper:
+  [30509795942](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509795942),
+  commit `ddc6711e358067414d180d0780eac490faf00dff`: PASS.
+- Second-review normal CI:
+  [30546252168](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252168),
+  commit `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`: PASS.
+- Second-review isolated Headless Paper:
+  [30546252420](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30546252420),
+  commit `2114e3cd8f5d6fcd7b4aeb22fd4343290e297072`: PASS.
+
+## Failed then fixed
+
+- Second-review Headless run
+  [30544431524](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30544431524)
+  passed all isolated build and startup cases but failed the final history-count assertion because
+  the harness still expected Main `V001–V002 + baseline = 3` after additive Main V003 made the
+  correct count 4. Run
+  [30545124212](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30545124212)
+  was cancelled as superseded once the identical stale assertion was known. Commit `c6542ca`
+  updates only the Main count; Frontier remains 3.
+- Headless run
+  [30545484393](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30545484393)
+  exposed a test-only self-starvation race: the Redis Pub/Sub probe blocked one Core executor
+  thread while Main/Frontier migrations occupied the other, so the handler queued to that same
+  executor missed its three-second wait. Commit `2114e3c` runs the blocking reflection probe on
+  an independent test background thread and retains a bounded ten-second delivery wait.
+- Pre-client Headless run
+  [30476250410](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30476250410)
+  failed because Vault API was absent from every Paper plugin classloader; Core raised
+  `NoClassDefFoundError`, then the hard-dependent probe could not resolve the Core API.
+- Runs
+  [30506338795](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30506338795)
+  and
+  [30506338797](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30506338797)
+  exposed unordered Core shaded-JAR consumption in module MariaDB tests.
+- Headless runs
+  [30506691754](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30506691754)
+  and
+  [30506938089](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30506938089)
+  then exposed duplicate shaded metadata rejected by Paper remapping and provider-startup timing.
+- Headless run
+  [30508550428](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30508550428)
+  proved Core itself was ready but Main/Frontier checked the asynchronously published concrete
+  capabilities too early. Both modules now use a bounded readiness wait and still fail closed
+  when the capabilities never become available.
+- Headless run
+  [30508837532](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30508837532)
+  reached the corrected module path but the harness-only 1000 ms provider startup timeout raced a
+  slow hosted main-thread dispatch. The harness now uses the production-default 5000 ms timeout;
+  provider-outage behavior remains a separate explicit case.
+- Headless run
+  [30509207888](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509207888)
+  passed Core provider startup and exposed that module-local Hikari pools relied on JDBC
+  ServiceLoader discovery across Paper plugin classloaders. Main and Frontier now explicitly load
+  the shaded MariaDB driver, matching the established Core pool boundary.
+- Headless run
+  [30509460990](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509460990)
+  started both module pools and exposed Flyway scanning with the Core executor thread context
+  classloader, which reported zero module migrations. Each module now binds Flyway resource
+  discovery to its own plugin classloader.
+- Superseded runs
+  [30509752581](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509752581)
+  and
+  [30509752604](https://github.com/eariver/Project-Wayfarer-Plugins/actions/runs/30509752604)
+  were cancelled before conclusion after the preceding raw evidence showed the harness assertion
+  used `absent` while the sanitized command contract emits `none`. Commit `ddc6711e` corrected
+  only that assertion before the successful final runs.
+- The harness now uses a test-only Vault plugin that shades Vault API, registers a representative
+  RedisEconomy-named Economy service through ServicesManager, keeps the probe API compile-only,
+  rejects duplicate JAR entries and Core/probe enable or classloading errors, and waits only for
+  the bounded Core provider-readiness window.
+- Review defects fixed in code: typed config was disconnected, progress baselines were missing,
+  enchant thresholds used n=0, Silk branch activation was delayed, threshold caching was absent,
+  clear repair failures were not terminal, purchase fulfillment stopped at payment, and
+  non-launch claims were not released.
+- Second-review defects fixed in code: physical item authority was incomplete, owner-bound items
+  could enter containers, Main GUI repair was a display stub, durability could be restored outside
+  evolution, permanent traversal items and rocket metadata were incomplete, launchpad identity and
+  placement revalidation were partial, arbitrary-player removal/protection scope were misaligned,
+  and navigation actions were not connected.
+
+## Pre-client Phase 01 — Growth progress Long.MAX_VALUE saturation (2026-07-31)
+
+Scope: PR #14 final pre-client correction Phase 01 only. Positive growth progress
+addition saturates at `Long.MAX_VALUE` without negative wrap, and
+`EvolutionPlan.evaluate(Long.MAX_VALUE)` terminates because threshold generation now
+saturates internally and stops at the `Long.MAX_VALUE` terminal threshold. Balance,
+evolution formula, progress units, death, reissue, Frontier, permission and
+presentation behavior are unchanged. No migration was added.
+
+- Implementation commit: `85be072a7a3cb8d9d5b130191d08a89b1b347386`
+  (`fix(main): saturate cumulative progress at long maximum`).
+- Validation HEAD: `85be072a7a3cb8d9d5b130191d08a89b1b347386` (identical to the
+  implementation HEAD; no code change was needed during validation).
+
+Initial attempt (2026-07-31, same HEAD):
+
+- `.\gradlew.bat :plugins:wayfarer-main:test --tests "io.github.eariver.wayfarer.main.domain.EvolutionPlanTest" --tests "io.github.eariver.wayfarer.main.domain.GrowthToolProgressTest" --tests "io.github.eariver.wayfarer.main.domain.GrowthToolAuthorityTest" --tests "io.github.eariver.wayfarer.main.application.GrowthSessionStoreTest" --console=plain -q`:
+  PASS — 15 focused tests, 0 failures, 0 errors, 0 skipped.
+- `.\gradlew.bat :plugins:wayfarer-main:test :plugins:wayfarer-main:compileMariaDbIntegrationTestJava --console=plain`:
+  PASS — 40 Main unit tests across 14 classes, 0 failures, 0 errors, 0 skipped;
+  MariaDB integration source set compiles.
+- `:plugins:wayfarer-main:mariaDbIntegrationTest`: ENVIRONMENT_BLOCKED, not executed.
+  The local Docker daemon/Compose services were not running
+  (`npipe:////./pipe/dockerDesktopLinuxEngine` unreachable), so the MariaDB
+  Testcontainers suite — including the new
+  `growthToolCheckpointRoundTripsLongMaxProgress` — could not start. Not claimed.
+
+Re-run after the Docker Compose environment was started (2026-07-31, same HEAD,
+image `mariadb:11.8` verified pullable):
+
+- `.\gradlew.bat :plugins:wayfarer-main:cleanTest :plugins:wayfarer-main:test --console=plain`:
+  PASS (BUILD SUCCESSFUL); the `test` task outcome was restored FROM-CACHE, so it was
+  superseded by the forced local execution below.
+- `.\gradlew.bat :plugins:wayfarer-main:cleanTest :plugins:wayfarer-main:test --no-build-cache --console=plain`:
+  PASS — forced fresh local execution; 40 tests across 14 classes, 0 failures,
+  0 errors, 0 skipped.
+- `.\gradlew.bat :plugins:wayfarer-main:mariaDbIntegrationTest --console=plain`:
+  PASS — 5 tests, 0 failures, 0 errors, 0 skipped, including
+  `growthToolCheckpointRoundTripsLongMaxProgress` (`Long.MAX_VALUE` checkpoint
+  save/read round-trip against a MariaDB 11.8 Testcontainers instance).
+
+Code modification during validation: none. Phase 01 initial verdict: **PASS** —
+superseded by the post-validation correction recorded below.
+
+At the historical Phase 01 checkpoint, later Phase 02–08 work, client gameplay testing, and the
+stable V0.0.2 release were not yet recorded. The current Phase 01–06 Plugin capability state is
+recorded below; Phase 08, client acceptance, Project acceptance, and Stable publication remain
+pending. This entry does not assert `requirements_cleared=true` or V0.0.2 completion.
+
+### Post-validation correction — terminal threshold cache idempotency (2026-07-31)
+
+Post-validation code review found a blocking defect in the Phase 01 implementation:
+once the threshold cache ends at the `Long.MAX_VALUE` terminal threshold, a repeated
+`thresholdsThrough(Long.MAX_VALUE)` / `evaluate(Long.MAX_VALUE, ...)` call missed the
+early return (`last > progress` is false at `MAX == MAX`), re-entered threshold
+generation, and appended a duplicate `Long.MAX_VALUE` entry on every call. Because
+`upperBound` counts every entry `<= progress`, repeated terminal evaluations inflated
+the evolution count and grew the cache without bound — a non-idempotent terminal
+evaluation.
+
+- Correction commit: `b4ac6392503646fa5983825b983e0c0552b69e74`
+  (`fix(main): keep terminal evolution threshold idempotent`), an additional commit on
+  top of the unchanged Phase 01 implementation commit; no amend, no rebase.
+- Correction: when the cache tail is already `Long.MAX_VALUE`, the cache is returned
+  unchanged, so the terminal threshold is never duplicated. The general early-return
+  condition stays `last > progress`, so a non-MAX cached threshold equal to the
+  requested progress still triggers generation of the next threshold. Balance,
+  threshold formula and progress units are unchanged. No migration was added.
+- The initial validation results above are retained unchanged; the initial PASS
+  verdict was corrected by this post-validation review.
+
+Added regression coverage
+(`EvolutionPlanTest.terminalThresholdAtLongMaxIsIdempotentAcrossRepeatedEvaluations`,
+plus a cache-size assertion in
+`rejectsInvalidPlansAndSaturatesThresholdsAtLongMax`):
+
+1. Repeated `evaluate(Long.MAX_VALUE)` returns the same evolution count.
+2. `cachedThresholdCount()` does not increase across repeated calls.
+3. Exactly one `Long.MAX_VALUE` terminal threshold exists in the cache.
+4. Repeated `thresholdsThrough(Long.MAX_VALUE)` returns identical content.
+5. A non-MAX cached threshold equal to progress still generates the next threshold.
+
+Final test results (validation HEAD `b4ac6392503646fa5983825b983e0c0552b69e74`):
+
+- `.\gradlew.bat :plugins:wayfarer-main:test --tests "io.github.eariver.wayfarer.main.domain.EvolutionPlanTest" --no-daemon --console=plain`:
+  PASS — 8 tests, 0 failures, 0 errors, 0 skipped.
+- `.\gradlew.bat :plugins:wayfarer-main:cleanTest :plugins:wayfarer-main:test --no-build-cache --no-daemon --console=plain`:
+  PASS — 41 tests across 14 classes, 0 failures, 0 errors, 0 skipped (forced fresh
+  local execution).
+
+Phase 01 final verdict after correction: **PASS**. At that historical checkpoint, later work was
+not yet recorded; this correction does not assert `requirements_cleared=true` or V0.0.2
+completion. Current Phase 01–06 capability evidence is summarized below, while Phase 08, client
+acceptance, Project acceptance, and Stable publication remain pending.
+
+## Current pre-client Phase 01–06 capability record
+
+- Phase 01: positive progress addition saturates at `Long.MAX_VALUE` and terminal threshold
+  evaluation is idempotent.
+- Phase 02: Frontier permanent-item death recovery uses typed durable Pending Delivery with the
+  same identity/epoch and Safe Entry/respawn reconciliation; Launchpad/Rocket are excluded.
+- Phase 03: Main reissue architecture and authority/recovery boundaries are complete.
+- Phase 04: Main reissue domain/persistence and V004 evidence is retained in the Phase 04 report.
+- Phase 05: Main death/no-auto-restore, paid Player reissue, pending/free retry, and recovery
+  evidence is retained in the Phase 05 report.
+- Phase 06: Main/Frontier permission leaf split and descriptor boundaries are complete. The Phase
+  06 report records Main 108 unit plus 9 MariaDB integration tests and Frontier 65 unit plus 6
+  MariaDB integration tests, all with zero failures/errors/skips.
+
+These are Plugin source/test/headless evidence types. They do not constitute Client Acceptance,
+Project acceptance, or a Client Test Candidate.
+
+## Phase 07 local validation (2026-08-01)
+
+- `.\gradlew.bat --no-daemon --console=plain --rerun-tasks clean check assemble`: PASS;
+  `BUILD SUCCESSFUL`, 90 actionable tasks executed. Generated JUnit XML observed 409 tests,
+  0 failures, 0 errors, and 0 skipped. Existing Javadoc warning output did not fail the build;
+  no source correction was made.
+- Validators all returned exit code 0: `test-release-policy.sh`, `test-scoped-runtime-jars.sh`,
+  `test-scoped-stable-package.sh`, `test-runtime-jar-manifest.sh`, `test-node24-actions.sh`,
+  `test-v002-handoff-mapping.sh`, `test-stable-release-package.sh`,
+  `test-stable-publication-recovery.sh`, and `verify-v002-plugin-packaging.sh`.
+- `git diff --check`: PASS. Allowed documentation scope only; immutable requirement and
+  `source.md` unchanged. No release workflow was dispatched.
+- Consistency searches found only explicitly historical anchor references and deferred/current
+  limitation wording; no present-tense forbidden completion claim was added.
+
+## Not run / not claimed
+
+- Phase 08 independent audit, Client Test Candidate, bounded Client Acceptance, Project acceptance,
+  and Stable publication: not performed and not claimed.
+- Canonical LeafGrapple motion: `EXTERNAL_BLOCKED` and `CLIENT_TEST_REQUIRED`.
+- Visual/interaction client acceptance: `CLIENT_TEST_REQUIRED`.
+- Project Runtime acceptance, Project migration and Project deployment: not authorized.
+- Stress, full crash matrix and exhaustive failure timing: not required.
+
+Development `0.0.2-SNAPSHOT` JAR hashes are intentionally not release evidence. No candidate SHA,
+tag, pre-release, stable release, merge, or `requirements_cleared=true` assertion was created.
+
+## Phase 08B remediation (2026-08-02)
+
+Phase 08B corrected the Launchpad expiration boundary without changing persistence schema,
+threading boundaries, world lifecycle, or module architecture. In
+`FrontierGameplayRuntime.expireCandidate`, a main-thread `UNKNOWN` reconciliation classification
+now defers before the repository destructive remove; the runtime index, block mutation, audit
+success path, and DB state transition therefore remain untouched for an unloaded world. A later
+scheduler pass can classify again after the world is available. Loaded-world classifications retain
+the existing expiration path.
+
+The focused regression `LaunchpadExpirationDecisionTest` passed with both required behaviors:
+`unknownWorldClassificationDefersExpirationWithoutDestructiveTransition` and
+`loadedWorldClassificationKeepsExpirationEligible`. The V0.0.2 exact world remains
+`frontier_iris`; Issue #17 remains the future single-name configurability item. FRONT-D01 is
+resolved, FRONT-D02 is accepted at the Plugin source boundary but still requires a temporary
+test-only safe tier and bounded client motion, and FRONT-D04/MAIN-D08 are accepted with their
+supported-boundary limitations. This evidence does not fix a Client Test Candidate or claim
+Client/Project acceptance, Stable readiness, or `requirements_cleared`.
+
+Phase 08B local validation:
+
+- Focused command `:plugins:wayfarer-frontier:test --tests
+  io.github.eariver.wayfarer.frontier.gameplay.LaunchpadExpirationDecisionTest`: PASS.
+- `\.\gradlew.bat --no-daemon --console=plain --rerun-tasks clean check assemble`: PASS;
+  `BUILD SUCCESSFUL`, 90 actionable tasks executed. Generated JUnit XML totals: 411 tests,
+  0 failures, 0 errors, 0 skipped.
+- Existing V0.0.2 validators all returned exit code 0: `test-release-policy.sh`,
+  `test-scoped-runtime-jars.sh`, `test-scoped-stable-package.sh`, `test-runtime-jar-manifest.sh`,
+  `test-node24-actions.sh`, `test-v002-handoff-mapping.sh`, `test-stable-release-package.sh`,
+  `test-stable-publication-recovery.sh`, and `verify-v002-plugin-packaging.sh`.
+- Javadoc emitted the repository's existing non-fatal warning output; no unrelated source
+  correction was made. No release workflow was dispatched.
+
+## Phase 09A candidate fixation (2026-08-02)
+
+The external ChatGPT independent review of Phase 08B is recorded as `PASS`. Phase 09A fixed the
+first bounded Client Test Candidate as `V0.0.2-Client-Candidate-1` from product-source commit
+`90c3f5fe0f02fe297bd6d12f596ce6c9bac27cce`. The later metadata HEAD is documentation-only and
+does not change the candidate product bytes.
+
+Exact local ignored candidate artifacts:
+
+- Core `Wayfarer_Core-V0.0.1.jar`, 11751447 bytes,
+  `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2`; exact published V0.0.1
+  GitHub Release asset, reused unchanged and not rebuilt as V0.0.2.
+- Main `wayfarer-main-0.0.2-SNAPSHOT.jar`, 4671368 bytes,
+  `730d56888001e9c76bd127b25c118a937f03a5dd95a0fa381c8c38fec2517113`.
+- Frontier `wayfarer-frontier-0.0.2-SNAPSHOT.jar`, 4682233 bytes,
+  `f43829c7b6e06ea44549ffdd1ef26a567aef1563ba73a0808c47634742e9d3ec`.
+
+The one required candidate build used Java `25.0.3`, Gradle `9.6.1`, and the prescribed
+Main/Frontier shadow-JAR command. `verify-v002-plugin-packaging.sh` returned `PASS`. The local
+candidate `SHA256SUMS.txt` verification returned `PASS`; its final SHA-256 and the final manifest
+SHA-256 are recorded in the ignored Phase 09A result report.
+
+The pinned read-only LeafGrapple artifact is `LeafGrapple.jar`, 56175 bytes, plugin version `1.0.2`,
+embedded Maven version `1.0.2-SNAPSHOT`, SHA-256
+`FFE4B3305BB48737E1B6C373698FEFE7121B879FD5B9399F930F5023B5F78833`. The complete reviewed
+`hooks.wood` tier was copied to the test-only `hooks.wayfarer` fixture. Only the tier key,
+durability enabled flag, entity-hook enabled flag, and the four explicit false entity target
+values differ; all other values are identical. Exact source transformation and local/tracked
+fixture byte comparisons passed. The tracked fixture is
+`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml`.
+
+Client Acceptance has not started. Project acceptance is pending. No Project Runtime, server,
+world, database, migration, external original JAR, secret, tag, GitHub Release, merge, release
+workflow, or `requirements_cleared` value was changed or created.

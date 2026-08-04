@@ -1,0 +1,158 @@
+# V0.0.2 Mainline Handoff
+
+PR #14 remains Open / Draft / Unmerged. Phase 10B-A Candidate-1 failed the first mandatory Main
+and Frontier client scenarios and is rejected for promotion; Candidate-2, Candidate-3, and
+Candidate-4 are historical rejected candidates with preserved evidence. Candidate-5 Product
+remediation is complete at `3ba94dd561e2f845fd7726329bd89cdbfb51d51a`; Candidate-5 is prepared
+for a focused Client retest, which has not started. Prepared/status metadata commits do not
+change the Candidate-5 Product bytes.
+
+## Fixed candidate artifacts
+
+| Component | Exact artifact | Size | SHA-256 / provenance |
+|---|---|---:|---|
+| Core | `Wayfarer_Core-V0.0.1.jar` | 11751447 | `b045581d3984dddba10ed7b2ada435926b8538ba9b29a1151550ce59588395a2`; published GitHub Release `V0.0.1`, reused unchanged |
+| Main | `wayfarer-main-0.0.2-SNAPSHOT.jar` | 4690577 | `391ea0b1beae8ff4e7ed1e8428179ff5b5166ff85fdd1c67d0fdff6062b82079` |
+| Frontier | `wayfarer-frontier-0.0.2-SNAPSHOT.jar` | 4713179 | `dda3ac825ddde024046e9c72c9954cf3af59ceb1e8643aeb44571ea7f9a312b8` |
+
+The exact local staging path is
+`.ai-work/luna-gpt-5.6-v003/candidate/V0.0.2-Client-Candidate-5/`. The Candidate-5 JARs are
+ignored local handoff artifacts, not tracked or published; only hash/size evidence is retained
+in the submission package. Core was not reattached as V0.0.2.
+Historical Candidate-1 Main/Frontier hashes are `730d56888001e9c76bd127b25c118a937f03a5dd95a0fa381c8c38fec2517113`
+and `f43829c7b6e06ea44549ffdd1ef26a567aef1563ba73a0808c47634742e9d3ec`; both remediation
+module hashes changed.
+Embedded descriptor identities and the checksum manifest are recorded in the local candidate
+manifest.
+
+## Frontier-approved first Client Test Fixture
+
+The external Project/Frontier authority is Project Issue
+`eariver/Project_Wayfarer#4`, specifically
+https://github.com/eariver/Project_Wayfarer/issues/4#issuecomment-5155937809 (comment ID
+`5155937809`). That comment records:
+
+```text
+Concrete Fixture:
+  ACKNOWLEDGED
+
+First Client Test baseline:
+  APPROVED
+
+Candidate:
+  V0.0.2-Client-Candidate-5
+
+Use:
+  Client Test only
+
+Pre-test balance changes:
+  NONE
+
+Production promotion:
+  DECIDE_AFTER_CLIENT_TEST
+```
+
+The approved immutable Fixture is
+`docs/testing/fixtures/V0.0.2/leafgrapple-wayfarer-test-only.yml` at commit
+`521a41bbcc4d4e0e58111deeb663f52bf1c6e1af`, SHA-256
+`ed210f8e56db26315f91fecb9e1d35d686c8fe647480498b7588467a6fa2448a`. The pinned LeafGrapple
+artifact is `LeafGrapple.jar`, plugin version `1.0.2`, embedded Maven version
+`1.0.2-SNAPSHOT`, size `56175` bytes, SHA-256
+`FFE4B3305BB48737E1B6C373698FEFE7121B879FD5B9399F930F5023B5F78833`.
+
+The first-test movement/range/cooldown values are:
+
+```text
+max-distance: 16.0
+max-pull-distance: 32.0
+launch-speed: 1.2
+pull-acceleration: 0.05
+max-pull-speed: 0.85
+cooldown-ticks: 20
+```
+
+The Fixture also fixes `Wood Grapple`, PAPER with
+`leafgrapple:wood_grapple` / `leafgrapple:wood_grapple_head`, durability disabled, glowing
+display at scale `0.35`, offset Y `-0.1`, and entity-hook disabled with players, mobs, animals,
+and monsters all false. The complete Entity Hook subtree remains copied from `hooks.wood`.
+There are no pre-test balance changes.
+
+## Tier configuration and Runtime Guard boundary
+
+The LeafGrapple Tier Fixture owns the LeafGrapple public tier configuration: item/model/display,
+range, pull distance, launch speed, pull acceleration, maximum pull speed, cooldown, disabled
+durability, and disabled entity-hook targets. It does not own a world restriction.
+
+The Wayfarer Runtime Guard separately enforces the exact case-sensitive `frontier_iris` boundary:
+Themes outside `frontier_iris` are rejected; the plugin remains enabled when `frontier_iris` is
+absent or unloaded; Wayfarer never creates the world; and Multiverse owns world
+creation/loading. LeafGrapple itself must not be described as enforcing this boundary.
+
+## Phase 10B-B remediation boundary
+
+MAIN-01 was a functional failure: the prior delivery path collapsed item creation/annotation,
+physical insertion, and final authority marking into one blanket failure, so the exact failed
+stage could not be distinguished. Candidate-2 adds a sanitized correlation ID and explicit
+`FIND_OR_CREATE_AUTHORITY`, `MAIN_THREAD_DELIVERY_GATE`, `CREATE_AND_ANNOTATE_ITEM`,
+`INSERT_PHYSICAL_ITEM`, `MARK_DELIVERED`, `AUDIT_RESULT`, `SESSION_REFRESH`, and `UNKNOWN`
+diagnostic model, with stage-specific runtime logging and safe player/admin correlation output.
+
+FRONT-01 was an integration failure: the MVI `5.3.5` public share-handling events occur before
+profile application, while the prior readiness path could deliver during restoration and then
+duplicate on reconnect. Candidate-2 continues on the concrete public MVI events when available,
+uses bounded two-observation fingerprint stabilization otherwise, coalesces per-player entry
+requests, cancels superseded/quit/world-leave work, and self-heals only exact-current
+Elytra/Grappling Hook/Navigation duplicates after authoritative readiness. Launchpads, Rockets,
+malformed items, and unrelated items are not removed.
+
+The historical Candidate-2 gates are retained in the Client Acceptance Plan. The current
+Candidate-5 gates and local worksheet are under the V003 Candidate-5 handoff. Full Client
+Acceptance remains incomplete.
+
+## Mainline disposable-client preparation
+
+Candidate-5 disposable Client Test worksheets are prepared under
+`.ai-work/luna-gpt-5.6-v003/client-test/V0.0.2-Client-Candidate-5-Focused/`.
+Project Runtime creation and server/world setup were not executed from this repository because
+the repository authority boundary prohibits Project Runtime changes. Any later authorized
+environment must use the exact fixed Candidate-5 bytes and immutable test-only Fixture; it must
+not use Project Runtime, Project worlds, Project data, credentials, or Player UUIDs.
+
+The exact detailed procedure is solely
+`docs/testing/plans/V0.0.2-client-acceptance.md`. The required scenario groups are summarized
+here only for handoff:
+
+- motion and range: short-range Block Hook, horizontal long-range Hook, upward Hook to a cliff,
+  mountain, tree, or structure, and cave/ceiling/narrow-space Hook;
+- interaction composition: Hook-to-Elytra, Hook after Launchpad, cooldown-boundary repeated
+  input, and reissued canonical LeafGrapple item use;
+- safety and fail-closed: Player/Mob/Animal/Monster rejection, exact `frontier_iris` Runtime
+  Guard rejection outside the boundary, and missing plugin, wrong version, missing tier, or unsafe
+  configuration;
+- display: held Hook and launched Hook Head Resource Pack models, including glowing/scale/offset
+  usability.
+
+For motion and interaction scenarios, the bounded repetition rules are normally three attempts,
+stopping after three consecutive unambiguous successes; at least five consecutive cooldown
+inputs; one or two representative attempts per configured entity target category; and at least
+ten attempts for an affected scenario when an anomaly, instability, or unclear reproducibility
+remains under constant conditions. Distinct artifact/configuration/fail-closed states need one
+unambiguous result each. A single major failure remains material.
+
+## Resolved and residual gates
+
+- LeafGrapple first-test baseline: `RESOLVED / APPROVED` by the external Project/Frontier
+  authority above.
+- LeafGrapple production balance: `OPEN_AFTER_CLIENT_TEST`.
+- Candidate-1 Client Test: `FAIL`; rejected for promotion.
+- Candidate-4: `REJECTED_BEFORE_CLIENT_TEST` / preserved historical evidence.
+- Candidate-5 focused Client retest: `PREPARED_WAITING_FOR_OPERATOR` / `NOT_STARTED`.
+- Client Acceptance: `NOT COMPLETE`.
+- Resource Pack: `SKIPPED_OUT_OF_SCOPE_BY_OWNER`.
+- Project acceptance: `PENDING` and Project-owned.
+- Stable publication: `NOT AUTHORIZED`.
+
+No Project Runtime, server, world, database, migration, secret, external original JAR, or
+production configuration was changed. This handoff does not authorize Client Test execution,
+production promotion, PR Ready status, merge, tag or GitHub Release creation, release workflow
+dispatch, or setting/inferencing `requirements_cleared`.

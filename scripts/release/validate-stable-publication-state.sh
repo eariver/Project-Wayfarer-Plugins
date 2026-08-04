@@ -9,8 +9,12 @@ fail() {
 : "${TAG:?TAG is required}"
 : "${STABLE_SOURCE_COMMIT:?STABLE_SOURCE_COMMIT is required}"
 
-[[ "$TAG" =~ ^V0\.0\.[1-9][0-9]*$ ]] \
-  || fail "TAG must be a stable V0.0.x version."
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=release-policy.sh
+source "$script_dir/release-policy.sh"
+
+is_stable_version "$TAG" \
+  || fail "TAG must be V0.0.1 or a correction such as V0.0.1a."
 [[ "$STABLE_SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] \
   || fail "STABLE_SOURCE_COMMIT must be an exact lowercase commit SHA."
 git cat-file -e "${STABLE_SOURCE_COMMIT}^{commit}" 2>/dev/null \

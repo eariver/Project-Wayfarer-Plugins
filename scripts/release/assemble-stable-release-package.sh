@@ -17,6 +17,39 @@ handoff_mappings() {
   require_value REQUIREMENT_TRACEABILITY
   require_value RELEASE_READINESS
 
+  if [[ "${RELEASE_SCOPE:-core}" != "core" ]]; then
+    require_value PLUGIN_TEST_REPORT
+    handoff_version="${RELEASE_VERSION%[a-z]}"
+    [[ "$handoff_version" == "V0.0.2" ]] \
+      || fail "No reviewed gameplay-module handoff mapping exists for $RELEASE_VERSION."
+    handoff_root="docs/handoff/$handoff_version"
+    cat <<EOF
+${handoff_root}/sanitized-configuration.md|SANITIZED_CONFIGURATION.md
+${handoff_root}/config-default-proposals.md|CONFIG_DEFAULT_PROPOSALS.md
+${handoff_root}/command-and-permission-reference.md|COMMAND_AND_PERMISSION_REFERENCE.md
+${handoff_root}/dependency-and-placement.md|DEPENDENCY_AND_PLACEMENT.md
+${handoff_root}/third-party-notices.md|THIRD_PARTY_NOTICES.md
+${handoff_root}/known-limitations.md|KNOWN_LIMITATIONS.md
+${handoff_root}/upgrade-and-rollback.md|UPGRADE_AND_ROLLBACK.md
+${handoff_root}/project-acceptance-input.md|PROJECT_ACCEPTANCE_INPUT.md
+${handoff_root}/artifact-inventory.md|ARTIFACT_INVENTORY.md
+${handoff_root}/artifact-matrix.md|PROPOSED_ARTIFACT_MATRIX.md
+${handoff_root}/compatibility-matrix.md|COMPATIBILITY_MATRIX.md
+${handoff_root}/migration-and-compatibility.md|MIGRATION_AND_COMPATIBILITY.md
+${handoff_root}/open-decisions.md|OPEN_DECISIONS.md
+${handoff_root}/requirement-compliance.md|REQUIREMENT_COMPLIANCE.md
+${handoff_root}/evidence-index.md|EVIDENCE_INDEX.md
+${handoff_root}/mainline-handoff.md|MAINLINE_HANDOFF.md
+${PLUGIN_TEST_REPORT}|PLUGIN_TEST_REPORT.md
+LICENSE|LICENSE
+${TEST_EVIDENCE}|TEST_SERVER_EVIDENCE.md
+${MAIN_SERVER_INSTRUCTION}|MAIN_SERVER_INSTRUCTION.md
+${REQUIREMENT_TRACEABILITY}|REQUIREMENT_TRACEABILITY.md
+${RELEASE_READINESS}|RELEASE_READINESS.md
+EOF
+    return
+  fi
+
   cat <<EOF
 docs/handoff/V0.0.1/sanitized-configuration.md|SANITIZED_CONFIGURATION.md
 docs/handoff/V0.0.1/command-and-permission-reference.md|COMMAND_AND_PERMISSION_REFERENCE.md
@@ -75,6 +108,12 @@ snapshot_handoff() {
   : > "$SNAPSHOT_DIR/HANDOFF_ASSET_INDEX.tsv"
   printf '%s\n' "$HANDOFF_SOURCE_COMMIT" > "$SNAPSHOT_DIR/HANDOFF_SOURCE_COMMIT"
 
+  mapping_file="$(mktemp)"
+  if ! handoff_mappings > "$mapping_file"; then
+    rm -f -- "$mapping_file"
+    fail "Handoff mapping could not be resolved."
+  fi
+
   declare -A release_names=()
   while IFS='|' read -r source_path release_name; do
     [[ -n "$source_path" && -n "$release_name" ]] \
@@ -101,7 +140,8 @@ snapshot_handoff() {
       "$release_name" \
       "$source_sha" \
       >> "$SNAPSHOT_DIR/HANDOFF_ASSET_INDEX.tsv"
-  done < <(handoff_mappings)
+  done < "$mapping_file"
+  rm -f -- "$mapping_file"
 }
 
 assemble_package() {
@@ -206,7 +246,7 @@ EOF
     while IFS= read -r filename; do
       [[ -f "$filename" && ! -L "$filename" ]] \
         || fail "Required checksum asset is missing or not regular: $filename"
-      sha256sum "$filename"
+      sha256sum --text "$filename"
     done < "$checksum_targets"
   ) > "$assets_dir/SHA256SUMS.txt"
 
@@ -332,7 +372,10 @@ verify_package() {
 
   checksum_file="$assets_dir/SHA256SUMS.txt"
   checksum_names="$(mktemp)"
-  awk '{ print $2 }' "$checksum_file" > "$checksum_names"
+  # GNU coreutils on Windows emits the binary-mode marker (`*filename`) while
+  # Linux emits the text-mode separator (` filename`). Normalize either form
+  # before comparing the covered asset names.
+  awk '{ sub(/^\*/, "", $2); print $2 }' "$checksum_file" > "$checksum_names"
 
   expected_checksum_count=0
   for filename in "${expected_assets[@]}"; do

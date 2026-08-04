@@ -5,9 +5,70 @@ plugins {
 
 dependencies {
     compileOnly(libs.paper.api)
+    compileOnly(libs.worldedit.bukkit) {
+        isTransitive = false
+    }
+    compileOnly(libs.worldedit.core) {
+        isTransitive = false
+    }
+    compileOnly(libs.worldguard.bukkit) {
+        isTransitive = false
+    }
+    compileOnly(libs.worldguard.core) {
+        isTransitive = false
+    }
+    compileOnly(libs.multiverse.inventories)
     compileOnly(project(":libraries:wayfarer-api"))
     implementation(project(":libraries:wayfarer-common"))
+    implementation(libs.hikari)
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.mysql)
+    implementation(libs.mariadb.client)
     implementation(project(":integrations:wayfarer-leafgrapple-adapter"))
+    testImplementation(project(":libraries:wayfarer-api"))
+    testImplementation(libs.paper.api)
+}
+
+val mariaDbIntegrationTestSourceSet = sourceSets.create("mariaDbIntegrationTest")
+
+configurations.named(mariaDbIntegrationTestSourceSet.implementationConfigurationName) {
+    extendsFrom(configurations.testImplementation.get())
+}
+configurations.named(mariaDbIntegrationTestSourceSet.runtimeOnlyConfigurationName) {
+    extendsFrom(configurations.testRuntimeOnly.get())
+}
+
+dependencies {
+    add(
+        mariaDbIntegrationTestSourceSet.implementationConfigurationName,
+        sourceSets.main.get().output
+    )
+    add(
+        mariaDbIntegrationTestSourceSet.implementationConfigurationName,
+        project(":libraries:wayfarer-testkit")
+    )
+    add(
+        mariaDbIntegrationTestSourceSet.implementationConfigurationName,
+        project(":plugins:wayfarer-core")
+    )
+    add(mariaDbIntegrationTestSourceSet.implementationConfigurationName, libs.flyway.core)
+    add(mariaDbIntegrationTestSourceSet.implementationConfigurationName, libs.flyway.mysql)
+    add(mariaDbIntegrationTestSourceSet.implementationConfigurationName, libs.mariadb.client)
+    add(mariaDbIntegrationTestSourceSet.implementationConfigurationName, libs.testcontainers.junit)
+}
+
+val mariaDbIntegrationTest = tasks.register<Test>("mariaDbIntegrationTest") {
+    description = "Runs isolated Frontier migration integration tests."
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    dependsOn(":plugins:wayfarer-core:shadowJar")
+    testClassesDirs = mariaDbIntegrationTestSourceSet.output.classesDirs
+    classpath = mariaDbIntegrationTestSourceSet.runtimeClasspath
+    shouldRunAfter(tasks.test)
+    useJUnitPlatform()
+}
+
+tasks.check {
+    dependsOn(mariaDbIntegrationTest)
 }
 
 
@@ -26,7 +87,11 @@ tasks.processResources {
 
 tasks.shadowJar {
     archiveClassifier.set("")
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
+    append("META-INF/LICENSE")
+    append("META-INF/LICENSE.txt")
+    append("META-INF/NOTICE")
 }
 
 tasks.jar {

@@ -1,225 +1,207 @@
 package io.github.eariver.wayfarer.preclient.fixture;
 
-import org.bukkit.plugin.Plugin;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.ServicePriority;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.Locale;
 
 /**
- * Test-only provider registered with the API class identity owned by the candidate Core plugin.
+ * Test-only Vault plugin that makes the Vault API visible through Paper's plugin
+ * classloader and publishes a representative Economy service.
  */
 public final class PreclientWaymarkFixturePlugin extends JavaPlugin
     implements InvocationHandler {
-    private static final String PROVIDER_TYPE =
-        "io.github.eariver.wayfarer.api.WayfarerWaymarkProvider";
     private static final Path MODE_FILE = Path.of("fixture-mode.txt");
-    private static final Path EFFECT_FILE = Path.of("fixture-effects.properties");
-    private static final Path CRASH_MARKER_FILE = Path.of("fixture-crash-marker.txt");
-    private ClassLoader apiLoader;
+    private static final String PROVIDER_NAME = "RedisEconomy";
+    private double balance = 100_000D;
 
     @Override
     public void onEnable() {
-        Plugin core = Objects.requireNonNull(
-            getServer().getPluginManager().getPlugin("Wayfarer_Core"),
-            "Wayfarer_Core plugin identity"
-        );
-        apiLoader = core.getClass().getClassLoader();
-        try {
-            Class<?> serviceType = Class.forName(PROVIDER_TYPE, true, apiLoader);
-            Object provider = Proxy.newProxyInstance(
-                apiLoader,
-                new Class<?>[]{serviceType},
-                this
-            );
-            register(serviceType, provider);
-            getLogger().info("WAYFARER_FIXTURE: REGISTERED candidate-api-identity");
-        } catch (ClassNotFoundException failure) {
-            throw new IllegalStateException("Candidate provider API is unavailable", failure);
+        if ("outage".equals(mode())) {
+            getLogger().info("WAYFARER_FIXTURE_VAULT: API_ONLY provider=unavailable");
+            return;
         }
+        register(Economy.class);
+        Plugin core = getServer().getPluginManager().getPlugin("Wayfarer_Core");
+        if (core != null) {
+            try {
+                Class<?> coreEconomy = Class.forName(
+                    Economy.class.getName(),
+                    false,
+                    core.getClass().getClassLoader()
+                );
+                if (coreEconomy != Economy.class) {
+                    register(coreEconomy);
+                }
+                getLogger().info(
+                    "WAYFARER_FIXTURE_VAULT: API_IDENTITY shared="
+                        + (coreEconomy == Economy.class)
+                );
+            } catch (ClassNotFoundException failure) {
+                throw new IllegalStateException(
+                    "Core Vault API identity is unavailable"
+                );
+            }
+        }
+        getLogger().info(
+            "WAYFARER_FIXTURE_VAULT: REGISTERED provider=" + PROVIDER_NAME
+        );
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] arguments) throws Throwable {
+    public synchronized Object invoke(
+        Object proxy,
+        Method method,
+        Object[] arguments
+    ) {
         if (method.getDeclaringClass() == Object.class) {
             return objectMethod(proxy, method, arguments);
         }
-        String mode = mode();
         String name = method.getName();
-        System.out.println(
-            "WAYFARER_FIXTURE: CALL " + name
+        getLogger().info(
+            "WAYFARER_FIXTURE_VAULT: CALL " + name
                 + " thread=" + Thread.currentThread().getName()
-                + " mode=" + mode
         );
-        System.out.flush();
         return switch (name) {
-            case "probe" -> completed(record(
-                "ProbeResult",
-                !"outage".equals(mode),
-                "preclient-fixture",
-                "outage".equals(mode) ? "FIXTURE_OUTAGE" : null
-            ));
-            case "balance" -> completed(new BigDecimal("100000"));
-            case "debit" -> effect("DEBIT", (String) arguments[2], mode);
-            case "refund" -> effect("REFUND", (String) arguments[2], mode);
-            case "resolve" -> resolve((String) arguments[1], mode);
-            default -> throw new UnsupportedOperationException("Unsupported fixture method");
+            case "getName" -> PROVIDER_NAME;
+            case "isEnabled" -> true;
+            case "hasBankSupport" -> false;
+            case "fractionalDigits" -> 2;
+            case "format" -> String.format(
+                Locale.ROOT,
+                "%.2f",
+                ((Number) arguments[0]).doubleValue()
+            );
+            case "currencyNamePlural" -> "Waymarks";
+            case "currencyNameSingular" -> "Waymark";
+            case "hasAccount", "createPlayerAccount" -> true;
+            case "getBalance" -> balance;
+            case "has" -> balance >= lastNumber(arguments);
+            case "withdrawPlayer" ->
+                withdraw(method.getReturnType(), lastNumber(arguments));
+            case "depositPlayer" ->
+                deposit(method.getReturnType(), lastNumber(arguments));
+            case "getBanks" -> List.of();
+            case "createBank", "deleteBank", "bankBalance", "bankHas",
+                 "bankWithdraw", "bankDeposit", "isBankOwner", "isBankMember" ->
+                response(
+                    method.getReturnType(),
+                    0D,
+                    false,
+                    "Bank operations are unavailable"
+                );
+            default -> throw new UnsupportedOperationException(
+                "Unsupported Vault fixture method: " + name
+            );
         };
     }
 
-    private Object effect(String kind, String operationId, String mode) throws Exception {
-        if ("outage".equals(mode)) {
-            return CompletableFuture.failedFuture(
-                new IllegalStateException("fixture provider outage")
+    private Object withdraw(Class<?> responseType, double amount) {
+        if (!Double.isFinite(amount) || amount <= 0D) {
+            return response(responseType, amount, false, "Invalid amount");
+        }
+        if (balance < amount) {
+            return response(responseType, amount, false, "Insufficient funds");
+        }
+        balance -= amount;
+        return response(responseType, amount, true, null);
+    }
+
+    private Object deposit(Class<?> responseType, double amount) {
+        if (!Double.isFinite(amount) || amount <= 0D) {
+            return response(responseType, amount, false, "Invalid amount");
+        }
+        balance += amount;
+        return response(responseType, amount, true, null);
+    }
+
+    private Object response(
+        Class<?> responseType,
+        double amount,
+        boolean success,
+        String message
+    ) {
+        try {
+            Class<?> responseKind = Class.forName(
+                responseType.getName() + "$ResponseType",
+                true,
+                responseType.getClassLoader()
+            );
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            Object kind = Enum.valueOf(
+                (Class<? extends Enum>) responseKind.asSubclass(Enum.class),
+                success ? "SUCCESS" : "FAILURE"
+            );
+            return responseType.getConstructor(
+                double.class,
+                double.class,
+                responseKind,
+                String.class
+            ).newInstance(amount, balance, kind, message);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException(
+                "Vault fixture response construction failed"
             );
         }
-        if ("timeout-before-effect".equals(mode)) {
-            return new CompletableFuture<>();
-        }
-        String reference = kind.toLowerCase(java.util.Locale.ROOT) + "-" + operationId;
-        persistEffect(operationId, kind, reference);
-        if (("crash-after-debit".equals(mode) && "DEBIT".equals(kind))
-            || ("crash-after-refund".equals(mode) && "REFUND".equals(kind))) {
-            Files.writeString(
-                CRASH_MARKER_FILE,
-                "HALT_AFTER_" + kind + System.lineSeparator(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING
-            );
-            System.out.println(
-                "WAYFARER_FIXTURE: HALT_AFTER_" + kind + " operation=" + operationId
-            );
-            System.out.flush();
-            Runtime.getRuntime().halt("DEBIT".equals(kind) ? 73 : 74);
-        }
-        if ("timeout-after-effect".equals(mode)) {
-            return new CompletableFuture<>();
-        }
-        if ("unknown-after-effect".equals(mode)) {
-            return completed(record(
-                "EffectResult",
-                enumeration("EffectStatus", "UNKNOWN"),
-                reference,
-                "FIXTURE_UNKNOWN_AFTER_EFFECT"
-            ));
-        }
-        return completed(record(
-            "EffectResult",
-            enumeration("EffectStatus", "SUCCEEDED"),
-            reference,
-            null
-        ));
     }
 
-    private Object resolve(String operationId, String mode) throws Exception {
-        if ("resolve-unknown".equals(mode)) {
-            return completed(record(
-                "ResolutionResult",
-                enumeration("ResolutionStatus", "UNKNOWN"),
-                null,
-                "FIXTURE_RESOLUTION_UNKNOWN"
-            ));
-        }
-        Properties effects = loadEffects();
-        String value = effects.getProperty(operationId);
-        if (value == null) {
-            return completed(record(
-                "ResolutionResult",
-                enumeration("ResolutionStatus", "NOT_APPLIED"),
-                null,
-                "FIXTURE_NOT_APPLIED"
-            ));
-        }
-        String[] fields = value.split("\\|", 2);
-        return completed(record(
-            "ResolutionResult",
-            enumeration("ResolutionStatus", "APPLIED"),
-            fields[1],
-            null
-        ));
-    }
-
-    private synchronized void persistEffect(
-        String operationId,
-        String kind,
-        String reference
-    ) throws IOException {
-        Properties effects = loadEffects();
-        effects.setProperty(operationId, kind + "|" + reference);
-        try (OutputStream output = Files.newOutputStream(
-            EFFECT_FILE,
-            StandardOpenOption.CREATE,
-            StandardOpenOption.TRUNCATE_EXISTING
-        )) {
-            effects.store(output, "test-only Waymark fixture effects");
-        }
-    }
-
-    private synchronized Properties loadEffects() throws IOException {
-        Properties effects = new Properties();
-        if (Files.isRegularFile(EFFECT_FILE)) {
-            try (InputStream input = Files.newInputStream(EFFECT_FILE)) {
-                effects.load(input);
-            }
-        }
-        return effects;
-    }
-
-    private String mode() throws IOException {
-        return Files.isRegularFile(MODE_FILE)
-            ? Files.readString(MODE_FILE).trim()
-            : "success";
-    }
-
-    private Object record(String simpleName, Object... arguments) throws Exception {
-        Class<?> type = Class.forName(PROVIDER_TYPE + "$" + simpleName, true, apiLoader);
-        for (Constructor<?> constructor : type.getDeclaredConstructors()) {
-            if (constructor.getParameterCount() == arguments.length) {
-                return constructor.newInstance(arguments);
-            }
-        }
-        throw new IllegalStateException("Fixture API record constructor is unavailable");
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private Object enumeration(String simpleName, String value) throws ClassNotFoundException {
-        Class enumType = Class.forName(PROVIDER_TYPE + "$" + simpleName, true, apiLoader);
-        return Enum.valueOf(enumType, value);
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private void register(Class serviceType, Object provider) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void register(Class<?> economyType) {
+        Object economy = Proxy.newProxyInstance(
+            economyType.getClassLoader(),
+            new Class<?>[]{economyType},
+            this
+        );
         getServer().getServicesManager().register(
-            serviceType,
-            provider,
+            (Class) economyType,
+            economy,
             this,
             ServicePriority.Normal
         );
     }
 
-    private static CompletableFuture<Object> completed(Object value) {
-        return CompletableFuture.completedFuture(value);
+    private String mode() {
+        try {
+            return Files.isRegularFile(MODE_FILE)
+                ? Files.readString(MODE_FILE).trim()
+                : "success";
+        } catch (IOException failure) {
+            throw new IllegalStateException("Vault fixture mode is unavailable");
+        }
     }
 
-    private static Object objectMethod(Object proxy, Method method, Object[] arguments) {
+    private static double lastNumber(Object[] arguments) {
+        if (arguments == null || arguments.length == 0) {
+            throw new IllegalArgumentException("Vault amount is absent");
+        }
+        Object value = arguments[arguments.length - 1];
+        if (!(value instanceof Number number)) {
+            throw new IllegalArgumentException("Vault amount is invalid");
+        }
+        return number.doubleValue();
+    }
+
+    private static Object objectMethod(
+        Object proxy,
+        Method method,
+        Object[] arguments
+    ) {
         return switch (method.getName()) {
-            case "toString" -> "PreclientWaymarkFixture";
+            case "toString" -> "PreclientVaultEconomyFixture";
             case "hashCode" -> System.identityHashCode(proxy);
             case "equals" -> proxy == arguments[0];
-            default -> throw new UnsupportedOperationException("Unsupported Object method");
+            default -> throw new UnsupportedOperationException(
+                "Unsupported Object method"
+            );
         };
     }
 }

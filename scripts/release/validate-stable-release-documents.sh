@@ -2,6 +2,7 @@
 set -euo pipefail
 
 : "${STABLE_SOURCE_COMMIT:?STABLE_SOURCE_COMMIT is required}"
+: "${RELEASE_SCOPE:?RELEASE_SCOPE is required}"
 : "${TEST_EVIDENCE:?TEST_EVIDENCE is required}"
 : "${REQUIREMENT_TRACEABILITY:?REQUIREMENT_TRACEABILITY is required}"
 : "${RELEASE_READINESS:?RELEASE_READINESS is required}"
@@ -129,18 +130,40 @@ if ! grep -Fq -- "$STABLE_SOURCE_COMMIT" "$RELEASE_READINESS"; then
   exit 1
 fi
 
-mapfile -t expected_sha_lines < <(
-  sed -nE 's/^- Stable candidate SHA-256: `([0-9A-Fa-f]{64})`$/\1/p' \
-    "$TEST_EVIDENCE"
-)
-if [[ "${#expected_sha_lines[@]}" -ne 1 ]]; then
-  echo "Test evidence does not contain one valid Stable candidate SHA-256 line." >&2
-  exit 1
+if [[ "$RELEASE_SCOPE" == "core" ]]; then
+  mapfile -t expected_sha_lines < <(
+    sed -nE 's/^- Stable candidate SHA-256: `([0-9A-Fa-f]{64})`$/\1/p' \
+      "$TEST_EVIDENCE"
+  )
+  if [[ "${#expected_sha_lines[@]}" -ne 1 ]]; then
+    echo "Test evidence does not contain one valid Stable candidate SHA-256 line." >&2
+    exit 1
+  fi
+  expected_sha="${expected_sha_lines[0]}"
+  if ! grep -Fq -- "$expected_sha" "$RELEASE_READINESS"; then
+    echo "Release readiness does not identify the expected stable candidate SHA-256." >&2
+    exit 1
+  fi
+  printf '%s\n' "${expected_sha^^}"
+else
+  required_artifacts=(Wayfarer_Main Wayfarer_Frontier)
+  if [[ "$RELEASE_SCOPE" == "all" ]]; then
+    required_artifacts=(Wayfarer_Core "${required_artifacts[@]}")
+  fi
+  for artifact in "${required_artifacts[@]}"; do
+    mapfile -t hashes < <(
+      sed -nE \
+        "s/^- ${artifact} stable candidate SHA-256: \`([0-9A-Fa-f]{64})\`$/\\1/p" \
+        "$TEST_EVIDENCE"
+    )
+    if [[ "${#hashes[@]}" -ne 1 ]]; then
+      echo "Test evidence must contain one stable candidate hash for $artifact." >&2
+      exit 1
+    fi
+    grep -Fq -- "${hashes[0]}" "$RELEASE_READINESS" \
+      || {
+        echo "Release readiness does not identify the $artifact candidate hash." >&2
+        exit 1
+      }
+  done
 fi
-expected_sha="${expected_sha_lines[0]}"
-if ! grep -Fq -- "$expected_sha" "$RELEASE_READINESS"; then
-  echo "Release readiness does not identify the expected stable candidate SHA-256." >&2
-  exit 1
-fi
-
-printf '%s\n' "${expected_sha^^}"

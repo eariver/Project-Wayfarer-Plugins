@@ -13,10 +13,9 @@ on:
         type: choice
         options:
           - core
-          - core-main
-          - core-frontier
+          - main-frontier
           - all
-        default: core
+        default: main-frontier
       test_instructions:
         description: "Optional Markdown path or commit-pinned URL for test-server verification"
         required: false
@@ -50,7 +49,7 @@ jobs:
 
     steps:
       - name: Check out selected main commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -68,13 +67,15 @@ jobs:
             exit 1
           fi
 
-          if [[ ! "$INPUT_VERSION" =~ ^V0\.0\.[1-9][0-9]*-[0-9A-Za-z][0-9A-Za-z.-]*$ ]]; then
+          source scripts/release/release-policy.sh
+
+          if ! is_prerelease_version "$INPUT_VERSION"; then
             echo "::error::Pre-release version must resemble V0.0.1-alpha.1."
             exit 1
           fi
 
-          if [[ "$RELEASE_SCOPE" != "core" ]]; then
-            echo "::error::The current V0.0.x release policy permits only release_scope=core."
+          if ! is_release_scope "$RELEASE_SCOPE"; then
+            echo "::error::Release scope must be core, main-frontier, or all."
             exit 1
           fi
 
@@ -108,13 +109,13 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Set up Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "25"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Verify and build release artifacts
         env:
@@ -134,56 +135,59 @@ jobs:
           set -euo pipefail
           mkdir -p release
 
-          copy_plugin_jar() {
-            local module_path="$1"
-            local artifact_name="$2"
+          source scripts/release/release-policy.sh
+          RELEASE_VERSION="$RELEASE_VERSION" \
+            RELEASE_SCOPE="$RELEASE_SCOPE" \
+            OUTPUT_DIR=release \
+            bash scripts/release/collect-scoped-runtime-jars.sh >/dev/null
+          mapfile -t release_jars < <(
+            find release -maxdepth 1 -type f -name 'Wayfarer_*.jar' -printf '%f\n' | sort
+          )
 
-            mapfile -t jars < <(
-              find "$module_path/build/libs" -maxdepth 1 -type f \
-                -name "*.jar" \
-                ! -name "*-sources.jar" \
-                ! -name "*-javadoc.jar" \
-                | sort
-            )
-
-            if [[ "${#jars[@]}" -ne 1 ]]; then
-              echo "::error::Expected exactly one runtime JAR in $module_path/build/libs, found ${#jars[@]}."
-              printf '%s\n' "${jars[@]}"
+          component_metadata="$RUNNER_TEMP/prerelease-component-metadata.md"
+          : > "$component_metadata"
+          record_component() {
+            local component="$1"
+            local config_path="$2"
+            local migration_path="$3"
+            local config_version migration_version
+            config_version="$(
+              awk '$1 == "config-version:" { print $2; exit }' "$config_path"
+            )"
+            migration_version="$(
+              find "$migration_path" -maxdepth 1 -type f -name 'V*__*.sql' -printf '%f\n' \
+                | sed 's/__.*//' | sort -V | tail -n 1
+            )"
+            if [[ -z "$config_version" || -z "$migration_version" ]]; then
+              echo "::error::$component config or migration version is missing."
               exit 1
             fi
-
-            cp "${jars[0]}" "release/${artifact_name}-${RELEASE_VERSION}.jar"
+            printf -- '- %s: config `%s`; migration `%s`\n' \
+              "$component" "$config_version" "$migration_version" \
+              >> "$component_metadata"
           }
-
-          copy_plugin_jar "plugins/wayfarer-core" "Wayfarer_Core"
-
-          CONFIG_VERSION="$(
-            awk '$1 == "config-version:" { print $2; exit }' \
-              plugins/wayfarer-core/src/main/resources/config.yml
-          )"
-          if [[ -z "$CONFIG_VERSION" ]]; then
-            echo "::error::Core config.yml must declare config-version before release."
-            exit 1
+          if scope_includes_core "$RELEASE_SCOPE"; then
+            record_component \
+              "Wayfarer_Core" \
+              plugins/wayfarer-core/src/main/resources/config.yml \
+              plugins/wayfarer-core/src/main/resources/db/migration/core
           fi
-
-          MIGRATION_VERSION="$(
-            find plugins/wayfarer-core/src/main/resources/db/migration/core \
-              -maxdepth 1 -type f -name 'V*__*.sql' -printf '%f\n' \
-              | sed 's/__.*//' | sort -V | tail -n 1
-          )"
-          if [[ -z "$MIGRATION_VERSION" ]]; then
-            echo "::error::No Core Flyway migration version was found."
-            exit 1
+          if scope_includes_main_frontier "$RELEASE_SCOPE"; then
+            record_component \
+              "Wayfarer_Main" \
+              plugins/wayfarer-main/src/main/resources/config.yml \
+              plugins/wayfarer-main/src/main/resources/db/migration/main
+            record_component \
+              "Wayfarer_Frontier" \
+              plugins/wayfarer-frontier/src/main/resources/config.yml \
+              plugins/wayfarer-frontier/src/main/resources/db/migration/frontier
           fi
 
           cp gradle/libs.versions.toml release/DEPENDENCY_VERSIONS.toml
 
           (
             cd release
-            sha256sum \
-              "Wayfarer_Core-${RELEASE_VERSION}.jar" \
-              DEPENDENCY_VERSIONS.toml \
-              > SHA256SUMS.txt
+            sha256sum "${release_jars[@]}" DEPENDENCY_VERSIONS.toml > SHA256SUMS.txt
           )
 
           cat > release/RELEASE_MANIFEST.md <<EOF
@@ -194,8 +198,6 @@ jobs:
           - Tag: ${TAG}
           - Release scope: ${RELEASE_SCOPE}
           - Source commit: ${SOURCE_SHA}
-          - Config version: ${CONFIG_VERSION}
-          - Migration version: ${MIGRATION_VERSION}
           - Source branch: main
           - Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           - Test instructions: ${TEST_INSTRUCTIONS:-Not specified}
@@ -212,6 +214,11 @@ jobs:
           while read -r hash file; do
             printf -- '- `%s`: `%s`\n' "$file" "$hash" >> release/RELEASE_MANIFEST.md
           done < release/SHA256SUMS.txt
+
+          {
+            printf '\n## Component compatibility\n\n'
+            cat "$component_metadata"
+          } >> release/RELEASE_MANIFEST.md
 
           cat >> release/RELEASE_MANIFEST.md <<EOF
 
@@ -235,10 +242,10 @@ jobs:
       - name: Generate build provenance
         uses: actions/attest@v4
         with:
-          subject-path: "release/Wayfarer_Core-${{ steps.metadata.outputs.release_version }}.jar"
+          subject-path: "release/Wayfarer_*.jar"
 
       - name: Store release package for approval
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.metadata.outputs.artifact_name }}
           path: release/
@@ -260,13 +267,13 @@ jobs:
 
     steps:
       - name: Check out approved source commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.build.outputs.source_sha }}
           fetch-depth: 0
 
       - name: Download approved release package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: release/
@@ -312,8 +319,16 @@ jobs:
             exit 1
           fi
 
+          mapfile -t release_jars < <(
+            find release -maxdepth 1 -type f -name 'Wayfarer_*.jar' | sort
+          )
+          if [[ "${#release_jars[@]}" -lt 1 ]]; then
+            echo "::error::No scoped runtime JARs were found."
+            exit 1
+          fi
+
           gh release create "$TAG" \
-            "release/Wayfarer_Core-${TAG}.jar" \
+            "${release_jars[@]}" \
             release/SHA256SUMS.txt \
             release/RELEASE_MANIFEST.md \
             release/DEPENDENCY_VERSIONS.toml \

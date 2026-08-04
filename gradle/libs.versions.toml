@@ -9,6 +9,9 @@ junit = "5.14.3"
 mockito = "5.23.0"
 testcontainers = "2.0.5"
 vault-api = "1.7.1"
+worldedit = "7.4.4"
+worldguard = "7.0.17"
+multiverse-inventories = "5.3.5"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -24,6 +27,11 @@ mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 testcontainers-junit = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
 testcontainers-mariadb = { module = "org.testcontainers:testcontainers-mariadb", version.ref = "testcontainers" }
 vault-api = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault-api" }
+worldedit-bukkit = { module = "com.sk89q.worldedit:worldedit-bukkit", version.ref = "worldedit" }
+worldedit-core = { module = "com.sk89q.worldedit:worldedit-core", version.ref = "worldedit" }
+worldguard-bukkit = { module = "com.sk89q.worldguard:worldguard-bukkit", version.ref = "worldguard" }
+worldguard-core = { module = "com.sk89q.worldguard:worldguard-core", version.ref = "worldguard" }
+multiverse-inventories = { module = "org.mvplugins.multiverse.inventories:multiverse-inventories", version.ref = "multiverse-inventories" }
 
 [plugins]
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
