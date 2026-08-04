@@ -56,7 +56,7 @@ Completed:
 - retained the Owner-provided mainline requirement source as the base;
 - applied only the approved clarification/contradiction-resolution subset of the delta register;
 - excluded prior implementation state, test state, roadmap, and release sequencing;
-- committed raw source snapshots and the normalized canonical source.
+- committed the immutable source-input manifest and the normalized canonical source.
 
 Canonical source:
 
@@ -149,7 +149,7 @@ LEGACY / VERSION-PREFIXED REQUIREMENT IDS:
 4. WorldEdit/FAWE Launchpad protection boundary.
 5. Launchpad material identity across configuration changes.
 6. Authoritative return path under portal denial.
-7. Player-paid Growth Tool reissue invocation context.
+7. Player-paid reissue invocation context.
 8. Complete command-to-permission group allocation.
 9. Maximum normal-progress loss window.
 
