@@ -58,23 +58,69 @@ Automotive SPICE assessment or certification.
 - No implementation, build-candidate creation, runtime test, or release operation is authorized while
   `docs/V0.0.2-redesign/STATUS.md` says the applicable predecessor gate is incomplete.
 
-## Domain documents and linked identifiers
+## Process-specific domains and identifiers
 
 Read and comply with:
 
 `docs/V0.0.2-redesign/00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md`
 
-- Requirements, architecture, detailed design, verification, and evidence are divided by controlled
-  functional or cross-cutting domain documents.
-- Codex must use full linked identifiers such as
-  `V002-SWE3-MAIN-004-DD-017`; local shorthand such as `DD-017` is insufficient in work orders,
-  implementation records, tests, reports, or reviews.
-- Each implementation unit in the consistency record receives a linked `IMP` identifier and maps to
-  one or more approved full `DD` identifiers.
-- Codex must not merge domains, duplicate normative items, invent new document IDs, renumber approved
-  items, or assign a new plugin-domain code.
-- When an implementation task cannot be mapped unambiguously to an approved document-linked detailed
-  design item, stop with `DESIGN_BLOCKED`.
+Document ID: `GOV-TRACE-001`.
+
+- Controlled IDs never contain a Product-version token such as `V002`.
+- Document IDs use `<PROCESS>-<DOMAIN>-<DOCUMENT_NUMBER>`.
+- Normative item IDs concatenate the document ID and semantic item role.
+- Each SWE process owns a separate domain dictionary. Codex must not assume SWE.1, SWE.2, SWE.3,
+  SWE.4, SWE.5, and SWE.6 use matching domain names.
+- Cross-process allocation is proved through explicit full-ID traceability, not domain-name matching.
+- The retired item types `REQ`, `ARC`, `UV`, `IV`, and `QV` must not be introduced.
+- `DD` identifies approved SWE.3 detailed design; `IMP` identifies the implementation unit that
+  realizes it; `REF` identifies an authoritative external reference.
+- Codex must not merge domains, duplicate normative items, invent document IDs, invent item IDs,
+  renumber reviewed items, or change a phase domain dictionary.
+- When an implementation task cannot be mapped unambiguously to an approved full SWE.3 `DD` ID, stop
+  with `DESIGN_BLOCKED`.
+
+## SWE.3 source-code traceability
+
+Every production class and every production method that realizes normative SWE.3 behavior must list
+its applicable full SWE.3 `DD` IDs in standard Javadoc text.
+
+Required form:
+
+```java
+/**
+ * Performs the approved behavior.
+ *
+ * <p><strong>SWE.3 traceability:</strong>
+ * {@code SWE3-DURABILITY-001-DD-004},
+ * {@code SWE3-DURABILITY-001-DD-006}
+ */
+```
+
+Rules:
+
+- Class Javadoc identifies the class design scope.
+- Method Javadoc identifies every SWE.3 item realized by the method.
+- Javadoc alone is sufficient when the whole class or method maps unambiguously to one item or a
+  small set from one detailed-design document.
+- When one method contains distinct code regions mapped to items from multiple detailed-design
+  documents, list all IDs in method Javadoc and add focused comments immediately before the relevant
+  regions using:
+
+```java
+// SWE.3 traceability: SWE3-AUTHORITY-001-DD-009
+```
+
+- Every inline ID must also appear in the enclosing method Javadoc.
+- Trace comments identify mapping only; they do not replace ordinary design or code explanation.
+- Generated code, trivial accessors, constructors, and mechanical data holders may use class-level
+  mapping only when the approved SWE.3 design explicitly permits it.
+- Codex must not alter design IDs to make the source mapping convenient.
+
+Construction must run the approved deterministic source scanner and commit the sanitized generated
+implementation-to-detailed-design consistency report. The scanner must report source path,
+class/method signature, line range, Javadoc IDs, inline IDs, and linked `IMP` ID, and must reject
+unknown, missing, unmatched, or duplicated mappings according to `GOV-TRACE-001`.
 
 ## External library and platform API authority
 
