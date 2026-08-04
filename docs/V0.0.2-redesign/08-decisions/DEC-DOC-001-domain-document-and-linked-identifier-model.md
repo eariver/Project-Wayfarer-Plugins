@@ -1,40 +1,42 @@
-# DEC-DOC-001 — Domain Document Split and Linked Identifier Model
+# DEC-DOC-001 — Initial Domain Document Split and Linked Identifier Model
 
-State: `APPROVED`  
+State: `SUPERSEDED`  
 Date: 2026-08-05 JST  
 Decision owner: Project Owner  
 Prepared by: ChatGPT  
-Applicable scope: all V0.0.2 redesign work products and later Wayfarer-owned plugin design work
+Applicable scope: historical V0.0.2 redesign governance only  
+Superseded by: `DEC-DOC-002`
 
-## Decision
+## Historical decision
 
-1. Requirements, architecture, detailed design, verification, and related controlled work products
-   are divided by functional or cross-cutting domain.
-2. Every controlled document receives a stable document identifier.
-3. Every normative requirement or design/verification item inside the document receives an individual
-   identifier formed by concatenating the owning document identifier and a local item identifier.
-4. Full linked identifiers, not local shorthand, are used in traceability, work orders, implementation
-   consistency records, verification reports, and reviews.
-5. Each normative item has one owning document; other documents reference it instead of duplicating
-   it.
-6. Existing draft redesign documents are normalized before the applicable lifecycle gate.
+This decision originally established:
 
-## Governing policy
+1. domain-separated requirements, design, and verification documents;
+2. a stable document identifier;
+3. document-linked normative-item identifiers;
+4. one owning document for each normative item;
+5. full identifiers in traceability and implementation consistency records.
 
-`docs/V0.0.2-redesign/00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md`
+## Supersession reason
 
-## Rationale
+The original model is no longer authoritative because it:
 
-The repository must be sufficient to continue and audit the work without conversational context.
-Domain separation limits monolithic specifications and ownership ambiguity. Linked identifiers make
-the owning document and item relationship explicit and preserve end-to-end traceability through
-SWE.1 to SWE.6.
+- embedded `V002` in document and item identifiers;
+- required one global domain partition across SWE.1 through SWE.6;
+- used process-redundant item types such as `REQ`, `ARC`, `UV`, `IV`, and `QV`;
+- did not define Javadoc and inline source-code traceability to SWE.3 detailed design.
 
-## Consequences
+These points were corrected by the Owner-approved process-specific model in `DEC-DOC-002` and
+`GOV-TRACE-001` Revision B.
 
-- A monolithic V0.0.2 requirements or design specification is prohibited.
-- New plugin domains require a tracked domain-code decision.
-- Document indexes are required per SWE phase.
-- Codex implementation consistency records must cite full `DD` identifiers and create linked `IMP`
-  identifiers.
-- ChatGPT reviews reject ambiguous, duplicated, unowned, or locally identified normative items.
+## Retained principles
+
+The following principles remain valid through the replacement decision:
+
+- documents remain subject-separated and reviewable;
+- every controlled document and normative item has a stable full identifier;
+- each normative item has one owner;
+- traceability uses complete identifiers;
+- existing draft documents must be normalized before their applicable gate.
+
+This document is retained for decision history and must not be used as current identifier authority.
