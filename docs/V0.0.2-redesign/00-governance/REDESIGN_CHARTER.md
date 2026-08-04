@@ -111,12 +111,25 @@ referenced to immutable Product and environment identities.
 - Architecture allocates every approved requirement or explicitly records why allocation is not
   applicable.
 - Detailed design specifies behavior at a level where Codex does not need to invent semantics.
+- Java standard APIs, Paper/Spigot/Bukkit APIs, adopted plugin boundaries, and acceptable external
+  libraries are evaluated before Project-owned implementation is designed.
+- Functionality adequately supplied by an approved platform API or external library is not
+  reimplemented without a controlled justification.
+- External dependencies must have an acceptable maintenance profile, compatibility, license,
+  packaging, and failure-boundary assessment.
+- Designs that rely on platform or library behavior link the authoritative official references used
+  to validate that behavior, with particular attention to SWE.3 event, lifecycle, threading, item,
+  inventory, persistence, and cancellation semantics.
 - Implementation changes are traceable to detailed-design identifiers.
 - Verification is derived from requirements and design, not from code structure alone.
 - Runtime and Client tests cover only behavior that cannot be sufficiently established at lower test
   levels.
 - A passed test count does not substitute for requirements coverage or design conformance.
 - Deviations, limitations, and unresolved decisions are explicit.
+
+The controlling cross-plugin engineering policy is:
+
+`00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
 
 ## 9. Completion condition
 
