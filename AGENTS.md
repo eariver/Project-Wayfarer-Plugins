@@ -58,6 +58,24 @@ Automotive SPICE assessment or certification.
 - No implementation, build-candidate creation, runtime test, or release operation is authorized while
   `docs/V0.0.2-redesign/STATUS.md` says the applicable predecessor gate is incomplete.
 
+## Domain documents and linked identifiers
+
+Read and comply with:
+
+`docs/V0.0.2-redesign/00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md`
+
+- Requirements, architecture, detailed design, verification, and evidence are divided by controlled
+  functional or cross-cutting domain documents.
+- Codex must use full linked identifiers such as
+  `V002-SWE3-MAIN-004-DD-017`; local shorthand such as `DD-017` is insufficient in work orders,
+  implementation records, tests, reports, or reviews.
+- Each implementation unit in the consistency record receives a linked `IMP` identifier and maps to
+  one or more approved full `DD` identifiers.
+- Codex must not merge domains, duplicate normative items, invent new document IDs, renumber approved
+  items, or assign a new plugin-domain code.
+- When an implementation task cannot be mapped unambiguously to an approved document-linked detailed
+  design item, stop with `DESIGN_BLOCKED`.
+
 ## External library and platform API authority
 
 Read and comply with:
