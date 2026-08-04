@@ -28,14 +28,27 @@ The redesign follows a tailored V-model aligned to SWE.1 through SWE.6.
 This is a Project Wayfarer process tailoring. The repository does not claim formal Automotive SPICE
 assessment or certification solely from using these process names.
 
+## Engineering policy
+
+All current and future Wayfarer-owned plugins may use Java standard APIs, Paper/Spigot/Bukkit APIs,
+and approved external libraries. Existing suitable capabilities must be reused instead of being
+unnecessarily reimplemented. Dependency maintenance, compatibility, licensing, packaging, failure
+behavior, and official API references are controlled by:
+
+`00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
+
+SWE.2 and SWE.3 must apply this policy. Codex may not select or replace dependencies during
+construction.
+
 ## Reading order
 
 1. `STATUS.md`
 2. `00-governance/REDESIGN_CHARTER.md`
 3. `00-governance/V_MODEL_PROCESS_AND_ROLES.md`
 4. `00-governance/DOCUMENT_CONTROL_AND_GATES.md`
-5. the active phase directory named by `STATUS.md`
-6. the current approved work order, when implementation or verification is authorized
+5. `00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
+6. the active phase directory named by `STATUS.md`
+7. the current approved work order, when implementation or verification is authorized
 
 ## Directory model
 
