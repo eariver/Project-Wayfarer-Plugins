@@ -2,6 +2,7 @@
 
 Updated: 2026-08-05 JST  
 Branch: `redesign/V0.0.2-swe1-3`  
+Draft PR: `#18`  
 Baseline: Plugin V0.0.1 on `main`  
 Current process: `SWE.1 Software Requirements Analysis`  
 Current gate: `SWE1_REQUIREMENTS_BASELINE_NOT_READY`
@@ -17,6 +18,9 @@ V0.0.1 REDESIGN:
 
 PR #14 / CANDIDATE-8:
   FROZEN REFERENCE / NOT A DESIGN AUTHORITY
+
+PR #18:
+  OPEN / DRAFT / DESIGN AUTHORITY WORKSTREAM
 
 CANDIDATE-9:
   NOT STARTED / NOT AUTHORIZED
@@ -47,27 +51,30 @@ traceability baseline before any new architecture or implementation decision.
 
 ## Current work products
 
-| Work product | Status | Authority |
+| Work product | State | Authority |
 |---|---|---|
 | Redesign entry point | Prepared | `README.md` |
-| Redesign charter | Prepared | `00-governance/REDESIGN_CHARTER.md` |
-| V-model process and roles | Prepared | `00-governance/V_MODEL_PROCESS_AND_ROLES.md` |
-| Document control and gates | Prepared | `00-governance/DOCUMENT_CONTROL_AND_GATES.md` |
-| SWE.1 source register | In preparation | `01-swe1-software-requirements-analysis/REQUIREMENT_SOURCES.md` |
-| SWE.1 analysis plan | In preparation | `01-swe1-software-requirements-analysis/SWE1_ANALYSIS_PLAN.md` |
+| Redesign charter | Prepared for Owner confirmation | `00-governance/REDESIGN_CHARTER.md` |
+| V-model process and roles | Prepared for Owner confirmation | `00-governance/V_MODEL_PROCESS_AND_ROLES.md` |
+| Document control and gates | Prepared for Owner confirmation | `00-governance/DOCUMENT_CONTROL_AND_GATES.md` |
+| Legacy V0.0.2 freeze | Approved baseline | `00-governance/LEGACY_V002_FREEZE.md` |
+| V-model role decision | Approved baseline | `08-decisions/DEC-PROC-001-v-model-role-allocation.md` |
+| SWE.1 source register | Draft | `01-swe1-software-requirements-analysis/REQUIREMENT_SOURCES.md` |
+| SWE.1 analysis plan | Draft | `01-swe1-software-requirements-analysis/SWE1_ANALYSIS_PLAN.md` |
 | Software Requirements Specification | Not started | planned under SWE.1 directory |
 | Requirements traceability matrix | Not started | planned under `07-traceability/` |
 
 ## Immediate next actions
 
-1. Identify and retrieve all authoritative V0.0.2 input sources from the Project and Plugin
+1. Retrieve and hash all remaining authoritative V0.0.2 input sources from the Project and Plugin
    repositories.
-2. Classify each source by authority, applicability, version, and conflict status.
-3. Extract stakeholder and software requirements without inheriting implementation assumptions from
+2. Inventory V0.0.1 public API, contracts, migrations, and release handoff constraints.
+3. Classify each source statement by authority, applicability, conflict status, and release scope.
+4. Extract stakeholder and software requirements without inheriting implementation assumptions from
    PR #14.
-4. Assign stable requirement IDs and define verification intent.
-5. Record ambiguities, conflicts, missing decisions, and V0.0.1 baseline dependency issues.
-6. Present the SWE.1 baseline for Owner review before SWE.2 begins.
+5. Assign stable requirement IDs and define verification intent.
+6. Record ambiguities, conflicts, missing decisions, and V0.0.1 baseline dependency issues.
+7. Present the SWE.1 baseline for Owner review before SWE.2 begins.
 
 ## Stop conditions
 
