@@ -1,7 +1,7 @@
 # SWE.1 Complete Package Self-review
 
 Document ID: `REV-SWE1-001`  
-Revision: A  
+Revision: B  
 State: `COMPLETE_AWAITING_OWNER_REVIEW`  
 Date: 2026-08-05 JST  
 Reviewer: ChatGPT  
@@ -37,7 +37,7 @@ The review checks:
 | `SWE1-INDEX-001` | PASS |
 | `SWE1-SCOPE-001` | PASS |
 | `SWE1-GLOSSARY-001` | PASS |
-| `SWE1-COMMON-001` | PASS as draft; no open item directly owned |
+| `SWE1-COMMON-001` | PASS as draft; cites missing-world and LeafGrapple integration issues |
 | `SWE1-CORE-001` | PASS as draft |
 | `SWE1-MAIN-001` | PASS as draft; cites external-repair issue |
 | `SWE1-MAIN-002` | PASS as draft; cites checkpoint-bound issue |
@@ -120,7 +120,7 @@ Automated checks executed against all generated target requirement records and M
 | Referenced issue exists | PASS |
 | Requirement appears in owning document | PASS |
 | Requirement appears in verification allocation | PASS — 164/164 |
-| Requirement appears in reverse traceability | PASS — 164/164 |
+| Requirement has reverse traceability through its `Source` field | PASS — 164/164 |
 | Canonical source-clause forward disposition | PASS — 59/59 |
 | Unexplained canonical source clauses | PASS — 0 |
 | Implementation-status token in normative statements | PASS — none |
@@ -189,17 +189,19 @@ The first decomposition draft was corrected before this review was closed:
 6. Corrected one terminology typo.
 7. Confirmed that exact presentation choices are not functional acceptance obligations while required
    information/actions remain observable.
+8. Corrected the source-disposition accounting so process/governance-only canonical clauses are not
+   reported as Product requirements.
 
 Result: PASS after correction.
 
 ### 5.4 Source coverage
 
 ```text
-Canonical clauses allocated to Product requirements:
-  57
+Canonical clauses allocated to one or more Product requirements:
+  56
 
-Canonical clauses explicitly dispositioned to scope/governance:
-  2
+Canonical clauses explicitly dispositioned to scope/governance only:
+  3
 
 Unexplained canonical clauses:
   0
@@ -209,7 +211,8 @@ Requirements without source provenance:
 ```
 
 `CAN-COM-010` is governed by `GOV-ENG-001`; it is not duplicated as a Product requirement.
-`CAN-SCOPE-003` is a scope disposition prohibiting an unapproved adapter.
+`CAN-SCOPE-003` prohibits an unapproved adapter and is controlled through scope disposition.
+`CAN-SCOPE-004` separates process/release material from software behavior.
 
 Result: PASS.
 
