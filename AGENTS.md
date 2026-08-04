@@ -58,6 +58,28 @@ Automotive SPICE assessment or certification.
 - No implementation, build-candidate creation, runtime test, or release operation is authorized while
   `docs/V0.0.2-redesign/STATUS.md` says the applicable predecessor gate is incomplete.
 
+## External library and platform API authority
+
+Read and comply with:
+
+`docs/V0.0.2-redesign/00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
+
+- Java standard APIs, Paper/Spigot/Bukkit APIs, adopted plugin boundaries, and approved external
+  libraries must be used instead of unnecessary Project-owned reimplementation when they adequately
+  satisfy the approved design.
+- Codex may use only dependencies, versions, packaging modes, adapter boundaries, and API contracts
+  explicitly approved by the current SWE.2/SWE.3 baseline.
+- Codex must not add, remove, replace, upgrade, shade, relocate, or change the scope of a dependency
+  without an approved design update.
+- Codex must not replace an approved library capability with custom code or copy external-library
+  source into the Project.
+- Codex must not rely on undocumented platform or library behavior. When an implementation detail
+  reveals that the approved official reference is incomplete, incompatible, or incorrect for the
+  selected version, stop with `DESIGN_BLOCKED`.
+- The implementation-to-detailed-design consistency record must identify the actual Java,
+  Paper/Spigot/Bukkit, adopted-plugin, and external-library APIs used and map them to the approved
+  design references.
+
 ## GitHub Actions release operations
 
 - Codex may inspect CI runs, workflow runs, tags, releases, logs, and release assets using GitHub CLI.
