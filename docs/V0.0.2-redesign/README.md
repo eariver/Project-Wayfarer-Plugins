@@ -28,6 +28,28 @@ The redesign follows a tailored V-model aligned to SWE.1 through SWE.6.
 This is a Project Wayfarer process tailoring. The repository does not claim formal Automotive SPICE
 assessment or certification solely from using these process names.
 
+## Domain and traceability model
+
+Controlled IDs do not contain Product-version tokens. Each SWE process defines domains suited to the
+question answered by that process:
+
+- SWE.1 and SWE.6 are normally organized by Product target, server, or theme;
+- SWE.2 through SWE.5 are normally organized by architectural, implementation, unit, or integration
+  concern;
+- cross-process relationships are explicit traceability links, not inferred from matching domain
+  names.
+
+SWE.3 construction adds source-level traceability: production class and method Javadocs list the
+approved full SWE.3 detailed-design IDs they realize, with focused inline trace comments only where a
+method contains separately mapped regions. A deterministic source scan produces the consistency
+record.
+
+The controlling policy is:
+
+`00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md`
+
+Document ID: `GOV-TRACE-001`.
+
 ## Engineering policy
 
 All current and future Wayfarer-owned plugins may use Java standard APIs, Paper/Spigot/Bukkit APIs,
@@ -46,9 +68,10 @@ construction.
 2. `00-governance/REDESIGN_CHARTER.md`
 3. `00-governance/V_MODEL_PROCESS_AND_ROLES.md`
 4. `00-governance/DOCUMENT_CONTROL_AND_GATES.md`
-5. `00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
-6. the active phase directory named by `STATUS.md`
-7. the current approved work order, when implementation or verification is authorized
+5. `00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md`
+6. `00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
+7. the active phase directory named by `STATUS.md`
+8. the current approved work order, when implementation or verification is authorized
 
 ## Directory model
 
