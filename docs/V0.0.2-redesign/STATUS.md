@@ -57,8 +57,10 @@ traceability baseline before any new architecture or implementation decision.
 | Redesign charter | Prepared for Owner confirmation | `00-governance/REDESIGN_CHARTER.md` |
 | V-model process and roles | Prepared for Owner confirmation | `00-governance/V_MODEL_PROCESS_AND_ROLES.md` |
 | Document control and gates | Prepared for Owner confirmation | `00-governance/DOCUMENT_CONTROL_AND_GATES.md` |
+| External library and reference policy | Owner-approved | `00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md` |
 | Legacy V0.0.2 freeze | Approved baseline | `00-governance/LEGACY_V002_FREEZE.md` |
 | V-model role decision | Approved baseline | `08-decisions/DEC-PROC-001-v-model-role-allocation.md` |
+| External library reuse decision | Approved baseline | `08-decisions/DEC-ENG-001-external-library-reuse-and-reference-policy.md` |
 | SWE.1 source register | Draft | `01-swe1-software-requirements-analysis/REQUIREMENT_SOURCES.md` |
 | SWE.1 analysis plan | Draft | `01-swe1-software-requirements-analysis/SWE1_ANALYSIS_PLAN.md` |
 | Software Requirements Specification | Not started | planned under SWE.1 directory |
@@ -72,9 +74,11 @@ traceability baseline before any new architecture or implementation decision.
 3. Classify each source statement by authority, applicability, conflict status, and release scope.
 4. Extract stakeholder and software requirements without inheriting implementation assumptions from
    PR #14.
-5. Assign stable requirement IDs and define verification intent.
-6. Record ambiguities, conflicts, missing decisions, and V0.0.1 baseline dependency issues.
-7. Present the SWE.1 baseline for Owner review before SWE.2 begins.
+5. Derive applicable reuse, maintainability, dependency-selection, and official-reference constraints
+   from `GOV-ENG-001` without prematurely selecting concrete libraries during SWE.1.
+6. Assign stable requirement IDs and define verification intent.
+7. Record ambiguities, conflicts, missing decisions, and V0.0.1 baseline dependency issues.
+8. Present the SWE.1 baseline for Owner review before SWE.2 begins.
 
 ## Stop conditions
 
