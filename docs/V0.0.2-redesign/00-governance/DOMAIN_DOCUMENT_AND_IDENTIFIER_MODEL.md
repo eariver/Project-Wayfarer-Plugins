@@ -1,213 +1,382 @@
-# Domain Document and Linked Identifier Model
+# Phase-specific Domain, Identifier, and Source Traceability Model
 
-Document ID: `V002-GOV-COM-002`  
-Revision: A  
+Document ID: `GOV-TRACE-001`  
+Revision: B  
 State: `APPROVED_OWNER_POLICY`  
 Date: 2026-08-05 JST  
 Author: ChatGPT  
 Reviewer: Owner  
-Applicable Product: Plugin V0.0.2 redesign and later Wayfarer-owned plugin design work
+Applicable scope: all current and future Project Wayfarer-owned plugin work products  
+Supersedes: Revision A and `DEC-DOC-001`
 
 ## 1. Purpose
 
-Control the decomposition and identification of SWE.1 through SWE.6 work products so that every
-requirement, design element, implementation unit, verification case, and evidence record can be
-located and traced without relying on chat history or document titles.
+Control the decomposition and identification of SWE.1 through SWE.6 work products and the mapping
+from approved detailed design to source code. The model must make the subject of each process work
+product clear without assuming that every SWE process uses the same domain partition.
 
-## 2. Domain-first document split
+## 2. Core principles
 
-Requirements and design work products must be divided by a single dominant functional or
-cross-cutting domain. A document must not become a catch-all specification merely because several
-areas are implemented in the same module or class.
+1. Controlled documents are split into reviewable subject domains.
+2. Domain meaning is defined separately for each SWE process.
+3. A domain name in one SWE process does not have to exist or mean the same thing in another process.
+4. Cross-process relationships are expressed by explicit traceability links, never inferred from
+   matching domain names.
+5. Document and item identifiers contain no Product-version token.
+6. Version applicability is metadata, not identifier content.
+7. Every normative item has one owning document and one globally unambiguous full identifier.
+8. SWE.3 design-to-code traceability is recorded in production-source Javadoc and, where necessary,
+   focused inline comments.
 
-Initial domain codes are:
-
-| Code | Domain |
-|---|---|
-| `COM` | Cross-plugin behavior, shared terminology, repository-wide constraints, and common contracts |
-| `CORE` | Wayfarer_Core |
-| `MAIN` | Wayfarer_Main and Growth Tool behavior |
-| `FRONT` | Wayfarer_Frontier shared behavior |
-| `WB` | Worlds Beyond behavior |
-| `RF` | Ruined Frontier integration behavior |
-| `INT` | External systems, adopted plugins, platform APIs, and inter-module interfaces |
-| `DATA` | Persistence, migration, identity, transaction, cache, and audit data contracts |
-| `SEC` | Permission, trust, authority, abuse prevention, and security boundaries |
-| `QLT` | Cross-cutting quality, timing, reliability, failure, recovery, and observability |
-| `OPS` | Deployment, configuration, lifecycle, operations, backup, and release-facing behavior |
-
-A new Wayfarer-owned plugin receives a stable domain code through a tracked `DEC-*` decision before
-its first controlled requirement or design document is created.
-
-## 3. Ownership and duplication rules
-
-- Each normative requirement or design element has exactly one owning document.
-- Other documents reference the owning item's full identifier; they must not restate it as a second
-  independently controlled requirement.
-- Behavior spanning multiple domains is owned by a `COM` or `INT` document when no single product
-  domain is authoritative.
-- Cross-cutting persistence, security, quality, or operational constraints are owned by their
-  corresponding cross-cutting domain and allocated to product domains through traceability.
-- A document may contain background, rationale, examples, and references, but only explicitly
-  identified normative items participate in conformance and coverage accounting.
-- Document division follows responsibility and reviewability, not arbitrary file length.
-
-## 4. Controlled document identifier
+## 3. Controlled document identifier
 
 Every controlled work product uses:
 
 ```text
-V002-<PROCESS>-<DOMAIN>-<DOCUMENT_NUMBER>
+<PROCESS>-<DOMAIN>-<DOCUMENT_NUMBER>
 ```
 
 Where:
 
-- `V002` identifies Plugin V0.0.2 redesign;
 - `<PROCESS>` is `GOV`, `SWE1`, `SWE2`, `SWE3`, `SWE4`, `SWE5`, `SWE6`, `TRC`, `WO`, `REV`, or
   `EVD`;
-- `<DOMAIN>` is one approved domain code;
+- `<DOMAIN>` is a domain approved for that process;
 - `<DOCUMENT_NUMBER>` is a three-digit sequence unique inside the process/domain pair.
 
 Examples:
 
 ```text
-V002-SWE1-MAIN-001
-V002-SWE2-CORE-002
-V002-SWE3-INT-004
-V002-SWE5-WB-001
+SWE1-MAIN-001
+SWE2-PERMISSION-001
+SWE3-INVENTORY-002
+SWE4-DURABILITY-001
+SWE5-GAMEPLAY-FLOW-001
+SWE6-MAIN-001
 ```
 
-The document identifier must appear in the document header and should prefix the filename:
+A Product version such as `V002` or `V0.0.2` must not appear in a document or normative-item ID.
+Document headers instead record:
+
+- introduced Product version;
+- applicable Product version or version range;
+- current revision;
+- lifecycle state;
+- superseded/replacement identifiers where applicable.
+
+The same approved requirement retains its identifier when carried into a later Product version. A
+materially different obligation receives a new item identifier and explicit supersession links.
+
+## 4. Process-specific domain model
+
+### 4.1 SWE.1 — requirement target domains
+
+SWE.1 domains identify the Product, server, theme, or externally visible target to which the
+requirement applies. Initial examples are:
 
 ```text
-V002-SWE3-MAIN-004-growth-tool-durability-design.md
+COMMON
+CORE
+MAIN
+FRONTIER
+WB
+RF
+ADAPTER
 ```
+
+`COMMON` owns obligations that genuinely apply across targets. It must not become a substitute for
+allocating a requirement to its actual target.
+
+A requirement about Main permission enforcement remains owned by a `MAIN` SWE.1 document. It may map
+later to a `PERMISSION` or `AUTHORITY` domain in SWE.2/SWE.3.
+
+### 4.2 SWE.2 — architectural concern domains
+
+SWE.2 domains identify the architectural concern being designed. They are derived after the SWE.1
+baseline and may include, for example:
+
+```text
+COMMAND
+PERMISSION
+ITEM
+INVENTORY
+AUTHORITY
+STATE
+PERSISTENCE
+TRANSACTION
+EVENT
+LIFECYCLE
+INTEGRATION
+OBSERVABILITY
+```
+
+The final SWE.2 domain dictionary is controlled by the SWE.2 document index. It is not required to
+mirror the SWE.1 target domains.
+
+### 4.3 SWE.3 — detailed-design concern domains
+
+SWE.3 domains identify implementation-facing design subjects. They may refine, split, combine, or
+rename SWE.2 concerns when this improves construction clarity, while retaining explicit upstream
+traceability.
+
+Examples include:
+
+```text
+HELD-AUTHORIZATION
+GUI-ENTRY
+BLOCK-PROGRESS
+DURABILITY
+DELIVERY
+REPAIR
+REISSUE
+PLAYER-COMMAND
+DATABASE-ACCESS
+RUNTIME-SHUTDOWN
+```
+
+The final SWE.3 domain dictionary is controlled by the SWE.3 document index. Domain changes from
+SWE.2 are valid only when the traceability matrix makes the allocation explicit.
+
+### 4.4 SWE.4 — unit-verification subject domains
+
+SWE.4 domains identify the unit behavior or design concern under verification. They generally follow
+construction boundaries but may be reorganized for verification clarity. They are not required to
+match SWE.3 one-for-one.
+
+### 4.5 SWE.5 — integration subject domains
+
+SWE.5 domains identify the interface, interaction, or integrated flow under test, such as:
+
+```text
+GAMEPLAY-FLOW
+PERSISTENCE-FLOW
+WAYMARK-TRANSACTION
+PLUGIN-LIFECYCLE
+MAIN-CORE-INTEGRATION
+FRONTIER-MVI-INTEGRATION
+```
+
+### 4.6 SWE.6 — qualification target domains
+
+SWE.6 returns to externally observable Product targets and therefore normally uses target-oriented
+domains comparable to SWE.1, such as `MAIN`, `FRONTIER`, `WB`, or `RF`. Exact equality with the SWE.1
+domain set is not required; qualification scope controls the final dictionary.
 
 ## 5. Linked item identifier
 
-Every normative item inside a controlled document receives an identifier derived by concatenating the
-owning document identifier and a local item identifier:
+Every normative item inside a controlled document receives:
 
 ```text
 <DOCUMENT_ID>-<ITEM_TYPE>-<ITEM_NUMBER>
 ```
 
-The required item types are:
+The item type describes the semantic role of the item inside its process. It must not merely repeat
+the process name.
+
+### 5.1 SWE.1 item types
 
 | Type | Meaning |
 |---|---|
-| `REQ` | SWE.1 software requirement |
-| `ARC` | SWE.2 architectural design element or architectural constraint |
-| `DD` | SWE.3 detailed-design element or construction constraint |
-| `IMP` | Implementation unit recorded by Codex |
-| `UV` | SWE.4 unit-verification case |
-| `IV` | SWE.5 integration-verification case |
-| `QV` | SWE.6 qualification-verification case |
-| `REF` | Version-specific official platform/library reference relied upon by design |
-| `RISK` | Controlled risk or design assumption requiring disposition |
+| `CAP` | Required capability or externally observable behavior |
+| `CON` | Required constraint or prohibition |
+| `IFC` | External or inter-product interface obligation |
+| `QLT` | Quality, reliability, performance, security, recovery, or operability obligation |
+
+### 5.2 SWE.2 item types
+
+| Type | Meaning |
+|---|---|
+| `CMP` | Component or responsibility allocation |
+| `IFC` | Architectural interface contract |
+| `FLOW` | Control, data, or interaction flow |
+| `STM` | Architecture-level state model or transition allocation |
+| `DAT` | Data ownership or architectural data model |
+| `DEP` | Platform, library, runtime, or deployment dependency allocation |
+| `CON` | Architectural invariant or constraint |
+
+### 5.3 SWE.3 item types
+
+| Type | Meaning |
+|---|---|
+| `DD` | Normative detailed-design or construction obligation |
+| `REF` | Authoritative Java, Paper/Spigot/Bukkit, plugin, library, or standards reference |
+| `IMP` | Implementation unit recorded during construction and consistency reporting |
+
+Each `DD` item also carries a `Design kind` attribute, selected from a controlled vocabulary such as
+`BEHAVIOR`, `STATE_TRANSITION`, `API_CONTRACT`, `DATA`, `THREADING`, `ERROR_HANDLING`, `ALGORITHM`,
+`CONFIGURATION`, or `OBSERVABILITY`.
+
+`DD` and `IMP` are intentionally retained because they distinguish approved design from the source
+unit that realizes it within the SWE.3 process.
+
+### 5.4 SWE.4 through SWE.6 item types
+
+| Type | Meaning |
+|---|---|
+| `CASE` | Executable verification or qualification case |
+| `PROC` | Controlled setup, execution, or teardown procedure |
+| `ENV` | Environment or configuration definition |
+| `DATA` | Test input, fixture, or dataset definition |
+| `ORCL` | Pass/fail oracle or expected-result rule |
+| `EVID` | Evidence or result record linked to an execution identity |
+| `REF` | Authoritative external reference used by the verification design |
+
+The former generic types `REQ`, `ARC`, `UV`, `IV`, and `QV` are not used. Their process meaning is
+already expressed by the owning document ID and they add no semantic information.
+
+### 5.5 Cross-process supporting item types
+
+`RISK` and `ISSUE` may be used in any process when a controlled risk, assumption, conflict, or open
+question requires an individual disposition. They are not substitutes for normative requirements or
+design items.
 
 Examples:
 
 ```text
-V002-SWE1-MAIN-001-REQ-003
-V002-SWE2-MAIN-002-ARC-005
-V002-SWE3-MAIN-004-DD-017
-V002-SWE3-MAIN-004-REF-006
-V002-SWE4-MAIN-001-UV-012
+SWE1-MAIN-001-CAP-003
+SWE1-MAIN-001-QLT-004
+SWE2-AUTHORITY-001-STM-002
+SWE3-HELD-AUTHORIZATION-001-DD-007
+SWE3-HELD-AUTHORIZATION-001-REF-003
+SWE3-HELD-AUTHORIZATION-001-IMP-002
+SWE4-HELD-AUTHORIZATION-001-CASE-004
+SWE5-GAMEPLAY-FLOW-001-CASE-006
+SWE6-MAIN-001-CASE-011
 ```
 
-This concatenation is mandatory. A local identifier such as `REQ-003` is insufficient outside its
-owning document and must not be used in traceability, reviews, code comments, work orders, or test
-reports.
+A local identifier such as `DD-007` is insufficient outside its owning document.
 
-## 6. Requirement record
+## 6. Cross-process traceability
 
-Each SWE.1 requirement record must include at least:
+The target-to-concern transition is explicit:
 
 ```text
-Full requirement ID
-Title
-Normative statement
-Rationale
-Source or Owner decision
-Applicability and priority
-Preconditions or trigger
-Required observable result
-Failure or denial result, when applicable
-Verification intent
-Dependencies and assumptions
-Open decision or conflict reference
-State
+SWE1-MAIN-001-CAP-003
+  -> SWE2-AUTHORITY-001-STM-002
+  -> SWE3-HELD-AUTHORIZATION-001-DD-007
+  -> SWE3-HELD-AUTHORIZATION-001-IMP-002
+  -> SWE4-HELD-AUTHORIZATION-001-CASE-004
+  -> SWE5-GAMEPLAY-FLOW-001-CASE-006
+  -> SWE6-MAIN-001-CASE-011
 ```
 
-A requirement must express one independently assessable obligation. When one statement contains
-multiple independently failing obligations, it must be split into separate requirement IDs.
-
-## 7. Design record
-
-Each SWE.2 and SWE.3 normative design item must include:
-
-- its full `ARC` or `DD` identifier;
-- the upstream requirement identifiers it satisfies;
-- the allocated component, interface, state machine, event, data owner, or runtime boundary;
-- failure behavior and constraints;
-- applicable official-reference identifiers;
-- downstream verification obligations.
-
-References to Paper, Spigot/Bukkit, Java, or external-library behavior use document-linked `REF`
-identifiers so the exact design assumption is reviewable and traceable.
-
-## 8. Traceability rule
-
-The minimum chain uses full identifiers only:
-
-```text
-Source / DEC
-  -> ...-REQ-...
-  -> ...-ARC-...
-  -> ...-DD-...
-  -> ...-IMP-...
-  -> ...-UV-... / ...-IV-... / ...-QV-...
-  -> Evidence and review verdict
-```
+This chain demonstrates that SWE.1 and SWE.6 can be target-oriented while SWE.2 through SWE.5 are
+concern-oriented. Domain-name equality is never used as evidence of coverage.
 
 Every approved upstream item must have one or more downstream allocations or an explicit justified
-`NOT_APPLICABLE` disposition. Every downstream item must identify its direct upstream items.
+`NOT_APPLICABLE` disposition. Every downstream item identifies its direct upstream items.
 
-## 9. Document index
+## 7. Source-code traceability to SWE.3
 
-Each SWE phase maintains a controlled document index listing:
+### 7.1 Javadoc requirement
+
+Every production class and every production method that realizes normative SWE.3 behavior must list
+its applicable full SWE.3 `DD` identifiers in Javadoc.
+
+Use a standard Javadoc paragraph rather than an undocumented custom tag:
+
+```java
+/**
+ * Performs the authorized Growth Tool damage transition.
+ *
+ * <p><strong>SWE.3 traceability:</strong>
+ * {@code SWE3-DURABILITY-001-DD-004},
+ * {@code SWE3-DURABILITY-001-DD-006}
+ */
+```
+
+Class-level Javadoc identifies the design scope owned by the class. Method-level Javadoc identifies
+the design obligations realized by that method. Constructors, generated code, trivial accessors, and
+mechanical data holders may use a class-level mapping only when the applicable SWE.3 design explicitly
+permits that treatment.
+
+### 7.2 Inline-comment rule
+
+Javadoc alone is sufficient when the complete class or method unambiguously realizes one design item
+or a small set of items from one detailed-design document.
+
+When one method contains materially distinct code regions that realize SWE.3 items from multiple
+documents, the method Javadoc lists every applicable full ID and each region is preceded by a focused
+comment identifying the item realized by that region:
+
+```java
+// SWE.3 traceability: SWE3-AUTHORITY-001-DD-009
+
+// SWE.3 traceability: SWE3-DURABILITY-001-DD-004
+```
+
+Inline trace comments must describe mapping only. They must not duplicate design prose or explain
+ordinary Java syntax.
+
+### 7.3 Extracted consistency evidence
+
+Construction must include a deterministic source scan that extracts:
+
+- production source path;
+- class and method signature;
+- source line range;
+- Javadoc SWE.3 IDs;
+- inline SWE.3 IDs;
+- corresponding `IMP` identifier;
+- unmatched, unknown, duplicated, or missing IDs.
+
+The generated implementation-to-detailed-design consistency report is committed as controlled,
+sanitary evidence. The scanner must fail the prescribed conformance check when:
+
+- a cited SWE.3 ID does not exist in the approved baseline;
+- an implementation unit lacks required Javadoc mapping;
+- an inline mapping cites an ID absent from the enclosing method Javadoc;
+- an approved construction-scope `DD` item has no implementation allocation without an approved
+  `NOT_APPLICABLE` disposition.
+
+Codex must not invent or alter a SWE.3 ID while implementing. A missing or unsuitable mapping is
+`DESIGN_BLOCKED`.
+
+## 8. Ownership and duplication
+
+- Each normative item has exactly one owning document.
+- Other documents reference the owning item's full identifier instead of duplicating the obligation.
+- A document may include rationale, diagrams, examples, and references, but only identified normative
+  items participate in conformance and coverage accounting.
+- Document division follows the subject appropriate to that SWE process, not module layout, source
+  file layout, or arbitrary document length.
+
+## 9. Phase document indexes
+
+Each SWE phase maintains its own controlled document index containing:
 
 - document ID;
+- domain definition and rationale;
 - title and path;
-- domain;
 - revision and state;
-- predecessor/superseded document;
-- owning role and reviewer;
-- applicable scope;
-- contained normative-item ranges.
+- applicable Product versions;
+- predecessor/superseded documents;
+- contained item ranges;
+- upstream and downstream traceability status.
 
-The phase index is navigational and does not duplicate the normative content of the owning documents.
+A new process domain is approved through that phase's document index or a tracked decision before the
+first normative document in the domain is created.
 
 ## 10. Identifier lifecycle
 
-- Identifiers are not reused.
+- Identifiers are never reused.
+- Identifiers do not change solely because the Product version changes.
+- Version applicability is updated in metadata and traceability records.
 - After first formal review, an item is not renumbered merely to close a sequence gap.
-- A deleted or rejected item retains its identifier and disposition.
-- A materially changed approved requirement receives either a new revision with explicit impact
-  analysis or a replacement identifier when its obligation changes meaning.
-- Superseded items point to their replacement; replacements point back to the superseded items.
-- Document moves or filename changes do not change the document identifier.
+- Rejected and superseded items retain their identifier and disposition.
+- A materially changed obligation receives a replacement identifier when its semantic contract is no
+  longer the same obligation.
+- File moves and filename changes do not change the controlled document ID.
 
 ## 11. Existing draft normalization
 
-The V0.0.2 redesign began before this policy was approved. Existing draft work products may retain
-legacy filenames temporarily, but before their applicable gate review they must:
+Before G1 review:
 
-1. receive a compliant document identifier;
-2. use linked full identifiers for every normative item;
-3. appear in the applicable phase document index;
-4. update all traceability references to the full identifiers.
+1. remove `V002` from all controlled document and item IDs;
+2. replace the earlier global-domain model with process-specific domains;
+3. replace `REQ` with the applicable SWE.1 semantic item type;
+4. rename the SWE.1 phase index and revise its reservations;
+5. update all traceability and status references;
+6. mark `DEC-DOC-001` superseded by `DEC-DOC-002`.
 
-No SWE.1, SWE.2, or SWE.3 baseline may be approved while a normative item uses an unlinked or ambiguous
-identifier.
+No SWE.1, SWE.2, or SWE.3 baseline may be approved while a normative item uses a version-prefixed,
+process-redundant, or ambiguous identifier.
