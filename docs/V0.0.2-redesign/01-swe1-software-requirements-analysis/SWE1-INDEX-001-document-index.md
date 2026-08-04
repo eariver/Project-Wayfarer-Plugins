@@ -1,23 +1,23 @@
 # SWE.1 Target-domain Document Index
 
 Document ID: `SWE1-INDEX-001`  
-Revision: A  
-State: `DRAFT`  
+Revision: B  
+State: `DRAFT_FOR_OWNER_REVIEW`  
 Date: 2026-08-05 JST  
 Author: ChatGPT  
-Reviewer: Owner  
+Reviewer: Project Owner  
 Introduced Product version: Plugin V0.0.2 redesign  
-Applicable Product versions: V0.0.2 and later while documents remain active  
-Predecessor: `V002-SWE1-COM-003` — superseded before G1
+Applicable Product versions: V0.0.2 and later while items remain active  
+Predecessor: Revision A
 
 ## 1. Purpose
 
-Identify every controlled SWE.1 work product, the target or support domain it owns, its state, path,
-and normative-item range. This index is navigational and does not duplicate normative content.
+Identify every controlled SWE.1 work product, its target or support domain, path, state, and contained
+item range. This index is navigational and does not duplicate normative content.
 
-## 2. SWE.1 domain rule
+## 2. Domain rule
 
-Normative Product requirements use target-oriented domains:
+Normative SWE.1 Product requirements use target-oriented domains:
 
 ```text
 COMMON
@@ -25,85 +25,66 @@ CORE
 MAIN
 FRONTIER
 WB
-RF
-ADAPTER
 ```
 
-Process-support documents may use `SRC`, `PLAN`, `INDEX`, `SCOPE`, `GLOSSARY`, `ISSUE`, and `VERIFY`.
-These support domains do not imply downstream architecture domains.
+`RF` and `ADAPTER` are recognized possible target domains but have no normative document in the
+current scope.
 
-SWE.2 through SWE.5 will define separate concern-oriented domain dictionaries. Traceability maps each
-SWE.1 target requirement to the appropriate downstream concerns.
+Support documents use `SRC`, `PLAN`, `INDEX`, `SCOPE`, `GLOSSARY`, `ISSUE`, and `VERIFY`. Downstream
+SWE.2–SWE.5 domains will be concern-oriented and need not match these targets.
 
-## 3. Current and reserved documents
+## 3. Controlled SWE.1 work products
 
-| Document ID | Domain role | Title / purpose | Path | State | Normative item range |
+| Document ID | Domain role | Title / purpose | Path | State | Item range / count |
 |---|---|---|---|---|---|
-| `SWE1-SRC-001` | Support / source | Requirement Source Register | `REQUIREMENT_SOURCES.md` | DRAFT | Source records only |
-| `SWE1-PLAN-001` | Support / plan | SWE.1 Analysis Plan | `SWE1_ANALYSIS_PLAN.md` | DRAFT | Process obligations only |
-| `SWE1-INDEX-001` | Support / index | SWE.1 Target-domain Document Index | this file | DRAFT | None |
-| `SWE1-SCOPE-001` | Support / scope | Scope and Non-scope | reserved | NOT_CREATED | Scope dispositions; no duplicated Product requirements |
-| `SWE1-GLOSSARY-001` | Support / glossary | Glossary and controlled states | reserved | NOT_CREATED | Definitions |
-| `SWE1-COMMON-001` | Product target | Cross-target common requirements | reserved | NOT_CREATED | `...-CAP-*`, `...-CON-*`, `...-IFC-*`, `...-QLT-*` |
-| `SWE1-CORE-001` | Product target | Wayfarer_Core requirements | reserved | NOT_CREATED | `...-CAP-*`, `...-CON-*`, `...-IFC-*`, `...-QLT-*` |
-| `SWE1-MAIN-001` | Product target | Main / Wayfarer_Main / Growth Tool requirements | reserved | NOT_CREATED | `...-CAP-*`, `...-CON-*`, `...-IFC-*`, `...-QLT-*` |
-| `SWE1-FRONTIER-001` | Product target | Frontier shared requirements | reserved | NOT_CREATED | `...-CAP-*`, `...-CON-*`, `...-IFC-*`, `...-QLT-*` |
-| `SWE1-WB-001` | Product target | Worlds Beyond requirements | reserved pending scope confirmation | NOT_CREATED | semantic SWE.1 items only |
-| `SWE1-RF-001` | Product target | Ruined Frontier integration requirements | reserved pending scope confirmation | NOT_CREATED | semantic SWE.1 items only |
-| `SWE1-ADAPTER-001` | Conditional Product target | Separate adapter requirements | reserved only if approved decision requires an adapter | NOT_CREATED | semantic SWE.1 items only |
-| `SWE1-ISSUE-001` | Support / issue | Open Questions, Conflicts, and Baseline Dependencies | reserved | NOT_CREATED | `RISK-*` and `ISSUE-*` only |
-| `SWE1-VERIFY-001` | Support / verification intent | Requirement Verification-intent Allocation | reserved | NOT_CREATED | Allocation records only |
+| `SWE1-SRC-001` | Support / source | Requirement Source Register | `REQUIREMENT_SOURCES.md` | DRAFT_FOR_OWNER_REVIEW | Source records |
+| `SWE1-SRC-002` | Support / source | Canonical positive-requirement source | `SWE1-SRC-002-canonical-mainline-requirements.md` | DRAFT_FOR_OWNER_REVIEW | 59 `CAN-*` source clauses |
+| `SWE1-PLAN-001` | Support / plan | Analysis Plan and Execution Record | `SWE1_ANALYSIS_PLAN.md` | EXECUTED_AWAITING_OWNER_REVIEW | Process record |
+| `SWE1-INDEX-001` | Support / index | This target-domain index | this file | DRAFT_FOR_OWNER_REVIEW | None |
+| `SWE1-SCOPE-001` | Support / scope | Scope and Non-scope | `SWE1-SCOPE-001-scope-and-non-scope.md` | DRAFT_FOR_OWNER_REVIEW | Scope dispositions |
+| `SWE1-GLOSSARY-001` | Support / glossary | Glossary and controlled terms | `SWE1-GLOSSARY-001-glossary.md` | DRAFT_FOR_OWNER_REVIEW | Definitions |
+| `SWE1-COMMON-001` | Product / COMMON | Cross-target common requirements | `SWE1-COMMON-001-common-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CON-001`–`CON-008` (8), `IFC-001`–`IFC-002` (2), `QLT-001`–`QLT-008` (8) |
+| `SWE1-CORE-001` | Product / CORE | Wayfarer_Core requirements | `SWE1-CORE-001-core-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-002` (2), `CON-001`–`CON-008` (8), `IFC-001`–`IFC-003` (3), `QLT-001`–`QLT-001` (1) |
+| `SWE1-MAIN-001` | Product / MAIN | Lifecycle, authority, delivery | `SWE1-MAIN-001-authority-delivery-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-009` (9), `CON-001`–`CON-009` (9), `QLT-001`–`QLT-002` (2) |
+| `SWE1-MAIN-002` | Product / MAIN | Progress, evolution, durability, checkpoint | `SWE1-MAIN-002-progress-durability-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-016` (16), `CON-001`–`CON-005` (5), `QLT-001`–`QLT-006` (6) |
+| `SWE1-MAIN-003` | Product / MAIN | GUI, repair, reissue, admin, permission | `SWE1-MAIN-003-repair-reissue-admin-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-009` (9), `CON-001`–`CON-004` (4), `IFC-001`–`IFC-001` (1), `QLT-001`–`QLT-005` (5) |
+| `SWE1-FRONTIER-001` | Product / FRONTIER | Runtime boundary, MVI, persistence, permission | `SWE1-FRONTIER-001-boundary-persistence-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-002` (2), `CON-001`–`CON-008` (8), `IFC-001`–`IFC-002` (2), `QLT-001`–`QLT-002` (2) |
+| `SWE1-WB-001` | Product / WB | Loadout, permanent items, hook, navigation | `SWE1-WB-001-loadout-navigation-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-010` (10), `CON-001`–`CON-008` (8), `IFC-001`–`IFC-001` (1), `QLT-001`–`QLT-005` (5) |
+| `SWE1-WB-002` | Product / WB | Launchpad, shop, portal, administration | `SWE1-WB-002-launchpad-shop-portal-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-016` (16), `CON-001`–`CON-007` (7), `IFC-001`–`IFC-001` (1), `QLT-001`–`QLT-004` (4) |
+| `SWE1-ISSUE-001` | Support / issue | Open questions and conflicts | `SWE1-ISSUE-001-open-questions.md` | DRAFT_FOR_OWNER_REVIEW | `ISSUE-001`–`ISSUE-009` |
+| `SWE1-VERIFY-001` | Support / verification | Verification-intent allocation | `SWE1-VERIFY-001-verification-intent.md` | DRAFT_FOR_OWNER_REVIEW | 164 allocations |
 
-## 4. Requirement ownership rules
+Cross-directory controlled work products:
 
-- Each normative Product obligation is owned by the target to which it applies.
-- A Main requirement about permissions remains in the `MAIN` document during SWE.1; it is not moved to
-  a `PERMISSION` domain until SWE.2 architecture allocation.
-- A Frontier requirement about inventory isolation remains in the appropriate `FRONTIER`, `WB`, or
-  `RF` target document during SWE.1; downstream design may map it to `INVENTORY`, `STATE`, or
-  `AUTHORITY` concerns.
-- `COMMON` is used only for one genuinely shared obligation. Similar but observably different target
-  behavior receives separate target-owned items.
-- `WB`, `RF`, and `ADAPTER` documents are created only after SWE.1 confirms their V0.0.2 scope.
-- Other documents reference full IDs rather than copying normative statements.
+| Document ID | Purpose | Path | State |
+|---|---|---|---|
+| `TRC-SWE1-001` | Source-to-requirement bidirectional traceability | `../07-traceability/TRC-SWE1-001-source-requirement-traceability.md` | DRAFT_FOR_OWNER_REVIEW |
+| `REV-SWE1-001` | Complete SWE.1 package self-review | `../10-reviews-and-evidence/REV-SWE1-001-self-review.md` | COMPLETE_AWAITING_OWNER_REVIEW |
+| `DEC-REQ-001` | Canonical source merge and analysis method | `../08-decisions/DEC-REQ-001-canonical-source-merge-and-swe1-analysis.md` | APPROVED_OWNER_DECISION |
 
-## 5. Normative item types
+## 4. Requirement ownership
 
-SWE.1 Product documents use:
+- Common obligations applying identically across targets are owned by `SWE1-COMMON-001`.
+- Core shared-service behavior is owned by `SWE1-CORE-001`.
+- Main behavior is split across three `MAIN` documents to remain reviewable; it is not moved to
+  architecture concern domains during SWE.1.
+- Frontier plugin/runtime/MVI/persistence behavior is owned by `SWE1-FRONTIER-001`.
+- Externally observable Worlds Beyond theme behavior is owned by `SWE1-WB-001` or `SWE1-WB-002`.
+- Other documents reference full requirement IDs rather than copying normative statements.
 
-```text
-CAP  required capability or observable behavior
-CON  required constraint or prohibition
-IFC  external or inter-product interface obligation
-QLT  quality, reliability, security, recovery, performance, or operability obligation
-```
-
-Examples:
+## 5. Item summary
 
 ```text
-SWE1-MAIN-001-CAP-001
-SWE1-MAIN-001-CON-002
-SWE1-FRONTIER-001-IFC-003
-SWE1-COMMON-001-QLT-004
+Total draft Product requirements: 164
+
+CAP: 64
+CON: 57
+IFC: 10
+QLT: 33
 ```
 
-The retired `REQ` type and every `V002-*` prefix are prohibited.
+## 6. Gate state
 
-## 6. Normalization actions before G1
-
-1. retain `SWE1-SRC-001` and `SWE1-PLAN-001` as version-independent support-document IDs;
-2. replace every reference to `V002-SWE1-COM-003` with `SWE1-INDEX-001`;
-3. remove or supersede every reserved global cross-cutting SWE.1 domain such as `DATA`, `SEC`, `QLT`,
-   or `OPS`; allocate those concerns downstream after target requirements are approved;
-4. create target documents only after scope disposition;
-5. populate exact item ranges after each document is drafted;
-6. complete source-to-target requirement traceability before G1 review.
-
-## 7. Downstream allocation preview
-
-This index does not reserve SWE.2 through SWE.6 domains. Later phase indexes may create concern domains
-such as `PERMISSION`, `INVENTORY`, `AUTHORITY`, `STATE`, `PERSISTENCE`, `TRANSACTION`, or
-`GAMEPLAY-FLOW` based on the approved upstream items.
-
-A target requirement may allocate to several concern documents, and one concern document may satisfy
-requirements from several targets. The traceability matrix, not this index, controls that relationship.
+The document set has been decomposed and self-reviewed. It is not an approved baseline. G1 remains
+`NOT_READY` until Owner review, issue resolution/acceptance, V0.0.1 baseline inventory, and Project
+consistency review are complete.

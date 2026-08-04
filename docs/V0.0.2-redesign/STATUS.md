@@ -5,140 +5,177 @@ Branch: `redesign/V0.0.2-swe1-3`
 Draft PR: `#18`  
 Baseline: Plugin V0.0.1 on `main`  
 Current process: `SWE.1 Software Requirements Analysis`  
-Current gate: `SWE1_REQUIREMENTS_BASELINE_NOT_READY`
+Current gate: `SWE1_OWNER_REVIEW_PENDING`
 
 ## Executive status
 
 ```text
 V0.0.1 BASELINE:
-  ASSUMED ACCEPTED FOR V0.0.2 REQUIREMENTS ANALYSIS
+  ASSUMED ACCEPTED FOR INITIAL V0.0.2 ANALYSIS
 
 V0.0.1 REDESIGN:
   OUT OF CURRENT SCOPE
 
-PR #14 / CANDIDATE-8:
-  FROZEN REFERENCE / NOT A DESIGN AUTHORITY
+PR #14 / LEGACY IMPLEMENTATION:
+  FROZEN REFERENCE / NOT A REQUIREMENT OR DESIGN AUTHORITY
 
-PR #18:
-  OPEN / DRAFT / DESIGN AUTHORITY WORKSTREAM
+CANONICAL SOURCE MERGE:
+  COMPLETE / SELF-REVIEWED / OWNER REVIEW PENDING
 
-CANDIDATE-9:
-  NOT STARTED / NOT AUTHORIZED
+SWE.1 DECOMPOSITION:
+  COMPLETE / 164 DRAFT REQUIREMENTS
 
-SWE.1:
-  ACTIVE
+SWE.1 OPEN ISSUES:
+  9
+
+SWE.1 SELF-REVIEW:
+  PASS FOR OWNER REVIEW
+
+G1 REQUIREMENTS BASELINE:
+  NOT APPROVED
 
 SWE.2:
-  NOT STARTED
+  NOT AUTHORIZED
 
-SWE.3 DETAILED DESIGN:
-  NOT STARTED
-
-SWE.3 UNIT CONSTRUCTION:
+SWE.3:
   NOT AUTHORIZED
 
 SWE.4 THROUGH SWE.6:
   NOT AUTHORIZED
 
-MERGE / TAG / RELEASE:
+PRODUCT IMPLEMENTATION / CANDIDATE / RELEASE:
   NOT AUTHORIZED
 ```
 
-## Active objective
+## Completed requested work
 
-Establish approved, target-domain V0.0.2 Software Requirements documents and bidirectional
-traceability before any architecture or implementation decision.
+### Step 1 — Canonical positive-requirement source
 
-Controlled IDs are version-independent. Each SWE process defines domains suited to that process:
+Completed:
 
-- SWE.1 and SWE.6 are normally Product-target oriented;
-- SWE.2 through SWE.5 are normally architecture, implementation, unit, or integration-concern
-  oriented;
-- cross-process relationships are explicit trace links, not matching domain names.
+- retained the Owner-provided mainline requirement source as the base;
+- applied only the approved clarification/contradiction-resolution subset of the delta register;
+- excluded prior implementation state, test state, roadmap, and release sequencing;
+- committed raw source snapshots and the normalized canonical source.
 
-## Current work products
-
-| Work product | State | Authority |
-|---|---|---|
-| Redesign entry point | Prepared | `README.md` |
-| Redesign charter | Prepared for Owner confirmation | `00-governance/REDESIGN_CHARTER.md` |
-| V-model process and roles | Prepared for Owner confirmation | `00-governance/V_MODEL_PROCESS_AND_ROLES.md` |
-| Document control and gates | Prepared for Owner confirmation | `GOV-CONTROL-001` / `00-governance/DOCUMENT_CONTROL_AND_GATES.md` |
-| Phase-specific domain, identifier, and source traceability model | Owner-approved | `GOV-TRACE-001` / `00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md` |
-| External library and reference policy | Owner-approved | `GOV-ENG-001` / `00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md` |
-| Legacy V0.0.2 freeze | Approved baseline | `00-governance/LEGACY_V002_FREEZE.md` |
-| V-model role decision | Approved baseline | `08-decisions/DEC-PROC-001-v-model-role-allocation.md` |
-| External library reuse decision | Approved baseline | `08-decisions/DEC-ENG-001-external-library-reuse-and-reference-policy.md` |
-| Initial domain/identifier decision | Superseded | `08-decisions/DEC-DOC-001-domain-document-and-linked-identifier-model.md` |
-| Corrected domain/source-traceability decision | Approved baseline | `08-decisions/DEC-DOC-002-process-specific-domain-and-source-traceability-model.md` |
-| SWE.1 source register | Draft | `SWE1-SRC-001` / `01-swe1-software-requirements-analysis/REQUIREMENT_SOURCES.md` |
-| SWE.1 analysis plan | Draft Revision B | `SWE1-PLAN-001` / `01-swe1-software-requirements-analysis/SWE1_ANALYSIS_PLAN.md` |
-| SWE.1 target-domain document index | Draft | `SWE1-INDEX-001` / `01-swe1-software-requirements-analysis/SWE1-INDEX-001-document-index.md` |
-| Target-domain software requirements | Not started | reserved in `SWE1-INDEX-001` |
-| Requirements traceability matrix | Not started | planned under `07-traceability/` |
-
-## Identifier policy now in force
+Canonical source:
 
 ```text
-Document ID:
-  <PROCESS>-<DOMAIN>-<DOCUMENT_NUMBER>
+Document:
+  SWE1-SRC-002
 
-Normative item ID:
-  <DOCUMENT_ID>-<SEMANTIC_ITEM_TYPE>-<ITEM_NUMBER>
-
-Version token:
-  prohibited in IDs
-
-SWE.1 item types:
-  CAP / CON / IFC / QLT
-
-SWE.2 item types:
-  CMP / IFC / FLOW / STM / DAT / DEP / CON
-
-SWE.3 item types:
-  DD / REF / IMP
-
-SWE.4-SWE.6 item types:
-  CASE / PROC / ENV / DATA / ORCL / EVID / REF
+SHA-256:
+  A04C1DBA6FE0D9568C51CE2D2F7FE591F0598C3B92A1EDD4B47AFF779F9A9121
 ```
 
-The process-redundant types `REQ`, `ARC`, `UV`, `IV`, and `QV` are retired.
+### Step 2 — SWE.1 decomposition
 
-## SWE.3 construction traceability requirement
+Completed target documents:
 
-Future production classes and methods implementing normative SWE.3 behavior must list applicable full
-SWE.3 `DD` IDs in Javadoc. Focused inline trace comments are required only for distinct code regions
-inside a method that map to items from multiple detailed-design documents.
+- `SWE1-COMMON-001`
+- `SWE1-CORE-001`
+- `SWE1-MAIN-001`
+- `SWE1-MAIN-002`
+- `SWE1-MAIN-003`
+- `SWE1-FRONTIER-001`
+- `SWE1-WB-001`
+- `SWE1-WB-002`
 
-A deterministic source scan must generate the implementation-to-detailed-design consistency report and
-reject missing or invalid mappings before G3C can pass.
+Totals:
 
-## Immediate next actions
+```text
+CAP: 64
+CON: 57
+IFC: 10
+QLT: 33
+TOTAL: 164
+```
 
-1. Complete the immutable SWE.1 source baseline.
-2. Inventory V0.0.1 public API, contracts, migrations, and release handoff constraints.
-3. Confirm V0.0.2 scope and the final SWE.1 target-domain document set.
-4. Classify each source statement by authority, target, applicability, conflict status, and release
-   scope.
-5. Extract singular `CAP`, `CON`, `IFC`, and `QLT` items into their owning target documents.
-6. Derive applicable reuse, maintainability, dependency-selection, and official-reference constraints
-   without selecting concrete architecture during SWE.1.
-7. Define verification intent and complete bidirectional source-to-requirement traceability.
-8. Record ambiguities, conflicts, missing decisions, and V0.0.1 baseline dependency issues.
-9. Present the SWE.1 baseline for Owner review before SWE.2 begins.
+Supporting work products:
 
-## Stop conditions
+- scope and non-scope;
+- glossary;
+- nine-item open-issue register;
+- verification-intent allocation;
+- source-to-requirement bidirectional traceability.
 
-Stop SWE.1 and request an Owner decision when:
+### Step 3 — Self-review
 
-- two equal- or higher-authority sources require incompatible behavior;
-- a required gameplay behavior is undefined and cannot be derived without Product invention;
-- V0.0.2 requires a V0.0.1 interface change that would invalidate the accepted baseline premise;
-- scope cannot be bounded between V0.0.2 and a later release;
-- a requirement cannot be stated in a verifiable and implementation-independent form;
-- a normative item cannot be assigned an unambiguous SWE.1 Product target.
+`REV-SWE1-001` completed.
+
+Automated and manual review found and corrected:
+
+- missing explicit normal durability behavior;
+- incomplete MVI group wording;
+- missing Launchpad expiration timestamp basis;
+- missing Frontier schema extensibility constraint;
+- four potentially compound requirements;
+- one terminology typo.
+
+Final automated consistency result:
+
+```text
+DUPLICATE REQUIREMENT IDS:
+  0
+
+UNTRACED REQUIREMENTS:
+  0
+
+UNEXPLAINED CANONICAL CLAUSES:
+  0
+
+MISSING VERIFICATION INTENT:
+  0
+
+LEGACY / VERSION-PREFIXED REQUIREMENT IDS:
+  0
+```
+
+## Current work-product entry points
+
+1. `README.md`
+2. `SWE1-INDEX-001-document-index.md`
+3. `SWE1-SRC-002-canonical-mainline-requirements.md`
+4. target requirement documents listed in the index
+5. `SWE1-ISSUE-001-open-questions.md`
+6. `../07-traceability/TRC-SWE1-001-source-requirement-traceability.md`
+7. `../10-reviews-and-evidence/REV-SWE1-001-self-review.md`
+
+## Open issues before G1
+
+1. Missing `frontier_iris` enablement behavior.
+2. Supported external Growth Tool repair boundary.
+3. LeafGrapple 1.0.2 API and safe configuration.
+4. WorldEdit/FAWE Launchpad protection boundary.
+5. Launchpad material identity across configuration changes.
+6. Authoritative return path under portal denial.
+7. Player-paid Growth Tool reissue invocation context.
+8. Complete command-to-permission group allocation.
+9. Maximum normal-progress loss window.
+
+Additional baseline work before G1:
+
+- V0.0.1 public API/contract/migration inventory;
+- machine-readable Frontier lock and Project-manifest consistency review;
+- Owner review and correction of the full package.
+
+## Immediate next action
+
+Conduct the joint Project Owner / ChatGPT review requested by the Owner.
+
+The review should proceed in this order:
+
+1. canonical source and amendment disposition;
+2. scope/non-scope;
+3. Common and Core requirements;
+4. Main requirements;
+5. Frontier and Worlds Beyond requirements;
+6. open issues;
+7. verification intent and traceability;
+8. G1 disposition.
 
 ## Continuation rule
 
-A new ChatGPT session or Codex task must read this file first. Work may continue only from the
-current process and gate recorded here. Chat history is supplementary context, not process authority.
+A new ChatGPT session or Codex task must read this file and `SWE1-INDEX-001` first. No downstream
+design, implementation, build candidate, runtime test, merge, tag, or release is authorized while G1
+is not approved.

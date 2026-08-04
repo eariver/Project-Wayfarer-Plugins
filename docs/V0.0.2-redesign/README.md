@@ -4,65 +4,37 @@ This directory is the authoritative entry point for the V0.0.2 redesign.
 
 ## Development premise
 
-- Plugin V0.0.1 is treated as the accepted baseline for this redesign.
+- Plugin V0.0.1 is treated as the accepted baseline for initial analysis.
 - V0.0.1 redesign is outside the current scope.
-- When SWE.1 analysis identifies a V0.0.1 defect or an interface that prevents a valid V0.0.2
-  design, record it as a baseline dependency issue. Do not silently redesign V0.0.1.
-- The failed or incomplete V0.0.2 implementation on PR #14 is retained as evidence and an analysis
-  input. It is not a design authority and is not the implementation baseline for the redesign.
+- PR #14 is retained only as defect/risk/reference evidence.
+- Product intent is derived from controlled source documents and Owner decisions, not from prior code.
 
 ## Process model
 
-The redesign follows a tailored V-model aligned to SWE.1 through SWE.6.
+The work follows the Project-tailored V-model:
 
-| Process | Project activity | Primary executor | Independent review / approval |
-|---|---|---|---|
-| SWE.1 | Software Requirements Analysis | ChatGPT | Owner |
-| SWE.2 | Software Architectural Design | ChatGPT | Owner |
-| SWE.3 design | Software Detailed Design | ChatGPT | Owner |
-| SWE.3 construction | Unit construction from approved detailed design; implementation/design consistency record | Codex | ChatGPT, then Owner gate where required |
-| SWE.4 | Software Unit Verification | Codex | ChatGPT |
-| SWE.5 | Software Integration and Integration Test | Codex | ChatGPT |
-| SWE.6 | Software Qualification Test | Codex | ChatGPT, then Owner acceptance |
+| Process | Primary executor | Review / approval |
+|---|---|---|
+| SWE.1 Software Requirements Analysis | ChatGPT | Project Owner |
+| SWE.2 Software Architectural Design | ChatGPT | Project Owner |
+| SWE.3 Detailed Design | ChatGPT | Project Owner |
+| SWE.3 Unit Construction and design-consistency record | Codex | ChatGPT |
+| SWE.4 Unit Verification | Codex | ChatGPT |
+| SWE.5 Integration and Integration Test | Codex | ChatGPT |
+| SWE.6 Qualification Test | Codex | ChatGPT and Project Owner |
 
-This is a Project Wayfarer process tailoring. The repository does not claim formal Automotive SPICE
-assessment or certification solely from using these process names.
+No downstream process starts before its predecessor gate is approved.
 
-## Domain and traceability model
+## Current state
 
-Controlled IDs do not contain Product-version tokens. Each SWE process defines domains suited to the
-question answered by that process:
+SWE.1 source merge, target requirement decomposition, traceability, verification intent, and ChatGPT
+self-review are complete. The package is awaiting joint Project Owner / ChatGPT review.
 
-- SWE.1 and SWE.6 are normally organized by Product target, server, or theme;
-- SWE.2 through SWE.5 are normally organized by architectural, implementation, unit, or integration
-  concern;
-- cross-process relationships are explicit traceability links, not inferred from matching domain
-  names.
+G1 is not approved. SWE.2 and Product implementation are not authorized.
 
-SWE.3 construction adds source-level traceability: production class and method Javadocs list the
-approved full SWE.3 detailed-design IDs they realize, with focused inline trace comments only where a
-method contains separately mapped regions. A deterministic source scan produces the consistency
-record.
+See `STATUS.md` for exact counts, open issues, and the next action.
 
-The controlling policy is:
-
-`00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md`
-
-Document ID: `GOV-TRACE-001`.
-
-## Engineering policy
-
-All current and future Wayfarer-owned plugins may use Java standard APIs, Paper/Spigot/Bukkit APIs,
-and approved external libraries. Existing suitable capabilities must be reused instead of being
-unnecessarily reimplemented. Dependency maintenance, compatibility, licensing, packaging, failure
-behavior, and official API references are controlled by:
-
-`00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
-
-SWE.2 and SWE.3 must apply this policy. Codex may not select or replace dependencies during
-construction.
-
-## Reading order
+## Reading order for the current review
 
 1. `STATUS.md`
 2. `00-governance/REDESIGN_CHARTER.md`
@@ -70,40 +42,47 @@ construction.
 4. `00-governance/DOCUMENT_CONTROL_AND_GATES.md`
 5. `00-governance/DOMAIN_DOCUMENT_AND_IDENTIFIER_MODEL.md`
 6. `00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
-7. the active phase directory named by `STATUS.md`
-8. the current approved work order, when implementation or verification is authorized
+7. `01-swe1-software-requirements-analysis/SWE1-INDEX-001-document-index.md`
+8. `01-swe1-software-requirements-analysis/SWE1-SRC-002-canonical-mainline-requirements.md`
+9. `01-swe1-software-requirements-analysis/SWE1-SCOPE-001-scope-and-non-scope.md`
+10. target requirement documents in index order
+11. `01-swe1-software-requirements-analysis/SWE1-ISSUE-001-open-questions.md`
+12. `07-traceability/TRC-SWE1-001-source-requirement-traceability.md`
+13. `10-reviews-and-evidence/REV-SWE1-001-self-review.md`
 
-## Directory model
+## Source authority
 
-```text
-docs/V0.0.2-redesign/
-├─ README.md
-├─ STATUS.md
-├─ 00-governance/
-├─ 01-swe1-software-requirements-analysis/
-├─ 02-swe2-software-architectural-design/
-├─ 03-swe3-software-detailed-design/
-├─ 04-swe4-software-unit-verification/
-├─ 05-swe5-software-integration-test/
-├─ 06-swe6-software-qualification-test/
-├─ 07-traceability/
-├─ 08-decisions/
-├─ 09-work-orders/
-└─ 10-reviews-and-evidence/
-```
+The original Owner-provided input files are identified by filename and SHA-256 in
+`01-swe1-software-requirements-analysis/source-snapshots/SOURCE_INPUT_MANIFEST.md`.
+The normalized repository-controlled source used for decomposition is `SWE1-SRC-002`.
 
-Directories are created as their first controlled artifact is approved or prepared. Empty directory
-placeholders are not authority.
+The controlled merge decision is:
 
-## Authority rule
+`08-decisions/DEC-REQ-001-canonical-source-merge-and-swe1-analysis.md`
 
-A conversation, mutable branch URL, local file, or uncommitted runtime observation is not sufficient
-project authority. Requirements, designs, decisions, work orders, reviews, and evidence summaries
-needed to continue the work must be committed to this repository and referenced by immutable commit
-SHA or release tag.
+The direct source for decomposed SWE.1 requirements is `SWE1-SRC-002`.
 
-## Current activity
+## Identifier and domain rules
 
-SWE.1 Software Requirements Analysis is active. No V0.0.2 Product implementation, Candidate-9
-remediation, runtime acceptance continuation, PR readiness transition, merge, tag, or release is
-authorized by this redesign directory until the corresponding gates are approved.
+- Product-version tokens are not placed in requirement/design IDs.
+- SWE.1 and SWE.6 use target-oriented domains.
+- SWE.2–SWE.5 use process-appropriate concern, unit, flow, or topology domains.
+- Cross-process coverage is explicit; matching domain names are never assumed to establish traceability.
+- Production code will trace to approved SWE.3 items through Javadoc and focused inline comments as
+  governed by `GOV-TRACE-001`.
+
+## Engineering policy
+
+All Wayfarer-owned plugins may use suitable Java, Paper/Spigot/Bukkit, adopted-plugin, and approved
+external-library capabilities. Equivalent mature capabilities must not be unnecessarily reimplemented.
+SWE.2/SWE.3 designs must cite authoritative version-appropriate references.
+
+See:
+
+`00-governance/EXTERNAL_LIBRARY_AND_REFERENCE_POLICY.md`
+
+## Repository authority rule
+
+Chat history, mutable branch URLs, local files, and uncommitted observations are supplementary only.
+Controlled requirements, designs, decisions, work orders, reviews, and evidence needed to continue
+the project must be committed and referenced by immutable commit SHA or release tag.
