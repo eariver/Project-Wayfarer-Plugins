@@ -5,7 +5,8 @@ Branch: `redesign/V0.0.2-swe1-3`
 Draft PR: `#18`  
 Baseline: Plugin V0.0.1 on `main`  
 Current process: `SWE.1 Software Requirements Analysis`  
-Current gate: `SWE1_OWNER_REVIEW_PENDING`
+Current activity: clause-by-clause joint Owner review  
+Current gate: `SWE1_OWNER_REVIEW_IN_PROGRESS`
 
 ## Executive status
 
@@ -13,169 +14,101 @@ Current gate: `SWE1_OWNER_REVIEW_PENDING`
 V0.0.1 BASELINE:
   ASSUMED ACCEPTED FOR INITIAL V0.0.2 ANALYSIS
 
-V0.0.1 REDESIGN:
-  OUT OF CURRENT SCOPE
-
 PR #14 / LEGACY IMPLEMENTATION:
   FROZEN REFERENCE / NOT A REQUIREMENT OR DESIGN AUTHORITY
 
 CANONICAL SOURCE MERGE:
-  COMPLETE / SELF-REVIEWED / OWNER REVIEW PENDING
+  COMPLETE AS REVISION A
 
-SWE.1 DECOMPOSITION:
-  COMPLETE / 164 DRAFT REQUIREMENTS
+INITIAL SWE.1 DECOMPOSITION:
+  COMPLETE AS DRAFT
 
-SWE.1 OPEN ISSUES:
-  9
+JOINT OWNER REVIEW:
+  IN PROGRESS / CAN-COM-001 THROUGH CAN-COM-005 REVIEWED
 
-SWE.1 SELF-REVIEW:
-  PASS FOR OWNER REVIEW
+OWNER-APPROVED CORRECTIONS:
+  RECORDED IN DEC-REQ-002
+
+PROVISIONAL SWE.1 REQUIREMENT COUNT:
+  169 AFTER APPROVED ATOMIC DECOMPOSITION THROUGH CAN-COM-005
+
+OPEN ISSUES FROM INITIAL ANALYSIS:
+  9 / SUBJECT TO CONTINUED REVIEW
+
+INITIAL SELF-REVIEW SNAPSHOT:
+  SUPERSEDED AS CURRENT EVIDENCE BY OWNER-REVIEW CORRECTIONS
 
 G1 REQUIREMENTS BASELINE:
   NOT APPROVED
 
-SWE.2:
+SWE.2 THROUGH SWE.6:
   NOT AUTHORIZED
 
-SWE.3:
-  NOT AUTHORIZED
-
-SWE.4 THROUGH SWE.6:
-  NOT AUTHORIZED
-
-PRODUCT IMPLEMENTATION / CANDIDATE / RELEASE:
+PRODUCT IMPLEMENTATION / CANDIDATE / MERGE / TAG / RELEASE:
   NOT AUTHORIZED
 ```
 
-## Completed requested work
+## Current controlling review records
 
-### Step 1 — Canonical positive-requirement source
+- `08-decisions/DEC-REQ-002-common-requirement-review-corrections.md`
+  - Owner-approved correction directions for `CAN-COM-001` through `CAN-COM-005`;
+  - overrides conflicting text in the Revision A canonical source and affected draft SWE.1 documents
+    until consolidated revisions are issued.
+- `10-reviews-and-evidence/REV-SWE1-002-joint-owner-review-log.md`
+  - joint review progress and rationale;
+  - next clause for review is `CAN-COM-006`.
 
-Completed:
+## Approved corrections through CAN-COM-005
 
-- retained the Owner-provided mainline requirement source as the base;
-- applied only the approved clarification/contradiction-resolution subset of the delta register;
-- excluded prior implementation state, test state, roadmap, and release sequencing;
-- committed the immutable source-input manifest and the normalized canonical source.
+### CAN-COM-001
 
-Canonical source:
+- Separate capability ownership from physical-server placement.
+- Do not gate plugin operation solely on a fixed server name or backend role.
+- Treat artifact placement and capability composition as integration/deployment configuration.
+- Preserve future server consolidation, division, and capability co-location.
 
-```text
-Document:
-  SWE1-SRC-002
+### CAN-COM-002
 
-SHA-256:
-  A04C1DBA6FE0D9568C51CE2D2F7FE591F0598C3B92A1EDD4B47AFF779F9A9121
-```
+- Generalize shared access from Core-only to public contracts of approved shared-owner software units.
+- Prohibit feature-plugin dependency on another feature plugin's internal implementation.
+- Preserve shared-to-feature layering and an acyclic dependency graph.
 
-### Step 2 — SWE.1 decomposition
+### CAN-COM-003
 
-Completed target documents:
+- Separate authority, ownership, and access mechanism.
+- Split the former single authority item into MariaDB durable authority, Redis coordination,
+  external player-state authority, Waymark provider authority, and Minecraft runtime-state authority.
+- Permit explicit logical/physical dual-state ownership with feature-owned reconciliation.
 
-- `SWE1-COMMON-001`
-- `SWE1-CORE-001`
-- `SWE1-MAIN-001`
-- `SWE1-MAIN-002`
-- `SWE1-MAIN-003`
-- `SWE1-FRONTIER-001`
-- `SWE1-WB-001`
-- `SWE1-WB-002`
+### CAN-COM-004
 
-Totals:
+- Prohibit unsupported access to external private/internal state while allowing supported public
+  contracts and approved adapters.
+- Prohibit Wayfarer from becoming a general or long-term normal inventory/profile store.
+- Preserve the possibility of a future explicitly approved transactional cross-context item-transfer
+  capability using temporary persistence and controlled transformation/redelivery.
+- Generalize shared-foundation semantic neutrality instead of enumerating present features.
 
-```text
-CAP: 64
-CON: 57
-IFC: 10
-QLT: 33
-TOTAL: 164
-```
+### CAN-COM-005
 
-Supporting work products:
+- Use platform-authorized execution contexts rather than assuming one global main thread.
+- Prohibit blocking external I/O on tick-critical or region-critical execution contexts.
+- Add an atomic requirement for asynchronous-completion revalidation.
 
-- scope and non-scope;
-- glossary;
-- nine-item open-issue register;
-- verification-intent allocation;
-- source-to-requirement bidirectional traceability.
+## Required consolidation work before G1
 
-### Step 3 — Self-review
+1. Revise `SWE1-SRC-002` to incorporate every approved joint-review correction.
+2. Revise affected target requirement documents, beginning with `SWE1-COMMON-001` and
+   `SWE1-CORE-001`.
+3. Update `SWE1-INDEX-001`, `TRC-SWE1-001`, and `SWE1-VERIFY-001` after item additions or changes.
+4. Review and remove equivalent fixed-server-role assumptions in later Main and Frontier clauses.
+5. Continue joint review from `CAN-COM-006`.
+6. After all corrections are consolidated, rerun automated identifier/source checks and a complete
+   SWE.1 self-review.
+7. Present the corrected package for explicit G1 Owner approval.
 
-`REV-SWE1-001` completed.
+## Authority restriction
 
-Automated and manual review found and corrected:
-
-- missing explicit normal durability behavior;
-- incomplete MVI group wording;
-- missing Launchpad expiration timestamp basis;
-- missing Frontier schema extensibility constraint;
-- four potentially compound requirements;
-- one terminology typo.
-
-Final automated consistency result:
-
-```text
-DUPLICATE REQUIREMENT IDS:
-  0
-
-UNTRACED REQUIREMENTS:
-  0
-
-UNEXPLAINED CANONICAL CLAUSES:
-  0
-
-MISSING VERIFICATION INTENT:
-  0
-
-LEGACY / VERSION-PREFIXED REQUIREMENT IDS:
-  0
-```
-
-## Current work-product entry points
-
-1. `README.md`
-2. `SWE1-INDEX-001-document-index.md`
-3. `SWE1-SRC-002-canonical-mainline-requirements.md`
-4. target requirement documents listed in the index
-5. `SWE1-ISSUE-001-open-questions.md`
-6. `../07-traceability/TRC-SWE1-001-source-requirement-traceability.md`
-7. `../10-reviews-and-evidence/REV-SWE1-001-self-review.md`
-
-## Open issues before G1
-
-1. Missing `frontier_iris` enablement behavior.
-2. Supported external Growth Tool repair boundary.
-3. LeafGrapple 1.0.2 API and safe configuration.
-4. WorldEdit/FAWE Launchpad protection boundary.
-5. Launchpad material identity across configuration changes.
-6. Authoritative return path under portal denial.
-7. Player-paid reissue invocation context.
-8. Complete command-to-permission group allocation.
-9. Maximum normal-progress loss window.
-
-Additional baseline work before G1:
-
-- V0.0.1 public API/contract/migration inventory;
-- machine-readable Frontier lock and Project-manifest consistency review;
-- Owner review and correction of the full package.
-
-## Immediate next action
-
-Conduct the joint Project Owner / ChatGPT review requested by the Owner.
-
-The review should proceed in this order:
-
-1. canonical source and amendment disposition;
-2. scope/non-scope;
-3. Common and Core requirements;
-4. Main requirements;
-5. Frontier and Worlds Beyond requirements;
-6. open issues;
-7. verification intent and traceability;
-8. G1 disposition.
-
-## Continuation rule
-
-A new ChatGPT session or Codex task must read this file and `SWE1-INDEX-001` first. No downstream
-design, implementation, build candidate, runtime test, merge, tag, or release is authorized while G1
-is not approved.
+No document in the current branch authorizes SWE.2, SWE.3 construction, SWE.4 through SWE.6 execution,
+product implementation, Candidate remediation, PR readiness transition, merge, tag, deployment, or
+release. Only the Owner may approve the next gate.
