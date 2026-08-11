@@ -1,16 +1,17 @@
 # Worlds Beyond Launchpad, Shop, Portal, and Administration Requirements
 
 Document ID: `SWE1-WB-002`  
-Revision: A  
+Revision: B  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-11 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Target domain: `WB`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary source: `SWE1-SRC-002` Revision A  
+Primary source: `SWE1-SRC-002` Revision B  
+Controlling Common review decisions: `DEC-REQ-002`, `DEC-REQ-004`  
 Contained normative items: CAP: 16, CON: 7, IFC: 1, QLT: 4
 
 ## 1. Purpose
@@ -24,6 +25,7 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 - Source-prescribed implementation mechanisms are retained only when they are themselves an approved external interface or compatibility constraint.
 - A requirement carrying an open issue remains draft and cannot support G1 PASS until the issue is resolved or explicitly accepted as a blocker.
 - Full identifiers are used in all downstream traceability.
+- Literal `frontier_iris` references originate from unreviewed Worlds Beyond target clauses and remain subject to later target-clause correction toward the configured Worlds Beyond gameplay-world identifier approved during Common review; this checkpoint does not pre-adjudicate each WB clause.
 
 ## 3. Requirements
 
@@ -89,17 +91,17 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 
 ### SWE1-WB-002-CAP-004 — Launchpad placement eligibility
 
-**Normative statement:** Launchpad placement shall require exact `frontier_iris`, a solid supporting top surface, air at the target, no liquid, a loaded chunk, world-border inclusion, spawn exclusion, WorldGuard permission, and no active-launchpad overlap.
+**Normative statement:** Under the current unreviewed `CAN-WB-009` wording, Launchpad placement requires exact `frontier_iris`, a solid supporting top surface, air at the target, no liquid, a loaded chunk, world-border inclusion, spawn exclusion, WorldGuard permission, and no active-launchpad overlap.
 
 **Source:** SWE1-SRC-002 §8 CAN-WB-009; AMD-004  
-**Rationale:** Defines the current approved placement safety boundary.  
+**Rationale:** Preserves the current placement-policy draft pending target review.  
 **Precondition / trigger:** A player attempts to place a current authorized Launchpad.  
-**Required observable result:** Placement succeeds only when every listed condition is true.  
+**Required observable result:** Placement succeeds only when every approved placement condition is true.  
 **Verification intent:** SWE.4 placement-policy verification, SWE.5 WorldGuard/Paper integration, SWE.6 representative client qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Literal world-name wording is pending later `CAN-WB-009` review against the approved configured-world direction.  
 **State:** `DRAFT`
 
 ### SWE1-WB-002-CON-002 — No generic structure-exclusion requirement
@@ -125,9 +127,9 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 **Rationale:** Addresses the three-system consistency boundary without claiming external atomicity.  
 **Precondition / trigger:** Any placement stage succeeds, fails, times out, or is replayed.  
 **Required observable result:** The operation reaches one valid terminal or reconcilable state with no duplicate item/record/block effect.  
-**Verification intent:** SWE.4 coordinator/idempotency verification and SWE.5 failure-injection integration test.  
+**Verification intent:** SWE.4 coordinator/idempotency verification and SWE.5 failure-injection integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -179,17 +181,17 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 
 ### SWE1-WB-002-CAP-007 — Public step activation
 
-**Normative statement:** Any eligible player stepping on an active Launchpad inside exact `frontier_iris` shall be able to activate it unless sneaking.
+**Normative statement:** Under the current unreviewed `CAN-WB-011` wording, any eligible player stepping on an active Launchpad inside exact `frontier_iris` shall be able to activate it unless sneaking.
 
 **Source:** SWE1-SRC-002 §8 CAN-WB-011  
-**Rationale:** Defines public use and the intentional opt-out.  
+**Rationale:** Defines public use and the intentional opt-out pending target-world wording review.  
 **Precondition / trigger:** An eligible player enters the trigger area.  
 **Required observable result:** Non-sneaking activation proceeds subject to claim/cooldown/safety; sneaking causes no launch or use increment.  
 **Verification intent:** SWE.5 movement/event integration and SWE.6 client qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Literal world-name wording is pending later `CAN-WB-011` review.  
 **State:** `DRAFT`
 
 ### SWE1-WB-002-CAP-008 — Current-look launch direction
@@ -232,22 +234,22 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 **Required observable result:** Durable and physical state reflect exactly one use, and terminal use removes active authority/block once.  
 **Verification intent:** SWE.4 state-transition verification, SWE.5 database/block integration, SWE.6 qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
 ### SWE1-WB-002-CAP-010 — Manual break behavior
 
-**Normative statement:** Any player shall be able to normally break an active Launchpad; a successful break shall produce no item, remove the physical block and active authority exactly once, and produce an audit reference.
+**Normative statement:** Any player shall be able to normally break an active Launchpad; a successful break shall produce no item, remove the physical block and active authority exactly once, and produce an audit reference/correlation.
 
-**Source:** SWE1-SRC-002 §8 CAN-WB-012  
-**Rationale:** Defines public cleanup without item recovery.  
+**Source:** SWE1-SRC-002 §8 CAN-WB-012; §4 CAN-COM-009  
+**Rationale:** Defines public cleanup without item recovery and preserves inspectable removal evidence.  
 **Precondition / trigger:** A non-cancelled ordinary player break targets an active launchpad.  
-**Required observable result:** The block and active record are removed with no drop and no duplicate deletion.  
-**Verification intent:** SWE.5 Paper/database integration and SWE.6 representative qualification.  
+**Required observable result:** The block and active record are removed with no drop and no duplicate deletion, with retrievable designated audit evidence.  
+**Verification intent:** SWE.5 Paper/database/audit integration and SWE.6 representative qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-008  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -262,7 +264,7 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 **Required observable result:** State remains valid for cancellation or reaches the same single deleted disposition for replay.  
 **Verification intent:** SWE.4 policy/idempotency verification and SWE.5 event integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -287,7 +289,7 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 **Normative statement:** Launchpad expiration shall be based on `last_used_at` after at least one successful use and otherwise on `created_at`; an overdue active launchpad shall be removed according to the idempotent lifecycle policy.
 
 **Source:** SWE1-SRC-002 §8 CAN-WB-013  
-**Rationale:** Provides durable time-based lifecycle without tick blocking.  
+**Rationale:** Provides durable time-based lifecycle without blocking critical runtime execution.  
 **Precondition / trigger:** A launchpad reaches expiration during runtime or downtime.  
 **Required observable result:** The due time is derived from the correct timestamp and overdue physical/durable state reaches one deleted disposition.  
 **Verification intent:** SWE.4 expiration-policy verification and SWE.5 restart/scheduler integration.  
@@ -307,7 +309,7 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 **Required observable result:** The discrepancy is reported and can be resolved idempotently without issuing a free Launchpad item.  
 **Verification intent:** SWE.4 classification verification and SWE.5 reconciliation integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-008; SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -329,17 +331,17 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 
 ### SWE1-WB-002-CAP-014 — Frontier shop catalog
 
-**Normative statement:** Inside exact `frontier_iris`, the shop shall offer Launchpad ×1 for 30 WM and a non-explosive Flight Duration 3 Firework Rocket ×1 for 200 WM.
+**Normative statement:** Under the current unreviewed `CAN-WB-014` wording, inside exact `frontier_iris` the shop shall offer Launchpad ×1 for 30 WM and a non-explosive Flight Duration 3 Firework Rocket ×1 for 200 WM.
 
 **Source:** SWE1-SRC-002 §8 CAN-WB-014  
-**Rationale:** Defines the approved initial shop capability.  
+**Rationale:** Defines the approved initial catalog pending target-world wording review.  
 **Precondition / trigger:** An authorized player opens the current shop.  
-**Required observable result:** The two products, quantities, and current approved prices are available.  
+**Required observable result:** The two products, quantities, and current approved prices are available in the approved Worlds Beyond context.  
 **Verification intent:** SWE.4 catalog verification and SWE.6 client qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Literal world-name wording is pending later `CAN-WB-014` review.  
 **State:** `DRAFT`
 
 ### SWE1-WB-002-CON-006 — Waystone purchase denial
@@ -349,42 +351,42 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 **Source:** SWE1-SRC-002 §8 CAN-WB-014; §9 CAN-SCOPE-002  
 **Rationale:** Prevents payment for unavailable functionality.  
 **Precondition / trigger:** The catalog is displayed or a direct Waystone purchase route is invoked.  
-**Required observable result:** No Waymark debit, delivery, or Waystone authority occurs.  
+**Required observable result:** No Waymark debit, delivery entitlement, or Waystone authority occurs.  
 **Verification intent:** SWE.4 action-policy verification, SWE.5 transaction integration, SWE.6 qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-013  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-WB-002-QLT-003 — Shop transaction safety
+### SWE1-WB-002-QLT-003 — Shop protected-operation and entitlement safety
 
-**Normative statement:** Shop purchases shall use the Core transaction boundary with operation identity, duplicate-click protection, current quote/item validation, and typed pending delivery or approved refund for a clear post-debit delivery failure; `UNKNOWN` shall not be treated as success or automatically retried.
+**Normative statement:** A confirmed shop purchase shall use the approved shared Waymark transaction capability under one stable logical operation identity with distinct protected effect identities. Current quote, product eligibility, player/context eligibility, and delivery preconditions shall be revalidated before their applicable protected effects. One accepted purchase operation shall establish at most one successful debit effect and one durable item entitlement. Delivery retry may continue only that same entitlement when final delivery has not been established. An `UNKNOWN` debit, delivery, or compensation effect shall remain `UNKNOWN`, shall not be treated as success or clear failure, and shall not automatically authorize retry or refund/compensation. A proven clear post-debit delivery failure may enter an approved typed-pending-delivery or compensation path, but the same paid entitlement shall not result in both a successful delivered entitlement and successful refund/compensation.
 
-**Source:** SWE1-SRC-002 §8 CAN-WB-014; §4 CAN-COM-007  
-**Rationale:** Protects funds and delivery under replay and partial failure.  
-**Precondition / trigger:** A player confirms a shop purchase and any later delivery stage succeeds, fails, or becomes ambiguous.  
-**Required observable result:** At most one debit and one item entitlement result from one operation identity; unresolved outcomes remain reconcilable.  
-**Verification intent:** SWE.4 transaction/delivery verification, SWE.5 Core/Frontier integration, SWE.6 representative purchase qualification.  
+**Source:** SWE1-SRC-002 §8 CAN-WB-014; §4 CAN-COM-007; DEC-REQ-004 §3  
+**Rationale:** Protects funds and delivery entitlement across replay, partial failure, and ambiguous external/domain outcomes without forcing a specific shared transaction owner or pre-deciding the final WB pending-vs-refund priority.  
+**Precondition / trigger:** A player confirms a shop purchase and any protected debit/delivery/compensation stage succeeds, clearly fails, is replayed, or becomes ambiguous.  
+**Required observable result:** One logical purchase produces at most one successful debit and one item entitlement; delivery retry preserves the same entitlement; unresolved effects remain inspectable/reconcilable; refund/compensation is not driven from ambiguity.  
+**Verification intent:** SWE.4 operation/effect/entitlement matrix verification, SWE.5 shared-transaction/Frontier delivery integration, SWE.6 representative purchase qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-006; SWE1-COMMON-001-QLT-012; SWE1-COMMON-001-QLT-013  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact priority between typed pending delivery and refund/compensation after a proven clear delivery failure remains deferred to `CAN-WB-014` Owner review.  
 **State:** `DRAFT`
 
 ### SWE1-WB-002-CAP-015 — Vanilla portal denial
 
-**Normative statement:** Vanilla portal traversal from or within exact `frontier_iris` shall be denied.
+**Normative statement:** Under the current unreviewed `CAN-WB-015` wording, vanilla portal traversal from or within exact `frontier_iris` shall be denied.
 
 **Source:** SWE1-SRC-002 §8 CAN-WB-015; AMD-002  
-**Rationale:** Adds the explicit Worlds Beyond portal boundary approved after the original source.  
-**Precondition / trigger:** A player attempts a vanilla Nether, End, gateway, or equivalent portal traversal covered by the selected platform contract in exact `frontier_iris`.  
+**Rationale:** Adds the explicit Worlds Beyond portal boundary approved after the original source, pending configured-world wording review.  
+**Precondition / trigger:** A player attempts a vanilla Nether, End, gateway, or equivalent portal traversal covered by the selected platform contract in the approved Worlds Beyond context.  
 **Required observable result:** Traversal does not complete and no unintended dimension/world transfer occurs.  
 **Verification intent:** SWE.5 Paper portal integration and SWE.6 client qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** SWE1-ISSUE-001-ISSUE-006  
+**Open issue / conflict:** SWE1-ISSUE-001-ISSUE-006; literal world-name wording also remains pending target-clause review.  
 **State:** `DRAFT`
 
 ### SWE1-WB-002-CON-007 — No Gate or return-structure ownership
@@ -404,15 +406,15 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 
 ### SWE1-WB-002-CAP-016 — Worlds Beyond administration
 
-**Normative statement:** The software shall provide authorized capabilities for loadout inspection/reissue, delivery inspection/retry, Launchpad inspection/removal/reconciliation, transaction inspection, and audit reference.
+**Normative statement:** The software shall provide authorized capabilities for loadout inspection/reissue, delivery inspection/retry, Launchpad inspection/removal/reconciliation, transaction inspection, and audit reference/correlation.
 
-**Source:** SWE1-SRC-002 §8 CAN-WB-016  
-**Rationale:** Provides operational recovery for the approved theme domains.  
+**Source:** SWE1-SRC-002 §8 CAN-WB-016; §4 CAN-COM-009  
+**Rationale:** Provides operational recovery for the approved theme domains with retrievable protected-outcome evidence.  
 **Precondition / trigger:** An authorized administrator invokes a supported operation.  
-**Required observable result:** Only the documented domain state is inspected or changed, with an auditable actionable result.  
-**Verification intent:** SWE.5 command integration and SWE.6 representative administration qualification.  
+**Required observable result:** Only the documented domain state is inspected or changed, with an actionable auditable disposition.  
+**Verification intent:** SWE.5 command/audit integration and SWE.6 representative administration qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-008  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -432,17 +434,17 @@ Define Launchpad item, placement, use, lifecycle, protection, reconciliation, sh
 **Open issue / conflict:** SWE1-ISSUE-001-ISSUE-008  
 **State:** `DRAFT`
 
-### SWE1-WB-002-QLT-004 — Asynchronous expiration and restart catch-up
+### SWE1-WB-002-QLT-004 — Expiration processing and restart catch-up execution safety
 
-**Normative statement:** Expiration candidates shall be searched without main-thread blocking I/O, physical world mutation shall occur on the main thread, and overdue expiration shall be processed after restart.
+**Normative statement:** Expiration-candidate search shall not perform blocking durable/external I/O on tick-critical or region-critical execution contexts. Physical world mutation shall occur only on an execution context authorized by the adopted server platform for the affected world/block state, with applicable mutable preconditions revalidated before mutation. Overdue expiration shall be processed after restart.
 
-**Source:** SWE1-SRC-002 §8 CAN-WB-013  
-**Rationale:** Ensures timed cleanup is thread-safe and durable across downtime.  
-**Precondition / trigger:** The scheduler runs or the plugin restarts with overdue active launchpads.  
-**Required observable result:** Candidate lookup does not block the main thread and overdue records are safely revalidated and removed.  
-**Verification intent:** SWE.4 scheduler/thread verification and SWE.5 restart/expiration integration.  
+**Source:** SWE1-SRC-002 §8 CAN-WB-013; §4 CAN-COM-005; DEC-REQ-002 §6  
+**Rationale:** Preserves timed cleanup across downtime without assuming one global main thread.  
+**Precondition / trigger:** Expiration processing runs or runtime restarts with overdue active launchpads.  
+**Required observable result:** Candidate lookup does not block a prohibited critical context; overdue records are revalidated and physical removal occurs from an authorized execution context.  
+**Verification intent:** SWE.4 scheduler/execution-context/revalidation verification and SWE.5 restart/expiration integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-001; SWE1-COMMON-001-QLT-002; SWE1-COMMON-001-QLT-009  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
