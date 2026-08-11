@@ -1,21 +1,22 @@
 # Wayfarer_Core Software Requirements
 
 Document ID: `SWE1-CORE-001`  
-Revision: A  
+Revision: B  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-11 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Target domain: `CORE`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary source: `SWE1-SRC-002` Revision A  
+Primary source: `SWE1-SRC-002` Revision B  
+Controlling Common review decisions: `DEC-REQ-002`, `DEC-REQ-004`  
 Contained normative items: CAP: 2, CON: 8, IFC: 3, QLT: 1
 
 ## 1. Purpose
 
-Define the shared Core capabilities and compatibility constraints required by the Main and Frontier targets without allocating target gameplay to Core.
+Define the shared capabilities currently allocated to Wayfarer_Core and the Core compatibility constraints required by approved dependent capabilities without allocating target gameplay semantics to Core.
 
 ## 2. Requirement interpretation rules
 
@@ -24,22 +25,23 @@ Define the shared Core capabilities and compatibility constraints required by th
 - Source-prescribed implementation mechanisms are retained only when they are themselves an approved external interface or compatibility constraint.
 - A requirement carrying an open issue remains draft and cannot support G1 PASS until the issue is resolved or explicitly accepted as a blocker.
 - Full identifiers are used in all downstream traceability.
+- Common requirements do not permanently force all future shared capability ownership into Core; this document controls only capabilities explicitly allocated to Core by the applicable Core clauses/design baseline.
 
 ## 3. Requirements
 
-### SWE1-CORE-001-CAP-001 — Shared Core availability
+### SWE1-CORE-001-CAP-001 — Shared Core service availability independent of backend naming
 
-**Normative statement:** Wayfarer_Core shall provide the shared runtime services required by approved Main and Frontier capabilities and shall be deployable on both Main and Frontier without target-specific gameplay ownership.
+**Normative statement:** For shared services explicitly allocated to Wayfarer_Core, Core shall provide the approved compatible service to any runtime containing an approved dependent Wayfarer capability without requiring a historical Main/Frontier backend name and without taking ownership of the dependent feature's gameplay semantics.
 
-**Source:** SWE1-SRC-002 §5 CAN-CORE-001; §4 CAN-COM-001  
-**Rationale:** Provides a single shared foundation while preserving gameplay-plugin ownership.  
-**Precondition / trigger:** When either gameplay plugin resolves a required Core service.  
-**Required observable result:** The compatible service is available or the dependent capability fails closed without Core taking over target gameplay.  
-**Verification intent:** SWE.5 Main-Core and Frontier-Core integration tests.  
+**Source:** SWE1-SRC-002 §5 CAN-CORE-001; §4 CAN-COM-001; DEC-REQ-002 §2  
+**Rationale:** Preserves the current Core allocation while separating service ownership from physical backend naming.  
+**Precondition / trigger:** When an approved dependent capability resolves a Core-owned shared service.  
+**Required observable result:** The compatible Core-owned service is available when its actual prerequisites are met, or the dependent capability fails closed; backend naming alone does not decide availability.  
+**Verification intent:** SWE.2 allocation inspection and SWE.5 dependent-capability/Core integration across approved topologies.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-CON-001  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact shared ownership under CAN-CORE-001/CAN-CORE-003 remains subject to the upcoming Core-clause Owner review.  
 **State:** `DRAFT`
 
 ### SWE1-CORE-001-IFC-001 — V0.0.1 public API compatibility
@@ -53,23 +55,23 @@ Define the shared Core capabilities and compatibility constraints required by th
 **Verification intent:** API compatibility analysis, binary compatibility tooling, and SWE.5 class-loading integration test.  
 **Priority:** `MUST`  
 **Dependencies:** None  
-**Assumptions:** None  
+**Assumptions:** Complete accepted V0.0.1 public-contract inventory will be established before G1.  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
 ### SWE1-CORE-001-IFC-002 — Additive Core extension
 
-**Normative statement:** A Core capability needed by Main or Frontier shall be introduced through an additive public contract with explicit capability discovery and version compatibility.
+**Normative statement:** A Core capability needed by an approved dependent capability shall be introduced through an additive public contract with explicit capability discovery and version compatibility unless an Owner-approved baseline-breaking change authorizes otherwise.
 
 **Source:** SWE1-SRC-002 §5 CAN-CORE-001  
-**Rationale:** Allows extension without silently changing baseline semantics.  
-**Precondition / trigger:** When a new shared capability is required.  
-**Required observable result:** Consumers can determine capability availability and fail closed when the required version/capability is absent.  
-**Verification intent:** SWE.4 contract verification and SWE.5 mixed-version integration test.  
+**Rationale:** Allows Core extension without silently changing accepted baseline semantics.  
+**Precondition / trigger:** When a new shared capability is proposed for Core ownership.  
+**Required observable result:** Consumers can determine capability availability and fail closed when the required compatible version/capability is absent.  
+**Verification intent:** SWE.4 contract verification and SWE.5 mixed-version integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact additive/breaking compatibility policy remains subject to CAN-CORE-001 Owner review.  
 **State:** `DRAFT`
 
 ### SWE1-CORE-001-CON-001 — Public API implementation isolation
@@ -94,8 +96,8 @@ Define the shared Core capabilities and compatibility constraints required by th
 **Source:** SWE1-SRC-002 §5 CAN-CORE-002  
 **Rationale:** Prevents service-resolution and type-cast failures.  
 **Precondition / trigger:** At artifact assembly and runtime loading.  
-**Required observable result:** The runtime resolves one compatible API class identity for all modules.  
-**Verification intent:** Packaging inspection and SWE.5 class-loading integration test.  
+**Required observable result:** The runtime resolves one compatible API class identity for all consumers.  
+**Verification intent:** Packaging inspection and SWE.5 class-loading integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -104,17 +106,17 @@ Define the shared Core capabilities and compatibility constraints required by th
 
 ### SWE1-CORE-001-CAP-002 — Waymark transaction service
 
-**Normative statement:** Core shall expose the approved Waymark transaction boundary used by Main repair/reissue and Frontier shop operations.
+**Normative statement:** Core shall expose the approved Waymark transaction boundary used by currently allocated Main repair/reissue and Frontier shop operations.
 
 **Source:** SWE1-SRC-002 §5 CAN-CORE-003  
-**Rationale:** Centralizes shared economy semantics and prevents direct provider access.  
-**Precondition / trigger:** When a target plugin requests an approved debit, refund, or reconciliation-capable operation.  
-**Required observable result:** The request is executed through Core and returns an explicit supported disposition.  
-**Verification intent:** SWE.4 service-contract verification and SWE.5 provider integration test.  
+**Rationale:** Centralizes the currently allocated shared economy semantics and prevents direct feature access to provider internals.  
+**Precondition / trigger:** When an approved dependent capability requests a supported debit, refund/compensation, or reconciliation-capable operation.  
+**Required observable result:** The request is handled through the approved Core contract and returns an explicit supported disposition.  
+**Verification intent:** SWE.4 service-contract verification and SWE.5 provider/dependent-capability integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-IFC-004  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Concrete shared transaction ownership remains subject to CAN-CORE-003 Owner review.  
 **State:** `DRAFT`
 
 ### SWE1-CORE-001-IFC-003 — Provider acceptance semantics
@@ -125,9 +127,9 @@ Define the shared Core capabilities and compatibility constraints required by th
 **Rationale:** Prevents overstating external guarantees.  
 **Precondition / trigger:** When translating provider responses into Wayfarer transaction outcomes.  
 **Required observable result:** Returned status and documentation preserve the provider's actual guarantee boundary.  
-**Verification intent:** Interface inspection and failure-mode integration test.  
+**Verification intent:** Interface inspection and SWE.5 failure-mode provider integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-IFC-004  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -142,22 +144,22 @@ Define the shared Core capabilities and compatibility constraints required by th
 **Required observable result:** The operation remains `UNKNOWN` or uses an explicit provider-supported proof; balance delta alone does not terminally succeed it.  
 **Verification intent:** SWE.4 outcome-policy verification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-006  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
 ### SWE1-CORE-001-CON-004 — No automatic UNKNOWN retry
 
-**Normative statement:** Core shall not automatically re-invoke a Waymark provider operation whose outcome is `UNKNOWN`.
+**Normative statement:** Core shall not automatically re-invoke a Waymark provider effect whose outcome is `UNKNOWN`.
 
-**Source:** SWE1-SRC-002 §5 CAN-CORE-004  
-**Rationale:** Avoids duplicate debit/refund.  
-**Precondition / trigger:** When an operation returns or is recovered as `UNKNOWN`.  
-**Required observable result:** No second provider effect is automatically attempted; manual reconciliation remains possible.  
-**Verification intent:** SWE.4 replay-policy verification and SWE.5 ambiguous-provider integration test.  
+**Source:** SWE1-SRC-002 §5 CAN-CORE-004; §4 CAN-COM-007  
+**Rationale:** Avoids duplicate debit/refund/compensation where the provider effect may already have occurred.  
+**Precondition / trigger:** When a provider effect returns or is recovered as `UNKNOWN`.  
+**Required observable result:** No second uncertain provider effect is automatically attempted; authorized reconciliation remains possible.  
+**Verification intent:** SWE.4 replay-policy verification and SWE.5 ambiguous-provider integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-006  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -168,71 +170,71 @@ Define the shared Core capabilities and compatibility constraints required by th
 
 **Source:** SWE1-SRC-002 §5 CAN-CORE-004  
 **Rationale:** Preserves provider ownership and upgrade safety.  
-**Precondition / trigger:** When transaction guarantees are insufficient.  
+**Precondition / trigger:** When provider guarantees are insufficient for a requested transaction semantic.  
 **Required observable result:** The limitation is represented explicitly rather than bypassed through provider-internal state.  
 **Verification intent:** Source/dependency inspection.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-CON-003; SWE1-COMMON-001-IFC-004  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-CORE-001-QLT-001 — Transaction idempotency support
+### SWE1-CORE-001-QLT-001 — Protected transaction-effect identity contract
 
-**Normative statement:** The Core transaction boundary shall accept or produce stable operation identity sufficient for target modules to recognize replay and prevent duplicate provider effects.
+**Normative statement:** For a protected provider operation handled by the Core transaction boundary, Core shall operate on the stable logical operation/effect identity established before provider effect, correlate provider invocation/reference/result with that identity, and return the existing effect disposition on replay. A provider effect already proven successful or recorded as `UNKNOWN` shall not be automatically re-invoked for the same effect identity.
 
-**Source:** SWE1-SRC-002 §4 CAN-COM-007; §5 CAN-CORE-003  
-**Rationale:** Enables end-to-end duplicate-effect prevention.  
-**Precondition / trigger:** On initial execution and subsequent replay of the same logical operation.  
-**Required observable result:** The provider invocation occurs no more than allowed by the stored operation disposition.  
-**Verification intent:** SWE.4 unit verification and SWE.5 transaction integration test.  
+**Source:** SWE1-SRC-002 §4 CAN-COM-007; §5 CAN-CORE-003; DEC-REQ-004 §3  
+**Rationale:** Specializes Common protected-operation identity and replay containment at the provider boundary.  
+**Precondition / trigger:** Initial provider invocation, replay, restart recovery, or reconciliation inspection of the same protected effect.  
+**Required observable result:** Provider interaction remains correlated with one logical operation/effect; replay returns the established disposition and does not create an automatic second successful/uncertain effect.  
+**Verification intent:** SWE.4 contract/idempotency verification and SWE.5 provider transaction/recovery integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-006; SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact Core transaction contract remains subject to CAN-CORE-003 review.  
 **State:** `DRAFT`
 
-### SWE1-CORE-001-CON-006 — Core gameplay non-ownership
+### SWE1-CORE-001-CON-006 — Shared-foundation semantic neutrality
 
-**Normative statement:** Core shall not own Main Growth Tool behavior, Worlds Beyond traversal behavior, launchpad behavior, target GUI behavior, or target command semantics.
+**Normative statement:** A capability allocated to Core as shared foundation shall not own policy or gameplay semantics that apply only to a specific feature domain unless an approved architecture allocation explicitly assigns that responsibility to Core; Core may provide reusable mechanisms and contracts without embedding feature-specific decisions.
 
-**Source:** SWE1-SRC-002 §4 CAN-COM-004; §5 CAN-CORE-001  
-**Rationale:** Maintains dependency direction and target autonomy.  
-**Precondition / trigger:** During architecture allocation and implementation.  
-**Required observable result:** Target gameplay remains in the target plugin and Core exposes only shared contracts.  
-**Verification intent:** SWE.2 allocation review and source inspection.  
+**Source:** SWE1-SRC-002 §4 CAN-COM-004; §5 CAN-CORE-001; DEC-REQ-002 §5.4  
+**Rationale:** Prevents current feature names from becoming the permanent definition of the shared boundary while preserving reusable shared mechanisms.  
+**Precondition / trigger:** During capability allocation, API design, or shared implementation design.  
+**Required observable result:** Feature-specific policy remains with its approved feature owner unless explicitly reallocated; Core contracts expose shared mechanisms rather than hidden feature decisions.  
+**Verification intent:** SWE.2 allocation review and SWE.3 API/ownership inspection.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-CON-002; SWE1-COMMON-001-CON-007  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
 ### SWE1-CORE-001-CON-007 — Core migration necessity
 
-**Normative statement:** A new Core migration shall be introduced only for a new Core-owned durable capability and shall not be added merely because Main or Frontier needs target-owned persistence.
+**Normative statement:** A new Core migration shall be introduced only for a durable capability allocated to Core and shall not be added merely because another feature needs persistence owned outside Core.
 
 **Source:** SWE1-SRC-002 §5 CAN-CORE-005  
 **Rationale:** Prevents target schema leakage into Core.  
-**Precondition / trigger:** When persistence changes are proposed.  
-**Required observable result:** The migration changes only `wf_core_*` structures and has an identified Core requirement.  
-**Verification intent:** Migration ownership inspection and SWE.5 migration integration test.  
+**Precondition / trigger:** When a Core persistence change is proposed.  
+**Required observable result:** Every Core migration has an identified Core-owned durable-state requirement and does not alter another owner's schema objects.  
+**Verification intent:** Migration ownership inspection and SWE.5 migration integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-IFC-002  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact Core namespace/table-prefix implications remain subject to CAN-CORE-005 review and accepted V0.0.1 migration inventory.  
 **State:** `DRAFT`
 
 ### SWE1-CORE-001-CON-008 — Accepted Core migration preservation
 
-**Normative statement:** All applied V0.0.1 Core migrations shall remain byte-for-byte unchanged.
+**Normative statement:** All accepted V0.0.1 Core migration files shall remain byte-for-byte unchanged.
 
-**Source:** SWE1-SRC-002 §5 CAN-CORE-005  
+**Source:** SWE1-SRC-002 §5 CAN-CORE-005; §4 CAN-COM-008  
 **Rationale:** Protects accepted database history.  
 **Precondition / trigger:** At any Core schema evolution.  
-**Required observable result:** Prior migration checksums remain identical.  
-**Verification intent:** Checksum verification and inspection.  
+**Required observable result:** Prior accepted Core migration content/checksums remain identical and later change is introduced by a new migration.  
+**Verification intent:** Accepted-migration inventory/checksum verification and inspection.  
 **Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
+**Dependencies:** SWE1-COMMON-001-CON-006  
+**Assumptions:** Complete accepted V0.0.1 migration inventory will be established before G1.  
+**Open issue / conflict:** Exact accepted inventory remains pending.  
 **State:** `DRAFT`
