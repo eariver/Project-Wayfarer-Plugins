@@ -1,9 +1,9 @@
 # Project Wayfarer Plugin Mainline Canonical Requirements Source
 
 Document ID: `SWE1-SRC-002`  
-Revision: B  
+Revision: C  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-11 JST  
+Date: 2026-08-12 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Introduced Product version: Plugin V0.0.2 redesign  
@@ -14,12 +14,13 @@ Predecessor sources:
 Controlling joint-review decisions:
 - `DEC-REQ-002` — approved Common corrections for `CAN-COM-001` through `CAN-COM-005`
 - `DEC-REQ-004` — approved Common corrections for `CAN-COM-006` through `CAN-COM-010`
+- `DEC-REQ-005` — approved Core corrections for `CAN-CORE-001` through `CAN-CORE-005`
 
 ## 1. Purpose and authority
 
 This document is the normalized positive-requirement source used before SWE.1 requirement decomposition. It combines the mainline requirement source with only those later Owner decisions that clarified a requirement or resolved a contradiction in that source.
 
-Revision B integrates the completed joint Owner review of the Common canonical section (`CAN-COM-001` through `CAN-COM-010`). Later Core, Main, Frontier, Worlds Beyond, and Scope clauses remain subject to their own clause-by-clause review; conflicting target-specific wording identified for later propagation is not silently changed before that review.
+Revision C integrates the completed joint Owner review of the Common (`CAN-COM-001` through `CAN-COM-010`) and Core (`CAN-CORE-001` through `CAN-CORE-005`) canonical sections. Main, Frontier, Worlds Beyond, and Scope clauses remain subject to their own clause-by-clause review; conflicting target-specific wording identified for later propagation is not silently changed before that review.
 
 This document deliberately excludes:
 
@@ -41,6 +42,7 @@ Source clause identifiers beginning with `CAN-` are provenance anchors only. The
 | Owner instruction dated 2026-08-05 | Repository decision `DEC-REQ-001` | Controls the merge and analysis method |
 | Common joint review through CAN-COM-005 | Repository decision `DEC-REQ-002` | Controls integrated Common corrections 001–005 |
 | Common joint review through CAN-COM-010 | Repository decision `DEC-REQ-004` | Controls integrated Common corrections 006–010 |
+| Core joint review through CAN-CORE-005 | Repository decision `DEC-REQ-005` | Controls integrated Core corrections 001–005 |
 
 ## 3. Applied amendment disposition
 
@@ -154,25 +156,55 @@ The exact capability allocation, dependency/library selection, API contract, ver
 
 ## 5. Wayfarer_Core requirements source
 
-### CAN-CORE-001 — V0.0.1 compatibility
+### CAN-CORE-001 — Accepted V0.0.1 Core contract compatibility
 
-The accepted V0.0.1 public API and applied migrations are preserved. New APIs required by Main or Frontier are additive and compatible unless the Owner explicitly approves a baseline-breaking change.
+The accepted V0.0.1 Core public contract identified by the controlled accepted-baseline inventory remains backward-compatible. A conforming V0.0.1 consumer remains able to use the accepted public contract without incompatible source-use, binary-linkage, or documented behavioral-contract change.
 
-### CAN-CORE-002 — Public API boundary
+Compatibility applies to accepted public contract surfaces and their documented guarantees. It does not freeze Core internal implementation structure, implementation-specific dependencies, or undocumented implementation behavior. V0.0.1 implementation locations may be refactored, corrected, or replaced when the accepted contract remains compatible.
 
-Core public API must not expose Bukkit/Paper runtime objects, JDBC connections, HikariCP, Flyway, Lettuce, or another implementation-specific persistence/client type. API classes must not be bundled in multiple runtime artifacts in a way that creates class-identity conflicts.
+When an approved capability is explicitly allocated to Core and requires a new public contract, that contract extends the accepted baseline without incompatibly removing, renaming, retyping, or changing the documented semantics of accepted contract elements. Existing elements may be deprecated while remaining compatible.
 
-### CAN-CORE-003 — Waymark transaction boundary
+A baseline-breaking change is permitted only through an explicit Owner-approved baseline-change decision identifying the affected contract surface and version/transition scope. Accepted contract elements outside that approved scope remain subject to compatibility requirements.
 
-Core provides the approved Waymark provider/transaction boundary used by Main repair/reissue and Frontier shop operations. Provider acceptance does not prove durable Redis completion, external effect lookup, unconditional exactly-once behavior, or external atomic operation identity.
+The accepted V0.0.1 Core migration baseline remains protected by the Common migration-compatibility requirements and `CAN-CORE-005`.
 
-### CAN-CORE-004 — Ambiguous Waymark outcomes
+### CAN-CORE-002 — Stable public-contract abstraction and runtime type identity
 
-Balance difference is not used as proof of operation success. `UNKNOWN` is not automatically retried or completed. No Wayfarer-specific side channel is added to RedisEconomy to manufacture stronger semantics than the provider offers.
+Core-owned public contracts use stable contract-owned types or explicitly approved external/platform contract types and do not expose Core implementation-specific persistence, migration, cache, provider-client, execution, or other internal implementation types or raw internal resource/authority-access handles.
 
-### CAN-CORE-005 — Core migration discipline
+An external or platform-specific type may form part of a Core public contract only when that type is required by the approved capability contract and its compatibility, lifecycle, ownership, and execution-context implications are acceptable. Implementation convenience alone is not sufficient reason to expose an internal or runtime-specific type.
 
-A new Core migration is added only when a new Core-owned durable capability requires it. Existing V0.0.1 migration files remain unchanged.
+Within one in-process Core public-contract compatibility domain, participating software units resolve compatible runtime type identity for the contract types they exchange. Packaging or class-loading does not introduce independent duplicate definitions that cause service resolution, type checking, casting, callback, or equivalent contract failure.
+
+Intentionally isolated contract versions may coexist only when their type identities do not cross the same public-contract boundary and an approved compatibility or adapter boundary defines their interaction.
+
+### CAN-CORE-003 — V0.0.2 shared Waymark transaction contract and provider guarantee boundary
+
+For V0.0.2, Core owns and provides the compatibility-preserving shared Waymark transaction contract used by approved Wayfarer capabilities requiring financial effects, compensation, inspection, or reconciliation. This V0.0.2 allocation does not make Core the permanent owner of every future shared transaction implementation and does not override the Common shared-capability allocation rules.
+
+The Core transaction contract owns shared transaction coordination, operation/effect correlation, provider interaction disposition, and shared reconciliation support. Feature-specific eligibility, paid-benefit semantics, domain mutation, item entitlement, delivery, and equivalent feature policy remain authoritative in the applicable feature owner unless explicitly reallocated by an approved requirement.
+
+Waymark balance authority remains the approved economy provider. Core interprets provider evidence only within guarantees supplied by the approved provider contract and does not infer durable effect completion, provider-side effect lookup, external operation identity, atomic multi-effect execution, or exactly-once semantics unless the provider contract explicitly supplies that guarantee.
+
+Wayfarer-owned transaction records may authoritatively record Wayfarer's logical operation and effect dispositions, but they do not replace provider balance authority or independently prove a feature-owned domain effect. Protected-operation identity, replay, `UNKNOWN`, compensation, and duplicate-effect behavior follow the Common protected-operation requirements.
+
+### CAN-CORE-004 — Ambiguous Waymark effect containment and no manufactured provider semantics
+
+When the outcome of an individual Waymark provider effect is not established by evidence guaranteed for that effect by the approved provider contract, the Core transaction boundary preserves the applicable Common `UNKNOWN`, replay, and reconciliation semantics.
+
+A before/after balance observation, balance difference, or other aggregate provider state that is not contractually correlated to the exact provider effect does not by itself establish that the effect succeeded, clearly failed without effect, or was not applied. Such state may be used for eligibility, diagnostics, or reconciliation context without being promoted to exact-effect proof.
+
+Core does not access or mutate unsupported provider internals, create an unsupported provider-side or cross-channel marker, or otherwise introduce a Wayfarer-specific mechanism in order to claim effect lookup, provider-side operation identity, atomicity, exactly-once behavior, durable completion evidence, or another guarantee that the approved provider contract does not supply.
+
+Wayfarer-owned operation, effect, audit, and reconciliation records are permitted and required where applicable, but they represent Wayfarer's own knowledge and disposition and do not by themselves strengthen the authoritative guarantee of the provider effect. A stronger provider capability may be used when it is supplied through an approved supported provider contract and is interpreted only within its documented guarantee boundary.
+
+### CAN-CORE-005 — Core durable-schema evolution and accepted migration preservation
+
+Schema evolution attributed to Core is introduced only for an approved change, correction, integrity requirement, or compatibility requirement of a durable-state domain allocated to Core. A Core migration is not used to create, alter, or carry durable state owned by another Wayfarer durable-state owner merely because Core provides shared database or migration infrastructure.
+
+The accepted V0.0.1 Core migrations identified by the controlled accepted-baseline inventory retain their migration identity, ordering semantics, and exact artifact content. They are not modified, deleted, reordered, reused, or repurposed after acceptance or possible application to a supported installation.
+
+A later correction or schema evolution uses a new Core-owned migration identity. This requirement does not fix the future migration framework, resource location, executor, namespace convention, or physical migration-history mechanism, provided that the accepted migration history and supported V0.0.1 upgrade path remain compatible.
 
 ## 6. Wayfarer_Main requirements source
 
