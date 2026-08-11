@@ -1,6 +1,6 @@
 # V0.0.2 Redesign Status
 
-Updated: 2026-08-11 JST  
+Updated: 2026-08-12 JST  
 Branch: `redesign/V0.0.2-swe1-3`  
 Draft PR: `#18`  
 Single continuation entry point: [`CONTINUATION.md`](CONTINUATION.md)  
@@ -19,32 +19,35 @@ PR #14 / LEGACY IMPLEMENTATION:
   FROZEN REFERENCE / NOT A REQUIREMENT OR DESIGN AUTHORITY
 
 CANONICAL SOURCE:
-  REVISION B / COMMON CAN-COM-001 THROUGH CAN-COM-010 INTEGRATED
+  REVISION C / COMMON AND CORE SECTIONS INTEGRATED
 
 INITIAL SWE.1 DECOMPOSITION:
   COMPLETE AS DRAFT
 
 JOINT OWNER REVIEW:
   COMMON SECTION COMPLETE
-  NEXT: CAN-CORE-001 — V0.0.1 compatibility
+  CORE SECTION COMPLETE
+  NEXT: CAN-MAIN-001 — Deployment and lifecycle
 
-OWNER-APPROVED COMMON CORRECTIONS:
+OWNER-APPROVED REVIEW CORRECTIONS:
   CAN-COM-001–005: DEC-REQ-002 / INTEGRATED
   CAN-COM-006–010: DEC-REQ-004 / INTEGRATED
+  CAN-CORE-001–005: DEC-REQ-005 / INTEGRATED
 
 SESSION CONTINUITY AND CONSOLIDATION POLICY:
   APPROVED IN DEC-REQ-003
 
-PROVISIONAL SWE.1 REQUIREMENT COUNT:
-  176 AFTER INTEGRATED COMMON CHECKPOINT
-  CAP 64 / CON 59 / IFC 14 / QLT 39
+PROVISIONAL ACTIVE SWE.1 REQUIREMENT COUNT:
+  175 AFTER INTEGRATED CORE CHECKPOINT
+  CAP 64 / CON 58 / IFC 14 / QLT 39
+  HISTORICAL CORE CON-004 SUPERSEDED / NOT REUSED
 
 OPEN ISSUES:
   9 RECORDS
   ISSUE-001 PARTIALLY RESOLVED BY COMMON REVIEW; RECOVERY/RE-ENABLE DETAIL REMAINS OPEN
 
 CHECKPOINT CADENCE:
-  COMMON CHECKPOINT COMPLETE
+  CORE CHECKPOINT COMPLETE
   0 / 5 NEWLY APPROVED CLAUSES SINCE CHECKPOINT
 
 INITIAL SELF-REVIEW SNAPSHOT:
@@ -76,15 +79,18 @@ The continuation document must be updated at every Owner-directed repository che
   - ordered references, current next action, checkpoint state, and stop rules.
 - `08-decisions/DEC-REQ-002-common-requirement-review-corrections.md`
   - immutable rationale for Owner-approved `CAN-COM-001` through `CAN-COM-005` corrections;
-  - content has been integrated into Revision B canonical/Common package.
+  - integrated into the current canonical/Common package.
 - `08-decisions/DEC-REQ-004-common-requirement-review-corrections-006-010.md`
   - immutable rationale for Owner-approved `CAN-COM-006` through `CAN-COM-010` corrections;
-  - content has been integrated into the current checkpoint package.
+  - integrated into the current canonical/Common package.
+- `08-decisions/DEC-REQ-005-core-requirement-review-corrections-001-005.md`
+  - immutable rationale for Owner-approved `CAN-CORE-001` through `CAN-CORE-005` corrections;
+  - integrated into Canonical Revision C and Core Revision C.
 - `08-decisions/DEC-REQ-003-swe1-review-consolidation-and-session-continuity.md`
   - Owner-approved consolidation cadence and session-continuity policy.
 - `10-reviews-and-evidence/REV-SWE1-002-joint-owner-review-log.md`
-  - Common-section joint review is complete;
-  - next clause is `CAN-CORE-001`.
+  - Common and Core joint review are complete;
+  - next clause is `CAN-MAIN-001`.
 
 ## Integrated Common-section results
 
@@ -158,14 +164,51 @@ The continuation document must be updated at every Owner-directed repository che
 - Custom ownership remains permitted for an identified unmet requirement/constraint or material risk reduction.
 - Exact dependency/API/version/adapter/reference selection remains under `GOV-ENG-001` in SWE.2/SWE.3.
 
+## Integrated Core-section results
+
+### CAN-CORE-001 — accepted V0.0.1 contract compatibility
+
+- Preserve the controlled accepted external/public contract, not the V0.0.1 implementation.
+- Compatibility covers source use, binary linkage, and documented externally observable semantics.
+- Internal defects, structure, dependencies, validation, threading/lifecycle implementation, and undocumented behavior may be corrected/redesigned.
+- Breaking exceptions must be explicitly scoped; V0.0.1 contract/migration inventory remains required before G1.
+
+### CAN-CORE-002 — public-contract abstraction and type identity
+
+- Public contracts do not expose implementation-specific types or raw internal authority/resource handles merely for convenience.
+- Platform/external contract types are allowed when genuinely required and compatible with lifecycle/ownership/execution constraints.
+- Required result is compatible runtime type identity within an in-process contract domain, not a fixed JAR/class-loader layout.
+
+### CAN-CORE-003 — V0.0.2 shared Waymark transaction contract
+
+- V0.0.2 shared Waymark transaction contract is explicitly allocated to Core, consistent with the accepted V0.0.1 Core-facing transaction surface.
+- Core owns shared transaction coordination/provider interaction/inspection/reconciliation, not feature-specific eligibility/domain mutation/entitlement/final delivery.
+- Waymark balance authority remains the provider; Wayfarer transaction records own only Wayfarer's logical operation/effect disposition.
+- Provider evidence is interpreted only within supported provider guarantees.
+
+### CAN-CORE-004 — ambiguity and no manufactured provider semantics
+
+- Core reuses Common `UNKNOWN`/replay rules rather than duplicating them.
+- Balance or aggregate provider state is not uncorrelated proof of one exact effect.
+- Unsupported provider internals/side channels cannot manufacture stronger guarantees.
+- Wayfarer operation/audit/reconciliation records remain valid but do not strengthen provider authority.
+- `SWE1-CORE-001-CON-004` is superseded by deduplication; no behavior is relaxed.
+
+### CAN-CORE-005 — Core schema evolution and migration history
+
+- Core migrations may support approved correction/integrity/compatibility/evolution of Core-owned durable state, not only new capabilities.
+- Core migrations do not carry another owner's durable domain.
+- Controlled accepted V0.0.1 Core migration identity/order/byte content is immutable; later changes use new migration identities.
+- Future migration framework/resource/executor details remain design choices subject to compatibility.
+
 ## Known propagation carried to later target review
 
-The Common checkpoint does not silently approve later target clauses. Current draft target requirements explicitly carry these known follow-ups:
+The Common/Core checkpoints do not silently approve later target clauses. Current follow-ups include:
 
-- `CAN-MAIN-001`: fixed Main-backend/specific-Core wording versus Common topology/shared-owner direction;
+- `CAN-MAIN-001`: fixed Main-backend/specific-Core wording versus approved topology/shared-owner direction;
 - `CAN-FRONTIER-001`: fixed Frontier-backend/specific-Core wording versus Common direction;
 - `CAN-FRONTIER-002` and later WB clauses: literal `frontier_iris` wording versus the Owner-approved configurable Worlds Beyond gameplay-world direction;
-- `CAN-CORE-003` and target financial clauses: exact shared Waymark transaction capability ownership;
+- Main/WB financial clauses must use the reviewed V0.0.2 Core transaction boundary while retaining their own feature eligibility/domain/delivery/compensation semantics;
 - `CAN-WB-014`: exact typed-pending-delivery versus refund/compensation priority after a proven clear delivery failure;
 - `SWE1-ISSUE-001-ISSUE-001`: missing configured-world health/status and recovery/re-enable lifecycle detail.
 
@@ -178,12 +221,12 @@ During clause-by-clause review, the Owner instructs repository reflection at eit
 
 The Owner's explicit instruction controls the write. Reaching a boundary does not independently authorize mutation.
 
-The 2026-08-11 Common checkpoint has reset the counter to `0 / 5`. The current logical section is CORE.
+The 2026-08-12 Core checkpoint has reset the counter to `0 / 5`. The current logical section is MAIN.
 
 ## Required work before G1
 
-1. Continue joint Owner review from `CAN-CORE-001 — V0.0.1 compatibility`.
-2. Continue clause-by-clause review across Core, Main, Frontier, Worlds Beyond, and Scope without silently resolving target-specific conflicts from Common review.
+1. Continue joint Owner review from `CAN-MAIN-001 — Deployment and lifecycle`.
+2. Continue clause-by-clause review across Main, Frontier, Worlds Beyond, and Scope without silently resolving target-specific conflicts from Common/Core review.
 3. Resolve or explicitly disposition the nine issue records, including remaining ISSUE-001 recovery/re-enable semantics.
 4. Complete the accepted V0.0.1 public API/contract/migration inventory.
 5. Reconcile controlled Project consistency inputs and runtime locks without silently adding behavior.
