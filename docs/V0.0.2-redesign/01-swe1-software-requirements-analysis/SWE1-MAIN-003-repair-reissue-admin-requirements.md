@@ -1,21 +1,22 @@
 # Main GUI, Repair, Reissue, Administration, and Permission Requirements
 
 Document ID: `SWE1-MAIN-003`  
-Revision: A  
+Revision: B  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-11 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Target domain: `MAIN`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary source: `SWE1-SRC-002` Revision A  
+Primary source: `SWE1-SRC-002` Revision B  
+Controlling Common review decisions: `DEC-REQ-004`  
 Contained normative items: CAP: 9, CON: 4, IFC: 1, QLT: 5
 
 ## 1. Purpose
 
-Define Main user-management entry, repair and paid reissue transactions, administrative operations, permission interfaces, and presentation constraints.
+Define Main user-management entry, repair and paid reissue transactions, administrative operations, permission interfaces, and presentation constraints while specializing the approved Common protected-operation rules.
 
 ## 2. Requirement interpretation rules
 
@@ -24,6 +25,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 - Source-prescribed implementation mechanisms are retained only when they are themselves an approved external interface or compatibility constraint.
 - A requirement carrying an open issue remains draft and cannot support G1 PASS until the issue is resolved or explicitly accepted as a blocker.
 - Full identifiers are used in all downstream traceability.
+- Where this document refers to a shared Waymark transaction capability, the concrete shared owner remains subject to the applicable Core/shared-capability Owner review; feature requirements do not depend on provider internals.
 
 ## 3. Requirements
 
@@ -74,15 +76,15 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 
 ### SWE1-MAIN-003-QLT-001 — GUI replay safety
 
-**Normative statement:** Double click, lag, inventory-event replay, disconnect, or reopening a stale GUI shall not cause duplicate debit, duplicate repair, duplicate reissue, or authority mutation.
+**Normative statement:** Double click, lag, inventory-event replay, disconnect, or reopening a stale GUI shall not create a second protected repair/reissue operation or duplicate debit, repair, reissue, delivery entitlement, or authority mutation. Replay of an already accepted operation shall resolve to that operation; a stale unaccepted confirmation shall be rejected when its current prerequisites no longer hold.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; CAN-MAIN-015; CAN-MAIN-016  
-**Rationale:** Protects financial and authority effects at a high-replay user interface.  
-**Precondition / trigger:** A financial confirmation is submitted more than once or after its session becomes stale.  
-**Required observable result:** At most one operation identity is accepted; stale/replayed submissions cause no duplicate effect.  
-**Verification intent:** SWE.4 session/idempotency verification, SWE.5 GUI integration, SWE.6 representative client qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; CAN-MAIN-015; CAN-MAIN-016; §4 CAN-COM-007  
+**Rationale:** Applies the Common accepted-operation versus stale-request distinction at a high-replay user interface.  
+**Precondition / trigger:** A financial confirmation is repeated, recovered, or submitted after its quote/session/context becomes stale.  
+**Required observable result:** Accepted replay returns/advances one established logical operation; stale unaccepted confirmation produces no protected effect.  
+**Verification intent:** SWE.4 GUI-session/replay verification, SWE.5 GUI transaction integration, SWE.6 representative client qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -119,30 +121,30 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 
 ### SWE1-MAIN-003-CAP-005 — Repair transaction execution
 
-**Normative statement:** A confirmed repair shall execute through the Core Waymark transaction boundary using transaction identity, current player/tool authority validation, quote revalidation, and same-player/tool serialization.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-015  
-**Rationale:** Ensures payment and repair use current authority and shared economy semantics.  
-**Precondition / trigger:** The owner confirms a non-stale eligible repair quote.  
-**Required observable result:** One authorized debit attempt and one corresponding repair operation are coordinated.  
-**Verification intent:** SWE.4 coordinator verification, SWE.5 Core/Main transaction integration, SWE.6 client qualification.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
-
-### SWE1-MAIN-003-QLT-002 — Repair compensation on clear failure
-
-**Normative statement:** A clear Waymark debit followed by a clear downstream repair failure shall use the approved refund or compensation path, and duplicate refund shall be prevented.
+**Normative statement:** A confirmed repair shall execute through the approved shared Waymark transaction capability using the established logical operation/effect identities, current player/tool authority validation, quote revalidation, and same-player/tool serialization.
 
 **Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007  
-**Rationale:** Protects player funds without inventing atomic guarantees.  
-**Precondition / trigger:** A repair operation fails or becomes ambiguous after provider interaction.  
-**Required observable result:** The operation reaches one compensated or compensation-pending disposition without a second refund effect.  
-**Verification intent:** SWE.4 failure-policy verification and SWE.5 provider-failure integration test.  
+**Rationale:** Ensures payment and repair use current authority and the approved shared economy contract without depending on provider internals.  
+**Precondition / trigger:** The owner confirms a non-stale eligible repair quote.  
+**Required observable result:** The repair operation coordinates one protected debit effect and one corresponding repair-benefit effect under one logical operation identity.  
+**Verification intent:** SWE.4 coordinator/identity verification and SWE.5 shared-transaction/Main integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-IFC-004; SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-013  
+**Assumptions:** None  
+**Open issue / conflict:** Current canonical `CAN-MAIN-015` says Core transaction boundary; exact shared owner remains subject to CAN-CORE-003/CAN-MAIN-015 Owner review.  
+**State:** `DRAFT`
+
+### SWE1-MAIN-003-QLT-002 — Repair compensation on proven clear failure
+
+**Normative statement:** Automatic repair refund/compensation shall begin only after the original debit success is proven and the downstream repair benefit is proven not committed due to a clear failure. The compensation shall use its own stable effect identity and shall not be duplicated.
+
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007; DEC-REQ-004 §3  
+**Rationale:** Protects player funds without refunding an ambiguous repair that may actually have succeeded.  
+**Precondition / trigger:** A repair operation has proven debit success and a clear downstream repair failure with no committed repair benefit.  
+**Required observable result:** At most one compensation effect is initiated for the exact repair operation; an ambiguous downstream result does not enter automatic compensation.  
+**Verification intent:** SWE.4 repair failure/compensation matrix and SWE.5 provider/domain failure integration.  
+**Priority:** `MUST`  
+**Dependencies:** SWE1-COMMON-001-QLT-013  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -179,15 +181,15 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 
 ### SWE1-MAIN-003-CAP-008 — Successful reissue result
 
-**Normative statement:** A successful paid reissue shall preserve the logical tool ID, cumulative progress, and active branch; create a new physical instance ID; increment the epoch; invalidate all older physical instances; set the logical state to `ACTIVE`; set damage to zero; and deliver the item immediately or through typed pending delivery.
+**Normative statement:** A successful paid reissue shall preserve the logical tool ID, cumulative progress, and active branch; create a new physical instance ID; increment the epoch; invalidate all older physical instances; set the logical state to `ACTIVE`; set damage to zero; and establish exactly one immediate or typed-pending delivery entitlement for the replacement item.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-016; AMD-006; AMD-007  
-**Rationale:** Defines complete authority rotation and recovery semantics.  
-**Precondition / trigger:** A current eligible quote is explicitly confirmed and the financial/authority operation succeeds.  
-**Required observable result:** Exactly one new current physical authority exists or is pending, old epochs are denied, and preserved gameplay state is unchanged.  
-**Verification intent:** SWE.4 transition verification, SWE.5 transaction/delivery integration, SWE.6 reissue qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-016; AMD-006; AMD-007; §4 CAN-COM-007  
+**Rationale:** Defines complete authority rotation while connecting physical delivery to one protected entitlement.  
+**Precondition / trigger:** A current eligible quote is explicitly confirmed and the financial/authority operation reaches proven success for the required preceding effects.  
+**Required observable result:** Exactly one new current physical authority exists or is pending under one entitlement, old epochs are denied, and preserved gameplay state is unchanged.  
+**Verification intent:** SWE.4 transition/entitlement verification, SWE.5 transaction/delivery integration, SWE.6 reissue qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-012; SWE1-COMMON-001-QLT-013  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -199,25 +201,25 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Source:** SWE1-SRC-002 §6 CAN-MAIN-016; AMD-007  
 **Rationale:** Prevents paying for a duplicate or bypassing an existing free obligation.  
 **Precondition / trigger:** A reissue is requested while current physical authority or pending delivery exists.  
-**Required observable result:** No provider debit, epoch rotation, new instance, or duplicate delivery is created; an actionable denial is returned.  
+**Required observable result:** No provider debit, epoch rotation, new instance, or duplicate entitlement/delivery is created; an actionable denial is returned.  
 **Verification intent:** SWE.4 precondition verification, SWE.5 command/transaction integration, SWE.6 qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-QLT-003 — Reissue replay and UNKNOWN safety
+### SWE1-MAIN-003-QLT-003 — Reissue protected-effect replay and UNKNOWN safety
 
-**Normative statement:** Replay, duplicate confirmation, timeout recovery, or `UNKNOWN` shall not cause duplicate debit, duplicate epoch increment, duplicate physical instance, or automatic re-execution of the provider effect.
+**Normative statement:** One accepted paid-reissue logical operation shall establish at most one successful debit effect, one authority rotation/current replacement authority, and one replacement delivery entitlement. Replay, duplicate confirmation, timeout/restart recovery, or an `UNKNOWN` stage shall not create an additional debit, epoch increment, physical authority, entitlement, or automatic re-execution of the uncertain provider effect. Delivery retry may continue only the same established entitlement when final delivery has not been proven.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-016; §4 CAN-COM-007  
-**Rationale:** Protects both economy and logical authority.  
-**Precondition / trigger:** The same reissue operation is submitted or recovered multiple times.  
-**Required observable result:** The established operation identity yields at most one provider effect and one authority rotation; unresolved effects remain reconcilable.  
-**Verification intent:** SWE.4 idempotency/race verification and SWE.5 failure/replay integration test.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-016; §4 CAN-COM-007; DEC-REQ-004 §3  
+**Rationale:** Protects economy, logical authority, and delivery as separate effects under one reissue operation.  
+**Precondition / trigger:** The same reissue operation is submitted, replayed, recovered, or delivery-retried.  
+**Required observable result:** The established operation/effect identities yield one allowed protected result per effect kind; unresolved effects remain inspectable/reconcilable.  
+**Verification intent:** SWE.4 reissue idempotency/effect-matrix verification and SWE.5 failure/restart/delivery integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-006; SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -229,10 +231,10 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Source:** SWE1-SRC-002 §6 CAN-MAIN-018  
 **Rationale:** Provides required operational recovery and control.  
 **Precondition / trigger:** An authorized administrator invokes a supported operation with valid arguments.  
-**Required observable result:** The operation performs only its documented state change, is auditable, and returns an actionable disposition.  
-**Verification intent:** SWE.5 command integration and SWE.6 representative administration qualification.  
+**Required observable result:** The operation performs only its documented state change, produces retrievable audit correlation where designated, and returns an actionable disposition.  
+**Verification intent:** SWE.5 command/audit integration and SWE.6 representative administration qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-008  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -245,7 +247,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Rationale:** Fixes the approved medium-grained permission interface.  
 **Precondition / trigger:** A player or administrator reaches a gameplay, command, or debug entry point.  
 **Required observable result:** Access is evaluated against the directly applicable node; absence of the node denies the protected action without protected mutation.  
-**Verification intent:** SWE.4 permission-policy verification, SWE.5 LuckPerms/Bukkit permission integration, SWE.6 representative qualification.  
+**Verification intent:** SWE.4 permission-policy verification, SWE.5 permission integration, SWE.6 representative qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -297,17 +299,17 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-QLT-005 — Repair ambiguous-outcome containment
+### SWE1-MAIN-003-QLT-005 — Repair effect-level ambiguous-outcome containment
 
-**Normative statement:** An ambiguous repair debit, repair commit, or refund shall remain `UNKNOWN` for manual reconciliation and shall not be automatically completed or retried.
+**Normative statement:** An ambiguous repair debit effect, repair-commit effect, or compensation effect shall remain `UNKNOWN` for authorized reconciliation and shall not be automatically retried, treated as success, treated as clear failure, or used to authorize the next success/failure-dependent protected effect.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007  
-**Rationale:** Prevents duplicate financial or repair effects when completion cannot be proven.  
-**Precondition / trigger:** A repair stage returns an ambiguous result.  
-**Required observable result:** No automatic second provider/repair effect occurs; the operation is inspectable and reconcilable.  
-**Verification intent:** SWE.4 outcome-policy verification and SWE.5 provider-failure integration test.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007; DEC-REQ-004 §3  
+**Rationale:** Prevents duplicate debit/repair/refund and prevents an ambiguous successful repair from being refunded automatically.  
+**Precondition / trigger:** Any protected repair effect returns or is recovered with an outcome that cannot be proven success or clear no-effect failure.  
+**Required observable result:** The exact operation/effect identity remains `UNKNOWN`, inspectable, and reconcilable; no automatic second effect or compensation is initiated from that ambiguity.  
+**Verification intent:** SWE.4 effect-level outcome-policy verification and SWE.5 provider/domain failure/reconciliation integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-006; SWE1-COMMON-001-QLT-013  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
