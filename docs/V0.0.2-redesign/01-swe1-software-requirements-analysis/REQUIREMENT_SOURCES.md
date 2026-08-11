@@ -1,9 +1,9 @@
 # V0.0.2 Requirement Source Register
 
 Document ID: `SWE1-SRC-001`  
-Revision: B  
+Revision: C  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-11 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Applicable Product: Plugin V0.0.2 redesign  
@@ -11,31 +11,32 @@ Baseline premise: Plugin V0.0.1 accepted
 
 ## 1. Purpose
 
-Identify the controlled inputs used for the current V0.0.2 SWE.1 analysis and distinguish product
-authority from implementation evidence, planning material, and later consistency sources.
+Identify the controlled inputs used for the current V0.0.2 SWE.1 analysis and distinguish product authority from implementation evidence, planning material, review decisions, and later consistency sources.
 
 ## 2. Authority classes
 
 | Class | Meaning |
 |---|---|
-| A | Explicit Owner decision controlling current product intent or analysis method |
+| A | Explicit Owner decision controlling current product intent or analysis/review method |
 | B | Owner-provided mainline product requirement source |
 | C | Accepted V0.0.1 public contract or immutable baseline constraint |
 | D | Project/Concept consistency input not used to silently add requirements in this analysis |
 | E | Prior implementation, test, roadmap, or delta material that is reference-only except for an explicitly selected Owner-amendment subset |
-| DERIVED | Controlled document produced by applying registered sources under an approved method |
+| DERIVED | Controlled document produced by applying registered sources and approved review decisions under the approved method |
 
 Conflict priority:
 
 1. committed explicit Owner decision;
-2. current approved Project source of truth or runtime lock;
+2. current approved Project source of truth or runtime lock where it controls the applicable field;
 3. Owner-provided mainline requirement source;
 4. accepted V0.0.1 public contract and immutable migration;
 5. Concept/consistency input;
 6. prior implementation/test/roadmap evidence;
 7. engineering preference.
 
-## 3. Controlling source set for this SWE.1 decomposition
+Within the current SWE.1 review, `DEC-REQ-002` and `DEC-REQ-004` are explicit Owner decisions that control the Common corrections integrated into `SWE1-SRC-002` Revision B and affected derived requirements.
+
+## 3. Controlling source set for this SWE.1 decomposition and review
 
 ### SRC-OWNER-001 — Canonical merge and SWE.1 execution instruction
 
@@ -61,6 +62,27 @@ Controls:
 - record ambiguities and conflicts;
 - self-review all created SWE.1 work products before Owner review.
 
+### SRC-OWNER-002 — Joint Owner Common-review corrections
+
+```text
+Authority class:
+  A
+
+Decision records:
+  DEC-REQ-002 — CAN-COM-001 through CAN-COM-005
+  DEC-REQ-004 — CAN-COM-006 through CAN-COM-010
+
+Integration checkpoint:
+  2026-08-11 JST
+```
+
+Controls:
+
+- the approved semantics of the complete Common canonical section;
+- approved atomic decomposition that increases the provisional Product requirement count to 176;
+- direct propagation into affected Core/Main/Frontier/WB drafts while preserving unreviewed target-clause conflicts for later review;
+- reuse/ownership non-duplication as a SWE.1 constraint with concrete engineering selection governed by `GOV-ENG-001`.
+
 ### SRC-MAINLINE-001 — Mainline Main/Frontier requirement source
 
 ```text
@@ -83,12 +105,9 @@ Authority class:
 
 Use:
 
-- base product behavior, compatibility, authority, lifecycle, Main, Frontier, Worlds Beyond, and
-  non-scope intent;
-- source algorithm or procedure wording is translated into implementation-independent SWE.1
-  obligations where possible;
-- test procedures, release workflow, roadmap sequencing, and handoff lists are not automatically
-  software requirements.
+- base product behavior, compatibility, authority, lifecycle, Main, Frontier, Worlds Beyond, and non-scope intent;
+- source algorithm/procedure wording is translated into implementation-independent SWE.1 obligations where possible;
+- test procedures, release workflow, roadmap sequencing, and handoff lists are not automatically software requirements.
 
 ### SRC-DELTA-001 — Requirement/implementation delta register
 
@@ -114,8 +133,7 @@ Authority class:
 Applied subset:
 
 - AMD-001 through AMD-011 as dispositioned by `SWE1-SRC-002` §3;
-- safe-entry delivery-outcome notification detail where it clarifies the base pending-delivery
-  requirement.
+- safe-entry delivery-outcome notification detail where it clarifies the base pending-delivery requirement.
 
 Explicitly excluded:
 
@@ -133,12 +151,21 @@ Explicitly excluded:
 Document ID:
   SWE1-SRC-002
 
+Revision:
+  B
+
 Path:
   docs/V0.0.2-redesign/01-swe1-software-requirements-analysis/
   SWE1-SRC-002-canonical-mainline-requirements.md
 
-SHA-256:
+Current Git blob SHA at Common checkpoint:
+  b3bd39c19fa844fc50890403c860ad301a0b7c29
+
+Revision A SHA-256 retained as historical identity:
   A04C1DBA6FE0D9568C51CE2D2F7FE591F0598C3B92A1EDD4B47AFF779F9A9121
+
+Revision B controlled content SHA-256:
+  PENDING FINAL SWE.1 CONSOLIDATION / HASH REFRESH BEFORE G1
 
 Authority class:
   DERIVED
@@ -147,8 +174,7 @@ State:
   DRAFT_FOR_OWNER_REVIEW
 ```
 
-This is the sole direct source document used by the decomposed SWE.1 target requirements. It preserves
-provenance to `SRC-MAINLINE-001`, `SRC-DELTA-001`, and `SRC-OWNER-001`.
+`SWE1-SRC-002` remains the primary canonical source for decomposed SWE.1 Product requirements. Requirement `Source` fields may additionally name the Owner decision that controls a reviewed correction or `GOV-ENG-001` where the requirement explicitly links to engineering-governance evidence; those references do not replace canonical provenance.
 
 ## 4. Accepted V0.0.1 baseline sources
 
@@ -168,9 +194,7 @@ Authority class:
   C
 ```
 
-Use in this analysis is limited to the accepted-baseline premise already represented in the
-canonical source. A full V0.0.1 public-interface and migration inventory remains required before G1
-PASS; no internal V0.0.1 implementation behavior was imported as a requirement.
+Use in this analysis is limited to the accepted-baseline premise represented in the canonical source and to later controlled inventory of accepted public contracts/migrations. A full V0.0.1 public-interface and migration inventory remains required before G1 PASS; no internal V0.0.1 implementation behavior is silently imported as a requirement.
 
 ### SRC-PLUG-002 — Published V0.0.1 contracts and migrations
 
@@ -192,8 +216,7 @@ Status:
 
 ## 5. Registered Project consistency inputs
 
-The following remain registered for later consistency and feasibility review. Their content was not
-used to silently add or change the 164 requirements produced in this execution.
+The following remain registered for later consistency and feasibility review. Their content was not used to silently add or change the original 164-requirement decomposition. The current provisional 176-item count results from explicit Owner-approved Common review decisions, not from silent import of these consistency sources.
 
 | Source ID | Repository path | Observed blob SHA | Class |
 |---|---|---|---|
@@ -204,8 +227,7 @@ used to silently add or change the 164 requirements produced in this execution.
 | SRC-PROJ-005 | `docs/14-frontier-v0.1.0-scope.md` | `8cb28384fa0c8a65f665ba65fda3a8b64e96ac9d` | D/A by controlled field |
 | SRC-PROJ-006 | `docs/15-frontier-runtime-lock.md` | `e78abf0f5cc4efc2ba64ac2397c6e109c956e2ec` | D/A by controlled field |
 
-Machine-readable Frontier locks, `versions.yml`, `plugin-manifest.yml`, and current Concept blobs
-remain pending content/hash review before G1.
+Machine-readable Frontier locks, `versions.yml`, `plugin-manifest.yml`, and current Concept blobs remain pending content/hash review before G1.
 
 ## 6. Prior implementation reference
 
@@ -228,7 +250,7 @@ Authority class:
 Permitted use:
 
 - identify prior defects and verification omissions;
-- assess implementation reuse only after SWE.3;
+- assess implementation reuse only after SWE.3 is authorized;
 - derive risk and review checklists.
 
 Prohibited use:
@@ -242,7 +264,8 @@ Prohibited use:
 - complete V0.0.1 public API, contract, and immutable migration inventory;
 - retrieve and hash the applicable machine-readable Frontier locks;
 - inspect current Project manifests for compatibility/placement conflicts;
-- run a consistency review of the draft SWE.1 baseline against registered Project sources without
-  adding behavior silently;
+- run a consistency review of the draft SWE.1 baseline against registered Project sources without adding behavior silently;
 - resolve or accept all issues in `SWE1-ISSUE-001`;
-- obtain Owner approval of `SWE1-SRC-002` and the decomposed target requirements.
+- finish joint Owner review of Core/Main/Frontier/WB/Scope clauses;
+- after final consolidation, calculate/record the controlled Revision B-or-later canonical content SHA-256 and rerun the complete source/identifier/count self-review;
+- obtain explicit G1 Owner approval of the complete canonical and decomposed SWE.1 package.
