@@ -1,20 +1,20 @@
 # SWE.1 Source-to-Requirement Traceability
 
 Document ID: `TRC-SWE1-001`  
-Revision: C  
+Revision: D  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-11 JST  
+Date: 2026-08-12 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
-Traceability scope: `SWE1-SRC-002` Revision B to the 176 provisional draft SWE.1 Product requirements after integrated Common review  
+Traceability scope: `SWE1-SRC-002` Revision C to the 175 provisional draft SWE.1 Product requirements after integrated Common and Core review  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded
 
 ## 1. Purpose
 
-Provide bidirectional traceability from the 59 canonical source clauses to the provisional 176 SWE.1 Product requirements after integration of the Owner-approved Common corrections. Forward traceability is controlled in this document. Reverse traceability is controlled by each requirement's `Source` field.
+Provide bidirectional traceability from the 59 canonical source clauses to the provisional 175 active SWE.1 Product requirements after integration of the Owner-approved Common and Core corrections. Forward traceability is controlled in this document. Reverse traceability is controlled by each active requirement's `Source` field, with explicit disposition for superseded identifiers.
 
-This checkpoint revision updates the Common-section decomposition and its direct target propagation. It does not claim that the complete post-review automated identifier/source audit has already been rerun; that full audit and recount remain mandatory before G1.
+This checkpoint revision updates the complete Core-section decomposition, removes one redundant Core requirement without weakening behavior, and advances the next review section to Main. It does not claim that the complete post-review automated identifier/source audit has already been rerun; that full audit and recount remain mandatory before G1.
 
 ## 2. Source-clause forward traceability
 
@@ -26,14 +26,14 @@ This checkpoint revision updates the Common-section decomposition and its direct
 | `CAN-COM-004` | `SWE1-COMMON-001-CON-003`; `SWE1-COMMON-001-CON-004`; `SWE1-COMMON-001-CON-005`; `SWE1-CORE-001-CON-006`; `SWE1-FRONTIER-001-CON-004` |
 | `CAN-COM-005` | `SWE1-COMMON-001-QLT-001`; `SWE1-COMMON-001-QLT-002`; `SWE1-COMMON-001-QLT-009`; `SWE1-MAIN-001-CAP-005`; `SWE1-MAIN-001-CAP-006`; `SWE1-WB-002-QLT-004` |
 | `CAN-COM-006` | `SWE1-COMMON-001-QLT-003`; `SWE1-COMMON-001-QLT-004`; `SWE1-COMMON-001-QLT-010`; `SWE1-COMMON-001-QLT-011`; `SWE1-MAIN-001-QLT-001`; `SWE1-MAIN-001-QLT-002`; `SWE1-FRONTIER-001-CON-002`; `SWE1-FRONTIER-001-CAP-001` |
-| `CAN-COM-007` | `SWE1-COMMON-001-QLT-005`; `SWE1-COMMON-001-QLT-006`; `SWE1-COMMON-001-QLT-012`; `SWE1-COMMON-001-QLT-013`; `SWE1-CORE-001-CON-004`; `SWE1-CORE-001-QLT-001`; `SWE1-MAIN-003-QLT-001`; `SWE1-MAIN-003-CAP-005`; `SWE1-MAIN-003-QLT-002`; `SWE1-MAIN-003-CAP-008`; `SWE1-MAIN-003-QLT-003`; `SWE1-MAIN-003-QLT-005`; `SWE1-WB-002-QLT-003` |
+| `CAN-COM-007` | `SWE1-COMMON-001-QLT-005`; `SWE1-COMMON-001-QLT-006`; `SWE1-COMMON-001-QLT-012`; `SWE1-COMMON-001-QLT-013`; `SWE1-CORE-001-QLT-001`; `SWE1-MAIN-003-QLT-001`; `SWE1-MAIN-003-CAP-005`; `SWE1-MAIN-003-QLT-002`; `SWE1-MAIN-003-CAP-008`; `SWE1-MAIN-003-QLT-003`; `SWE1-MAIN-003-QLT-005`; `SWE1-WB-002-QLT-003` |
 | `CAN-COM-008` | `SWE1-COMMON-001-IFC-002`; `SWE1-COMMON-001-IFC-006`; `SWE1-COMMON-001-CON-006`; `SWE1-COMMON-001-QLT-007`; `SWE1-CORE-001-CON-008`; `SWE1-FRONTIER-001-CON-006`; `SWE1-FRONTIER-001-QLT-002` |
 | `CAN-COM-009` | `SWE1-COMMON-001-QLT-008`; `SWE1-COMMON-001-QLT-014`; `SWE1-MAIN-001-CAP-009`; `SWE1-WB-002-CAP-010`; `SWE1-WB-002-CAP-016` |
 | `CAN-COM-010` | `SWE1-COMMON-001-CON-010`; concrete capability/dependency/API selection and authoritative-reference evidence are governed by `GOV-ENG-001` in SWE.2/SWE.3 |
-| `CAN-CORE-001` | `SWE1-CORE-001-CAP-001`; `SWE1-CORE-001-IFC-001`; `SWE1-CORE-001-IFC-002`; `SWE1-CORE-001-CON-006` |
+| `CAN-CORE-001` | `SWE1-CORE-001-IFC-001`; `SWE1-CORE-001-IFC-002`; `SWE1-CORE-001-CON-008` |
 | `CAN-CORE-002` | `SWE1-CORE-001-CON-001`; `SWE1-CORE-001-CON-002` |
 | `CAN-CORE-003` | `SWE1-CORE-001-CAP-002`; `SWE1-CORE-001-IFC-003`; `SWE1-CORE-001-QLT-001` |
-| `CAN-CORE-004` | `SWE1-CORE-001-CON-003`; `SWE1-CORE-001-CON-004`; `SWE1-CORE-001-CON-005` |
+| `CAN-CORE-004` | `SWE1-CORE-001-CON-003`; `SWE1-CORE-001-CON-005`; inherited `UNKNOWN`/replay obligations use `SWE1-COMMON-001-QLT-006`, `SWE1-COMMON-001-QLT-012`, and `SWE1-CORE-001-QLT-001`; historical `SWE1-CORE-001-CON-004` superseded by deduplication |
 | `CAN-CORE-005` | `SWE1-CORE-001-CON-007`; `SWE1-CORE-001-CON-008` |
 | `CAN-FRONTIER-001` | `SWE1-FRONTIER-001-CON-001`; `SWE1-FRONTIER-001-CON-002` |
 | `CAN-FRONTIER-002` | `SWE1-FRONTIER-001-CAP-001`; `SWE1-FRONTIER-001-CON-003` |
@@ -82,25 +82,31 @@ This checkpoint revision updates the Common-section decomposition and its direct
 
 ## 3. Reverse-traceability control
 
-The requirement-owned `Source` field is the authoritative reverse link from each requirement to its canonical clause(s), amendment(s), and controlling review decision where applicable.
+The active requirement-owned `Source` field is the authoritative reverse link from each requirement to its canonical clause(s), amendment(s), and controlling review decision where applicable. `SWE1-CORE-001-CON-004` is an explicitly superseded historical identifier and is not part of the active reverse-trace set.
 
-At this integrated Common checkpoint:
+At this integrated Core checkpoint:
 
 ```text
-PROVISIONAL PRODUCT REQUIREMENT COUNT:
-  176
+PROVISIONAL ACTIVE PRODUCT REQUIREMENT COUNT:
+  175
 
 COMMON REQUIREMENTS:
   30
 
+CORE ACTIVE REQUIREMENTS:
+  13
+
 COMMON SOURCE CLAUSES REVIEWED/INTEGRATED:
   CAN-COM-001 through CAN-COM-010
+
+CORE SOURCE CLAUSES REVIEWED/INTEGRATED:
+  CAN-CORE-001 through CAN-CORE-005
 
 FULL POST-CHECKPOINT AUTOMATED REVERSE-TRACE AUDIT:
   PENDING BEFORE G1
 ```
 
-The prior Revision B automated result for 164 requirements is historical evidence only and is not reused as proof for the 176-item checkpoint package. Before G1, the complete package self-review shall parse every current `Source` field, verify known canonical identifiers, detect requirements without source, detect canonical clauses without downstream disposition, and verify identifier uniqueness/counts.
+The prior Revision B automated result for 164 requirements is historical evidence only and is not reused as proof for the 175-item checkpoint package. Before G1, the complete package self-review shall parse every current active `Source` field, verify known canonical identifiers, detect active requirements without source, detect canonical clauses without downstream requirement/disposition, verify superseded-item dispositions, and verify identifier uniqueness/counts.
 
 ## 4. Amendment traceability
 
@@ -125,7 +131,8 @@ The prior Revision B automated result for 164 requirements is historical evidenc
 |---|---|
 | `DEC-REQ-002` | Common `CAN-COM-001`–`005`; topology/shared ownership, authority split, external-state boundaries, execution-context rules; added Common `CON-009`, `IFC-003`–`IFC-005`, `QLT-009` |
 | `DEC-REQ-004` | Common `CAN-COM-006`–`010`; lifecycle, protected-operation safety, migration ownership, audit/data minimization, capability reuse; added Common `QLT-010`–`QLT-014`, `IFC-006`, `CON-010` |
+| `DEC-REQ-005` | Core `CAN-CORE-001`–`005`; accepted-contract compatibility, public API abstraction/type identity, V0.0.2 Core Waymark transaction allocation/provider guarantee boundary, ambiguity/side-channel constraints, Core schema evolution and accepted migration immutability; superseded duplicate `SWE1-CORE-001-CON-004` |
 
 ## 6. Current disposition
 
-Traceability has been updated for the integrated Common checkpoint and remains draft. It is not an approved G1 baseline. Target-specific clauses and their derived requirements remain subject to continued Owner review, and the complete automated source/identifier/recount audit is required after all joint-review corrections are consolidated.
+Traceability has been updated for the integrated Common and Core checkpoints and remains draft. It is not an approved G1 baseline. Main, Frontier, Worlds Beyond, Scope, and issue-specific clauses remain subject to continued Owner review, and the complete automated source/identifier/recount audit is required after all joint-review corrections are consolidated.
