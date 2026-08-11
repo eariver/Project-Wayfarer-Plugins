@@ -1,73 +1,74 @@
 # Main Lifecycle, Tool Authority, and Delivery Requirements
 
 Document ID: `SWE1-MAIN-001`  
-Revision: A  
+Revision: B  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-11 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Target domain: `MAIN`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary source: `SWE1-SRC-002` Revision A  
+Primary source: `SWE1-SRC-002` Revision B  
+Controlling Common review decisions: `DEC-REQ-002`, `DEC-REQ-004`  
 Contained normative items: CAP: 9, CON: 9, QLT: 2
 
 ## 1. Purpose
 
-Define Main deployment, logical and physical Growth Tool authority, initial delivery, owner binding, transfer controls, and death behavior.
+Define Main lifecycle, logical and physical Growth Tool authority, initial delivery, owner binding, transfer controls, and death behavior while carrying unresolved Main-specific topology wording to the later `CAN-MAIN-001` Owner review.
 
 ## 2. Requirement interpretation rules
 
 - Each item expresses one assessable software obligation.
 - Product intent is separated from architecture, class, event-priority, algorithm, and test-procedure decisions.
 - Source-prescribed implementation mechanisms are retained only when they are themselves an approved external interface or compatibility constraint.
-- A requirement carrying an open issue remains draft and cannot support G1 PASS until the issue is resolved or explicitly accepted as a blocker.
+- A requirement carrying an open issue or explicit Common/target conflict remains draft and cannot support G1 PASS until resolved or explicitly accepted as a blocker.
 - Full identifiers are used in all downstream traceability.
 
 ## 3. Requirements
 
 ### SWE1-MAIN-001-CON-001 — Main-only activation
 
-**Normative statement:** Wayfarer_Main shall activate its gameplay only on the Main backend and shall require a compatible Wayfarer_Core service.
+**Normative statement:** Under the current unreviewed `CAN-MAIN-001` wording, Wayfarer_Main activates its gameplay only on the Main backend and requires a compatible Wayfarer_Core service.
 
 **Source:** SWE1-SRC-002 §6 CAN-MAIN-001  
-**Rationale:** Prevents capability exposure on Frontier or Lobby.  
+**Rationale:** Preserves the current target-clause text until the Main section is jointly reviewed; it is not a reaffirmation of fixed-backend gating.  
 **Precondition / trigger:** At plugin enablement.  
-**Required observable result:** Gameplay listeners, commands, and schedulers become active only in the approved runtime role with compatible Core capability.  
-**Verification intent:** SWE.5 lifecycle/deployment integration test and SWE.6 Main qualification.  
+**Required observable result:** Pending target-clause correction.  
+**Verification intent:** Deferred until `CAN-MAIN-001` is reconciled with Common topology/capability ownership requirements.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-CON-001  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Fixed Main-backend and specific Core dependency wording conflicts with Owner-approved `CAN-COM-001`/`CAN-COM-002` direction and must be corrected during `CAN-MAIN-001` review.  
 **State:** `DRAFT`
 
-### SWE1-MAIN-001-QLT-001 — Pre-activation validation
+### SWE1-MAIN-001-QLT-001 — Main Growth Tool prerequisite validation
 
-**Normative statement:** Wayfarer_Main shall validate configuration, Core capability, schema compatibility, and runtime role before registering gameplay entry points.
+**Normative statement:** The Main Growth Tool capability shall become available only after its approved configuration, Main-owned schema compatibility, required approved shared-capability contracts, and applicable configured gameplay-context conditions have been validated.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-001; §4 CAN-COM-006  
-**Rationale:** Avoids partial initialization.  
-**Precondition / trigger:** At enablement and configuration activation.  
-**Required observable result:** Invalid prerequisites result in a fail-closed non-gameplay state with an observable operational reason.  
-**Verification intent:** SWE.5 lifecycle integration test.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-001; §4 CAN-COM-006; DEC-REQ-004 §2  
+**Rationale:** Specializes Common capability-prerequisite availability without making a backend name or specific shared-provider implementation a generic lifecycle prerequisite.  
+**Precondition / trigger:** At capability startup and whenever an assigned mandatory prerequisite is refreshed or invalidated.  
+**Required observable result:** The Main Growth Tool capability remains unavailable with an operationally observable reason whenever an assigned prerequisite is invalid.  
+**Verification intent:** SWE.4 prerequisite-policy verification and SWE.5 Main lifecycle integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-003; SWE1-COMMON-001-QLT-004  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact Main placement/context allocation remains subject to `CAN-MAIN-001` review.  
 **State:** `DRAFT`
 
-### SWE1-MAIN-001-QLT-002 — Bounded shutdown
+### SWE1-MAIN-001-QLT-002 — Dirty-session lifecycle disposition
 
-**Normative statement:** Wayfarer_Main shall stop accepting new operations on disable, attempt a bounded asynchronous flush of dirty sessions, and reject stale callbacks.
+**Normative statement:** When the Main Growth Tool capability is deactivated, each accepted dirty-session persistence obligation shall be checkpointed/completed, safely rejected where no protected effect occurred, or retained as an explicitly recoverable pending obligation within the Common bounded accepted-operation lifecycle disposition.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-017; §4 CAN-COM-006  
-**Rationale:** Prevents post-disable mutation and unbounded shutdown.  
-**Precondition / trigger:** At disable or runtime replacement.  
-**Required observable result:** No new gameplay operation is accepted, flush disposition is recorded, and obsolete callbacks do not mutate state.  
-**Verification intent:** SWE.4 lifecycle verification and SWE.5 disable/restart integration test.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-017; §4 CAN-COM-006; DEC-REQ-004 §2  
+**Rationale:** Specializes Main session durability without mandating asynchronous flush, runtime-generation counters, or duplicating Common admission/stale-completion rules.  
+**Precondition / trigger:** Capability deactivation, plugin disablement, runtime replacement, or another Main lifecycle close while dirty work is accepted.  
+**Required observable result:** Dirty accepted work has a finite inspectable/recoverable disposition; no incomplete durable obligation is silently discarded.  
+**Verification intent:** SWE.4 session-disposition verification and SWE.5 disable/restart recovery integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-010; SWE1-COMMON-001-QLT-011  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -80,7 +81,7 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 **Rationale:** Defines the durable player entitlement and duplicate boundary.  
 **Precondition / trigger:** When a record is created, granted, delivered, repaired, or reissued.  
 **Required observable result:** Concurrent creation or grant resolves to one logical pickaxe authority for the owner.  
-**Verification intent:** SWE.4 uniqueness/race verification and SWE.5 database integration test.  
+**Verification intent:** SWE.4 uniqueness/race verification and SWE.5 database integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -95,7 +96,7 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 **Rationale:** Provides explicit durable state for all approved gameplay outcomes.  
 **Precondition / trigger:** Whenever tool authority or delivery state changes.  
 **Required observable result:** The durable record exposes exactly one valid state from each applicable state set.  
-**Verification intent:** SWE.4 state-model verification and SWE.5 persistence integration test.  
+**Verification intent:** SWE.4 state-model verification and SWE.5 persistence integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -110,7 +111,7 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 **Rationale:** Supports restart-safe authority, evolution, repair, reissue, and concurrency.  
 **Precondition / trigger:** When a logical tool record is created or loaded.  
 **Required observable result:** All required fields are valid and sufficient to reconstruct the approved physical representation and state.  
-**Verification intent:** Schema inspection and SWE.5 persistence integration test.  
+**Verification intent:** Schema inspection and SWE.5 persistence integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -125,7 +126,7 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 **Rationale:** Allows physical items to be checked against durable authority.  
 **Precondition / trigger:** When a physical item is created or reconstructed.  
 **Required observable result:** The PDC contains valid values that map to one logical authority record.  
-**Verification intent:** SWE.4 item-identity verification and SWE.5 Paper item integration test.  
+**Verification intent:** SWE.4 item-identity verification and SWE.5 Paper item integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -155,7 +156,7 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 **Rationale:** Ensures every entry route applies the same authority.  
 **Precondition / trigger:** At each managed-tool gameplay or administrative entry point.  
 **Required observable result:** Only the current authorized state proceeds; invalid state produces no protected mutation or financial effect.  
-**Verification intent:** SWE.4 common-guard verification, SWE.5 event/command integration test, SWE.6 Main qualification.  
+**Verification intent:** SWE.4 common-guard verification, SWE.5 event/command integration, SWE.6 Main qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -179,30 +180,30 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 
 ### SWE1-MAIN-001-CAP-005 — Race-safe initial entitlement
 
-**Normative statement:** On Main join, the software shall asynchronously load the player's logical tool and race-safely create it when absent, using the single-tool uniqueness rule.
+**Normative statement:** On an applicable Main join/context entry, the software shall load the player's logical tool without blocking a critical runtime execution context and race-safely create it when absent, using the single-tool uniqueness rule.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-004  
-**Rationale:** Supports existing and new players without duplicate entitlements.  
-**Precondition / trigger:** A player joins Main with no logical pickaxe record.  
-**Required observable result:** Exactly one logical record is established despite concurrent join or grant activity.  
-**Verification intent:** SWE.4 concurrency verification and SWE.5 MariaDB integration test.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-004; §4 CAN-COM-005  
+**Rationale:** Supports existing and new players without duplicate entitlements or blocking runtime I/O.  
+**Precondition / trigger:** An eligible player enters the Main capability context with no logical pickaxe record.  
+**Required observable result:** Exactly one logical record is established despite concurrent join/grant activity, without synchronous durable I/O on a prohibited execution context.  
+**Verification intent:** SWE.4 concurrency/context verification and SWE.5 MariaDB integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-002  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact Main context remains subject to `CAN-MAIN-001` review.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-001-CAP-006 — Validated initial delivery
 
-**Normative statement:** After asynchronous entitlement resolution, the software shall revalidate that the player is online in the applicable Main context before delivering the physical item on the main thread.
+**Normative statement:** After deferred entitlement resolution, the software shall revalidate the player's current eligibility and perform physical-item mutation only from an execution context authorized by the adopted platform for that player/inventory state.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-004  
-**Rationale:** Prevents late delivery after logout or context change.  
-**Precondition / trigger:** The asynchronous load/create operation completes.  
-**Required observable result:** Delivery occurs only if the current player session remains eligible; otherwise the obligation remains safely recoverable.  
-**Verification intent:** SWE.5 join/logout integration test and SWE.6 representative qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-004; §4 CAN-COM-005  
+**Rationale:** Prevents late delivery after logout/context change and avoids assuming one global main-thread model.  
+**Precondition / trigger:** The deferred load/create operation completes.  
+**Required observable result:** Delivery occurs only if current lifecycle/player/context/authority preconditions remain valid; otherwise the obligation remains safely recoverable.  
+**Verification intent:** SWE.4 revalidation/context verification and SWE.5 join/logout/context-change integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-001; SWE1-COMMON-001-QLT-009  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -213,11 +214,11 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 
 **Source:** SWE1-SRC-002 §6 CAN-MAIN-004  
 **Rationale:** Prevents item loss and duplicate paid recovery.  
-**Precondition / trigger:** Initial or replacement delivery encounters insufficient inventory capacity or a safe delivery precondition failure.  
+**Precondition / trigger:** Initial or replacement delivery encounters insufficient inventory capacity or a safe-delivery precondition failure.  
 **Required observable result:** No world drop or duplicate authority occurs; the exact item obligation remains pending.  
-**Verification intent:** SWE.4 delivery-policy verification, SWE.5 inventory-full integration test, SWE.6 qualification.  
+**Verification intent:** SWE.4 delivery-policy verification, SWE.5 inventory-full integration, SWE.6 qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -228,11 +229,11 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 
 **Source:** SWE1-SRC-002 §6 CAN-MAIN-004  
 **Rationale:** Avoids silent duplication and authority rotation.  
-**Precondition / trigger:** A player joins with delivery state `DELIVERED`.  
+**Precondition / trigger:** An eligible player enters the Main capability context with delivery state `DELIVERED`.  
 **Required observable result:** No new physical instance or epoch is created without an authorized recovery/reissue flow.  
-**Verification intent:** SWE.4 delivery-state verification and SWE.5 rejoin integration test.  
+**Verification intent:** SWE.4 delivery-state verification and SWE.5 rejoin integration.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
@@ -290,7 +291,7 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 **Rationale:** Prevents uncontrolled world copies and supports explicit recovery semantics.  
 **Precondition / trigger:** The owner dies while the managed item would otherwise be included in drops.  
 **Required observable result:** No managed item entity is created from the death drop.  
-**Verification intent:** SWE.5 death-event integration test and SWE.6 Main qualification.  
+**Verification intent:** SWE.5 death-event integration and SWE.6 Main qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -305,7 +306,7 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 **Rationale:** Makes paid reissue the explicit loss-recovery path and survives process restart semantics cleanly.  
 **Precondition / trigger:** The owner respawns after death-drop suppression.  
 **Required observable result:** No physical managed item is automatically added; the logical tool remains unchanged and available for the authorized reissue path.  
-**Verification intent:** SWE.4 death-policy verification, SWE.5 death/respawn integration test, SWE.6 qualification.  
+**Verification intent:** SWE.4 death-policy verification, SWE.5 death/respawn integration, SWE.6 qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
@@ -314,15 +315,15 @@ Define Main deployment, logical and physical Growth Tool authority, initial deli
 
 ### SWE1-MAIN-001-CAP-009 — Pending-delivery notification and retry
 
-**Normative statement:** For a Main pending-delivery outcome, the software shall notify the reachable player, record a sanitized reason, and allow later free retry through an approved join or administrative path.
+**Normative statement:** For a Main pending-delivery outcome, the software shall notify the reachable player, retain a sanitized operational reason/audit correlation, and allow later free retry through an approved entry or administrative path.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-004  
-**Rationale:** Makes the recovery path explicit without charging for an existing obligation.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-004; §4 CAN-COM-009  
+**Rationale:** Makes the recovery path explicit without charging for an existing obligation and keeps it auditable.  
 **Precondition / trigger:** A Main item delivery becomes pending.  
-**Required observable result:** The player receives an actionable disposition when reachable, an audit reason exists, and retry does not rotate authority or debit Waymark.  
-**Verification intent:** SWE.4 disposition verification, SWE.5 retry integration, and SWE.6 client qualification.  
+**Required observable result:** The reachable player receives an actionable disposition, the pending entitlement remains correlated to retrievable audit evidence, and retry does not rotate authority or debit Waymark.  
+**Verification intent:** SWE.4 disposition/audit verification, SWE.5 retry/restart integration, SWE.6 client qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-COMMON-001-QLT-008; SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
