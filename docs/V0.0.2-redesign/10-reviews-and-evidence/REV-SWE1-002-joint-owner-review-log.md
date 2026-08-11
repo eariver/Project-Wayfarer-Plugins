@@ -1,11 +1,11 @@
 # SWE.1 Joint Owner Review Log
 
 Document ID: `REV-SWE1-002`  
-Revision: B  
+Revision: C  
 State: `IN_REVIEW`  
-Date: 2026-08-11 JST  
+Date: 2026-08-12 JST  
 Reviewers: Project Owner and ChatGPT  
-Reviewed source: `SWE1-SRC-002` Revision B  
+Reviewed source: `SWE1-SRC-002` Revision C  
 Reviewed derived documents: current draft SWE.1 package on `redesign/V0.0.2-swe1-3`
 
 ## 1. Purpose
@@ -26,9 +26,14 @@ Track the clause-by-clause joint review of the canonical requirement source and 
 | `CAN-COM-008` | Correction direction approved | `DEC-REQ-004` §4 |
 | `CAN-COM-009` | Correction direction approved | `DEC-REQ-004` §5 |
 | `CAN-COM-010` | Correction direction approved after Owner refinement to retain a SWE.1 reuse/ownership constraint | `DEC-REQ-004` §6 |
-| `CAN-CORE-001` onward | Not yet jointly reviewed | None |
+| `CAN-CORE-001` | Correction direction approved with Owner refinement: preserve accepted contract, not V0.0.1 implementation | `DEC-REQ-005` §2 |
+| `CAN-CORE-002` | Correction direction approved | `DEC-REQ-005` §3 |
+| `CAN-CORE-003` | Correction direction approved | `DEC-REQ-005` §4 |
+| `CAN-CORE-004` | Correction direction approved; duplicate Core UNKNOWN requirement superseded | `DEC-REQ-005` §5 |
+| `CAN-CORE-005` | Correction direction approved | `DEC-REQ-005` §6 |
+| `CAN-MAIN-001` onward | Not yet jointly reviewed | None |
 
-The Common canonical section is therefore completely reviewed. The next substantive review item is `CAN-CORE-001 — V0.0.1 compatibility`.
+The Common and Core canonical sections are completely reviewed and integrated. The next substantive review item is `CAN-MAIN-001 — Deployment and lifecycle`.
 
 ## 3. Key Owner determinations
 
@@ -78,59 +83,99 @@ Designated protected outcomes retain retrievable evidence sufficient for operati
 
 The Owner explicitly requested that reuse-first not disappear in SWE.2+. SWE.1 therefore retains a software-level capability ownership non-duplication constraint: Project-owned generic capability duplication requires an identified unmet requirement/constraint or material risk reduction. Concrete dependency/API/version/adapter/reference selection remains governed by `GOV-ENG-001` in SWE.2/SWE.3.
 
-During integration, the conversational placeholder `SWE1-COMMON-001-CON-009` for this new requirement was found to collide with the already approved Redis coordination requirement from `DEC-REQ-002`. The integrated identifier is `SWE1-COMMON-001-CON-010`; no approved identifier was silently reused or renumbered.
+During Common integration, the conversational placeholder `SWE1-COMMON-001-CON-009` for this new requirement was found to collide with the already approved Redis coordination requirement from `DEC-REQ-002`. The integrated identifier is `SWE1-COMMON-001-CON-010`; no approved identifier was silently reused or renumbered.
+
+### 3.12 V0.0.1 compatibility preserves contracts, not implementation
+
+The Owner confirmed that V0.0.1 was not requirements-analyzed or debugged to the same rigor as V0.0.2. V0.0.1 implementation locations are therefore not frozen. The protected baseline is the controlled accepted public contract: source use, binary linkage, and documented externally observable semantics. Internal structure, dependencies, implementation defects, validation/error handling, lifecycle/threading mechanics, and undocumented behavior may be corrected or redesigned while accepted contract compatibility is preserved.
+
+A breaking exception must be explicitly scoped; it does not silently waive the remainder of the accepted baseline. The complete controlled V0.0.1 public-contract/migration inventory remains required before G1.
+
+### 3.13 Core public API is implementation-isolated but not platform-type absolutist
+
+Core public contracts do not expose implementation-specific types or raw internal resource/authority handles merely for convenience. Present library names such as HikariCP/Flyway/Lettuce are not frozen into the SWE.1 prohibition. Platform/external contract types may be used when the approved capability genuinely requires them and compatibility/lifecycle/ownership/execution-context implications are acceptable.
+
+The runtime requirement is compatible contract type identity within one in-process compatibility domain, not one prescribed JAR/class-loader mechanism. Intentionally isolated versions remain possible behind an approved compatibility/adapter boundary.
+
+### 3.14 V0.0.2 shared Waymark transaction contract is allocated to Core without transferring feature semantics
+
+V0.0.2 Core provides the compatibility-preserving shared Waymark transaction contract, consistent with the accepted V0.0.1 `WayfarerServices.transactions()` / `WayfarerTransactions` public surface. This is a V0.0.2 allocation, not a permanent future implementation lock.
+
+Core owns shared provider interaction, operation/effect correlation, financial-effect coordination, inspection, and reconciliation mechanisms. Repair/reissue/shop eligibility, feature-domain mutation, item entitlement/final delivery, and other feature policy remain with the applicable feature owner.
+
+Waymark balance authority remains the economy provider. Wayfarer transaction records own Wayfarer's operation/effect disposition but do not replace provider balance authority or independently prove feature-domain effects. Provider evidence is interpreted only to the strength supplied by the supported provider contract.
+
+### 3.15 Ambiguous provider effects reuse Common UNKNOWN/replay semantics
+
+Core does not maintain a duplicate `UNKNOWN` retry rule. Historical `SWE1-CORE-001-CON-004` is superseded by deduplication because Common `QLT-006`, Common `QLT-012`, and Core `QLT-001` already impose the required behavior.
+
+Balance/aggregate provider state may be used for eligibility, diagnostics, or reconciliation context but not as uncorrelated proof of one exact provider effect. Unsupported provider internals or unilateral side-channel markers cannot manufacture stronger semantics. Wayfarer-owned transaction/audit/reconciliation records remain valid but do not strengthen provider authority.
+
+### 3.16 Core migrations evolve Core-owned state while accepted migration artifacts remain immutable
+
+Core migration justification covers approved changes, corrections, integrity requirements, compatibility requirements, and evolution of existing or new Core-owned durable state; it is not limited to a new capability. Core migrations do not become a persistence container for another owner's domain.
+
+Controlled accepted V0.0.1 Core migration artifacts are different from ordinary V0.0.1 implementation code: migration identity, ordering semantics, and byte-for-byte artifact content remain immutable. Later corrections use a new migration identity. Future migration framework/resource/executor choices remain open provided accepted history and the V0.0.1 upgrade path stay compatible.
 
 ## 4. Common-section checkpoint integration
 
-The Owner explicitly instructed repository checkpoint reflection after approval of `CAN-COM-010`. This simultaneously satisfied:
+The Owner explicitly instructed repository checkpoint reflection after approval of `CAN-COM-010`. This simultaneously satisfied five newly approved clauses since the preceding checkpoint and the Common → Core logical section transition.
 
-- five newly approved clauses since the previous repository checkpoint (`CAN-COM-006` through `CAN-COM-010`); and
-- the Common → Core logical section transition.
+That checkpoint integrated the canonical Common section, Common requirements, directly affected target requirements, issue state, index, traceability, verification-intent allocation, review/status/continuation records, and source register. `DEC-REQ-002` and `DEC-REQ-004` remain immutable rationale after integration.
 
-The integrated checkpoint updates the canonical Common section, Common requirements, directly affected Core/Main/Frontier/WB requirements, issue state, index, traceability, verification-intent allocation, this review log, `STATUS.md`, and `CONTINUATION.md`. `DEC-REQ-002` and `DEC-REQ-004` remain immutable rationale/decision records after integration.
+## 5. Core-section checkpoint integration
 
-The checkpoint does not pre-approve later target clauses. Where an unreviewed target clause still conflicts with the approved Common direction, the target requirement explicitly records that conflict/deferred correction rather than silently deciding the target clause.
+The Owner explicitly approved `CAN-CORE-001` through `CAN-CORE-005` and instructed repository checkpoint reflection after `CAN-CORE-005`. This simultaneously satisfies:
 
-## 5. Package impact
+- five newly approved clauses since the Common checkpoint; and
+- the Core → Main logical section transition.
 
-The initial 164-requirement self-review snapshot is historical. Owner-approved Common decomposition now produces a provisional integrated total of **176** Product requirements:
+`DEC-REQ-005` records the approved rationale. The Core checkpoint integrates the Canonical Revision C Core section, `SWE1-CORE-001` Revision C, index, traceability, verification intent, this review log, source/status/continuation records, and the requirement count.
+
+The checkpoint does not pre-approve Main or later target clauses. In particular, fixed Main backend/specific-Core wording remains for `CAN-MAIN-001` review rather than being silently rewritten here.
+
+## 6. Package impact
+
+The initial 164-requirement self-review snapshot is historical. The integrated Common checkpoint produced 176 requirements. Core review then superseded one redundant Core `UNKNOWN` requirement without removing behavior, producing a provisional integrated total of **175 active Product requirements**:
 
 ```text
 CAP: 64
-CON: 59
+CON: 58
 IFC: 14
 QLT: 39
-TOTAL: 176
+TOTAL ACTIVE: 175
 ```
 
-The Common requirement document now contains 30 items: CON 10, IFC 6, QLT 14.
+`SWE1-COMMON-001` contains 30 active items. `SWE1-CORE-001` contains 13 active items: CAP 2, CON 7, IFC 3, QLT 1. Historical `SWE1-CORE-001-CON-004` is superseded and not reused.
 
 The complete post-review automated identifier/source/count audit and full SWE.1 self-review remain required before G1. Checkpoint integration does not claim those activities were executed.
 
-## 6. Checkpoint cadence after integration
+## 7. Checkpoint cadence after Core integration
 
-The Common checkpoint resets the cadence counter:
+The Core checkpoint resets the cadence counter:
 
 ```text
 NEWLY APPROVED CLAUSES SINCE CHECKPOINT:
   0 / 5
 
 CURRENT SECTION:
-  CORE
+  MAIN
 
 NEXT REVIEW ITEM:
-  CAN-CORE-001 — V0.0.1 compatibility
+  CAN-MAIN-001 — Deployment and lifecycle
 ```
 
 A later logical section transition or five newly approved clauses creates a checkpoint candidate; repository mutation still requires explicit Owner instruction.
 
-## 7. Gate state
+## 8. Gate state
 
 ```text
 JOINT REVIEW:
-  COMMON SECTION COMPLETE / CORE SECTION NOT STARTED
+  COMMON SECTION COMPLETE
+  CORE SECTION COMPLETE
+  MAIN SECTION NOT STARTED
 
-COMMON CORRECTION DIRECTIONS:
+COMMON/CORE CORRECTION DIRECTIONS:
   OWNER APPROVED AND INTEGRATED
 
 G1 REQUIREMENTS BASELINE:
