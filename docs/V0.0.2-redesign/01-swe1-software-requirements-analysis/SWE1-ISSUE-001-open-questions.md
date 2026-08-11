@@ -1,35 +1,34 @@
 # V0.0.2 SWE.1 Open Questions, Conflicts, and Baseline Dependencies
 
 Document ID: `SWE1-ISSUE-001`  
-Revision: A  
+Revision: B  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-11 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Support domain: `ISSUE`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until resolved or superseded  
-Primary source: `SWE1-SRC-002` Revision A
+Primary source: `SWE1-SRC-002` Revision B
 
 ## 1. Purpose
 
-Record every unresolved question, contradiction, external feasibility dependency, or missing product
-decision identified during decomposition. These items are not substitute requirements. A requirement
-that cites one of these items remains draft until the issue is resolved or explicitly accepted as a
-G1 blocker.
+Record every unresolved question, contradiction, external feasibility dependency, or missing product decision identified during decomposition and joint Owner review. These items are not substitute requirements. A requirement that cites one of these items remains draft until the issue is resolved or explicitly accepted as a G1 blocker.
 
 ## 2. Issues
 
-### SWE1-ISSUE-001-ISSUE-001 — Missing `frontier_iris` at enablement
+### SWE1-ISSUE-001-ISSUE-001 — Configured Worlds Beyond world recovery after missing-world enablement
 
-**Problem:** The canonical source requires Frontier not to generate the world and to fail closed outside exact `frontier_iris`, but it does not decide whether the plugin as a whole must disable, enter a degraded administrative-only state, or remain enabled with gameplay dormant when the world is absent.
+**Problem:** Common review has resolved part of the original missing-`frontier_iris` question: the Worlds Beyond gameplay-world identifier is configurable rather than a literal SWE.1 invariant; Wayfarer_Frontier does not generate/recreate the required world; and when all Frontier gameplay capabilities depend on the missing configured world, whole-plugin fail-closed/unavailability is sufficient. The exact operational state and recovery behavior after the world later becomes available or the configuration is corrected remains unresolved.
 
-**Impact on SWE.1:** Owner decision required before G1 PASS because the externally observable health/lifecycle state is not defined.
+**Approved partial direction:** `DEC-REQ-004` §2.3. Missing configured world prevents dependent gameplay; whole-plugin disable/fail-enable is acceptable when all runtime gameplay depends on it; literal `frontier_iris` is not the general SWE.1 prerequisite.
 
-**Required resolution content:** Options to review: disable plugin; degraded/admin-health-only; enabled but all WB entry points dormant. The decision must define health/status, listener/scheduler registration, recovery when the world later appears, and restart behavior.
+**Impact on SWE.1:** G1 still requires an unambiguous observable lifecycle/recovery contract for the missing-world condition.
 
-**State:** `OPEN`
+**Required resolution content:** Define the externally observable health/status reason and the supported path after the configured world becomes available or configuration is corrected: explicit plugin re-enable, server restart, automatic recovery, or another controlled lifecycle transition. The resolution must remain compatible with Common capability admission closure/prior-lifecycle completion containment and must not make Wayfarer_Frontier generate the world.
+
+**State:** `OPEN_PARTIALLY_RESOLVED`
 
 ### SWE1-ISSUE-001-ISSUE-002 — Supported external repair boundary
 
@@ -73,7 +72,7 @@ G1 blocker.
 
 ### SWE1-ISSUE-001-ISSUE-006 — Authoritative return path under portal denial
 
-**Problem:** Vanilla portal traversal is denied in `frontier_iris`, while Gate implementation and an in-world return structure are outside scope. The source does not identify the authoritative command/proxy return mechanism that prevents players from being trapped.
+**Problem:** Vanilla portal traversal is denied in the Worlds Beyond gameplay context, while Gate implementation and an in-world return structure are outside scope. The source does not identify the authoritative command/proxy return mechanism that prevents players from being trapped.
 
 **Impact on SWE.1:** Owner/Project runtime decision required before G1 qualification intent is complete.
 
@@ -83,7 +82,7 @@ G1 blocker.
 
 ### SWE1-ISSUE-001-ISSUE-007 — Player-paid Growth Tool reissue invocation context
 
-**Problem:** Paid reissue behavior and price are defined, but the allowed invocation context is not: command versus GUI, exact world/backend restrictions, permission, and whether a missing physical item is required to open an alternative management route.
+**Problem:** Paid reissue behavior and price are defined, but the allowed invocation context is not: command versus GUI, applicable gameplay-context restrictions, permission, and whether a missing physical item is required to open an alternative management route.
 
 **Impact on SWE.1:** Owner decision required before the user-visible capability is unambiguous.
 
@@ -113,11 +112,7 @@ G1 blocker.
 
 ## 3. Issue disposition rules
 
-- Resolution must be committed as an Owner or controlled engineering decision and linked from every
-  affected requirement.
-- A resolution that changes product behavior requires impact analysis against the canonical source,
-  scope, target requirements, verification intent, and traceability.
-- A purely architectural/API choice may be resolved in SWE.2 only when the SWE.1 observable behavior
-  is already unambiguous.
-- G1 may be recommended `BLOCKED_OWNER_DECISION` while any issue prevents a testable requirement or
-  feasibility conclusion.
+- Resolution must be committed as an Owner or controlled engineering decision and linked from every affected requirement.
+- A resolution that changes product behavior requires impact analysis against the canonical source, scope, target requirements, verification intent, and traceability.
+- A purely architectural/API choice may be resolved in SWE.2 only when the SWE.1 observable behavior is already unambiguous.
+- G1 may be recommended `BLOCKED_OWNER_DECISION` while any issue prevents a testable requirement or feasibility conclusion.
