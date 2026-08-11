@@ -1,20 +1,20 @@
 # SWE.1 Verification-intent Allocation
 
 Document ID: `SWE1-VERIFY-001`  
-Revision: C  
+Revision: D  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-11 JST  
+Date: 2026-08-12 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Support domain: `VERIFY`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary requirement baseline: provisional SWE.1 target documents after integrated Common checkpoint
+Primary requirement baseline: provisional SWE.1 target documents after integrated Common and Core checkpoints
 
 ## 1. Purpose
 
-Control the verification intent assigned to every provisional draft SWE.1 Product requirement without duplicating the full 176-row requirement inventory. The normative allocation for an individual requirement is its own `Verification intent` field. This document defines allocation rules, checkpoint completeness accounting, open-issue restrictions, and downstream obligations.
+Control the verification intent assigned to every provisional active SWE.1 Product requirement without duplicating the full 175-row requirement inventory. The normative allocation for an individual active requirement is its own `Verification intent` field. This document defines allocation rules, checkpoint completeness accounting, open-issue restrictions, superseded-item handling, and downstream obligations.
 
 No SWE.4/SWE.5/SWE.6 execution is authorized by this document.
 
@@ -43,32 +43,40 @@ A requirement may use more than one level when internal correctness and external
 8. A target requirement that explicitly carries a known Common/target conflict may retain only provisional verification intent until its canonical target clause is jointly reviewed.
 9. Later verification documents use process-appropriate domains, Software Unit/Runtime Target or Integration Topology metadata, and full upstream trace links. Matching domain names do not prove coverage.
 10. `SWE1-COMMON-001-CON-010` capability ownership non-duplication is verified first through SWE.2/SWE.3 allocation/dependency assessment under `GOV-ENG-001`; integration verification is then assigned to the selected external or Project-owned boundary as applicable.
+11. Core V0.0.1 public-contract compatibility shall be verified against the controlled accepted public-contract inventory, separating source compatibility, binary linkage, documented contract semantics, and non-normative internal implementation behavior.
+12. Core public-contract isolation/type identity shall be verified against the complete public contract surface and the selected packaging/class-loading boundary rather than against one predetermined API-JAR mechanism.
+13. Waymark provider-effect verification shall distinguish provider-authoritative evidence, Wayfarer-owned operation/effect disposition, feature-owned domain effects, and uncorrelated aggregate provider state. A Wayfarer record or balance delta alone is not treated as proof stronger than its authority supplies.
+14. Accepted V0.0.1 Core migration immutability shall use the controlled accepted-migration inventory and artifact identity/hash/checksum evidence; later migration-framework choices do not relax accepted history compatibility.
+15. A superseded requirement identifier has no independent executable verification allocation after its replacement obligations are traced. The superseded disposition itself is verified by inspection and identifier/count audit.
 
 ## 4. Checkpoint completeness accounting
 
-Every provisional Product requirement in the integrated Common checkpoint package contains a non-empty `Verification intent` field.
+Every active provisional Product requirement in the integrated Common/Core checkpoint package contains a non-empty `Verification intent` field.
 
-| Requirement document | Requirements | Allocation status |
+| Requirement document | Active requirements | Allocation status |
 |---|---:|---|
 | `SWE1-COMMON-001` | 30 | 30 allocated |
-| `SWE1-CORE-001` | 14 | 14 allocated |
+| `SWE1-CORE-001` | 13 | 13 allocated; historical `CON-004` superseded |
 | `SWE1-MAIN-001` | 20 | 20 allocated |
 | `SWE1-MAIN-002` | 27 | 27 allocated |
 | `SWE1-MAIN-003` | 19 | 19 allocated |
 | `SWE1-FRONTIER-001` | 14 | 14 allocated |
 | `SWE1-WB-001` | 24 | 24 allocated |
 | `SWE1-WB-002` | 28 | 28 allocated |
-| **Total** | **176** | **176 allocated** |
+| **Total** | **175** | **175 allocated** |
 
 ```text
 CHECKPOINT DOCUMENT INSPECTION:
-  verification-intent fields retained/added for the integrated 176-item package
+  verification-intent fields retained/revised for the integrated 175-active-item package
+
+SUPERSEDED CORE ITEM:
+  SWE1-CORE-001-CON-004 -> Common QLT-006 / Common QLT-012 / Core QLT-001
 
 FULL POST-REVIEW AUTOMATED VERIFICATION-INTENT/IDENTIFIER AUDIT:
   PENDING BEFORE G1
 ```
 
-The old 164-item automated self-review result is historical evidence and is not reused as proof for the 176-item package.
+The old 164-item automated self-review result is historical evidence and is not reused as proof for the 175-item package.
 
 ## 5. Provisional allocations affected by open issues
 
@@ -84,16 +92,18 @@ The old 164-item automated self-review result is historical evidence and is not 
 | `SWE1-ISSUE-001-ISSUE-008` | `SWE1-MAIN-003-IFC-001`, `SWE1-FRONTIER-001-IFC-002`, `SWE1-WB-002-IFC-001` | Permission cases wait for complete route-to-group allocation |
 | `SWE1-ISSUE-001-ISSUE-009` | `SWE1-MAIN-002-CAP-015`, `SWE1-MAIN-002-QLT-006` | Crash-loss test oracle waits for a measurable maximum window |
 
-## 6. Common-review propagation still awaiting target-clause review
+The controlled V0.0.1 public-contract and Core migration inventories are also required before final verification baselining of `SWE1-CORE-001-IFC-001`, `IFC-002`, and `CON-008`; this is a source-baseline prerequisite rather than a new issue record.
 
-The Common checkpoint intentionally records but does not silently settle later target-specific conflicts. Executable verification baselines for these items wait for their owning canonical target review:
+## 6. Reviewed propagation and target-clause work still pending
 
-- `SWE1-MAIN-001-CON-001` — old Main-backend/Core fixed wording versus approved topology/shared-ownership rules;
-- `SWE1-FRONTIER-001-CON-001` — old Frontier-backend/Core fixed wording versus approved topology/shared-ownership rules;
+The Common and Core checkpoints intentionally do not silently settle later Main/Frontier/WB target clauses. Executable verification baselines for these items wait for their owning canonical target review:
+
+- `SWE1-MAIN-001-CON-001` — old Main-backend/specific-Core wording versus approved topology/shared-ownership rules;
+- `SWE1-FRONTIER-001-CON-001` — old Frontier-backend/specific-Core wording versus approved topology/shared-ownership rules;
 - `SWE1-FRONTIER-001-CAP-001`, `SWE1-FRONTIER-001-CON-003` — configured Worlds Beyond world direction versus current target literal;
-- literal-world references retained and marked in `SWE1-WB-002` pending their later `CAN-WB-*` reviews;
-- concrete shared Waymark transaction ownership in Core/Main/WB requirements pending `CAN-CORE-003` and relevant target reviews;
-- exact pending-delivery versus compensation priority in `CAN-WB-014` after a proven clear delivery failure.
+- literal-world references retained and marked in Worlds Beyond requirements pending their later `CAN-WB-*` reviews;
+- V0.0.2 shared Waymark transaction ownership is now allocated to Core by `CAN-CORE-003`, but Main/WB feature-specific eligibility, domain mutation, entitlement, delivery, compensation trigger, and target transaction sequencing remain for their own clause reviews;
+- exact pending-delivery versus compensation priority in `CAN-WB-014` after a proven clear delivery failure remains unresolved until that target clause is reviewed.
 
 ## 7. Required downstream chain
 
@@ -120,4 +130,4 @@ A SWE.4/SWE.5/SWE.6 case shall identify:
 
 ## 8. Current disposition
 
-Verification intent is allocated for the provisional 176-item Common-checkpoint package but is not an approved verification baseline. Continued Owner clause review, target-conflict resolution, open issues, V0.0.1 inventory, Project consistency review, complete automated self-review, and G1 approval remain prerequisites for downstream executable verification design/execution.
+Verification intent is allocated for the provisional 175-active-item Common/Core-checkpoint package but is not an approved verification baseline. Continued Owner clause review from `CAN-MAIN-001`, target-conflict resolution, open issues, V0.0.1 inventory, Project consistency review, complete automated self-review, and G1 approval remain prerequisites for downstream executable verification design/execution.
