@@ -1,9 +1,9 @@
 # V0.0.2 Requirement Source Register
 
 Document ID: `SWE1-SRC-001`  
-Revision: C  
+Revision: D  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-11 JST  
+Date: 2026-08-12 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Applicable Product: Plugin V0.0.2 redesign  
@@ -34,7 +34,7 @@ Conflict priority:
 6. prior implementation/test/roadmap evidence;
 7. engineering preference.
 
-Within the current SWE.1 review, `DEC-REQ-002` and `DEC-REQ-004` are explicit Owner decisions that control the Common corrections integrated into `SWE1-SRC-002` Revision B and affected derived requirements.
+Within the current SWE.1 review, `DEC-REQ-002`, `DEC-REQ-004`, and `DEC-REQ-005` are explicit Owner decisions controlling the Common/Core corrections integrated into `SWE1-SRC-002` Revision C and affected derived requirements.
 
 ## 3. Controlling source set for this SWE.1 decomposition and review
 
@@ -79,9 +79,32 @@ Integration checkpoint:
 Controls:
 
 - the approved semantics of the complete Common canonical section;
-- approved atomic decomposition that increases the provisional Product requirement count to 176;
+- approved atomic decomposition that produced 176 provisional Product requirements at the Common checkpoint;
 - direct propagation into affected Core/Main/Frontier/WB drafts while preserving unreviewed target-clause conflicts for later review;
 - reuse/ownership non-duplication as a SWE.1 constraint with concrete engineering selection governed by `GOV-ENG-001`.
+
+### SRC-OWNER-003 — Joint Owner Core-review corrections
+
+```text
+Authority class:
+  A
+
+Decision record:
+  DEC-REQ-005 — CAN-CORE-001 through CAN-CORE-005
+
+Integration checkpoint:
+  2026-08-12 JST
+```
+
+Controls:
+
+- V0.0.1 compatibility protects the controlled accepted public contract rather than freezing V0.0.1 implementation code;
+- Core public-contract abstraction and in-process runtime type-identity requirements;
+- V0.0.2 allocation of the compatibility-preserving shared Waymark transaction contract to Core without transferring feature-specific domain authority;
+- provider evidence/ambiguity constraints without manufactured provider semantics;
+- Core-owned schema-evolution justification and byte-for-byte immutability of controlled accepted V0.0.1 Core migration artifacts;
+- superseding redundant `SWE1-CORE-001-CON-004` without weakening the inherited Common/Core `UNKNOWN` and replay obligations;
+- provisional active Product requirement count becomes 175.
 
 ### SRC-MAINLINE-001 — Mainline Main/Frontier requirement source
 
@@ -152,19 +175,19 @@ Document ID:
   SWE1-SRC-002
 
 Revision:
-  B
+  C
 
 Path:
   docs/V0.0.2-redesign/01-swe1-software-requirements-analysis/
   SWE1-SRC-002-canonical-mainline-requirements.md
 
-Current Git blob SHA at Common checkpoint:
-  b3bd39c19fa844fc50890403c860ad301a0b7c29
+Current Git blob SHA at Core checkpoint:
+  6b586b537be10897fcb1ea909c2df6ec945675b5
 
 Revision A SHA-256 retained as historical identity:
   A04C1DBA6FE0D9568C51CE2D2F7FE591F0598C3B92A1EDD4B47AFF779F9A9121
 
-Revision B controlled content SHA-256:
+Revision C controlled content SHA-256:
   PENDING FINAL SWE.1 CONSOLIDATION / HASH REFRESH BEFORE G1
 
 Authority class:
@@ -196,6 +219,8 @@ Authority class:
 
 Use in this analysis is limited to the accepted-baseline premise represented in the canonical source and to later controlled inventory of accepted public contracts/migrations. A full V0.0.1 public-interface and migration inventory remains required before G1 PASS; no internal V0.0.1 implementation behavior is silently imported as a requirement.
 
+Core review explicitly reinforces this boundary: implementation locations may be changed or corrected in V0.0.2, while controlled accepted public-contract compatibility and controlled accepted migration-history artifacts remain protected.
+
 ### SRC-PLUG-002 — Published V0.0.1 contracts and migrations
 
 ```text
@@ -214,9 +239,11 @@ Status:
   PENDING_INVENTORY_AND_INTERFACE_REVIEW
 ```
 
+Core review observed the existing V0.0.1 public surface including `WayfarerServices.transactions()` and `WayfarerTransactions` as relevant inventory candidates, but the complete accepted API/semantic/migration inventory is still pending and shall not be inferred solely from implementation presence.
+
 ## 5. Registered Project consistency inputs
 
-The following remain registered for later consistency and feasibility review. Their content was not used to silently add or change the original 164-requirement decomposition. The current provisional 176-item count results from explicit Owner-approved Common review decisions, not from silent import of these consistency sources.
+The following remain registered for later consistency and feasibility review. Their content was not used to silently add or change the original 164-requirement decomposition. The current provisional active 175-item count results from explicit Owner-approved Common/Core review decisions, not from silent import of these consistency sources.
 
 | Source ID | Repository path | Observed blob SHA | Class |
 |---|---|---|---|
@@ -261,11 +288,11 @@ Prohibited use:
 
 ## 7. Source actions remaining before G1
 
-- complete V0.0.1 public API, contract, and immutable migration inventory;
+- complete V0.0.1 public API, documented public-contract semantics, and immutable migration inventory;
 - retrieve and hash the applicable machine-readable Frontier locks;
 - inspect current Project manifests for compatibility/placement conflicts;
 - run a consistency review of the draft SWE.1 baseline against registered Project sources without adding behavior silently;
 - resolve or accept all issues in `SWE1-ISSUE-001`;
-- finish joint Owner review of Core/Main/Frontier/WB/Scope clauses;
-- after final consolidation, calculate/record the controlled Revision B-or-later canonical content SHA-256 and rerun the complete source/identifier/count self-review;
+- finish joint Owner review of Main/Frontier/WB/Scope clauses;
+- after final consolidation, calculate/record the controlled Revision C-or-later canonical content SHA-256 and rerun the complete source/identifier/count/verification-intent self-review;
 - obtain explicit G1 Owner approval of the complete canonical and decomposed SWE.1 package.
