@@ -1,35 +1,35 @@
 # SWE.1 Source-to-Requirement Traceability
 
 Document ID: `TRC-SWE1-001`  
-Revision: B  
+Revision: C  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-11 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
-Traceability scope: `SWE1-SRC-002` Revision A to all draft SWE.1 target requirements  
+Traceability scope: `SWE1-SRC-002` Revision B to the 176 provisional draft SWE.1 Product requirements after integrated Common review  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded
 
 ## 1. Purpose
 
-Provide bidirectional traceability from the 59 merged canonical source clauses to the 164 decomposed
-SWE.1 requirements. Forward traceability is controlled in this document. Reverse traceability is
-controlled by each requirement's `Source` field and was independently checked against this matrix.
+Provide bidirectional traceability from the 59 canonical source clauses to the provisional 176 SWE.1 Product requirements after integration of the Owner-approved Common corrections. Forward traceability is controlled in this document. Reverse traceability is controlled by each requirement's `Source` field.
+
+This checkpoint revision updates the Common-section decomposition and its direct target propagation. It does not claim that the complete post-review automated identifier/source audit has already been rerun; that full audit and recount remain mandatory before G1.
 
 ## 2. Source-clause forward traceability
 
 | Canonical clause | Downstream requirement(s) or disposition |
 |---|---|
-| `CAN-COM-001` | `SWE1-COMMON-001-CON-001`; `SWE1-CORE-001-CAP-001` |
+| `CAN-COM-001` | `SWE1-COMMON-001-CON-001`; `SWE1-CORE-001-CAP-001`; `SWE1-FRONTIER-001-CON-001` (known target conflict carried to Frontier review) |
 | `CAN-COM-002` | `SWE1-COMMON-001-CON-002`; `SWE1-COMMON-001-CON-007`; `SWE1-COMMON-001-CON-008` |
-| `CAN-COM-003` | `SWE1-COMMON-001-IFC-001` |
-| `CAN-COM-004` | `SWE1-COMMON-001-CON-003`; `SWE1-COMMON-001-CON-004`; `SWE1-COMMON-001-CON-005`; `SWE1-CORE-001-CON-006` |
-| `CAN-COM-005` | `SWE1-COMMON-001-QLT-001`; `SWE1-COMMON-001-QLT-002` |
-| `CAN-COM-006` | `SWE1-COMMON-001-QLT-003`; `SWE1-COMMON-001-QLT-004`; `SWE1-MAIN-001-QLT-001`; `SWE1-MAIN-001-QLT-002` |
-| `CAN-COM-007` | `SWE1-COMMON-001-QLT-005`; `SWE1-COMMON-001-QLT-006`; `SWE1-CORE-001-QLT-001`; `SWE1-MAIN-003-QLT-002`; `SWE1-MAIN-003-QLT-003`; `SWE1-MAIN-003-QLT-005`; `SWE1-WB-002-QLT-003` |
-| `CAN-COM-008` | `SWE1-COMMON-001-IFC-002`; `SWE1-COMMON-001-CON-006`; `SWE1-COMMON-001-QLT-007`; `SWE1-FRONTIER-001-CON-006` |
-| `CAN-COM-009` | `SWE1-COMMON-001-QLT-008` |
-| `CAN-COM-010` | Allocated to `GOV-ENG-001`; concrete API/library selection begins in SWE.2/SWE.3 and is not duplicated as a Product requirement. |
+| `CAN-COM-003` | `SWE1-COMMON-001-IFC-001`; `SWE1-COMMON-001-CON-009`; `SWE1-COMMON-001-IFC-003`; `SWE1-COMMON-001-IFC-004`; `SWE1-COMMON-001-IFC-005`; `SWE1-FRONTIER-001-IFC-001` |
+| `CAN-COM-004` | `SWE1-COMMON-001-CON-003`; `SWE1-COMMON-001-CON-004`; `SWE1-COMMON-001-CON-005`; `SWE1-CORE-001-CON-006`; `SWE1-FRONTIER-001-CON-004` |
+| `CAN-COM-005` | `SWE1-COMMON-001-QLT-001`; `SWE1-COMMON-001-QLT-002`; `SWE1-COMMON-001-QLT-009`; `SWE1-MAIN-001-CAP-005`; `SWE1-MAIN-001-CAP-006`; `SWE1-WB-002-QLT-004` |
+| `CAN-COM-006` | `SWE1-COMMON-001-QLT-003`; `SWE1-COMMON-001-QLT-004`; `SWE1-COMMON-001-QLT-010`; `SWE1-COMMON-001-QLT-011`; `SWE1-MAIN-001-QLT-001`; `SWE1-MAIN-001-QLT-002`; `SWE1-FRONTIER-001-CON-002`; `SWE1-FRONTIER-001-CAP-001` |
+| `CAN-COM-007` | `SWE1-COMMON-001-QLT-005`; `SWE1-COMMON-001-QLT-006`; `SWE1-COMMON-001-QLT-012`; `SWE1-COMMON-001-QLT-013`; `SWE1-CORE-001-CON-004`; `SWE1-CORE-001-QLT-001`; `SWE1-MAIN-003-QLT-001`; `SWE1-MAIN-003-CAP-005`; `SWE1-MAIN-003-QLT-002`; `SWE1-MAIN-003-CAP-008`; `SWE1-MAIN-003-QLT-003`; `SWE1-MAIN-003-QLT-005`; `SWE1-WB-002-QLT-003` |
+| `CAN-COM-008` | `SWE1-COMMON-001-IFC-002`; `SWE1-COMMON-001-IFC-006`; `SWE1-COMMON-001-CON-006`; `SWE1-COMMON-001-QLT-007`; `SWE1-CORE-001-CON-008`; `SWE1-FRONTIER-001-CON-006`; `SWE1-FRONTIER-001-QLT-002` |
+| `CAN-COM-009` | `SWE1-COMMON-001-QLT-008`; `SWE1-COMMON-001-QLT-014`; `SWE1-MAIN-001-CAP-009`; `SWE1-WB-002-CAP-010`; `SWE1-WB-002-CAP-016` |
+| `CAN-COM-010` | `SWE1-COMMON-001-CON-010`; concrete capability/dependency/API selection and authoritative-reference evidence are governed by `GOV-ENG-001` in SWE.2/SWE.3 |
 | `CAN-CORE-001` | `SWE1-CORE-001-CAP-001`; `SWE1-CORE-001-IFC-001`; `SWE1-CORE-001-IFC-002`; `SWE1-CORE-001-CON-006` |
 | `CAN-CORE-002` | `SWE1-CORE-001-CON-001`; `SWE1-CORE-001-CON-002` |
 | `CAN-CORE-003` | `SWE1-CORE-001-CAP-002`; `SWE1-CORE-001-IFC-003`; `SWE1-CORE-001-QLT-001` |
@@ -82,22 +82,25 @@ controlled by each requirement's `Source` field and was independently checked ag
 
 ## 3. Reverse-traceability control
 
-Every one of the 164 requirements contains a `Source` field naming one or more canonical clauses and,
-where applicable, an amendment. Automated review parsed those fields and confirmed:
+The requirement-owned `Source` field is the authoritative reverse link from each requirement to its canonical clause(s), amendment(s), and controlling review decision where applicable.
+
+At this integrated Common checkpoint:
 
 ```text
-REQUIREMENTS WITHOUT A CANONICAL SOURCE:
-  0
+PROVISIONAL PRODUCT REQUIREMENT COUNT:
+  176
 
-REQUIREMENTS REFERENCING UNKNOWN CANONICAL CLAUSES:
-  0
+COMMON REQUIREMENTS:
+  30
 
-CANONICAL CLAUSES WITHOUT A REQUIREMENT OR EXPLICIT DISPOSITION:
-  0
+COMMON SOURCE CLAUSES REVIEWED/INTEGRATED:
+  CAN-COM-001 through CAN-COM-010
+
+FULL POST-CHECKPOINT AUTOMATED REVERSE-TRACE AUDIT:
+  PENDING BEFORE G1
 ```
 
-The requirement-owned `Source` field is the authoritative reverse link. This avoids maintaining a
-second 164-row copy that could diverge from the owning requirement documents.
+The prior Revision B automated result for 164 requirements is historical evidence only and is not reused as proof for the 176-item checkpoint package. Before G1, the complete package self-review shall parse every current `Source` field, verify known canonical identifiers, detect requirements without source, detect canonical clauses without downstream disposition, and verify identifier uniqueness/counts.
 
 ## 4. Amendment traceability
 
@@ -116,7 +119,13 @@ second 164-row copy that could diverge from the owning requirement documents.
 | `AMD-011` | `SWE1-MAIN-003-IFC-001`; `SWE1-FRONTIER-001-IFC-002`; `SWE1-WB-002-IFC-001` |
 | `AMD-012` | Excluded as process/release-stage material; no Product requirement generated. |
 
-## 5. Current disposition
+## 5. Joint-review decision traceability
 
-Traceability is complete for Owner review. It is not an approved baseline until the canonical source,
-requirements, scope, issues, and G1 gate are approved together.
+| Decision | Integrated effect |
+|---|---|
+| `DEC-REQ-002` | Common `CAN-COM-001`–`005`; topology/shared ownership, authority split, external-state boundaries, execution-context rules; added Common `CON-009`, `IFC-003`–`IFC-005`, `QLT-009` |
+| `DEC-REQ-004` | Common `CAN-COM-006`–`010`; lifecycle, protected-operation safety, migration ownership, audit/data minimization, capability reuse; added Common `QLT-010`–`QLT-014`, `IFC-006`, `CON-010` |
+
+## 6. Current disposition
+
+Traceability has been updated for the integrated Common checkpoint and remains draft. It is not an approved G1 baseline. Target-specific clauses and their derived requirements remain subject to continued Owner review, and the complete automated source/identifier/recount audit is required after all joint-review corrections are consolidated.
