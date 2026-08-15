@@ -1,7 +1,7 @@
 # Project Wayfarer Plugin Mainline Canonical Requirements Source
 
 Document ID: `SWE1-SRC-002`  
-Revision: D  
+Revision: E  
 State: `DRAFT_FOR_OWNER_REVIEW`  
 Date: 2026-08-15 JST  
 Author: ChatGPT  
@@ -16,12 +16,13 @@ Controlling joint-review decisions:
 - `DEC-REQ-004` — approved Common corrections for `CAN-COM-006` through `CAN-COM-010`
 - `DEC-REQ-005` — approved Core corrections for `CAN-CORE-001` through `CAN-CORE-005`
 - `DEC-REQ-006` — approved Main corrections for `CAN-MAIN-001` through `CAN-MAIN-005`
+- `DEC-REQ-007` — approved Main corrections for `CAN-MAIN-006` through `CAN-MAIN-010`
 
 ## 1. Purpose and authority
 
 This document is the normalized positive-requirement source used before SWE.1 requirement decomposition. It combines the mainline requirement source with only those later Owner decisions that clarified a requirement or resolved a contradiction in that source.
 
-Revision D integrates the completed joint Owner review of the Common (`CAN-COM-001` through `CAN-COM-010`), Core (`CAN-CORE-001` through `CAN-CORE-005`), and first Main checkpoint (`CAN-MAIN-001` through `CAN-MAIN-005`). `CAN-MAIN-006` and later Main clauses, Frontier, Worlds Beyond, and Scope remain subject to their own clause-by-clause review; conflicting later wording identified for required propagation is not silently changed before that owning review.
+Revision E integrates the completed joint Owner review of the Common (`CAN-COM-001` through `CAN-COM-010`), Core (`CAN-CORE-001` through `CAN-CORE-005`), and Main through `CAN-MAIN-010`. `CAN-MAIN-011` and later Main clauses, Frontier, Worlds Beyond, and Scope remain subject to their own clause-by-clause review; conflicting later wording identified for required propagation is not silently changed before that owning review.
 
 This document deliberately excludes:
 
@@ -45,6 +46,7 @@ Source clause identifiers beginning with `CAN-` are provenance anchors only. The
 | Common joint review through CAN-COM-010 | Repository decision `DEC-REQ-004` | Controls integrated Common corrections 006–010 |
 | Core joint review through CAN-CORE-005 | Repository decision `DEC-REQ-005` | Controls integrated Core corrections 001–005 |
 | Main joint review through CAN-MAIN-005 | Repository decision `DEC-REQ-006` | Controls integrated Main corrections 001–005 and mandatory propagation recorded for later Main review |
+| Main joint review through CAN-MAIN-010 | Repository decision `DEC-REQ-007` | Controls integrated Main corrections 006–010, including withdrawal of death-drop suppression, numeric encoding fixation, and material-dependent progress weighting |
 
 ## 3. Applied amendment disposition
 
@@ -55,10 +57,10 @@ Source clause identifiers beginning with `CAN-` are provenance anchors only. The
 | AMD-003 | Applied | Durable launchpad creation state is limited; velocity, cooldown, and auto-Elytra use current configuration |
 | AMD-004 | Applied as current-scope clarification only | Dedicated generic Gate/Portal/System-Structure placement exclusion is not required; no later roadmap is adopted here |
 | AMD-005 | Applied as current-scope clarification only | A physical pressure plate without durable launchpad authority need not be identified as a launchpad |
-| AMD-006 | Applied to still-unreviewed CAN-MAIN-006 subject to later Owner propagation | Existing death-drop/respawn text remains for CAN-MAIN-006 review; DEC-REQ-006 records that ordinary player/entity death/despawn drops shall not be prohibited |
+| AMD-006 | Superseded in part by `DEC-REQ-007` | Player/entity death/item-lifecycle drop suppression is withdrawn; respawn alone still does not create implicit replacement, now generalized under CAN-MAIN-006 / existing delivery semantics |
 | AMD-007 | Applied to still-unreviewed CAN-MAIN-016 subject to later Owner propagation | Player-paid Growth Tool reissue remains required; DEC-REQ-006 records revised authority-rotation and relative-pricing direction for CAN-MAIN-016 review |
 | AMD-008 | Applied | Permanent Worlds Beyond items use durable pending delivery after death |
-| AMD-009 | Applied | Positive progress addition saturates at `Long.MAX_VALUE` |
+| AMD-009 | Superseded by `DEC-REQ-007` | Concrete `Long.MAX_VALUE` saturation is replaced by representation-independent monotonic/overflow-safe maximum-boundary semantics |
 | AMD-010 | Applied only as a present requirement clarification | Exact language, layout, name, and lore are not V0.0.2 functional acceptance obligations |
 | AMD-011 | Applied | Main and Frontier permissions use the approved medium-grained groups |
 | AMD-012 | Excluded | Process/release-stage clarification, not a software-behavior change |
@@ -280,62 +282,72 @@ A Growth Tool shall not be processed through an anvil or grindstone in V0.0.2. T
 
 Physical movement or possession does not rotate Growth Tool authority. When an authorized reissue later rotates the current physical authority, prior physical instances may remain physically present but become stale and cannot be used as an authorized Growth Tool under the applicable epoch/current-authority requirements.
 
-### CAN-MAIN-006 — Death behavior
+### CAN-MAIN-006 — Death, respawn, and physical-item lifecycle neutrality
 
-The Growth Tool or Broken Tool is removed from death drops. It is not stored as a raw in-memory ItemStack for automatic respawn restoration, and it is not automatically restored on respawn. The logical tool record remains authoritative.
+Wayfarer_Main shall not suppress, remove, replace, or otherwise specially redirect an ordinary supported Minecraft Growth Tool or Broken Tool drop solely because it results from player death or another applicable entity/item lifecycle event. Ordinary Minecraft drop, pickup, storage, loss, destruction, and despawn behavior remains subject to the physical-state authority and possession rules established by `CAN-COM-003` and `CAN-MAIN-005`.
 
-> **Pending owning-clause review:** `DEC-REQ-006` §7.1 records the Owner direction that Wayfarer shall not prohibit ordinary Growth Tool/Broken Tool player/entity death or despawn drop behavior. The text above is retained only because `CAN-MAIN-006` has not yet completed its clause review; it shall not be treated as approved death-drop semantics.
+Death, respawn, physical-item loss, destruction, or failure to observe the delivered physical representation does not by itself change logical ownership, delivery status, current physical-instance identity, or authority epoch and does not create a new delivery or reissue entitlement.
 
-### CAN-MAIN-007 — Progress worlds
+Respawn does not itself cause automatic Growth Tool restoration or replacement. A previously delivered physical Growth Tool that is no longer available is replaced only through an applicable authorized recovery/reissue operation.
 
-Progress is available only in exact worlds:
+This clause does not prescribe temporary raw `ItemStack` retention, event-list manipulation, inventory scanning, physical-item tracking, or another implementation mechanism.
+
+### CAN-MAIN-007 — Configured exact progress-world boundary
+
+Growth Tool progress is available only in worlds whose platform world identity exactly matches an entry in the approved Growth Tool progress-world configuration.
+
+The initial V0.0.2 supplied/default progress-world allowlist contains:
 
 - `resource`
 - `resource_nether`
 - `resource_end`
 
-Main worlds, similarly named worlds, unknown worlds, and all other worlds are excluded.
+A world outside the approved exact allowlist does not grant Growth Tool progress. Wayfarer_Main shall not infer eligibility from a similar world name, prefix/suffix/substring match, dimension or environment alone, historical naming convention, or another unapproved heuristic.
 
-### CAN-MAIN-008 — Eligible progress event
+Absence or unavailability of one configured progress world does not cause another world to be adopted implicitly and does not by itself make other independently valid configured progress worlds ineligible. Configuration validity and capability-prerequisite behavior follow the applicable Main/Common lifecycle requirements.
 
-A successful player block break adds progress exactly once when:
+This clause fixes the approved exact-membership policy and V0.0.2 initial defaults, not permanent physical world names for later deployments.
 
-- the block is tagged `minecraft:mineable/pickaxe`;
-- the current main-hand item is the authorized active Growth Pickaxe;
-- owner, tool, and epoch match;
-- the event is not cancelled;
-- Survival is used, or Adventure results in an actual successful block break.
+### CAN-MAIN-008 — Qualifying player-mined block progress
 
-Player-placed, generator-created, re-placed Silk Touch ore, and normally broken plugin-generated blocks are eligible. Creative, Spectator, cancelled breaks, explosions, pistons, commands, WorldEdit/FAWE removal, and other non-player-break removal are not eligible.
+A completed qualifying player-caused block break grants Growth Tool progress exactly once when:
 
-### CAN-MAIN-009 — Progress representation and saturation
+- the current world is eligible under the approved progress-world requirements;
+- the broken block is classified by the adopted Minecraft block-tag contract as `minecraft:mineable/pickaxe`;
+- the physical tool used for the mining action resolves to the player's current authorized `ACTIVE` Growth Pickaxe; and
+- the player is in Survival, or is in Adventure and the player mining action actually completes the block break.
 
-`1.000` progress equals `1000` internal integer units. Positive addition saturates at `Long.MAX_VALUE`, never wraps negative, and becomes a no-op after saturation. Threshold evaluation, GUI display, checkpointing, and configuration reconciliation must remain defined at the saturated value. Detailed per-addition overflow audit is not required.
+A denied or cancelled mining attempt that does not complete the qualifying block break does not grant progress. Creative and Spectator activity does not grant Growth Tool progress.
 
-### CAN-MAIN-010 — Progress weights
+Block eligibility does not depend on block provenance or placement history. An otherwise eligible naturally generated, player-placed, generator/plugin-created, or Silk-Touch-collected-and-re-placed block remains eligible. Repeated eligible mining is not prohibited, and this requirement does not require Wayfarer to maintain block-placement or block-provenance authority solely for Growth Tool progress.
 
-The following initial configurable defaults apply:
+Block removal that is not the result of a qualifying player mining action does not grant Growth Tool progress. Explosion, piston, command, editor, plugin-direct, and equivalent non-player-mining removal are representative excluded cases and do not establish separate Product dependencies.
 
-| Block/category | Progress |
-|---|---:|
-| Cobblestone | 0.25 |
-| Cobbled Deepslate | 0.35 |
-| Stone/Granite/Diorite/Andesite/Tuff/Calcite | 1.00 |
-| Netherrack/Blackstone/Basalt | 1.00 |
-| Deepslate/End Stone | 1.25 |
-| Obsidian/Crying Obsidian | 2.00 |
-| Undefined pickaxe-tag block | 1.00 |
+Multiple observations or callbacks associated with the same completed physical block break shall not cause more than one progress addition.
 
-| Ore group | Multiplier |
-|---|---:|
-| Coal/Nether Quartz | 1.50 |
-| Copper | 1.60 |
-| Redstone | 1.75 |
-| Iron/Nether Gold | 2.00 |
-| Lapis | 2.10 |
-| Gold | 2.50 |
-| Diamond | 3.50 |
-| Emerald/Ancient Debris | 4.00 |
+### CAN-MAIN-009 — Deterministic cumulative progress and numeric-boundary safety
+
+Growth Tool cumulative progress is maintained as one logical non-negative progress quantity. Its accumulation, durable persistence and reload, threshold comparison, user-visible representation, and configuration reconciliation shall preserve the approved progress semantics deterministically without representation-dependent drift or divergence.
+
+An accepted positive progress addition shall not decrease cumulative progress and shall not cause numeric wraparound, negative overflow, corruption, or undefined behavior.
+
+The implementation may use a bounded or unbounded numeric representation. If the selected representation has a supported maximum cumulative value, reaching that boundary shall produce a defined bounded state; subsequent positive additions shall not wrap, corrupt the value, or make the Growth Tool unusable merely because that numeric boundary has been reached.
+
+Threshold/evolution determination, status presentation, durable persistence/reload, and configuration reconciliation shall remain defined at any supported maximum progress state.
+
+This requirement does not prescribe `1000` internal units per logical progress point, Java `long`, `Long.MAX_VALUE`, or another physical numeric encoding.
+
+### CAN-MAIN-010 — Uniform qualifying-break progress increment
+
+Every qualifying block break established by `CAN-MAIN-008` contributes the same configured positive logical Growth Tool progress increment.
+
+The initial V0.0.2 supplied/default increment is `1.00` logical progress per qualifying break.
+
+Progress increment does not vary according to block material, block category, ore classification, rarity, provenance, generation source, or equivalent block-specific characteristic. Wayfarer_Main shall not apply block-specific base weights, ore multipliers, rarity multipliers, or equivalent material-dependent progression modifiers unless a later approved requirement explicitly introduces such behavior.
+
+The configured uniform increment shall be a valid positive logical progress quantity. Configuration validity and fail-closed behavior follow the applicable Main/Common capability-prerequisite requirements.
+
+The logical increment does not prescribe an internal numeric encoding or storage scale; numeric representation and boundary safety follow `CAN-MAIN-009`.
 
 ### CAN-MAIN-011 — Material and enchantment evolution
 
