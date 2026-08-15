@@ -1,94 +1,90 @@
 # SWE.1 Target-domain Document Index
 
 Document ID: `SWE1-INDEX-001`  
-Revision: E  
+Revision: F  
 State: `DRAFT_FOR_OWNER_REVIEW`  
 Date: 2026-08-15 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 and later while items remain active  
-Predecessor: Revision D
+Predecessor: Revision E
 
 ## 1. Purpose
 
-Identify every controlled SWE.1 work product, its target or support domain, path, state, and contained item range. This index is navigational and does not duplicate normative content.
+Identify every controlled SWE.1 work product, its target/support domain, path, state, and contained item range. This index is navigational and does not duplicate normative content.
 
 ## 2. Domain rule
 
-Normative SWE.1 Product requirements use target-oriented domains:
-
-```text
-COMMON
-CORE
-MAIN
-FRONTIER
-WB
-```
-
-`RF` and `ADAPTER` are recognized possible target domains but have no normative document in the current scope.
-
-Support documents use `SRC`, `PLAN`, `INDEX`, `SCOPE`, `GLOSSARY`, `ISSUE`, and `VERIFY`. Downstream SWE.2–SWE.5 domains will be concern-oriented and need not match these targets.
+Normative SWE.1 Product requirements use `COMMON`, `CORE`, `MAIN`, `FRONTIER`, and `WB` target domains. `RF` and `ADAPTER` remain recognized possible domains with no normative document in current scope. Support documents use `SRC`, `PLAN`, `INDEX`, `SCOPE`, `GLOSSARY`, `ISSUE`, and `VERIFY`.
 
 ## 3. Controlled SWE.1 work products
 
-| Document ID | Domain role | Title / purpose | Path | State | Item range / count |
+| Document ID | Domain role | Title / purpose | Path | State | Active item range / count |
 |---|---|---|---|---|---|
-| `SWE1-SRC-001` | Support / source | Requirement Source Register | `REQUIREMENT_SOURCES.md` | DRAFT_FOR_OWNER_REVIEW | Source records |
-| `SWE1-SRC-002` | Support / source | Canonical positive-requirement source | `SWE1-SRC-002-canonical-mainline-requirements.md` | DRAFT_FOR_OWNER_REVIEW | 59 `CAN-*` source clauses; Common, Core, and Main `CAN-MAIN-001`–`005` integrated as Revision D |
+| `SWE1-SRC-001` | Support / source | Requirement Source Register | `REQUIREMENT_SOURCES.md` | DRAFT_FOR_OWNER_REVIEW | Source records; Revision F |
+| `SWE1-SRC-002` | Support / source | Canonical positive-requirement source | `SWE1-SRC-002-canonical-mainline-requirements.md` | DRAFT_FOR_OWNER_REVIEW | 59 `CAN-*` clauses; Common, Core, Main `CAN-MAIN-001`–`010` integrated as Revision E |
 | `SWE1-PLAN-001` | Support / plan | Analysis Plan and Execution Record | `SWE1_ANALYSIS_PLAN.md` | EXECUTED_AWAITING_OWNER_REVIEW | Process record |
 | `SWE1-INDEX-001` | Support / index | This target-domain index | this file | DRAFT_FOR_OWNER_REVIEW | None |
 | `SWE1-SCOPE-001` | Support / scope | Scope and Non-scope | `SWE1-SCOPE-001-scope-and-non-scope.md` | DRAFT_FOR_OWNER_REVIEW | Scope dispositions |
 | `SWE1-GLOSSARY-001` | Support / glossary | Glossary and controlled terms | `SWE1-GLOSSARY-001-glossary.md` | DRAFT_FOR_OWNER_REVIEW | Definitions |
-| `SWE1-COMMON-001` | Product / COMMON | Cross-target common requirements | `SWE1-COMMON-001-common-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CON-001`–`CON-010` (10), `IFC-001`–`IFC-006` (6), `QLT-001`–`QLT-014` (14); 30 active total |
-| `SWE1-CORE-001` | Product / CORE | Wayfarer_Core requirements | `SWE1-CORE-001-core-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-002` (2), active `CON-001`–`CON-003` + `CON-005`–`CON-008` (7), `IFC-001`–`IFC-003` (3), `QLT-001` (1); 13 active total; historical `CON-004` superseded |
-| `SWE1-MAIN-001` | Product / MAIN | Lifecycle, authority, delivery, possession/modification policy | `SWE1-MAIN-001-authority-delivery-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-011` with `CAP-010`/`CAP-011` added (11), `CON-001`–`CON-011` (11), `QLT-001`–`QLT-002` (2); 24 total; CAN-MAIN-006-derived CON-008/009 remain later-clause draft items |
-| `SWE1-MAIN-002` | Product / MAIN | Progress, evolution, durability, checkpoint | `SWE1-MAIN-002-progress-durability-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-016` (16), `CON-001`–`CON-005` (5), `QLT-001`–`QLT-006` (6); 27 total |
-| `SWE1-MAIN-003` | Product / MAIN | GUI, repair, reissue, admin, permission | `SWE1-MAIN-003-repair-reissue-admin-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-009` (9), `CON-001`–`CON-004` (4), `IFC-001` (1), `QLT-001`–`QLT-005` (5); 19 total |
-| `SWE1-FRONTIER-001` | Product / FRONTIER | Runtime boundary, MVI, persistence, permission | `SWE1-FRONTIER-001-boundary-persistence-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-002` (2), `CON-001`–`CON-008` (8), `IFC-001`–`IFC-002` (2), `QLT-001`–`QLT-002` (2); 14 total |
-| `SWE1-WB-001` | Product / WB | Loadout, permanent items, hook, navigation | `SWE1-WB-001-loadout-navigation-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-010` (10), `CON-001`–`CON-008` (8), `IFC-001` (1), `QLT-001`–`QLT-005` (5); 24 total |
-| `SWE1-WB-002` | Product / WB | Launchpad, shop, portal, administration | `SWE1-WB-002-launchpad-shop-portal-requirements.md` | DRAFT_FOR_OWNER_REVIEW | `CAP-001`–`CAP-016` (16), `CON-001`–`CON-007` (7), `IFC-001` (1), `QLT-001`–`QLT-004` (4); 28 total |
-| `SWE1-ISSUE-001` | Support / issue | Open questions and conflicts | `SWE1-ISSUE-001-open-questions.md` | DRAFT_FOR_OWNER_REVIEW | `ISSUE-001`–`ISSUE-009`; ISSUE-001 partially resolved |
-| `SWE1-VERIFY-001` | Support / verification | Verification-intent allocation | `SWE1-VERIFY-001-verification-intent.md` | DRAFT_FOR_OWNER_REVIEW | 179 provisional active allocations after Main CAN-MAIN-001–005 checkpoint; one historical Core item superseded |
+| `SWE1-COMMON-001` | Product / COMMON | Cross-target common requirements | `SWE1-COMMON-001-common-requirements.md` | DRAFT_FOR_OWNER_REVIEW | CON 10 / IFC 6 / QLT 14 = 30 active |
+| `SWE1-CORE-001` | Product / CORE | Wayfarer_Core requirements | `SWE1-CORE-001-core-requirements.md` | DRAFT_FOR_OWNER_REVIEW | CAP 2 / CON 7 / IFC 3 / QLT 1 = 13 active; historical `CON-004` superseded |
+| `SWE1-MAIN-001` | Product / MAIN | Lifecycle, authority, delivery, possession/lifecycle and modification policy | `SWE1-MAIN-001-authority-delivery-requirements.md` | DRAFT_FOR_OWNER_REVIEW | CAP 11 / CON 9 / QLT 2 = 22 active; historical `CON-008`, `CON-009` superseded |
+| `SWE1-MAIN-002` | Product / MAIN | Progress, evolution, durability, checkpoint | `SWE1-MAIN-002-progress-durability-requirements.md` | DRAFT_FOR_OWNER_REVIEW | CAP 15 / CON 5 / QLT 6 = 26 active; historical `CAP-006` superseded |
+| `SWE1-MAIN-003` | Product / MAIN | GUI, repair, reissue, admin, permission | `SWE1-MAIN-003-repair-reissue-admin-requirements.md` | DRAFT_FOR_OWNER_REVIEW | CAP 9 / CON 4 / IFC 1 / QLT 5 = 19 active |
+| `SWE1-FRONTIER-001` | Product / FRONTIER | Runtime boundary, MVI, persistence, permission | `SWE1-FRONTIER-001-boundary-persistence-requirements.md` | DRAFT_FOR_OWNER_REVIEW | 14 active |
+| `SWE1-WB-001` | Product / WB | Loadout, permanent items, hook, navigation | `SWE1-WB-001-loadout-navigation-requirements.md` | DRAFT_FOR_OWNER_REVIEW | 24 active |
+| `SWE1-WB-002` | Product / WB | Launchpad, shop, portal, administration | `SWE1-WB-002-launchpad-shop-portal-requirements.md` | DRAFT_FOR_OWNER_REVIEW | 28 active |
+| `SWE1-ISSUE-001` | Support / issue | Open questions and conflicts | `SWE1-ISSUE-001-open-questions.md` | DRAFT_FOR_OWNER_REVIEW | ISSUE-001–009 |
+| `SWE1-VERIFY-001` | Support / verification | Verification-intent allocation | `SWE1-VERIFY-001-verification-intent.md` | DRAFT_FOR_OWNER_REVIEW | 176 provisional active allocations after Main CAN-MAIN-006–010 checkpoint |
 
 Cross-directory controlled work products:
 
 | Document ID | Purpose | Path | State |
 |---|---|---|---|
-| `TRC-SWE1-001` | Source-to-requirement bidirectional traceability | `../07-traceability/TRC-SWE1-001-source-requirement-traceability.md` | DRAFT_FOR_OWNER_REVIEW |
+| `TRC-SWE1-001` | Source-to-requirement bidirectional traceability | `../07-traceability/TRC-SWE1-001-source-requirement-traceability.md` | DRAFT_FOR_OWNER_REVIEW / Revision F |
 | `REV-SWE1-001` | Complete SWE.1 package self-review snapshot | `../10-reviews-and-evidence/REV-SWE1-001-self-review.md` | SUPERSEDED_AS_CURRENT_EVIDENCE_BY_OWNER_REVIEW |
-| `REV-SWE1-002` | Joint Owner clause review log | `../10-reviews-and-evidence/REV-SWE1-002-joint-owner-review-log.md` | IN_REVIEW |
+| `REV-SWE1-002` | Joint Owner clause review log | `../10-reviews-and-evidence/REV-SWE1-002-joint-owner-review-log.md` | IN_REVIEW / Revision E |
 | `DEC-REQ-001` | Canonical source merge and analysis method | `../08-decisions/DEC-REQ-001-canonical-source-merge-and-swe1-analysis.md` | APPROVED |
-| `DEC-REQ-002` | Common review corrections CAN-COM-001–005 | `../08-decisions/DEC-REQ-002-common-requirement-review-corrections.md` | APPROVED / INTEGRATED AS RATIONALE |
+| `DEC-REQ-002` | Common review corrections CAN-COM-001–005 | `../08-decisions/DEC-REQ-002-common-requirement-review-corrections.md` | APPROVED / INTEGRATED |
 | `DEC-REQ-003` | Review consolidation/session-continuity policy | `../08-decisions/DEC-REQ-003-swe1-review-consolidation-and-session-continuity.md` | APPROVED |
-| `DEC-REQ-004` | Common review corrections CAN-COM-006–010 | `../08-decisions/DEC-REQ-004-common-requirement-review-corrections-006-010.md` | APPROVED / INTEGRATED AS RATIONALE |
-| `DEC-REQ-005` | Core review corrections CAN-CORE-001–005 | `../08-decisions/DEC-REQ-005-core-requirement-review-corrections-001-005.md` | APPROVED / INTEGRATED AS RATIONALE |
-| `DEC-REQ-006` | Main review corrections CAN-MAIN-001–005 | `../08-decisions/DEC-REQ-006-main-requirement-review-corrections-001-005.md` | APPROVED / INTEGRATED AS RATIONALE |
+| `DEC-REQ-004` | Common review corrections CAN-COM-006–010 | `../08-decisions/DEC-REQ-004-common-requirement-review-corrections-006-010.md` | APPROVED / INTEGRATED |
+| `DEC-REQ-005` | Core review corrections CAN-CORE-001–005 | `../08-decisions/DEC-REQ-005-core-requirement-review-corrections-001-005.md` | APPROVED / INTEGRATED |
+| `DEC-REQ-006` | Main review corrections CAN-MAIN-001–005 | `../08-decisions/DEC-REQ-006-main-requirement-review-corrections-001-005.md` | APPROVED / INTEGRATED |
+| `DEC-REQ-007` | Main review corrections CAN-MAIN-006–010 | `../08-decisions/DEC-REQ-007-main-requirement-review-corrections-006-010.md` | APPROVED / INTEGRATED |
 
-## 4. Requirement ownership
+## 4. Requirement ownership and reviewed Main boundary
 
-- Common obligations applying across Wayfarer-owned shared/feature capabilities are owned by `SWE1-COMMON-001` without implying one fixed physical topology.
-- V0.0.2 capabilities explicitly allocated to Core are owned by `SWE1-CORE-001`; the reviewed Core allocation does not make every future shared capability or implementation permanently Core-owned.
-- V0.0.1 Core compatibility protects accepted public contracts and controlled migration-history artifacts, not the V0.0.1 implementation itself.
-- Main behavior is split across three `MAIN` documents to remain reviewable; it is not moved to architecture concern domains during SWE.1.
-- Reviewed Main Growth Tool semantics distinguish Main-owned logical authority from Minecraft-owned physical item state, including current durability; physical possession/storage does not transfer logical ownership.
-- Frontier plugin/runtime/MVI/persistence behavior is owned by `SWE1-FRONTIER-001`, with known topology/world-identifier propagation explicitly carried to later target review.
-- Externally observable Worlds Beyond theme behavior is owned by `SWE1-WB-001` or `SWE1-WB-002`.
-- Other documents reference full requirement IDs rather than copying normative statements.
+- Common obligations remain in `SWE1-COMMON-001` without implying fixed physical topology.
+- Core owns only explicitly allocated V0.0.2 shared capabilities and preserves the accepted V0.0.1 public contract/migration history, not implementation structure.
+- Main requirements distinguish Main-owned logical Growth Tool state from Minecraft-owned physical item state.
+- Physical possession/storage/death/item lifecycle does not transfer logical ownership or create replacement entitlement.
+- Progress through CAN-MAIN-010 is based on configured exact worlds and qualifying player-mined blocks, allows provenance-neutral/repeated eligible mining, uses representation-independent numeric safety, and applies one uniform configured increment rather than block/ore weighting.
+- Later Main, Frontier, WB, and Scope requirements remain subject to owning-clause review.
 
 ## 5. Item summary
 
 ```text
-Provisional active Product requirements after Main CAN-MAIN-001–005 checkpoint: 179
+Provisional active Product requirements after integrated Main CAN-MAIN-006–010 checkpoint: 176
 
-CAP: 66
-CON: 60
+CAP: 65
+CON: 58
 IFC: 14
 QLT: 39
 ```
 
-Relative to the 175-item Core checkpoint, Main review adds four atomic requirements: Main `CAP-010`, `CAP-011`, `CON-010`, and `CON-011`. No existing active Main identifier is renumbered. Historical `SWE1-CORE-001-CON-004` remains superseded and is not reused. Still-unreviewed Main requirements that conflict with `DEC-REQ-006` propagation remain explicit draft conflicts pending their owning clause review. A complete automated recount/self-review remains required before G1.
+Historical superseded identifiers are retained and not reused:
+
+- `SWE1-CORE-001-CON-004`
+- `SWE1-MAIN-001-CON-008`
+- `SWE1-MAIN-001-CON-009`
+- `SWE1-MAIN-002-CAP-006`
+
+The complete automated recount/source/identifier/verification-intent audit remains required before G1.
 
 ## 6. Gate state
 
-Common, Core, and Main `CAN-MAIN-001` through `CAN-MAIN-005` have been jointly reviewed and integrated, but the complete SWE.1 baseline is not approved. G1 remains `NOT_READY` until remaining Main/Frontier/WB/Scope joint review, issue resolution/acceptance, V0.0.1 baseline inventory, Project consistency review, and the final complete SWE.1 self-review are complete. The next substantive clause is `CAN-MAIN-006 — Death behavior`.
+Common, Core, and Main through `CAN-MAIN-010` are jointly reviewed and integrated, but the complete SWE.1 baseline is not approved. G1 remains `NOT_READY` until remaining Main/Frontier/WB/Scope review, issue resolution/acceptance, V0.0.1 baseline inventory, Project consistency review, and final complete SWE.1 self-review are complete.
+
+Next substantive review item: `CAN-MAIN-011 — Material and enchantment evolution`.
