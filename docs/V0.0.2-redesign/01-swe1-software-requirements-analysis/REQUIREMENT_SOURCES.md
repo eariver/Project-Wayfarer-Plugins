@@ -1,9 +1,9 @@
 # V0.0.2 Requirement Source Register
 
 Document ID: `SWE1-SRC-001`  
-Revision: D  
+Revision: E  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-12 JST  
+Date: 2026-08-15 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Applicable Product: Plugin V0.0.2 redesign  
@@ -34,7 +34,7 @@ Conflict priority:
 6. prior implementation/test/roadmap evidence;
 7. engineering preference.
 
-Within the current SWE.1 review, `DEC-REQ-002`, `DEC-REQ-004`, and `DEC-REQ-005` are explicit Owner decisions controlling the Common/Core corrections integrated into `SWE1-SRC-002` Revision C and affected derived requirements.
+Within the current SWE.1 review, `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-005`, and `DEC-REQ-006` are explicit Owner decisions controlling the Common/Core/reviewed-Main corrections integrated into `SWE1-SRC-002` Revision D and affected derived requirements.
 
 ## 3. Controlling source set for this SWE.1 decomposition and review
 
@@ -106,6 +106,31 @@ Controls:
 - superseding redundant `SWE1-CORE-001-CON-004` without weakening the inherited Common/Core `UNKNOWN` and replay obligations;
 - provisional active Product requirement count becomes 175.
 
+### SRC-OWNER-004 — Joint Owner Main-review corrections 001–005
+
+```text
+Authority class:
+  A
+
+Decision record:
+  DEC-REQ-006 — CAN-MAIN-001 through CAN-MAIN-005
+
+Integration checkpoint:
+  2026-08-15 JST
+```
+
+Controls:
+
+- Main capability allocation independent of historical backend naming and capability-scoped lifecycle prerequisites;
+- Main ownership of the logical Growth Tool domain with MariaDB as durable logical-state authority and Minecraft physical item state as current durability authority;
+- atomic logical lifecycle/delivery/branch state dimensions and removal of persistence-mechanism fields from SWE.1;
+- physical-item identity as a persistent machine-readable reference resolved against current logical authority rather than an exact PDC field schema;
+- logical entitlement and physical delivery as distinct effects with same-entitlement pending retry and no fallback world-drop delivery;
+- owner-bound use without possession/storage binding, permitting ordinary drop/pickup/storage including non-owner possession while preserving logical ownership;
+- Wayfarer-exclusive durability restoration/enchantment modification, plus V0.0.2 anvil/grindstone processing prohibition including rename;
+- mandatory propagation to the still-unreviewed CAN-MAIN-006 death-drop and CAN-MAIN-016 reissue clauses;
+- provisional active Product requirement count becomes 179.
+
 ### SRC-MAINLINE-001 — Mainline Main/Frontier requirement source
 
 ```text
@@ -155,7 +180,7 @@ Authority class:
 
 Applied subset:
 
-- AMD-001 through AMD-011 as dispositioned by `SWE1-SRC-002` §3;
+- AMD-001 through AMD-011 as dispositioned by `SWE1-SRC-002` §3 and later explicit Owner decisions;
 - safe-entry delivery-outcome notification detail where it clarifies the base pending-delivery requirement.
 
 Explicitly excluded:
@@ -175,19 +200,19 @@ Document ID:
   SWE1-SRC-002
 
 Revision:
-  C
+  D
 
 Path:
   docs/V0.0.2-redesign/01-swe1-software-requirements-analysis/
   SWE1-SRC-002-canonical-mainline-requirements.md
 
-Current Git blob SHA at Core checkpoint:
-  6b586b537be10897fcb1ea909c2df6ec945675b5
+Current Git blob SHA at Main-001–005 checkpoint:
+  PENDING POST-CHECKPOINT METADATA REFRESH
 
 Revision A SHA-256 retained as historical identity:
   A04C1DBA6FE0D9568C51CE2D2F7FE591F0598C3B92A1EDD4B47AFF779F9A9121
 
-Revision C controlled content SHA-256:
+Revision D controlled content SHA-256:
   PENDING FINAL SWE.1 CONSOLIDATION / HASH REFRESH BEFORE G1
 
 Authority class:
@@ -243,7 +268,7 @@ Core review observed the existing V0.0.1 public surface including `WayfarerServi
 
 ## 5. Registered Project consistency inputs
 
-The following remain registered for later consistency and feasibility review. Their content was not used to silently add or change the original 164-requirement decomposition. The current provisional active 175-item count results from explicit Owner-approved Common/Core review decisions, not from silent import of these consistency sources.
+The following remain registered for later consistency and feasibility review. Their content was not used to silently add or change the original 164-requirement decomposition. The current provisional active 179-item count results from explicit Owner-approved Common/Core/Main review decisions, not from silent import of these consistency sources.
 
 | Source ID | Repository path | Observed blob SHA | Class |
 |---|---|---|---|
@@ -293,6 +318,6 @@ Prohibited use:
 - inspect current Project manifests for compatibility/placement conflicts;
 - run a consistency review of the draft SWE.1 baseline against registered Project sources without adding behavior silently;
 - resolve or accept all issues in `SWE1-ISSUE-001`;
-- finish joint Owner review of Main/Frontier/WB/Scope clauses;
-- after final consolidation, calculate/record the controlled Revision C-or-later canonical content SHA-256 and rerun the complete source/identifier/count/verification-intent self-review;
+- finish joint Owner review of remaining Main/Frontier/WB/Scope clauses;
+- after final consolidation, calculate/record the controlled Revision D-or-later canonical content SHA-256 and rerun the complete source/identifier/count/verification-intent self-review;
 - obtain explicit G1 Owner approval of the complete canonical and decomposed SWE.1 package.
