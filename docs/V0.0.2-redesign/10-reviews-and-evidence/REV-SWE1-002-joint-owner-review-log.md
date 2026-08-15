@@ -1,11 +1,11 @@
 # SWE.1 Joint Owner Review Log
 
 Document ID: `REV-SWE1-002`  
-Revision: C  
+Revision: D  
 State: `IN_REVIEW`  
-Date: 2026-08-12 JST  
+Date: 2026-08-15 JST  
 Reviewers: Project Owner and ChatGPT  
-Reviewed source: `SWE1-SRC-002` Revision C  
+Reviewed source: `SWE1-SRC-002` Revision D  
 Reviewed derived documents: current draft SWE.1 package on `redesign/V0.0.2-swe1-3`
 
 ## 1. Purpose
@@ -31,9 +31,14 @@ Track the clause-by-clause joint review of the canonical requirement source and 
 | `CAN-CORE-003` | Correction direction approved | `DEC-REQ-005` §4 |
 | `CAN-CORE-004` | Correction direction approved; duplicate Core UNKNOWN requirement superseded | `DEC-REQ-005` §5 |
 | `CAN-CORE-005` | Correction direction approved | `DEC-REQ-005` §6 |
-| `CAN-MAIN-001` onward | Not yet jointly reviewed | None |
+| `CAN-MAIN-001` | Correction direction approved | `DEC-REQ-006` §2 |
+| `CAN-MAIN-002` | Correction direction approved; later Owner refinement moves current durability authority to Minecraft physical item state | `DEC-REQ-006` §3 |
+| `CAN-MAIN-003` | Correction direction approved | `DEC-REQ-006` §4 |
+| `CAN-MAIN-004` | Correction direction approved with Owner refinement limiting world-drop prohibition to fallback delivery | `DEC-REQ-006` §5 |
+| `CAN-MAIN-005` | Correction direction approved with Owner refinements for possession/storage neutrality and controlled processing | `DEC-REQ-006` §6 |
+| `CAN-MAIN-006` onward | Not yet jointly reviewed | Later propagation from `DEC-REQ-006` applies where recorded |
 
-The Common and Core canonical sections are completely reviewed and integrated. The next substantive review item is `CAN-MAIN-001 — Deployment and lifecycle`.
+The Common and Core canonical sections and Main `CAN-MAIN-001` through `CAN-MAIN-005` are reviewed and integrated. The next substantive review item is `CAN-MAIN-006 — Death behavior`.
 
 ## 3. Key Owner determinations
 
@@ -117,6 +122,32 @@ Core migration justification covers approved changes, corrections, integrity req
 
 Controlled accepted V0.0.1 Core migration artifacts are different from ordinary V0.0.1 implementation code: migration identity, ordering semantics, and byte-for-byte artifact content remain immutable. Later corrections use a new migration identity. Future migration framework/resource/executor choices remain open provided accepted history and the V0.0.1 upgrade path stay compatible.
 
+### 3.17 Main deployment and lifecycle are capability-scoped
+
+`CAN-MAIN-001` no longer makes a historical Main backend name or Wayfarer_Core plugin presence a universal Main prerequisite. Approved deployment allocation and actual capability prerequisites control availability. V0.0.2 Main financial capabilities depend on the Core-provided shared transaction contract, while unrelated Main capabilities do not inherit that dependency merely because Core currently owns the financial boundary.
+
+### 3.18 Logical Growth Tool authority is separated from physical Minecraft state
+
+Wayfarer_Main owns logical Growth Tool semantics and MariaDB is the durable authority for that logical state. Lifecycle, delivery, and branch are independent state dimensions. Current physical durability/damage is instead authoritative Minecraft item state and is not duplicated as an authoritative current-damage field in Main's logical database record.
+
+The Owner approved two new atomic state requirements: `SWE1-MAIN-001-CAP-010` for delivery state and `CAP-011` for branch state.
+
+### 3.19 Physical item identity is a reference to logical authority, not authority itself
+
+Managed physical representations carry persistent machine-readable identity sufficient to resolve logical tool, current physical issuance, and epoch. SWE.1 does not fix an exact PDC key/layout. Presentation attributes including material/name/lore/enchantments/display revision are not independent authority. Current operations resolve physical identity against logical authority and fail closed on unsupported, malformed, mismatched, or stale identity.
+
+### 3.20 Initial entitlement and physical delivery are distinct effects
+
+Initial logical entitlement resolution is nonblocking on prohibited runtime contexts and race/replay safe. Physical delivery revalidates current mutable prerequisites before inventory mutation. Inventory-full or equivalent safe-delivery failure retains the same durable delivery entitlement; system-generated world drop cannot be used as fallback delivery. This prohibition does not extend to ordinary post-delivery user/entity drop behavior. Pending retry continues the same entitlement without debit, authority rotation, or duplicate delivery.
+
+### 3.21 Owner binding controls use, not ordinary possession/storage
+
+The Owner explicitly narrowed Growth Tool binding to logical use authority. Owner and non-owner physical possession, ordinary pickup/drop, chest/Ender Chest/Shulker Box storage, and equivalent Minecraft transfer are not prohibited merely because the item is managed and do not transfer logical ownership.
+
+Only the logical owner may use/progress the Growth Tool. Durability restoration and enchantment-state modification—including addition, increase, removal, reduction, transfer, and replacement—are Wayfarer-controlled. V0.0.2 additionally prohibits processing a managed Growth Tool/Broken Tool through an anvil or grindstone, including anvil rename. Crafting/Mending/smithing/external routes may not bypass the controlled repair/evolution semantics.
+
+This determination creates mandatory later propagation: CAN-MAIN-006 death-drop suppression conflicts with ordinary drop neutrality, and CAN-MAIN-016 must use authority rotation rather than global physical-absence proof while keeping reissue price strictly above applicable repair rather than fixing the current exact formula.
+
 ## 4. Common-section checkpoint integration
 
 The Owner explicitly instructed repository checkpoint reflection after approval of `CAN-COM-010`. This simultaneously satisfied five newly approved clauses since the preceding checkpoint and the Common → Core logical section transition.
@@ -125,34 +156,37 @@ That checkpoint integrated the canonical Common section, Common requirements, di
 
 ## 5. Core-section checkpoint integration
 
-The Owner explicitly approved `CAN-CORE-001` through `CAN-CORE-005` and instructed repository checkpoint reflection after `CAN-CORE-005`. This simultaneously satisfies:
+The Owner explicitly approved `CAN-CORE-001` through `CAN-CORE-005` and instructed repository checkpoint reflection after `CAN-CORE-005`. This simultaneously satisfied five newly approved clauses since the Common checkpoint and the Core → Main logical section transition.
 
-- five newly approved clauses since the Common checkpoint; and
-- the Core → Main logical section transition.
+`DEC-REQ-005` records the approved rationale. The Core checkpoint integrated Canonical Revision C, `SWE1-CORE-001` Revision C, index, traceability, verification intent, review log, source/status/continuation records, and the requirement count.
 
-`DEC-REQ-005` records the approved rationale. The Core checkpoint integrates the Canonical Revision C Core section, `SWE1-CORE-001` Revision C, index, traceability, verification intent, this review log, source/status/continuation records, and the requirement count.
+## 6. Main CAN-MAIN-001–005 checkpoint integration
 
-The checkpoint does not pre-approve Main or later target clauses. In particular, fixed Main backend/specific-Core wording remains for `CAN-MAIN-001` review rather than being silently rewritten here.
+The Owner explicitly approved correction directions for `CAN-MAIN-001` through `CAN-MAIN-005` and instructed repository checkpoint reflection after the fifth newly approved Main clause.
 
-## 6. Package impact
+`DEC-REQ-006` records the approved rationale and the required later propagation discovered during this review. This checkpoint integrates Canonical Revision D through CAN-MAIN-005, `SWE1-MAIN-001` Revision C, index, traceability, verification intent, this review log, source/status/continuation records, and the requirement count.
 
-The initial 164-requirement self-review snapshot is historical. The integrated Common checkpoint produced 176 requirements. Core review then superseded one redundant Core `UNKNOWN` requirement without removing behavior, producing a provisional integrated total of **175 active Product requirements**:
+The checkpoint does not approve CAN-MAIN-006 or CAN-MAIN-016. Their current conflicting wording is retained as an explicit owning-clause conflict so the next review cannot accidentally treat it as already approved.
+
+## 7. Package impact
+
+The initial 164-requirement self-review snapshot is historical. The integrated Common checkpoint produced 176 requirements; Core review superseded one redundant Core `UNKNOWN` requirement, producing 175. Main review through `CAN-MAIN-005` adds four atomic requirements and produces a provisional integrated total of **179 active Product requirements**:
 
 ```text
-CAP: 64
-CON: 58
+CAP: 66
+CON: 60
 IFC: 14
 QLT: 39
-TOTAL ACTIVE: 175
+TOTAL ACTIVE: 179
 ```
 
-`SWE1-COMMON-001` contains 30 active items. `SWE1-CORE-001` contains 13 active items: CAP 2, CON 7, IFC 3, QLT 1. Historical `SWE1-CORE-001-CON-004` is superseded and not reused.
+The added Main identifiers are `SWE1-MAIN-001-CAP-010`, `CAP-011`, `CON-010`, and `CON-011`. `SWE1-MAIN-001` now contains 24 items: CAP 11, CON 11, QLT 2. Historical `SWE1-CORE-001-CON-004` remains superseded and not reused.
 
 The complete post-review automated identifier/source/count audit and full SWE.1 self-review remain required before G1. Checkpoint integration does not claim those activities were executed.
 
-## 7. Checkpoint cadence after Core integration
+## 8. Checkpoint cadence after Main-001–005 integration
 
-The Core checkpoint resets the cadence counter:
+The Main checkpoint resets the cadence counter:
 
 ```text
 NEWLY APPROVED CLAUSES SINCE CHECKPOINT:
@@ -162,20 +196,21 @@ CURRENT SECTION:
   MAIN
 
 NEXT REVIEW ITEM:
-  CAN-MAIN-001 — Deployment and lifecycle
+  CAN-MAIN-006 — Death behavior
 ```
 
 A later logical section transition or five newly approved clauses creates a checkpoint candidate; repository mutation still requires explicit Owner instruction.
 
-## 8. Gate state
+## 9. Gate state
 
 ```text
 JOINT REVIEW:
   COMMON SECTION COMPLETE
   CORE SECTION COMPLETE
-  MAIN SECTION NOT STARTED
+  MAIN CAN-MAIN-001–005 INTEGRATED
+  MAIN REVIEW CONTINUES AT CAN-MAIN-006
 
-COMMON/CORE CORRECTION DIRECTIONS:
+COMMON/CORE/REVIEWED-MAIN CORRECTION DIRECTIONS:
   OWNER APPROVED AND INTEGRATED
 
 G1 REQUIREMENTS BASELINE:
