@@ -1,21 +1,22 @@
 # Main Progress, Evolution, Durability, and Checkpoint Requirements
 
 Document ID: `SWE1-MAIN-002`  
-Revision: A  
+Revision: B  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-05 JST  
+Date: 2026-08-15 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Target domain: `MAIN`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary source: `SWE1-SRC-002` Revision A  
-Contained normative items: CAP: 16, CON: 5, QLT: 6
+Primary source: `SWE1-SRC-002` Revision E  
+Controlling review decision: `DEC-REQ-007` for `CAN-MAIN-007` through `CAN-MAIN-010`  
+Contained active normative items: CAP: 15, CON: 5, QLT: 6; historical `CAP-006` superseded
 
 ## 1. Purpose
 
-Define eligible Growth Tool progress, fixed-point arithmetic, evolution, configuration reconciliation, normal durability, Broken state, and persistence timing.
+Define eligible Growth Tool progress, deterministic numeric safety, uniform progress accumulation, evolution, configuration reconciliation, normal durability, Broken state, and persistence timing. `CAN-MAIN-007` through `CAN-MAIN-010` are jointly reviewed and integrated under `DEC-REQ-007`; later Main clauses remain subject to their own clause review.
 
 ## 2. Requirement interpretation rules
 
@@ -24,158 +25,156 @@ Define eligible Growth Tool progress, fixed-point arithmetic, evolution, configu
 - Source-prescribed implementation mechanisms are retained only when they are themselves an approved external interface or compatibility constraint.
 - A requirement carrying an open issue remains draft and cannot support G1 PASS until the issue is resolved or explicitly accepted as a blocker.
 - Full identifiers are used in all downstream traceability.
+- Progress numeric semantics do not prescribe Java `long`, `Long.MAX_VALUE`, fixed-point scale, or another implementation encoding.
+- Superseded identifiers remain historical and are not reused or renumbered.
 
 ## 3. Requirements
 
-### SWE1-MAIN-002-CAP-001 — Exact progress world allowlist
+### SWE1-MAIN-002-CAP-001 — Configured exact progress-world allowlist
 
-**Normative statement:** Growth Tool progress shall be enabled only in exact worlds `resource`, `resource_nether`, and `resource_end`.
+**Normative statement:** Growth Tool progress shall be eligible only when the current platform world identity exactly matches an entry in the approved progress-world configuration. The initial V0.0.2 supplied/default allowlist shall contain `resource`, `resource_nether`, and `resource_end`.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-007  
-**Rationale:** Restricts progression to approved resource worlds.  
-**Precondition / trigger:** A player successfully breaks a block while holding an authorized active Growth Pickaxe.  
-**Required observable result:** World eligibility is true only for one of the three exact names.  
-**Verification intent:** SWE.4 world-policy verification and SWE.6 representative Main qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-007; DEC-REQ-007 §3  
+**Rationale:** Preserves an exact resource-world boundary without permanently fixing later deployment world names in SWE.1.  
+**Precondition / trigger:** A qualifying player mining action is evaluated for progress.  
+**Required observable result:** World eligibility is true only for exact membership in the current approved allowlist.  
+**Verification intent:** SWE.4 world-policy/configuration verification and SWE.6 representative Main qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-002-CON-001 — Progress denial outside allowlist
+### SWE1-MAIN-002-CON-001 — No progress outside configured allowlist
 
-**Normative statement:** Growth Tool progress shall not be granted in Main worlds, similarly named worlds, unknown worlds, or any world outside the exact progress allowlist.
+**Normative statement:** Growth Tool progress shall not be granted in a world outside the approved exact progress-world allowlist. The software shall not implicitly adopt another world through name similarity, prefix/suffix/substring matching, dimension/environment alone, historical naming convention, or another unapproved heuristic.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-007  
-**Rationale:** Prevents prefix/heuristic world adoption.  
-**Precondition / trigger:** An otherwise eligible break occurs outside the exact allowlist.  
-**Required observable result:** Progress remains unchanged.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-007; DEC-REQ-007 §3  
+**Rationale:** Prevents heuristic substitution or accidental expansion of the approved progress boundary.  
+**Precondition / trigger:** An otherwise qualifying mining action occurs outside the exact allowlist or one configured world is unavailable.  
+**Required observable result:** No progress is granted from the non-member world and no replacement world is inferred; independently valid configured worlds remain eligible.  
 **Verification intent:** SWE.4 negative world-policy verification and SWE.6 representative qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-MAIN-001-QLT-001  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-002-CAP-002 — Eligible player break progress
+### SWE1-MAIN-002-CAP-002 — Qualifying player-mined progress
 
-**Normative statement:** One successful block break shall add progress exactly once when the block is in `minecraft:mineable/pickaxe`, the current main-hand item is the current owner's authorized active Growth Pickaxe, and the non-cancelled break is valid in Survival or actually succeeds in Adventure.
+**Normative statement:** One completed qualifying player-caused block break shall add the applicable Growth Tool progress increment exactly once when the current world is eligible, the broken block is classified by the adopted Minecraft block-tag contract as `minecraft:mineable/pickaxe`, the physical tool used for the mining action is the player's current authorized `ACTIVE` Growth Pickaxe, and the applicable Survival/Adventure completion rule is satisfied.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-008  
-**Rationale:** Defines the externally observable progression trigger.  
-**Precondition / trigger:** All eligibility conditions are true at completion of one player break.  
-**Required observable result:** The computed progress increment is added once and only once.  
-**Verification intent:** SWE.4 eligibility/policy verification, SWE.5 Paper event integration, SWE.6 actual mining qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-008; DEC-REQ-007 §4  
+**Rationale:** Defines the externally observable progression trigger while reusing the existing current-authority requirement instead of duplicating owner/tool/epoch fields.  
+**Precondition / trigger:** A player mining action completes a block break satisfying all eligibility conditions.  
+**Required observable result:** The configured uniform progress increment is added once and only once for that completed physical block break.  
+**Verification intent:** SWE.4 eligibility/exactly-once policy verification, SWE.5 Paper event integration, and SWE.6 actual mining qualification.  
+**Priority:** `MUST`  
+**Dependencies:** SWE1-MAIN-002-CAP-001; SWE1-MAIN-001-CAP-004  
+**Assumptions:** None  
+**Open issue / conflict:** None  
+**State:** `DRAFT`
+
+### SWE1-MAIN-002-CAP-003 — Block-provenance-neutral eligibility
+
+**Normative statement:** An otherwise qualifying block shall remain eligible regardless of whether it was naturally generated, player placed, generator/plugin created, or collected and re-placed, including through Silk Touch. Wayfarer shall not require block-placement/provenance history solely to determine Growth Tool progress eligibility, and repeated eligible mining is not prohibited by this requirement.
+
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-008; DEC-REQ-007 §4  
+**Rationale:** Preserves player choice among ordinary mining, generated blocks, and repeated mining without introducing block-history authority.  
+**Precondition / trigger:** A qualifying player break occurs on a block with any supported placement/generation provenance.  
+**Required observable result:** Provenance alone neither grants nor denies eligibility; the same uniform increment policy applies.  
+**Verification intent:** SWE.4 provenance-policy verification and SWE.6 representative placed/generated/re-placed block qualification.  
+**Priority:** `MUST`  
+**Dependencies:** SWE1-MAIN-002-CAP-002  
+**Assumptions:** None  
+**Open issue / conflict:** None  
+**State:** `DRAFT`
+
+### SWE1-MAIN-002-CON-002 — Nonqualifying block-removal exclusion
+
+**Normative statement:** Creative or Spectator activity, a denied/cancelled mining attempt that does not complete a qualifying player break, and block removal not caused by a qualifying player mining action shall not grant Growth Tool progress.
+
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-008; DEC-REQ-007 §4  
+**Rationale:** Prevents progress from invalid/automated/non-player removal without creating Product dependencies on particular editor or plugin implementations.  
+**Precondition / trigger:** A nonqualifying mining/removal action occurs.  
+**Required observable result:** Cumulative progress and evolution state remain unchanged by that removal.  
+**Verification intent:** SWE.4 exclusion verification and SWE.5 representative cancelled/explosion/piston/command/editor/plugin-removal integration cases.  
+**Priority:** `MUST`  
+**Dependencies:** SWE1-MAIN-002-CAP-002  
+**Assumptions:** None  
+**Open issue / conflict:** None  
+**State:** `DRAFT`
+
+### SWE1-MAIN-002-CAP-004 — Representation-independent cumulative progress semantics
+
+**Normative statement:** Growth Tool cumulative progress shall preserve one approved logical non-negative progress quantity deterministically across accumulation, durable persistence/reload, threshold evaluation, presentation, and applicable configuration reconciliation without depending on one prescribed physical numeric encoding or scale.
+
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-009; DEC-REQ-007 §5  
+**Rationale:** Preserves stable Product semantics while leaving exact numeric representation to downstream design.  
+**Precondition / trigger:** Progress is accumulated, stored, loaded, displayed, compared, or reconciled.  
+**Required observable result:** Equivalent logical values produce consistent state/results without representation-dependent drift or divergence.  
+**Verification intent:** SWE.4 numeric-semantic/property verification and SWE.5 persistence/reload integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-002-CAP-003 — Eligible block provenance
+### SWE1-MAIN-002-QLT-001 — Overflow-safe monotonic progress accumulation
 
-**Normative statement:** Progress eligibility shall not depend on whether an otherwise eligible block was naturally generated, player placed, generator created, re-placed after Silk Touch collection, or normally created by another plugin.
+**Normative statement:** An accepted positive progress addition shall not decrease cumulative progress or cause numeric wraparound, negative overflow, corruption, or undefined behavior. If the selected representation is bounded, reaching or exceeding its supported maximum shall resolve to a defined safe maximum/bounded state without unsafe arithmetic behavior.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-008  
-**Rationale:** Preserves the approved broad progression model.  
-**Precondition / trigger:** An eligible player break occurs on one of the listed provenance classes.  
-**Required observable result:** The same block/category weight policy is applied.  
-**Verification intent:** SWE.4 provenance-policy verification and SWE.6 representative placed/generated block qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-009; DEC-REQ-007 §5; AMD-009 superseded by DEC-REQ-007  
+**Rationale:** Retains the safety intent of the former `Long.MAX_VALUE` rule without fixing Java `long` as the Product representation.  
+**Precondition / trigger:** A positive addition approaches/exceeds the selected representation boundary or progress is already at its supported maximum.  
+**Required observable result:** Progress never becomes negative/corrupt and remains in a defined supported state.  
+**Verification intent:** SWE.4 property/boundary verification and SWE.5 persistence integration.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-002-CON-002 — Non-player and invalid break exclusion
+### SWE1-MAIN-002-QLT-002 — Maximum-progress-state operability
 
-**Normative statement:** Creative, Spectator, cancelled breaks, explosions, pistons, commands, WorldEdit/FAWE removal, plugin-direct removal, and other non-player-break removal shall not grant Growth Tool progress.
+**Normative statement:** At any supported maximum cumulative progress state, applicable threshold/evolution determination, status/next-threshold presentation, durable persistence/reload, and configuration reconciliation shall remain defined and non-failing.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-008  
-**Rationale:** Prevents unintended or automated progress sources.  
-**Precondition / trigger:** A listed excluded removal occurs.  
-**Required observable result:** Cumulative progress and evolution state remain unchanged.  
-**Verification intent:** SWE.4 exclusion verification and SWE.5 representative event integration.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-009; DEC-REQ-007 §5; AMD-009 superseded by DEC-REQ-007  
+**Rationale:** Ensures numeric boundary handling remains a supported state rather than an implementation-specific terminal error.  
+**Precondition / trigger:** A logical tool is at the selected representation's supported maximum and is loaded, displayed, progressed, or reconciled.  
+**Required observable result:** Applicable operations complete deterministically without overflow, corruption, or unbounded work.  
+**Verification intent:** SWE.4 boundary verification, SWE.5 reload/persistence integration, and SWE.6 status qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-MAIN-002-QLT-001  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-002-CAP-004 — Fixed-point progress
+### SWE1-MAIN-002-CAP-005 — Uniform configurable progress increment
 
-**Normative statement:** Growth Tool progress shall be represented as integer units where `1.000` progress equals `1000` internal units.
+**Normative statement:** Each qualifying block break shall add the same configured positive logical progress increment regardless of block material, category, ore classification, rarity, provenance, or generation source. The initial V0.0.2 supplied/default increment shall be `1.00` logical progress per qualifying break.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-009  
-**Rationale:** Avoids floating-point accumulation error and provides deterministic persistence.  
-**Precondition / trigger:** Progress is calculated, stored, displayed, or compared to a threshold.  
-**Required observable result:** Equivalent values map consistently to integer units without fractional drift.  
-**Verification intent:** SWE.4 numeric-policy verification and persistence integration test.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-010; DEC-REQ-007 §6  
+**Rationale:** Makes eligible mining count, rather than block rarity, the progression basis and preserves player choice among mining strategies.  
+**Precondition / trigger:** A break qualifies under CAN-MAIN-008.  
+**Required observable result:** One uniform configured increment is applied; no material/ore/rarity multiplier changes the increment.  
+**Verification intent:** SWE.4 configuration/uniformity verification and SWE.6 representative stone/ore/generated/re-placed mining qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-MAIN-002-CAP-002; SWE1-MAIN-002-CAP-004  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-002-QLT-001 — Saturating progress addition
-
-**Normative statement:** Every positive progress addition shall saturate at `Long.MAX_VALUE`, shall never wrap negative, and shall become a no-op when the stored value is already saturated.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-009; AMD-009  
-**Rationale:** Eliminates overflow failure and undefined negative progress.  
-**Precondition / trigger:** A progress addition would exceed the maximum representable value or the current value is already maximum.  
-**Required observable result:** Stored progress equals `Long.MAX_VALUE`; no exception, negative wrap, or additional change occurs.  
-**Verification intent:** SWE.4 boundary-value verification and SWE.5 persistence integration test.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
-
-### SWE1-MAIN-002-QLT-002 — Saturated-state operability
-
-**Normative statement:** Evolution determination, next-threshold presentation, GUI status, checkpointing, reload, and configuration reconciliation shall remain defined and non-failing when cumulative progress equals `Long.MAX_VALUE`.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-009; AMD-009  
-**Rationale:** Ensures saturation is a supported state rather than a terminal error.  
-**Precondition / trigger:** A saturated logical tool is loaded, displayed, reconciled, or checkpointed.  
-**Required observable result:** The operation completes with a deterministic capped/no-next-threshold result and without overflow or unbounded work.  
-**Verification intent:** SWE.4 boundary verification, SWE.5 reload/persistence integration, SWE.6 status qualification.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
-
-### SWE1-MAIN-002-CAP-005 — Configurable block weights
-
-**Normative statement:** The software shall support configurable block/category progress weights with the initial defaults defined in CAN-MAIN-010, including a default weight of `1.00` for otherwise undefined pickaxe-tag blocks.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-010  
-**Rationale:** Provides the approved baseline while permitting controlled balance adjustment.  
-**Precondition / trigger:** An eligible break is classified by block/category.  
-**Required observable result:** The corresponding configured fixed-point base weight is selected deterministically.  
-**Verification intent:** SWE.4 weight-mapping verification and SWE.6 representative mining qualification.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
+## 4. Historical superseded identifier
 
 ### SWE1-MAIN-002-CAP-006 — Configurable ore multipliers
 
-**Normative statement:** The software shall support the initial ore-group multipliers defined in CAN-MAIN-010 and shall apply the applicable multiplier to an eligible base weight.
+**Disposition:** `SUPERSEDED_BY_OWNER_CORRECTION`  
+**Former source:** CAN-MAIN-010  
+**Replacement coverage:** Material/ore-dependent progression weighting was withdrawn by `DEC-REQ-007` §6. Uniform progress is controlled by `SWE1-MAIN-002-CAP-005`.  
+**Identifier reuse:** Prohibited.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-010  
-**Rationale:** Implements the approved ore progression baseline.  
-**Precondition / trigger:** An eligible break belongs to a configured ore group.  
-**Required observable result:** The progress increment equals the configured base weight multiplied according to the fixed-point policy.  
-**Verification intent:** SWE.4 multiplier verification and SWE.6 representative ore qualification.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
+## 5. Later Main requirements still awaiting owning-clause review
 
 ### SWE1-MAIN-002-CAP-007 — Material evolution
 
@@ -239,17 +238,17 @@ Define eligible Growth Tool progress, fixed-point arithmetic, evolution, configu
 
 ### SWE1-MAIN-002-QLT-003 — Deterministic threshold evaluation
 
-**Normative statement:** For every valid cumulative progress value, including `Long.MAX_VALUE`, the software shall determine material tier, conceptual evolution count, effective enchantments, and next-threshold state deterministically and within bounded runtime and memory.
+**Normative statement:** For every valid cumulative progress value, including any supported maximum state, the software shall determine material tier, conceptual evolution count, effective enchantments, and next-threshold state deterministically and within bounded runtime and memory.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-012  
-**Rationale:** Retains the source's correctness/performance intent without prescribing a specific algorithm.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-012; numeric-boundary terminology constrained by CAN-MAIN-009 / DEC-REQ-007 §5  
+**Rationale:** Retains the source's correctness/performance intent without prescribing a specific algorithm or numeric maximum.  
 **Precondition / trigger:** A tool is loaded, progressed, displayed, or reconciled.  
 **Required observable result:** The same configuration revision and progress produce the same evolution result without recursion overflow or unbounded expansion.  
 **Verification intent:** SWE.4 property/boundary verification and SWE.5 large-value integration test.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-MAIN-002-QLT-002  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** CAN-MAIN-012 remains unreviewed; exact threshold/reconciliation semantics will be reassessed in its owning review.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-002-CAP-010 — Configuration reconciliation
@@ -294,7 +293,7 @@ Define eligible Growth Tool progress, fixed-point arithmetic, evolution, configu
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Current durability is Minecraft physical authority under reviewed CAN-MAIN-002; this requirement must be interpreted/reviewed accordingly in CAN-MAIN-012.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-002-CAP-012 — Evolution-triggered full recovery
@@ -309,7 +308,7 @@ Define eligible Growth Tool progress, fixed-point arithmetic, evolution, configu
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Current durability is Minecraft physical authority; owning CAN-MAIN-012 review remains required.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-002-CAP-013 — Terminal durability interception
@@ -354,7 +353,7 @@ Define eligible Growth Tool progress, fixed-point arithmetic, evolution, configu
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Ordinary possession/drop/storage remains allowed under reviewed CAN-MAIN-005/006; this restriction concerns active use/repair only.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-002-QLT-004 — Broken-state durability
@@ -429,5 +428,5 @@ Define eligible Growth Tool progress, fixed-point arithmetic, evolution, configu
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Current durability remains Minecraft physical authority under reviewed CAN-MAIN-002.  
 **State:** `DRAFT`
