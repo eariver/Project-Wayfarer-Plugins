@@ -1,7 +1,7 @@
 # Main Lifecycle, Tool Authority, Delivery, and Modification Requirements
 
 Document ID: `SWE1-MAIN-001`  
-Revision: C  
+Revision: D  
 State: `DRAFT_FOR_OWNER_REVIEW`  
 Date: 2026-08-15 JST  
 Author: ChatGPT  
@@ -10,13 +10,13 @@ SWE process: SWE.1 Software Requirements Analysis
 Target domain: `MAIN`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary source: `SWE1-SRC-002` Revision D  
-Controlling review decisions: `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-006`  
-Contained normative items: CAP: 11, CON: 11, QLT: 2
+Primary source: `SWE1-SRC-002` Revision E  
+Controlling review decisions: `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-006`, `DEC-REQ-007`  
+Contained active normative items: CAP: 11, CON: 9, QLT: 2; historical `CON-008` and `CON-009` superseded
 
 ## 1. Purpose
 
-Define Main capability lifecycle, logical and physical Growth Tool authority, initial delivery, owner-bound use, ordinary possession/storage neutrality, and controlled tool modification. `CAN-MAIN-001` through `CAN-MAIN-005` are jointly reviewed and integrated under `DEC-REQ-006`; `CAN-MAIN-006` and later Main clauses remain subject to their own clause-by-clause review.
+Define Main capability lifecycle, logical and physical Growth Tool authority, initial delivery, owner-bound use, ordinary possession/storage/death-drop neutrality, and controlled tool modification. `CAN-MAIN-001` through `CAN-MAIN-006` are jointly reviewed and integrated under `DEC-REQ-006` / `DEC-REQ-007`; later Main clauses remain subject to their own clause-by-clause review.
 
 ## 2. Requirement interpretation rules
 
@@ -25,7 +25,8 @@ Define Main capability lifecycle, logical and physical Growth Tool authority, in
 - Source-prescribed implementation mechanisms are retained only when they are themselves an approved external interface or compatibility constraint.
 - A requirement carrying an open issue or explicit later-clause conflict remains draft and cannot support G1 PASS until resolved or explicitly accepted as a blocker.
 - Full identifiers are used in all downstream traceability.
-- Minecraft-owned physical item state, including current durability, is not silently duplicated as authoritative Main durable state unless a later approved requirement explicitly requires it.
+- Minecraft-owned physical item state, including current durability and ordinary item lifecycle/possession, is not silently duplicated as authoritative Main durable state unless a later approved requirement explicitly requires it.
+- Superseded identifiers remain historical and are not reused or renumbered.
 
 ## 3. Requirements
 
@@ -243,11 +244,11 @@ Define Main capability lifecycle, logical and physical Growth Tool authority, in
 
 **Normative statement:** When a still-valid Growth Tool delivery entitlement cannot be safely completed, including for insufficient inventory capacity, Main shall not create or use a world-item drop as a fallback means of completing/bypassing that delivery and shall retain the same delivery entitlement as an applicable durable pending/recoverable obligation rather than creating duplicate authority or delivery. This fallback-delivery restriction does not prohibit ordinary player-initiated or Minecraft entity/death drop behavior after delivery has completed.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-004; §4 CAN-COM-007; DEC-REQ-006 §5  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-004; §4 CAN-COM-007; DEC-REQ-006 §5; §6 CAN-MAIN-006; DEC-REQ-007 §2  
 **Rationale:** Prevents unsafe fallback delivery and duplicate entitlement while preserving normal post-delivery Minecraft possession/drop behavior.  
 **Precondition / trigger:** A still-valid initial/replacement delivery cannot be safely completed.  
-**Required observable result:** No fallback world delivery occurs; one existing entitlement remains pending/recoverable.  
-**Verification intent:** SWE.4 delivery-policy verification, SWE.5 inventory-full/context-failure integration, and SWE.6 representative qualification.  
+**Required observable result:** No fallback world delivery occurs; one existing entitlement remains pending/recoverable. Ordinary post-delivery death/entity drops remain unaffected.  
+**Verification intent:** SWE.4 delivery-policy verification, SWE.5 inventory-full/context-failure/death-drop integration, and SWE.6 representative qualification.  
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
@@ -256,13 +257,13 @@ Define Main capability lifecycle, logical and physical Growth Tool authority, in
 
 ### SWE1-MAIN-001-CON-005 — No implicit replacement of delivered authority
 
-**Normative statement:** A logical Growth Tool whose current delivery state is `DELIVERED` shall not receive a new physical issuance, epoch rotation, or replacement delivery merely because the player re-enters the capability context or the currently delivered physical item is not observed. Replacement shall occur only through an authorized recovery/reissue flow.
+**Normative statement:** A logical Growth Tool whose current delivery state is `DELIVERED` shall not receive a new physical issuance, epoch rotation, or replacement delivery merely because the player re-enters the capability context, dies/respawns, the physical item is lost/destroyed, or the currently delivered physical item is not observed. Replacement shall occur only through an authorized recovery/reissue flow.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-004; DEC-REQ-006 §5  
-**Rationale:** Distinguishes completed delivery from current physical-item observability and prevents silent duplication/authority rotation.  
-**Precondition / trigger:** A `DELIVERED` owner enters/re-enters the capability context or current physical item is not observed.  
-**Required observable result:** No new physical issuance or epoch occurs without an authorized recovery/reissue flow.  
-**Verification intent:** SWE.4 delivery-state/replacement policy verification and SWE.5 re-entry integration.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-004; CAN-MAIN-006; DEC-REQ-006 §5; DEC-REQ-007 §2  
+**Rationale:** Distinguishes completed delivery from current physical-item observability/lifecycle and prevents silent duplication or free authority rotation.  
+**Precondition / trigger:** A `DELIVERED` owner re-enters, dies/respawns, loses the item, or the current physical item is not observed.  
+**Required observable result:** No new physical issuance, delivery entitlement, or epoch occurs without an authorized recovery/reissue flow.  
+**Verification intent:** SWE.4 delivery/replacement policy verification and SWE.5 re-entry/death/respawn/loss integration.  
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
@@ -299,19 +300,19 @@ Define Main capability lifecycle, logical and physical Growth Tool authority, in
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-001-CON-007 — Ordinary physical possession and storage neutrality
+### SWE1-MAIN-001-CON-007 — Ordinary physical possession and lifecycle neutrality
 
-**Normative statement:** Wayfarer_Main shall not prohibit ordinary supported physical possession, player inventory/storage transfer, pickup, or player/entity drop solely because an item is a Growth Tool or Broken Tool. Physical movement through player inventories, chest, Ender Chest, Shulker Box, equivalent supported Minecraft storage/transfer contexts, world item entities, or non-owner possession shall not transfer or change logical Growth Tool ownership or current authority.
+**Normative statement:** Wayfarer_Main shall not prohibit ordinary supported physical possession, player inventory/storage transfer, pickup, or player/entity death/item-lifecycle drop solely because an item is a Growth Tool or Broken Tool. Physical movement through player inventories, chest, Ender Chest, Shulker Box, equivalent supported Minecraft storage/transfer contexts, world item entities, non-owner possession, death drop, ordinary loss/destruction, or despawn shall not transfer or change logical Growth Tool ownership or current authority.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-005; DEC-REQ-006 §6  
-**Rationale:** Separates logical owner authority from Minecraft physical possession/storage and avoids unnecessary managed-item restrictions.  
-**Precondition / trigger:** A managed physical item undergoes an ordinary supported possession, pickup, drop, or storage transfer.  
-**Required observable result:** Wayfarer does not cancel the ordinary movement merely because the item is managed, and no logical ownership/authority transfer is inferred from the movement.  
-**Verification intent:** SWE.4 transfer-policy verification, SWE.5 representative inventory/storage/drop integration, and SWE.6 representative client qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-005; CAN-MAIN-006; DEC-REQ-006 §6; DEC-REQ-007 §2  
+**Rationale:** Separates logical owner authority from Minecraft physical possession/lifecycle and avoids unnecessary managed-item restrictions.  
+**Precondition / trigger:** A managed physical item undergoes an ordinary supported possession, pickup, drop, death/lifecycle, loss, destruction, or storage transfer.  
+**Required observable result:** Wayfarer does not cancel the ordinary movement/lifecycle merely because the item is managed, and no logical ownership/authority transfer is inferred from it.  
+**Verification intent:** SWE.4 possession/lifecycle-policy verification, SWE.5 representative inventory/storage/death/drop integration, and SWE.6 representative client qualification.  
 **Priority:** `MUST`  
 **Dependencies:** SWE1-MAIN-001-CAP-004  
 **Assumptions:** None  
-**Open issue / conflict:** Current still-unreviewed CAN-MAIN-006 death-drop suppression conflicts with this approved direction and must be resolved during CAN-MAIN-006 review under DEC-REQ-006 §7.1.  
+**Open issue / conflict:** None  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-001-CON-010 — Wayfarer-exclusive durability restoration and enchantment modification
@@ -344,35 +345,23 @@ Define Main capability lifecycle, logical and physical Growth Tool authority, in
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
+## 4. Historical superseded identifiers
+
 ### SWE1-MAIN-001-CON-008 — Death-drop suppression
 
-**Normative statement:** The current canonical `CAN-MAIN-006` wording requires the Growth Tool or Broken Tool to be removed from player death drops.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-006; AMD-006  
-**Rationale:** Preserves the still-unreviewed target-clause text only as an explicit conflict item; it is not reaffirmed by the completed CAN-MAIN-001–005 review.  
-**Precondition / trigger:** The owner dies while the managed item would otherwise be included in drops.  
-**Required observable result:** Pending CAN-MAIN-006 correction.  
-**Verification intent:** Deferred until CAN-MAIN-006 is reconciled with DEC-REQ-006 §7.1.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** DEC-REQ-006 §7.1 records the Owner direction that ordinary player/entity death/despawn drop behavior shall not be prohibited. CAN-MAIN-006 must resolve this direct conflict before the requirement can support G1.  
-**State:** `DRAFT`
+**Disposition:** `SUPERSEDED_BY_OWNER_CORRECTION`  
+**Former source:** CAN-MAIN-006; AMD-006  
+**Replacement coverage:** `SWE1-MAIN-001-CON-007` now requires ordinary death/entity/item-lifecycle drop neutrality. The former suppression behavior is withdrawn by `DEC-REQ-007` §2.  
+**Identifier reuse:** Prohibited.
 
 ### SWE1-MAIN-001-CON-009 — No automatic respawn restoration
 
-**Normative statement:** The software shall not retain the dead player's managed raw ItemStack in process memory and shall not automatically restore the Growth Tool or Broken Tool on respawn.
+**Disposition:** `SUPERSEDED_BY_DEDUPLICATION`  
+**Former source:** CAN-MAIN-006; AMD-006  
+**Replacement coverage:** `SWE1-MAIN-001-CON-005` now explicitly covers death/respawn, physical loss/destruction, and non-observation without implicit replacement. No separate respawn-only requirement remains necessary.  
+**Identifier reuse:** Prohibited.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-006; AMD-006  
-**Rationale:** Separates the still-unreviewed automatic-respawn-restoration policy from the death-drop conflict.  
-**Precondition / trigger:** The owner respawns after death.  
-**Required observable result:** No physical managed item is automatically added solely because of respawn unless the later CAN-MAIN-006 review changes this policy.  
-**Verification intent:** Provisional SWE.4/SWE.5 death/respawn policy verification after CAN-MAIN-006 review.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** CAN-MAIN-006 remains unreviewed; death-drop suppression is already known to require correction under DEC-REQ-006 §7.1.  
-**State:** `DRAFT`
+## 5. Remaining active requirement
 
 ### SWE1-MAIN-001-CAP-009 — Pending-delivery notification and same-entitlement retry
 
