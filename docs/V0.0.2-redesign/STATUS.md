@@ -1,6 +1,6 @@
 # V0.0.2 Redesign Status
 
-Updated: 2026-08-12 JST  
+Updated: 2026-08-15 JST  
 Branch: `redesign/V0.0.2-swe1-3`  
 Draft PR: `#18`  
 Single continuation entry point: [`CONTINUATION.md`](CONTINUATION.md)  
@@ -19,7 +19,7 @@ PR #14 / LEGACY IMPLEMENTATION:
   FROZEN REFERENCE / NOT A REQUIREMENT OR DESIGN AUTHORITY
 
 CANONICAL SOURCE:
-  REVISION C / COMMON AND CORE SECTIONS INTEGRATED
+  REVISION D / COMMON + CORE + MAIN CAN-MAIN-001–005 INTEGRATED
 
 INITIAL SWE.1 DECOMPOSITION:
   COMPLETE AS DRAFT
@@ -27,27 +27,30 @@ INITIAL SWE.1 DECOMPOSITION:
 JOINT OWNER REVIEW:
   COMMON SECTION COMPLETE
   CORE SECTION COMPLETE
-  NEXT: CAN-MAIN-001 — Deployment and lifecycle
+  MAIN CAN-MAIN-001–005 COMPLETE / INTEGRATED
+  NEXT: CAN-MAIN-006 — Death behavior
 
 OWNER-APPROVED REVIEW CORRECTIONS:
   CAN-COM-001–005: DEC-REQ-002 / INTEGRATED
   CAN-COM-006–010: DEC-REQ-004 / INTEGRATED
   CAN-CORE-001–005: DEC-REQ-005 / INTEGRATED
+  CAN-MAIN-001–005: DEC-REQ-006 / INTEGRATED
 
 SESSION CONTINUITY AND CONSOLIDATION POLICY:
   APPROVED IN DEC-REQ-003
 
 PROVISIONAL ACTIVE SWE.1 REQUIREMENT COUNT:
-  175 AFTER INTEGRATED CORE CHECKPOINT
-  CAP 64 / CON 58 / IFC 14 / QLT 39
+  179 AFTER MAIN CAN-MAIN-001–005 CHECKPOINT
+  CAP 66 / CON 60 / IFC 14 / QLT 39
   HISTORICAL CORE CON-004 SUPERSEDED / NOT REUSED
 
 OPEN ISSUES:
   9 RECORDS
   ISSUE-001 PARTIALLY RESOLVED BY COMMON REVIEW; RECOVERY/RE-ENABLE DETAIL REMAINS OPEN
+  ISSUE-002 REMAINS OPEN FOR EXACT SUPPORTED EXTERNAL REPAIR/MODIFICATION BOUNDARY
 
 CHECKPOINT CADENCE:
-  CORE CHECKPOINT COMPLETE
+  MAIN CAN-MAIN-001–005 CHECKPOINT COMPLETE
   0 / 5 NEWLY APPROVED CLAUSES SINCE CHECKPOINT
 
 INITIAL SELF-REVIEW SNAPSHOT:
@@ -78,19 +81,19 @@ The continuation document must be updated at every Owner-directed repository che
   - single living entry point for session resumption;
   - ordered references, current next action, checkpoint state, and stop rules.
 - `08-decisions/DEC-REQ-002-common-requirement-review-corrections.md`
-  - immutable rationale for Owner-approved `CAN-COM-001` through `CAN-COM-005` corrections;
-  - integrated into the current canonical/Common package.
+  - immutable rationale for Owner-approved `CAN-COM-001` through `CAN-COM-005` corrections.
 - `08-decisions/DEC-REQ-004-common-requirement-review-corrections-006-010.md`
-  - immutable rationale for Owner-approved `CAN-COM-006` through `CAN-COM-010` corrections;
-  - integrated into the current canonical/Common package.
+  - immutable rationale for Owner-approved `CAN-COM-006` through `CAN-COM-010` corrections.
 - `08-decisions/DEC-REQ-005-core-requirement-review-corrections-001-005.md`
-  - immutable rationale for Owner-approved `CAN-CORE-001` through `CAN-CORE-005` corrections;
-  - integrated into Canonical Revision C and Core Revision C.
+  - immutable rationale for Owner-approved `CAN-CORE-001` through `CAN-CORE-005` corrections.
+- `08-decisions/DEC-REQ-006-main-requirement-review-corrections-001-005.md`
+  - immutable rationale for Owner-approved `CAN-MAIN-001` through `CAN-MAIN-005` corrections;
+  - records mandatory propagation to still-unreviewed `CAN-MAIN-006` and `CAN-MAIN-016`.
 - `08-decisions/DEC-REQ-003-swe1-review-consolidation-and-session-continuity.md`
   - Owner-approved consolidation cadence and session-continuity policy.
 - `10-reviews-and-evidence/REV-SWE1-002-joint-owner-review-log.md`
-  - Common and Core joint review are complete;
-  - next clause is `CAN-MAIN-001`.
+  - Common/Core and Main `CAN-MAIN-001`–`005` joint review are integrated;
+  - next clause is `CAN-MAIN-006`.
 
 ## Integrated Common-section results
 
@@ -201,15 +204,59 @@ The continuation document must be updated at every Owner-directed repository che
 - Controlled accepted V0.0.1 Core migration identity/order/byte content is immutable; later changes use new migration identities.
 - Future migration framework/resource/executor details remain design choices subject to compatibility.
 
+## Integrated Main CAN-MAIN-001–005 results
+
+### CAN-MAIN-001 — capability deployment and lifecycle
+
+- Main capabilities are allocated by approved integration/deployment configuration rather than a historical `Main` backend name.
+- Prerequisites and failure are capability-scoped by default.
+- Core's V0.0.2 transaction contract is a prerequisite only for Main financial capabilities that use it, not every Main capability.
+- Whole-plugin disable/startup/listener mechanisms are not fixed by SWE.1.
+
+### CAN-MAIN-002 — logical Growth Tool authority
+
+- Wayfarer_Main owns logical Growth Tool semantics; MariaDB is the durable authority for that logical state.
+- At most one logical Growth Tool exists per `(owner UUID, approved tool type)`; V0.0.2 approves only `PICKAXE`.
+- Lifecycle, delivery, and branch are separate durable state dimensions.
+- Current physical durability/damage is Minecraft item-state authority and is not duplicated as authoritative Main database state.
+- Table layout, record schema-version field, optimistic-lock counter, and timestamp/checkpoint fields are not fixed by SWE.1.
+
+### CAN-MAIN-003 — physical representation identity
+
+- Managed item metadata/possession is not independent authority; it is resolved against Main-owned logical authority.
+- Persistent machine-readable identity must distinguish the logical tool, physical issuance, epoch, and supported identity format without fixing exact PDC keys/layout.
+- Material/name/lore/enchantments/presentation revision/visual similarity do not establish authority by themselves.
+- Unsupported, malformed, mismatched, or stale physical identity fails closed for authority-requiring operations.
+
+### CAN-MAIN-004 — initial entitlement and durable delivery
+
+- Eligible Main capability entry, not a fixed backend join, triggers initial logical-entitlement resolution.
+- Logical entitlement and physical delivery are separate effects.
+- Deferred delivery revalidates current prerequisites and mutates inventory only from a platform-authorized execution context.
+- Delivery failure such as inventory full never uses a system-generated world drop as fallback; the same entitlement stays pending/recoverable.
+- The fallback prohibition does not block ordinary user/entity drops after delivery.
+- Pending retry continues the same entitlement without charge, authority rotation, or duplicate delivery; `DELIVERED` does not imply automatic replacement if the item is not observed.
+
+### CAN-MAIN-005 — owner-bound use and controlled modification
+
+- `Owner-bound` means use/authority-bound, not possession-bound.
+- Owner or non-owner may ordinarily possess, pick up, drop, store, or transfer a Growth Tool; chest, Ender Chest, Shulker Box, player inventory, and equivalent supported Minecraft storage are permitted.
+- Physical possession/storage never transfers logical ownership; only the logical owner may use/progress the Growth Tool.
+- Durability restoration and all enchantment-state modification are Wayfarer-controlled; ordinary durability loss remains Minecraft/Paper behavior.
+- V0.0.2 prohibits Growth Tool/Broken Tool processing through anvil or grindstone, including repair/combination/enchantment transfer or removal and anvil rename.
+- Crafting repair/combination, Mending, smithing/equivalent evolution bypass, and supported external modification may not bypass Wayfarer-controlled repair/evolution semantics.
+- Reissue authority rotation may leave old physical items present, but they become stale and unusable as authorized Growth Tools.
+
 ## Known propagation carried to later target review
 
-The Common/Core checkpoints do not silently approve later target clauses. Current follow-ups include:
+The integrated checkpoints do not silently approve later target clauses. Current follow-ups include:
 
-- `CAN-MAIN-001`: fixed Main-backend/specific-Core wording versus approved topology/shared-owner direction;
-- `CAN-FRONTIER-001`: fixed Frontier-backend/specific-Core wording versus Common direction;
-- `CAN-FRONTIER-002` and later WB clauses: literal `frontier_iris` wording versus the Owner-approved configurable Worlds Beyond gameplay-world direction;
-- Main/WB financial clauses must use the reviewed V0.0.2 Core transaction boundary while retaining their own feature eligibility/domain/delivery/compensation semantics;
-- `CAN-WB-014`: exact typed-pending-delivery versus refund/compensation priority after a proven clear delivery failure;
+- `CAN-MAIN-006`: existing death-drop suppression conflicts with the Owner-approved possession/drop neutrality. Owning review must allow ordinary player/entity death/despawn drop behavior; automatic respawn restoration remains separately reviewable.
+- `CAN-MAIN-016`: reissue must not depend on global proof that the current physical item is absent from every permitted possession/storage context. Successful authority rotation invalidates older instances; paid reissue must remain strictly more expensive than applicable repair, but the existing exact formula is no longer fixed. Pending-delivery free retry remains distinct.
+- `CAN-FRONTIER-001`: fixed Frontier-backend/specific-Core wording versus Common topology/shared-owner direction.
+- `CAN-FRONTIER-002` and later WB clauses: literal `frontier_iris` wording versus the Owner-approved configurable Worlds Beyond gameplay-world direction.
+- Main/WB financial clauses must use the reviewed V0.0.2 Core transaction boundary while retaining feature-specific eligibility/domain/delivery/compensation semantics.
+- `CAN-WB-014`: exact typed-pending-delivery versus refund/compensation priority after a proven clear delivery failure.
 - `SWE1-ISSUE-001-ISSUE-001`: missing configured-world health/status and recovery/re-enable lifecycle detail.
 
 ## SWE.1 repository-checkpoint cadence
@@ -221,13 +268,19 @@ During clause-by-clause review, the Owner instructs repository reflection at eit
 
 The Owner's explicit instruction controls the write. Reaching a boundary does not independently authorize mutation.
 
-The 2026-08-12 Core checkpoint has reset the counter to `0 / 5`. The current logical section is MAIN.
+Completed checkpoints:
+
+- Common checkpoint after `CAN-COM-006` through `CAN-COM-010` and Common → Core transition;
+- Core checkpoint after `CAN-CORE-001` through `CAN-CORE-005` and Core → Main transition;
+- Main checkpoint after `CAN-MAIN-001` through `CAN-MAIN-005`.
+
+The 2026-08-15 Main checkpoint resets the counter to `0 / 5`. The current logical section remains MAIN.
 
 ## Required work before G1
 
-1. Continue joint Owner review from `CAN-MAIN-001 — Deployment and lifecycle`.
-2. Continue clause-by-clause review across Main, Frontier, Worlds Beyond, and Scope without silently resolving target-specific conflicts from Common/Core review.
-3. Resolve or explicitly disposition the nine issue records, including remaining ISSUE-001 recovery/re-enable semantics.
+1. Continue joint Owner review from `CAN-MAIN-006 — Death behavior`.
+2. Continue clause-by-clause review across remaining Main, Frontier, Worlds Beyond, and Scope without silently resolving target-specific conflicts outside the owning clause.
+3. Resolve or explicitly disposition the nine issue records, including remaining ISSUE-001 recovery/re-enable semantics and ISSUE-002 supported external-modification boundary.
 4. Complete the accepted V0.0.1 public API/contract/migration inventory.
 5. Reconcile controlled Project consistency inputs and runtime locks without silently adding behavior.
 6. After all joint-review corrections are consolidated, rerun complete automated identifier/source/count/verification-intent checks and a full SWE.1 self-review.
