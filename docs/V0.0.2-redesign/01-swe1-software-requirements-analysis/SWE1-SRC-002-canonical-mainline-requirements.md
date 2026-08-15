@@ -1,9 +1,9 @@
 # Project Wayfarer Plugin Mainline Canonical Requirements Source
 
 Document ID: `SWE1-SRC-002`  
-Revision: C  
+Revision: D  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-12 JST  
+Date: 2026-08-15 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Introduced Product version: Plugin V0.0.2 redesign  
@@ -15,12 +15,13 @@ Controlling joint-review decisions:
 - `DEC-REQ-002` — approved Common corrections for `CAN-COM-001` through `CAN-COM-005`
 - `DEC-REQ-004` — approved Common corrections for `CAN-COM-006` through `CAN-COM-010`
 - `DEC-REQ-005` — approved Core corrections for `CAN-CORE-001` through `CAN-CORE-005`
+- `DEC-REQ-006` — approved Main corrections for `CAN-MAIN-001` through `CAN-MAIN-005`
 
 ## 1. Purpose and authority
 
 This document is the normalized positive-requirement source used before SWE.1 requirement decomposition. It combines the mainline requirement source with only those later Owner decisions that clarified a requirement or resolved a contradiction in that source.
 
-Revision C integrates the completed joint Owner review of the Common (`CAN-COM-001` through `CAN-COM-010`) and Core (`CAN-CORE-001` through `CAN-CORE-005`) canonical sections. Main, Frontier, Worlds Beyond, and Scope clauses remain subject to their own clause-by-clause review; conflicting target-specific wording identified for later propagation is not silently changed before that review.
+Revision D integrates the completed joint Owner review of the Common (`CAN-COM-001` through `CAN-COM-010`), Core (`CAN-CORE-001` through `CAN-CORE-005`), and first Main checkpoint (`CAN-MAIN-001` through `CAN-MAIN-005`). `CAN-MAIN-006` and later Main clauses, Frontier, Worlds Beyond, and Scope remain subject to their own clause-by-clause review; conflicting later wording identified for required propagation is not silently changed before that owning review.
 
 This document deliberately excludes:
 
@@ -43,6 +44,7 @@ Source clause identifiers beginning with `CAN-` are provenance anchors only. The
 | Common joint review through CAN-COM-005 | Repository decision `DEC-REQ-002` | Controls integrated Common corrections 001–005 |
 | Common joint review through CAN-COM-010 | Repository decision `DEC-REQ-004` | Controls integrated Common corrections 006–010 |
 | Core joint review through CAN-CORE-005 | Repository decision `DEC-REQ-005` | Controls integrated Core corrections 001–005 |
+| Main joint review through CAN-MAIN-005 | Repository decision `DEC-REQ-006` | Controls integrated Main corrections 001–005 and mandatory propagation recorded for later Main review |
 
 ## 3. Applied amendment disposition
 
@@ -53,8 +55,8 @@ Source clause identifiers beginning with `CAN-` are provenance anchors only. The
 | AMD-003 | Applied | Durable launchpad creation state is limited; velocity, cooldown, and auto-Elytra use current configuration |
 | AMD-004 | Applied as current-scope clarification only | Dedicated generic Gate/Portal/System-Structure placement exclusion is not required; no later roadmap is adopted here |
 | AMD-005 | Applied as current-scope clarification only | A physical pressure plate without durable launchpad authority need not be identified as a launchpad |
-| AMD-006 | Applied | Growth Tool is removed from death drops and is not restored automatically on respawn |
-| AMD-007 | Applied | Player-paid Growth Tool reissue is added with an explicit quote/confirm flow and defined price |
+| AMD-006 | Applied to still-unreviewed CAN-MAIN-006 subject to later Owner propagation | Existing death-drop/respawn text remains for CAN-MAIN-006 review; DEC-REQ-006 records that ordinary player/entity death/despawn drops shall not be prohibited |
+| AMD-007 | Applied to still-unreviewed CAN-MAIN-016 subject to later Owner propagation | Player-paid Growth Tool reissue remains required; DEC-REQ-006 records revised authority-rotation and relative-pricing direction for CAN-MAIN-016 review |
 | AMD-008 | Applied | Permanent Worlds Beyond items use durable pending delivery after death |
 | AMD-009 | Applied | Positive progress addition saturates at `Long.MAX_VALUE` |
 | AMD-010 | Applied only as a present requirement clarification | Exact language, layout, name, and lore are not V0.0.2 functional acceptance obligations |
@@ -208,40 +210,81 @@ A later correction or schema evolution uses a new Core-owned migration identity.
 
 ## 6. Wayfarer_Main requirements source
 
-### CAN-MAIN-001 — Deployment and lifecycle
+### CAN-MAIN-001 — Main capability deployment and lifecycle
 
-Wayfarer_Main activates only on the Main backend, requires Wayfarer_Core, validates its dependencies and schema before activation, and fails closed when a mandatory prerequisite is unavailable.
+Wayfarer_Main capabilities are enabled only where they are allocated by approved integration/deployment configuration and shall not use a historical `Main` backend identity, physical server name, or equivalent topology label as a general runtime prerequisite.
 
-### CAN-MAIN-002 — Logical Growth Tool authority
+Each Main capability is available only while the mandatory prerequisites assigned to that capability are valid, including applicable approved configuration, compatible Main-owned schema state, required approved shared or external capability contracts, and capability-specific gameplay/content context.
 
-MariaDB owns one logical `PICKAXE` per `owner_uuid + tool_type`.
+Mandatory dependencies are capability-scoped. Absence or incompatibility of a contract required by only one Main capability makes that capability unavailable but does not by itself disable unrelated Main capabilities whose own prerequisites remain valid.
 
-The logical record supports:
+For V0.0.2, a Main financial capability that uses the shared Waymark transaction contract requires the compatible Core-provided transaction contract allocated by `CAN-CORE-003`; this does not make the presence of Wayfarer_Core a universal prerequisite for every Main capability.
 
-- tool status: `ACTIVE`, `BROKEN`, `REVOKED`;
-- delivery status: `DELIVERED`, `PENDING`;
-- active branch: `FORTUNE`, `SILK_TOUCH`;
-- stable identity, owner, epoch, cumulative fixed-point progress, stored damage, schema version, optimistic-lock version, timestamps, and checkpoint timestamp.
+Prerequisite loss, operation-admission closure, accepted-operation disposition, and stale lifecycle completion follow the Common lifecycle requirements. This clause does not prescribe whole-plugin disablement, listener registration, startup ordering, or another specific lifecycle mechanism.
 
-### CAN-MAIN-003 — Physical identity
+### CAN-MAIN-002 — Logical Growth Tool authority and durable state
 
-A physical Growth Tool or Broken Tool carries PDC sufficient to identify item type, physical instance, logical tool, owner, tool type, epoch, schema, and display revision. Display name, lore, and material are not sufficient identity.
+Wayfarer_Main owns the logical Growth Tool domain. MariaDB is the durable authority for Main-owned logical Growth Tool state under the Common durable-state authority requirements.
 
-Unknown type/schema, malformed identity, wrong owner, wrong logical tool, and stale epoch are denied.
+For each owner and approved Growth Tool type, at most one logical Growth Tool authority may exist. The only Growth Tool type approved in V0.0.2 is `PICKAXE`; this uniqueness rule does not add other tool types to current scope.
 
-### CAN-MAIN-004 — Initial asynchronous delivery
+The logical Growth Tool state distinguishes:
 
-On Main join, the plugin asynchronously reads or race-safely creates the logical record, then revalidates the player's online state before main-thread delivery.
+- tool lifecycle status: `ACTIVE`, `BROKEN`, or `REVOKED`;
+- delivery status: `DELIVERED` or `PENDING`;
+- active branch: `FORTUNE` or `SILK_TOUCH`.
 
-A new player receives one tool. Rejoin does not duplicate it. Inventory-full delivery does not drop the item; it remains pending, the player is notified, the reason is audited, and retry is possible on a later join or authorized administrative action. A delivered record is not automatically reissued.
+Durable logical authority retains the semantic state required for logical continuity across supported restart, including stable logical identity, owner identity, approved tool type, current authority epoch, cumulative progress, and the applicable lifecycle, delivery, and branch states.
 
-### CAN-MAIN-005 — Owner binding and inventory restrictions
+Current physical durability/damage is authoritative Minecraft physical item state under `CAN-COM-003`; it is not maintained as a separate authoritative current-damage value in the Main logical Growth Tool record.
 
-Only the current owner may use or progress the current physical instance. Manual drop, other-player pickup, container storage, anvil, grindstone, smithing, crafting repair, same-tool combination, Mending, item-frame/armor-stand placement, and other supported transfer/repair paths are denied. Supported external repair integration must not bypass the same authority.
+This requirement does not prescribe a physical table layout, per-record schema-version field, optimistic-lock counter, creation/update timestamps, checkpoint-timestamp field, or another concurrency/persistence mechanism. Schema compatibility, checkpoint behavior, concurrency correctness, and auditability remain governed by their applicable requirements.
+
+### CAN-MAIN-003 — Physical representation identity and logical-authority validation
+
+A physical Growth Tool or Broken Tool is a Minecraft runtime representation of Main-owned logical Growth Tool authority and does not become authoritative from its item metadata or possession alone.
+
+Each managed physical representation shall carry supported persistent machine-readable identity information sufficient to correlate it with the applicable logical Growth Tool authority and current physical issuance. The identity semantics shall distinguish the managed item class, stable logical tool identity, physical instance/issuance identity, current authority epoch, and a supported identity-format discriminator sufficient for safe interpretation.
+
+Owner identity, approved tool type, or other logical-domain attributes may be carried redundantly in physical metadata but remain authoritative only through the current logical Growth Tool state. The requirement does not prescribe an exact PDC key set, metadata layout, serialization representation, or redundant-field set.
+
+Material, display name, lore, enchantments, presentation revision, visual similarity, or equivalent player-visible/mutable attributes shall not by themselves establish managed-item authority. Presentation metadata may exist but does not strengthen physical authority.
+
+Before a managed physical representation produces an operation requiring current tool authority, its identity shall be resolved and validated against the applicable current logical authority. Unsupported or malformed identity, unresolved or mismatched logical authority, subject-owner mismatch, invalid current physical issuance where applicable, and stale epoch shall fail closed.
+
+The exact persistent-item metadata mechanism may be selected during SWE.2/SWE.3 using an approved platform contract; use of Paper PDC remains permissible but is not fixed here as the Product-level encoding contract.
+
+### CAN-MAIN-004 — Initial logical entitlement and durable delivery
+
+When a player first reaches an eligible Main Growth Tool capability entry condition, Main shall resolve the player's existing logical Growth Tool authority or establish the initial logical `PICKAXE` authority when absent, subject to the approved uniqueness requirement. Durable resolution shall not block a runtime execution context on which such I/O is prohibited, and concurrent or replayed entry shall not create duplicate logical authority or duplicate initial delivery entitlement.
+
+Physical delivery is a distinct effect from logical-entitlement establishment. Before an outstanding initial or pending delivery entitlement mutates player inventory, Main shall revalidate the applicable current lifecycle, player, capability-context, logical-authority, and delivery prerequisites and perform the mutation only from an execution context authorized by the adopted platform contract.
+
+If a still-valid delivery entitlement cannot be safely completed, including because the player's inventory lacks capacity, Main shall not create or use a world-item drop as a means of completing or bypassing that delivery. The outstanding delivery entitlement remains durably pending/recoverable under the applicable lifecycle and protected-operation rules. This fallback-delivery restriction does not prohibit ordinary player-initiated or Minecraft entity/death drop behavior after delivery has completed.
+
+When a pending outcome occurs while the player is reachable, the player receives an actionable notification. The pending outcome and operationally relevant reason/classification remain correlated with retrievable evidence. A later eligible entry or authorized administrative retry may continue the same outstanding delivery entitlement without Waymark debit, logical-authority duplication, authority rotation, or duplicate delivery.
+
+Re-entry or failure merely to observe a physical item shall not cause automatic reissue when the current delivery state is `DELIVERED`. Recovery or replacement of a previously delivered item uses only the applicable authorized recovery/reissue requirements.
+
+### CAN-MAIN-005 — Owner-bound use and controlled tool modification
+
+A Growth Tool remains logically bound to its current owner regardless of which player, inventory, storage container, item entity, or other supported Minecraft possession context currently contains its physical representation. Physical possession, transfer, pickup, drop, or storage does not transfer or change logical ownership.
+
+Only the current logical owner may use a current authorized Growth Tool as a Growth Tool, gain Growth Tool progress, or perform another owner-authorized Growth Tool operation. A non-owner may physically possess, carry, pick up, drop, store, or transfer the item but does not thereby gain Growth Tool authority.
+
+Wayfarer_Main shall not prohibit ordinary supported physical possession, inventory/storage transfer, pickup, or player/entity drop solely because the item is a Growth Tool. This includes ordinary player inventory, chest, Ender Chest, Shulker Box, world item, and equivalent supported Minecraft storage/transfer behavior.
+
+Growth Tool durability restoration and Growth Tool enchantment-state modification, including enchantment addition, increase, removal, reduction, transfer, or replacement, occur only through operations authorized by Wayfarer_Main under the applicable Growth Tool requirements. Ordinary durability loss remains governed by the applicable Minecraft/Paper durability requirements.
+
+A Growth Tool shall not be processed through an anvil or grindstone in V0.0.2. This prohibition includes repair, combination, enchantment modification or transfer, grindstone enchantment removal, and anvil renaming. Crafting repair/combination, Mending-based durability restoration, smithing or equivalent transformation that bypasses approved Growth Tool evolution, and supported external modification paths shall likewise not alter the managed Growth Tool outside the applicable Wayfarer-controlled operation.
+
+Physical movement or possession does not rotate Growth Tool authority. When an authorized reissue later rotates the current physical authority, prior physical instances may remain physically present but become stale and cannot be used as an authorized Growth Tool under the applicable epoch/current-authority requirements.
 
 ### CAN-MAIN-006 — Death behavior
 
 The Growth Tool or Broken Tool is removed from death drops. It is not stored as a raw in-memory ItemStack for automatic respawn restoration, and it is not automatically restored on respawn. The logical tool record remains authoritative.
+
+> **Pending owning-clause review:** `DEC-REQ-006` §7.1 records the Owner direction that Wayfarer shall not prohibit ordinary Growth Tool/Broken Tool player/entity death or despawn drop behavior. The text above is retained only because `CAN-MAIN-006` has not yet completed its clause review; it shall not be treated as approved death-drop semantics.
 
 ### CAN-MAIN-007 — Progress worlds
 
@@ -365,6 +408,8 @@ A successful paid reissue:
 - delivers a fully repaired physical item immediately or through typed pending delivery.
 
 If an authorized current physical item or an existing pending delivery exists, paid reissue is rejected before debit and the player is directed to the free delivery-retry path. Replay, double confirmation, or `UNKNOWN` must not cause duplicate debit or duplicate authority rotation.
+
+> **Pending owning-clause review:** `DEC-REQ-006` §7.2 records that reissue safety shall not depend on proving current physical absence across all permitted possession/storage contexts; successful authority rotation shall invalidate prior physical instances. It also records that the exact formula above is no longer fixed so long as paid reissue remains strictly more expensive than the applicable repair price. `CAN-MAIN-016` remains unreviewed and shall be corrected during its own review.
 
 ### CAN-MAIN-017 — Session and checkpoint behavior
 
@@ -569,7 +614,7 @@ Build procedure, test repetition policy, PR status, release sequencing, stable-t
 The following matters remain intentionally unresolved and must be carried into SWE.1 issue analysis:
 
 1. For the configured Worlds Beyond gameplay world, exact health/status and recovery/re-enable behavior after the world is absent at Wayfarer_Frontier enablement. The Owner has approved whole-plugin fail-closed behavior as sufficient when all Frontier gameplay depends on that missing configured world; literal `frontier_iris` configuration and recovery semantics remain for Frontier-clause review.
-2. Exact supported external-repair integration boundary for Growth Tool.
+2. Exact supported external-repair/modification integration boundary for Growth Tool. The Product-level policy is fixed by reviewed `CAN-MAIN-005`: supported external paths must not bypass Wayfarer-exclusive durability restoration/enchantment modification.
 3. Exact public/non-public LeafGrapple 1.0.2 API and a deployable safe tier/configuration.
 4. Supported WorldEdit/FAWE protection boundary and the treatment of tools that bypass public hooks.
 5. Durable identification of an existing launchpad if the configured physical material changes.
