@@ -1,9 +1,9 @@
 # V0.0.2 Redesign Work Continuation
 
 Document ID: `GOV-CONTINUITY-001`  
-Revision: E  
+Revision: F  
 State: `IN_REVIEW`  
-Updated: 2026-08-15 JST  
+Updated: 2026-08-16 JST  
 Maintainer: ChatGPT  
 Reviewer: Project Owner  
 Applicable Product: Plugin V0.0.2 redesign
@@ -18,7 +18,7 @@ Draft PR: `#18`
 Current process: `SWE.1 Software Requirements Analysis`  
 Current gate: `SWE1_OWNER_REVIEW_IN_PROGRESS`  
 Current review section: `MAIN`  
-Next substantive review item: `CAN-MAIN-011 — Material and enchantment evolution`
+Next substantive review item: `CAN-MAIN-016 — Player-paid reissue`
 
 Always fetch the latest PR head before using a previously reported commit SHA.
 
@@ -27,15 +27,16 @@ Always fetch the latest PR head before using a previously reported commit SHA.
 Read these documents in order:
 
 1. [`STATUS.md`](STATUS.md) — current gate, count, checkpoint, next clause, and restrictions.
-2. [`REV-SWE1-002 — Joint Owner Review Log`](10-reviews-and-evidence/REV-SWE1-002-joint-owner-review-log.md) — Owner dispositions through CAN-MAIN-010.
+2. [`REV-SWE1-002 — Joint Owner Review Log`](10-reviews-and-evidence/REV-SWE1-002-joint-owner-review-log.md) — Owner dispositions through CAN-MAIN-015.
 3. [`DEC-REQ-006 — Main Requirement Review Corrections 001–005`](08-decisions/DEC-REQ-006-main-requirement-review-corrections-001-005.md).
 4. [`DEC-REQ-007 — Main Requirement Review Corrections 006–010`](08-decisions/DEC-REQ-007-main-requirement-review-corrections-006-010.md).
-5. [`DEC-REQ-002`](08-decisions/DEC-REQ-002-common-requirement-review-corrections.md), [`DEC-REQ-004`](08-decisions/DEC-REQ-004-common-requirement-review-corrections-006-010.md), and [`DEC-REQ-005`](08-decisions/DEC-REQ-005-core-requirement-review-corrections-001-005.md) for integrated Common/Core authority.
-6. [`DEC-REQ-003 — Review Consolidation and Session Continuity Policy`](08-decisions/DEC-REQ-003-swe1-review-consolidation-and-session-continuity.md).
-7. [`SWE1-SRC-002 — Canonical Mainline Requirements`](01-swe1-software-requirements-analysis/SWE1-SRC-002-canonical-mainline-requirements.md) Revision E.
-8. [`SWE1-INDEX-001`](01-swe1-software-requirements-analysis/SWE1-INDEX-001-document-index.md) Revision F.
-9. [`TRC-SWE1-001`](07-traceability/TRC-SWE1-001-source-requirement-traceability.md) Revision F.
-10. [`SWE1-VERIFY-001`](01-swe1-software-requirements-analysis/SWE1-VERIFY-001-verification-intent.md) Revision F.
+5. [`DEC-REQ-008 — Main Requirement Review Corrections 011–015`](08-decisions/DEC-REQ-008-main-requirement-review-corrections-011-015.md).
+6. [`DEC-REQ-002`](08-decisions/DEC-REQ-002-common-requirement-review-corrections.md), [`DEC-REQ-004`](08-decisions/DEC-REQ-004-common-requirement-review-corrections-006-010.md), and [`DEC-REQ-005`](08-decisions/DEC-REQ-005-core-requirement-review-corrections-001-005.md) for integrated Common/Core authority.
+7. [`DEC-REQ-003 — Review Consolidation and Session Continuity Policy`](08-decisions/DEC-REQ-003-swe1-review-consolidation-and-session-continuity.md).
+8. [`SWE1-SRC-002 — Canonical Mainline Requirements`](01-swe1-software-requirements-analysis/SWE1-SRC-002-canonical-mainline-requirements.md) Revision F.
+9. [`SWE1-INDEX-001`](01-swe1-software-requirements-analysis/SWE1-INDEX-001-document-index.md) Revision G.
+10. [`TRC-SWE1-001`](07-traceability/TRC-SWE1-001-source-requirement-traceability.md) Revision G.
+11. [`SWE1-VERIFY-001`](01-swe1-software-requirements-analysis/SWE1-VERIFY-001-verification-intent.md) Revision G.
 
 ## 3. Current authoritative state
 
@@ -43,16 +44,16 @@ Read these documents in order:
 
 - Common: `CAN-COM-001` through `CAN-COM-010` complete.
 - Core: `CAN-CORE-001` through `CAN-CORE-005` complete.
-- Main: `CAN-MAIN-001` through `CAN-MAIN-010` complete.
-- Next: `CAN-MAIN-011`.
+- Main: `CAN-MAIN-001` through `CAN-MAIN-015` complete.
+- Next: `CAN-MAIN-016`.
 
-The current canonical source is Revision E. `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-005`, `DEC-REQ-006`, and `DEC-REQ-007` are integrated controlling Owner decisions.
+The current canonical source is Revision F. `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-005`, `DEC-REQ-006`, `DEC-REQ-007`, and `DEC-REQ-008` are integrated controlling Owner decisions.
 
 ### 3.2 Provisional active requirement count
 
 ```text
-TOTAL: 176
-CAP:   65
+TOTAL: 178
+CAP:   67
 CON:   58
 IFC:   14
 QLT:   39
@@ -64,6 +65,13 @@ Historical superseded identifiers retained without reuse:
 - `SWE1-MAIN-001-CON-008`
 - `SWE1-MAIN-001-CON-009`
 - `SWE1-MAIN-002-CAP-006`
+- `SWE1-MAIN-003-QLT-002`
+
+New active identifiers from the CAN-MAIN-011–015 checkpoint:
+
+- `SWE1-MAIN-002-CAP-017`
+- `SWE1-MAIN-002-QLT-007`
+- `SWE1-MAIN-003-CAP-010`
 
 A complete post-review automated identifier/source/count/verification-intent audit remains pending before G1.
 
@@ -77,33 +85,46 @@ A complete post-review automated identifier/source/count/verification-intent aud
 - Delivery failure and ordinary post-delivery item lifecycle are distinct: no fallback delivery drop, but ordinary later drops/storage/death behavior are allowed.
 - Durability restoration and enchantment modification are Wayfarer-controlled; V0.0.2 anvil/grindstone processing including rename is prohibited.
 
-### 3.4 Reviewed progress model through CAN-MAIN-010
+### 3.4 Reviewed progress/evolution/reconciliation model
 
-- Progress worlds are exact members of approved configuration. Initial V0.0.2 defaults: `resource`, `resource_nether`, `resource_end`.
-- Similar-name/dimension/environment heuristics and implicit replacement-world adoption are prohibited.
-- One completed qualifying player-mined `minecraft:mineable/pickaxe` block with the current authorized active Growth Pickaxe grants progress exactly once under applicable Survival/Adventure rules.
-- Natural, player-placed, generated/plugin-created, Silk-Touch-re-placed, and repeated eligible mining are allowed; block provenance history is not required solely for progress.
-- Non-player removal and nonqualifying/cancelled mining do not grant progress.
-- Progress numeric representation is not fixed to `1000` internal units, Java `long`, or `Long.MAX_VALUE`; positive progress must remain monotonic, deterministic, overflow-safe, and operable at any selected supported maximum.
-- `AMD-009` concrete `Long.MAX_VALUE` rule is superseded by `DEC-REQ-007`.
-- Every qualifying break uses one uniform configured positive logical increment; V0.0.2 default is `1.00`.
-- Block/category weights and ore/rarity multipliers are withdrawn.
+- Progress worlds are exact configured identities; V0.0.2 defaults are `resource`, `resource_nether`, `resource_end`.
+- One completed qualifying player-mined `minecraft:mineable/pickaxe` block with the current authorized active Growth Pickaxe grants progress exactly once; natural/placed/generated/re-placed/repeated eligible mining is allowed.
+- Progress numeric representation is not fixed to an internal scale/type/maximum; positive progress remains deterministic, monotonic, overflow-safe, and operable at any selected supported maximum.
+- Each qualifying break uses one uniform configured positive logical increment; V0.0.2 default is `1.00`; block/category/ore/rarity weighting is withdrawn.
+- Base material sequence is Wood → Stone → Iron → Diamond; thresholds `100/400/1200` are V0.0.2 initial/default configuration.
+- Post-Diamond `800 + 200n + 40n²` is the initial/default increment from the preceding evolution threshold; mapping/caps are approved configurable defaults.
+- `FORTUNE`/`SILK_TOUCH` affect effective enchantment projection without erasing conceptual Fortune progression.
+- Evolution/reconciliation uses one internally consistent approved configuration snapshot.
+- Reconciliation preserves cumulative progress and authoritative identity/owner/lifecycle/delivery/branch/issuance/epoch; derived state may promote/demote.
+- Reconciliation alone does not repair/revive; material-change reconciliation preserves Minecraft-authoritative remaining-durability fraction where available.
+- A real qualifying progress addition crossing one or more evolution thresholds produces one progression-triggered full recovery.
 
-### 3.5 Known later propagation
+### 3.5 Reviewed Broken/management/Repair model
 
-`CAN-MAIN-016` must still be corrected during its owning review:
+- Terminal durability does not destroy the logical Growth Tool. Same-operation evolution recovery is applied before terminal Broken decision; otherwise the same authority transitions `ACTIVE → BROKEN`.
+- Broken conversion is not reissue, epoch rotation, or a new delivery entitlement. `GRAY_DYE` is initial/default Broken presentation only.
+- BROKEN cannot satisfy ACTIVE-only operations and remains durably recoverable across lifecycle interruption/restart.
+- Required owner management entry is current-authority main-hand air right-click without block/entity target; off-hand does not open the GUI.
+- GUI status distinguishes logical/derived/effective state from physical presentation and does not fix exact wording/layout/slots/name/lore.
+- Viewing status/repair preview is non-committing and causes no protected financial/domain effect.
+- Player Repair is full-repair only. Pricing formulas are initial/default approved configuration.
+- Repair requires explicit current quote and confirmation; changed state/price invalidates stale confirmation rather than silently charging another amount.
+- Repair benefit proceeds only after proven debit success through Core's approved V0.0.2 shared Waymark transaction contract.
+- Successful ACTIVE/BROKEN repair preserves the same current authority; BROKEN repair returns the same issuance/epoch to ACTIVE at maximum durability and is not reissue.
+- Partial/ambiguous Repair benefit remains `UNKNOWN` until authorized reconciliation; generic compensation uses Common rules.
 
-- no global proof that the current physical instance is absent is required for paid reissue safety;
-- successful authority rotation makes prior physical instances stale/unusable;
-- new physical reissue is fully repaired;
-- paid reissue price remains strictly above the applicable repair price, but the old exact formula is not fixed;
-- pending-delivery no-charge retry remains distinct.
+### 3.6 Known CAN-MAIN-016 propagation
 
-Later durability/reconciliation clauses must be reviewed against Minecraft current-durability authority and the representation-independent progress model.
+`CAN-MAIN-016` must be corrected during its owning review:
 
-Frontier/WB configured-world, topology/shared-owner, transaction/delivery, and open-issue propagation remains pending in their owning reviews.
+- paid reissue safety must not depend on global proof that the current physical instance is absent across all permitted possession/storage/world contexts;
+- successful authority rotation establishes a new physical issuance/current epoch and makes prior physical instances stale/unusable;
+- successful reissue is fully repaired;
+- paid reissue price remains strictly above the applicable repair price for the same logical tool/configuration, but the old exact `broken_repair_cost + full_repair_cost` formula is not fixed;
+- pending-delivery no-charge retry remains a distinct obligation and is not paid reissue;
+- allowed invocation context remains open issue `SWE1-ISSUE-001-ISSUE-007`.
 
-### 3.6 Gate restriction
+### 3.7 Gate restriction
 
 The following remain unauthorized by the current reviewed package:
 
@@ -122,6 +143,7 @@ Completed checkpoints:
 - Core checkpoint.
 - Main `CAN-MAIN-001`–`005` checkpoint.
 - Main `CAN-MAIN-006`–`010` checkpoint.
+- Main `CAN-MAIN-011`–`015` checkpoint.
 
 Current cadence:
 
@@ -138,17 +160,19 @@ A later section transition or five newly approved clauses creates a checkpoint c
 
 Review exactly:
 
-`CAN-MAIN-011 — Material and enchantment evolution`
+`CAN-MAIN-016 — Player-paid reissue`
 
 Before disposition:
 
 1. confirm latest PR #18 head;
-2. inspect CAN-MAIN-011 and its derived `SWE1-MAIN-002-CAP-007`, `CAP-008`, `CON-003`, and `CAP-009`;
-3. distinguish Product-visible material/enchantment evolution from fixed formulas/cycles that may be balance/configuration values;
-4. check consistency with uniform per-break progress and representation-independent numeric semantics;
-5. check branch ownership/administrative selection against already reviewed logical branch state;
-6. review exactly one clause and do not advance without Owner approval;
-7. do not mutate the repository again until the next Owner-directed checkpoint/immediate correction.
+2. inspect CAN-MAIN-016 and derived `SWE1-MAIN-003-CAP-006`, `CAP-007`, `CAP-008`, `CON-002`, `QLT-003`, and the reissue portion of `QLT-001`;
+3. apply `DEC-REQ-006` §7.2: reissue safety is authority rotation, not global proof of physical absence;
+4. preserve CAN-MAIN-004 pending-delivery free retry as separate from paid reissue;
+5. compare reissue pricing against the now-reviewed configurable Repair pricing and retain only the approved strict-more-expensive invariant unless the Owner chooses another explicit formula;
+6. preserve Common/Core protected-operation `UNKNOWN`, replay, compensation, and provider-guarantee boundaries;
+7. resolve or retain open issue `SWE1-ISSUE-001-ISSUE-007` for allowed player invocation context without guessing;
+8. review exactly one clause and do not advance without Owner approval;
+9. do not mutate the repository again until the next Owner-directed checkpoint/immediate correction.
 
 ## 6. Work required before G1
 
