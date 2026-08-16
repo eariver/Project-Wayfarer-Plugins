@@ -1,22 +1,22 @@
 # Main GUI, Repair, Reissue, Administration, and Permission Requirements
 
 Document ID: `SWE1-MAIN-003`  
-Revision: B  
+Revision: C  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-11 JST  
+Date: 2026-08-16 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 SWE process: SWE.1 Software Requirements Analysis  
 Target domain: `MAIN`  
 Introduced Product version: Plugin V0.0.2 redesign  
 Applicable Product versions: V0.0.2 until superseded  
-Primary source: `SWE1-SRC-002` Revision B  
-Controlling Common review decisions: `DEC-REQ-004`  
-Contained normative items: CAP: 9, CON: 4, IFC: 1, QLT: 5
+Primary source: `SWE1-SRC-002` Revision F  
+Controlling review decisions: `DEC-REQ-004`, `DEC-REQ-005`, `DEC-REQ-008`  
+Contained active normative items: CAP: 10, CON: 4, IFC: 1, QLT: 4; historical `QLT-002` superseded
 
 ## 1. Purpose
 
-Define Main user-management entry, repair and paid reissue transactions, administrative operations, permission interfaces, and presentation constraints while specializing the approved Common protected-operation rules.
+Define the Main owner management interface, owner-paid full repair, paid reissue, administrative operations, permission interfaces, and presentation constraints while specializing the approved Common protected-operation rules. `CAN-MAIN-014` and `CAN-MAIN-015` are jointly reviewed and integrated under `DEC-REQ-008`; `CAN-MAIN-016` and later clauses remain subject to their owning review.
 
 ## 2. Requirement interpretation rules
 
@@ -25,129 +25,171 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 - Source-prescribed implementation mechanisms are retained only when they are themselves an approved external interface or compatibility constraint.
 - A requirement carrying an open issue remains draft and cannot support G1 PASS until the issue is resolved or explicitly accepted as a blocker.
 - Full identifiers are used in all downstream traceability.
-- Where this document refers to a shared Waymark transaction capability, the concrete shared owner remains subject to the applicable Core/shared-capability Owner review; feature requirements do not depend on provider internals.
+- V0.0.2 Main financial capabilities use the Core-provided shared Waymark transaction contract approved by `CAN-CORE-003`; feature-specific eligibility, quote, repair/reissue benefit, and physical/logical state remain Main responsibilities.
+- Superseded identifiers remain historical and are not reused or renumbered.
 
-## 3. Requirements
+## 3. Reviewed management and repair requirements
 
-### SWE1-MAIN-003-CAP-001 — Management GUI entry
+### SWE1-MAIN-003-CAP-001 — Owner management GUI entry
 
-**Normative statement:** With the current authorized Growth Tool or Broken Tool in the main hand, an air right-click that does not target a block or entity shall open the Main management GUI; off-hand interaction shall not open it.
+**Normative statement:** The current logical owner of a current authorized Growth Tool or Broken Tool shall be able to open the Main management GUI by performing a main-hand air right-click that does not target a block or entity while holding that managed physical representation. The corresponding off-hand interaction shall not open the GUI. This required entry route does not prohibit another later approved management entry route.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-014  
-**Rationale:** Defines the externally visible management entry contract.  
-**Precondition / trigger:** The current owner performs the specified interaction with a current authorized item and has applicable use permission.  
-**Required observable result:** Exactly one management GUI opens for the owner; excluded interactions do not open it.  
-**Verification intent:** SWE.5 Paper event integration and SWE.6 client qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; DEC-REQ-008 §5  
+**Rationale:** Defines the externally visible owner management entry without treating physical possession as authority or pre-approving later permission-node allocation.  
+**Precondition / trigger:** The invoking player performs the required gesture with a managed representation.  
+**Required observable result:** The GUI opens only when the presented representation resolves to the invoking player's current logical ownership/current authority; non-owner possession, malformed identity, stale issuance, stale epoch, or equivalent failed authority does not grant owner management access.  
+**Verification intent:** SWE.4 authority/entry policy verification, SWE.5 Paper interaction integration, and SWE.6 client qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-MAIN-001-CAP-004; SWE1-MAIN-001-CAP-008; SWE1-MAIN-002-CON-005  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Exact permission-node allocation remains for CAN-MAIN-018 owning review.  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-CAP-002 — Management status presentation
+### SWE1-MAIN-003-CAP-002 — Management state presentation
 
-**Normative statement:** The management GUI shall present tool type, status, material, conceptual evolution count, cumulative progress, next-threshold state, enchantments, active branch, durability, repair cost preview, and any active configuration clamp or equivalent state.
+**Normative statement:** The management GUI shall present sufficient current state for the owner to understand the Growth Tool, including lifecycle status; Growth Pickaxe material tier; cumulative progress; conceptual evolution state/count; next configured evolution threshold or a defined no-next-threshold state; effective enchantments; active branch; current Minecraft-authoritative physical durability when applicable or Broken state when physical durability is not applicable; applicable repair availability/preview; and any material conceptual/effective difference caused by configured caps or branch projection.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-014  
-**Rationale:** Provides the information needed to understand and operate the tool.  
-**Precondition / trigger:** The authorized GUI is opened.  
-**Required observable result:** The current authoritative values are visible and consistent with the logical/physical state.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; DEC-REQ-008 §5  
+**Rationale:** Makes the interface explain the authoritative/derived Growth Tool state rather than merely exposing raw physical presentation.  
+**Precondition / trigger:** The authorized management GUI is opened.  
+**Required observable result:** Presented information is consistent with current authoritative logical/physical state. For a Broken representation, the material value represents the derived Growth Pickaxe material tier rather than the Broken presentation material.  
 **Verification intent:** SWE.4 presentation-model verification and SWE.6 client qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-MAIN-002-QLT-003; SWE1-MAIN-002-CAP-009; SWE1-MAIN-002-CON-003  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-CAP-003 — Management actions
+### SWE1-MAIN-003-CAP-003 — Management operation access
 
-**Normative statement:** The management GUI shall provide access to full repair and Help/Status behavior, with explicit preview and confirm/cancel semantics for a financial action.
+**Normative statement:** The management GUI shall provide access to the applicable Repair operation and Help/Status information and shall present the applicable repair availability/preview required by the repair requirements. Opening the GUI, viewing status, or viewing a repair preview shall not by itself authorize repair, debit Waymark, or produce another protected state-changing effect.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; CAN-MAIN-015  
-**Rationale:** Prevents accidental payment and exposes required management capability.  
-**Precondition / trigger:** The owner selects an available management action.  
-**Required observable result:** Non-financial help/status is shown without debit; repair requires an explicit confirm after preview.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; CAN-MAIN-015; DEC-REQ-008 §§5–6  
+**Rationale:** Preserves a clear management path without conflating presentation/preview with financial authorization.  
+**Precondition / trigger:** The owner opens the management interface or selects a non-committing status/repair-preview action.  
+**Required observable result:** Required management information/entry actions are available with no protected financial/domain effect until the separately governed repair confirmation is accepted.  
 **Verification intent:** SWE.5 GUI-flow integration and SWE.6 client qualification.  
 **Priority:** `MUST`  
-**Dependencies:** None  
+**Dependencies:** SWE1-MAIN-003-CAP-001; SWE1-MAIN-003-CAP-005  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-QLT-001 — GUI replay safety
+### SWE1-MAIN-003-QLT-004 — Presentation-independent management usability
 
-**Normative statement:** Double click, lag, inventory-event replay, disconnect, or reopening a stale GUI shall not create a second protected repair/reissue operation or duplicate debit, repair, reissue, delivery entitlement, or authority mutation. Replay of an already accepted operation shall resolve to that operation; a stale unaccepted confirmation shall be rejected when its current prerequisites no longer hold.
+**Normative statement:** Required management information shall remain identifiable and applicable required actions shall remain operable without depending on one exact language, inventory size, slot assignment, decorative item selection, display name, lore, or equivalent presentation encoding.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; CAN-MAIN-015; CAN-MAIN-016; §4 CAN-COM-007  
-**Rationale:** Applies the Common accepted-operation versus stale-request distinction at a high-replay user interface.  
-**Precondition / trigger:** A financial confirmation is repeated, recovered, or submitted after its quote/session/context becomes stale.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; AMD-010; DEC-REQ-008 §5  
+**Rationale:** Separates required Product usability from a fixed inventory-screen presentation design.  
+**Precondition / trigger:** The management GUI and managed item are presented to the player.  
+**Required observable result:** Required state/actions remain understandable and usable even when exact wording/layout/presentation changes.  
+**Verification intent:** SWE.6 client inspection and Owner usability review.  
+**Priority:** `MUST`  
+**Dependencies:** SWE1-MAIN-003-CAP-002; SWE1-MAIN-003-CAP-003  
+**Assumptions:** None  
+**Open issue / conflict:** None  
+**State:** `DRAFT`
+
+### SWE1-MAIN-003-QLT-001 — Protected repair/reissue UI replay safety
+
+**Normative statement:** Double click, lag, inventory-event replay, disconnect, or reopening a stale financial interface shall not create a second accepted protected repair/reissue operation or duplicate debit, repair, reissue, delivery entitlement, or authority mutation. Replay of an already accepted operation shall resolve to that operation; a stale unaccepted confirmation shall be rejected when its current prerequisites no longer hold.
+
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; CAN-MAIN-016; §4 CAN-COM-007; DEC-REQ-008 §§5–6  
+**Rationale:** Applies the Common accepted-operation versus stale-request distinction to the Main financial interaction surface. CAN-MAIN-014 is no longer a source because non-financial management entry/presentation does not itself create a protected operation.  
+**Precondition / trigger:** A repair/reissue financial confirmation is repeated, recovered, or submitted after its quote/session/context becomes stale.  
 **Required observable result:** Accepted replay returns/advances one established logical operation; stale unaccepted confirmation produces no protected effect.  
-**Verification intent:** SWE.4 GUI-session/replay verification, SWE.5 GUI transaction integration, SWE.6 representative client qualification.  
+**Verification intent:** SWE.4 UI-session/replay verification, SWE.5 transaction integration, SWE.6 representative client qualification.  
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
+**Open issue / conflict:** Reissue-specific application remains subject to CAN-MAIN-016 owning review.  
+**State:** `DRAFT`
+
+### SWE1-MAIN-003-CAP-004 — Configured full-repair pricing
+
+**Normative statement:** V0.0.2 player repair shall offer only full repair. Repair price shall be determined from the current approved repair-pricing configuration and current authoritative Growth Tool state. The initial V0.0.2 supplied/default schedule shall be: base full-repair cost `ceil(100 × (1 + evolution_count × 0.08))`; active repair `ceil(base_full_repair_cost × max(0.25, missing_durability_ratio))`; broken repair `base_full_repair_cost + 100 + evolution_count × 5`. These values are initial/default balance values and may be adjusted through approved configuration.
+
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; DEC-REQ-008 §6  
+**Rationale:** Preserves the approved initial economy while allowing balance adjustment without changing Product code/requirements.  
+**Precondition / trigger:** An eligible repair preview/quote is calculated.  
+**Required observable result:** The quote uses one current approved pricing configuration and current authoritative state; active missing-durability ratio is derived from Minecraft-authoritative physical durability rather than a separate Main damage authority.  
+**Verification intent:** SWE.4 formula/configuration/boundary verification and SWE.6 representative price qualification.  
+**Priority:** `MUST`  
+**Dependencies:** SWE1-MAIN-001-CON-002; SWE1-MAIN-002-QLT-007  
+**Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-CAP-004 — Full repair pricing
+### SWE1-MAIN-003-CON-001 — No paid repair at full durability
 
-**Normative statement:** The software shall offer only full repair and shall compute the initial price using: full repair base `ceil(100 × (1 + evolution_count × 0.08))`; active repair `ceil(full_repair_cost × max(0.25, missing_durability_ratio))`; broken repair `full_repair_cost + 100 + evolution_count × 5`.
+**Normative statement:** A current authorized `ACTIVE` Growth Pickaxe at maximum durability shall not be eligible for player-paid repair, shall present a repair charge of `0 WM`, and shall not begin a debit operation for repair.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-015  
-**Rationale:** Defines the approved initial economy result.  
-**Precondition / trigger:** An authorized repair preview is requested.  
-**Required observable result:** The quoted amount equals the applicable formula using current authoritative evolution/durability state.  
-**Verification intent:** SWE.4 formula/boundary verification and SWE.6 representative price qualification.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; DEC-REQ-008 §6  
+**Rationale:** Prevents meaningless payment and avoids creating a zero-value protected financial operation solely for a no-op repair.  
+**Precondition / trigger:** Repair preview/confirm is requested for a fully durable active Growth Pickaxe.  
+**Required observable result:** Repair is unavailable/rejected before debit and the charge is shown as 0 WM.  
+**Verification intent:** SWE.4 eligibility policy verification and SWE.6 GUI qualification.  
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-CON-001 — No repair at full durability
+### SWE1-MAIN-003-CAP-005 — Confirmed repair transaction admission and execution
 
-**Normative statement:** An active item at maximum durability shall not be repairable and shall have a repair cost of 0 WM.
+**Normative statement:** Before any protected financial effect, an eligible owner-paid repair shall present an explicit quote and require explicit confirmation of that quote. Before debit, Main shall revalidate current logical/physical authority, lifecycle, physical-item state, applicable evolution state, pricing configuration, and quote validity. If a change alters eligibility or the confirmed amount, the stale confirmation shall be rejected without silently charging a different amount and a new quote/confirmation shall be required. An accepted repair shall use the V0.0.2 Core-provided shared Waymark transaction contract and applicable Common protected-operation identity/replay/UNKNOWN rules; the repair benefit shall proceed only after debit success is proven.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-015  
-**Rationale:** Prevents meaningless payment.  
-**Precondition / trigger:** Repair preview or confirm is requested for a fully durable active item.  
-**Required observable result:** The operation is unavailable or rejected before debit and displays 0 WM.  
-**Verification intent:** SWE.4 policy verification and SWE.6 GUI qualification.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
-
-### SWE1-MAIN-003-CAP-005 — Repair transaction execution
-
-**Normative statement:** A confirmed repair shall execute through the approved shared Waymark transaction capability using the established logical operation/effect identities, current player/tool authority validation, quote revalidation, and same-player/tool serialization.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007  
-**Rationale:** Ensures payment and repair use current authority and the approved shared economy contract without depending on provider internals.  
-**Precondition / trigger:** The owner confirms a non-stale eligible repair quote.  
-**Required observable result:** The repair operation coordinates one protected debit effect and one corresponding repair-benefit effect under one logical operation identity.  
-**Verification intent:** SWE.4 coordinator/identity verification and SWE.5 shared-transaction/Main integration.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007; §5 CAN-CORE-003; DEC-REQ-008 §6  
+**Rationale:** Protects the owner from stale pricing/state and sequences the paid benefit behind proven debit without inventing stronger provider guarantees.  
+**Precondition / trigger:** The owner confirms an eligible repair quote.  
+**Required observable result:** Stale/changed quotes are rejected before debit; an accepted current quote establishes one protected repair operation whose benefit is not attempted before proven debit success.  
+**Verification intent:** SWE.4 quote/revalidation/effect-order verification and SWE.5 Core transaction/Main integration.  
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-IFC-004; SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-013  
 **Assumptions:** None  
-**Open issue / conflict:** Current canonical `CAN-MAIN-015` says Core transaction boundary; exact shared owner remains subject to CAN-CORE-003/CAN-MAIN-015 Owner review.  
+**Open issue / conflict:** None; the V0.0.2 shared transaction owner is already allocated to Core by reviewed CAN-CORE-003.  
 **State:** `DRAFT`
 
-### SWE1-MAIN-003-QLT-002 — Repair compensation on proven clear failure
+### SWE1-MAIN-003-CAP-010 — Successful full-repair result
 
-**Normative statement:** Automatic repair refund/compensation shall begin only after the original debit success is proven and the downstream repair benefit is proven not committed due to a clear failure. The compensation shall use its own stable effect identity and shall not be duplicated.
+**Normative statement:** Successful repair of a current authorized `ACTIVE` Growth Pickaxe shall preserve logical identity, owner, cumulative progress, delivery state, branch, current physical issuance identity, and authority epoch while restoring the current physical item to maximum durability. Successful repair of a current authorized `BROKEN` tool shall transition the same logical tool `BROKEN → ACTIVE`, preserve owner/progress/delivery/branch/current issuance/epoch, establish the current authorized active Growth Pickaxe representation consistent with the current approved evolution configuration, and restore it to maximum durability. Repair shall not rotate authority or create a new delivery entitlement.
 
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007; DEC-REQ-004 §3  
-**Rationale:** Protects player funds without refunding an ambiguous repair that may actually have succeeded.  
-**Precondition / trigger:** A repair operation has proven debit success and a clear downstream repair failure with no committed repair benefit.  
-**Required observable result:** At most one compensation effect is initiated for the exact repair operation; an ambiguous downstream result does not enter automatic compensation.  
-**Verification intent:** SWE.4 repair failure/compensation matrix and SWE.5 provider/domain failure integration.  
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; reviewed CAN-MAIN-013; DEC-REQ-008 §§4,6  
+**Rationale:** Defines the actual paid Repair benefit and distinguishes repair from reissue/authority rotation.  
+**Precondition / trigger:** A repair operation has proven debit success and its Main-owned repair benefit is eligible to commit.  
+**Required observable result:** The same current authority is fully repaired; BROKEN repair returns the same issuance/epoch to ACTIVE rather than replacing it.  
+**Verification intent:** SWE.4 state-transition verification, SWE.5 logical/physical repair integration, and SWE.6 active/broken repair qualification.  
 **Priority:** `MUST`  
-**Dependencies:** SWE1-COMMON-001-QLT-013  
+**Dependencies:** SWE1-MAIN-003-CAP-005; SWE1-MAIN-002-CAP-014  
 **Assumptions:** None  
 **Open issue / conflict:** None  
 **State:** `DRAFT`
+
+### SWE1-MAIN-003-QLT-005 — Repair-benefit completion and ambiguous partial-state containment
+
+**Normative statement:** A repair operation shall not be reported as successful until the required logical and physical repaired state for the same current authority is established. If the repair benefit may be partially established or cannot be proven success or clear no-benefit failure, the exact repair effect shall remain `UNKNOWN` for authorized reconciliation and shall not be blindly retried, treated as success, treated as clear failure, or automatically compensated. Compensation remains governed by the Common requirement for proven debit success plus proven absence/clear failure of the downstream benefit.
+
+**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007; DEC-REQ-008 §6  
+**Rationale:** Handles Main's logical/Minecraft physical repair boundary without claiming cross-authority atomicity or refunding an ambiguously successful repair.  
+**Precondition / trigger:** Repair-benefit completion/recovery cannot establish the complete required repaired state.  
+**Required observable result:** Ambiguity remains correlated to the exact operation/effect and enters supported reconciliation without duplicate repair/debit/refund.  
+**Verification intent:** SWE.4 repair benefit/partial-state outcome matrix and SWE.5 failure/restart/reconciliation integration.  
+**Priority:** `MUST`  
+**Dependencies:** SWE1-COMMON-001-QLT-006; SWE1-COMMON-001-QLT-013; SWE1-MAIN-003-CAP-010  
+**Assumptions:** None  
+**Open issue / conflict:** None  
+**State:** `DRAFT`
+
+## 4. Historical superseded identifier
+
+### SWE1-MAIN-003-QLT-002 — Repair compensation on proven clear failure
+
+**Disposition:** `SUPERSEDED_BY_DEDUPLICATION`  
+**Former source:** CAN-MAIN-015; CAN-COM-007  
+**Replacement coverage:** The generic proven-debit/proven-no-benefit compensation rule is already controlled by the Common protected-operation requirements. Repair-specific ambiguity/completion semantics remain in `SWE1-MAIN-003-QLT-005`, and Repair admission/result remain in `SWE1-MAIN-003-CAP-005` / `CAP-010`.  
+**Identifier reuse:** Prohibited.
+
+## 5. Later Main requirements still awaiting owning-clause review
 
 ### SWE1-MAIN-003-CAP-006 — Player-paid missing-tool reissue
 
@@ -161,7 +203,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** SWE1-ISSUE-001-ISSUE-007  
+**Open issue / conflict:** SWE1-ISSUE-001-ISSUE-007; CAN-MAIN-016 remains unreviewed and current physical-absence semantics require correction under DEC-REQ-006 §7.2.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-CAP-007 — Reissue pricing
@@ -176,7 +218,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** `DEC-REQ-006` §7.2 already supersedes this exact formula pending CAN-MAIN-016 owning review; only the strict-more-expensive-than-applicable-repair invariant is carried forward.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-CAP-008 — Successful reissue result
@@ -191,7 +233,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-QLT-012; SWE1-COMMON-001-QLT-013  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** CAN-MAIN-016 remains unreviewed; successful reissue is known to be fully repaired and old instances stale under DEC-REQ-006 §7.2.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-CON-002 — Paid reissue pre-debit rejection
@@ -206,7 +248,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** Current-item physical-absence wording conflicts with reviewed possession/storage neutrality and must be corrected during CAN-MAIN-016 owning review.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-QLT-003 — Reissue protected-effect replay and UNKNOWN safety
@@ -221,7 +263,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-QLT-005; SWE1-COMMON-001-QLT-006; SWE1-COMMON-001-QLT-012  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** CAN-MAIN-016 remains unreviewed.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-CAP-009 — Main administrative capabilities
@@ -236,7 +278,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** SWE1-COMMON-001-QLT-008  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** CAN-MAIN-018 remains unreviewed.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-IFC-001 — Main permission nodes
@@ -251,7 +293,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** SWE1-ISSUE-001-ISSUE-008  
+**Open issue / conflict:** SWE1-ISSUE-001-ISSUE-008; CAN-MAIN-018 remains unreviewed.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-CON-003 — Direct permission-group enforcement
@@ -266,7 +308,7 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** CAN-MAIN-018 remains unreviewed.  
 **State:** `DRAFT`
 
 ### SWE1-MAIN-003-CON-004 — Debug dual gate
@@ -281,35 +323,5 @@ Define Main user-management entry, repair and paid reissue transactions, adminis
 **Priority:** `MUST`  
 **Dependencies:** None  
 **Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
-
-### SWE1-MAIN-003-QLT-004 — Presentation independence
-
-**Normative statement:** The required Main GUI information and actions shall remain clear and operable, but exact language, slot layout, item display name, lore, and presentation configuration shall not be used as functional acceptance criteria for this scope.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-014; AMD-010  
-**Rationale:** Separates product capability from deferred presentation refinement.  
-**Precondition / trigger:** The GUI and managed item are presented to the player.  
-**Required observable result:** Required status and actions are understandable and usable even though exact presentation is implementation-selected.  
-**Verification intent:** SWE.6 client inspection and Owner usability review.  
-**Priority:** `MUST`  
-**Dependencies:** None  
-**Assumptions:** None  
-**Open issue / conflict:** None  
-**State:** `DRAFT`
-
-### SWE1-MAIN-003-QLT-005 — Repair effect-level ambiguous-outcome containment
-
-**Normative statement:** An ambiguous repair debit effect, repair-commit effect, or compensation effect shall remain `UNKNOWN` for authorized reconciliation and shall not be automatically retried, treated as success, treated as clear failure, or used to authorize the next success/failure-dependent protected effect.
-
-**Source:** SWE1-SRC-002 §6 CAN-MAIN-015; §4 CAN-COM-007; DEC-REQ-004 §3  
-**Rationale:** Prevents duplicate debit/repair/refund and prevents an ambiguous successful repair from being refunded automatically.  
-**Precondition / trigger:** Any protected repair effect returns or is recovered with an outcome that cannot be proven success or clear no-effect failure.  
-**Required observable result:** The exact operation/effect identity remains `UNKNOWN`, inspectable, and reconcilable; no automatic second effect or compensation is initiated from that ambiguity.  
-**Verification intent:** SWE.4 effect-level outcome-policy verification and SWE.5 provider/domain failure/reconciliation integration.  
-**Priority:** `MUST`  
-**Dependencies:** SWE1-COMMON-001-QLT-006; SWE1-COMMON-001-QLT-013  
-**Assumptions:** None  
-**Open issue / conflict:** None  
+**Open issue / conflict:** CAN-MAIN-018 remains unreviewed.  
 **State:** `DRAFT`
