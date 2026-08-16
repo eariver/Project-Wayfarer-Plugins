@@ -1,9 +1,9 @@
 # Project Wayfarer Plugin Mainline Canonical Requirements Source
 
 Document ID: `SWE1-SRC-002`  
-Revision: E  
+Revision: F  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-15 JST  
+Date: 2026-08-16 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Introduced Product version: Plugin V0.0.2 redesign  
@@ -17,12 +17,13 @@ Controlling joint-review decisions:
 - `DEC-REQ-005` — approved Core corrections for `CAN-CORE-001` through `CAN-CORE-005`
 - `DEC-REQ-006` — approved Main corrections for `CAN-MAIN-001` through `CAN-MAIN-005`
 - `DEC-REQ-007` — approved Main corrections for `CAN-MAIN-006` through `CAN-MAIN-010`
+- `DEC-REQ-008` — approved Main corrections for `CAN-MAIN-011` through `CAN-MAIN-015`
 
 ## 1. Purpose and authority
 
 This document is the normalized positive-requirement source used before SWE.1 requirement decomposition. It combines the mainline requirement source with only those later Owner decisions that clarified a requirement or resolved a contradiction in that source.
 
-Revision E integrates the completed joint Owner review of the Common (`CAN-COM-001` through `CAN-COM-010`), Core (`CAN-CORE-001` through `CAN-CORE-005`), and Main through `CAN-MAIN-010`. `CAN-MAIN-011` and later Main clauses, Frontier, Worlds Beyond, and Scope remain subject to their own clause-by-clause review; conflicting later wording identified for required propagation is not silently changed before that owning review.
+Revision F integrates the completed joint Owner review of the Common (`CAN-COM-001` through `CAN-COM-010`), Core (`CAN-CORE-001` through `CAN-CORE-005`), and Main through `CAN-MAIN-015`. `CAN-MAIN-016` and later Main clauses, Frontier, Worlds Beyond, and Scope remain subject to their own clause-by-clause review; conflicting later wording identified for required propagation is not silently changed before that owning review.
 
 This document deliberately excludes:
 
@@ -47,6 +48,7 @@ Source clause identifiers beginning with `CAN-` are provenance anchors only. The
 | Core joint review through CAN-CORE-005 | Repository decision `DEC-REQ-005` | Controls integrated Core corrections 001–005 |
 | Main joint review through CAN-MAIN-005 | Repository decision `DEC-REQ-006` | Controls integrated Main corrections 001–005 and mandatory propagation recorded for later Main review |
 | Main joint review through CAN-MAIN-010 | Repository decision `DEC-REQ-007` | Controls integrated Main corrections 006–010, including withdrawal of death-drop suppression, numeric encoding fixation, and material-dependent progress weighting |
+| Main joint review through CAN-MAIN-015 | Repository decision `DEC-REQ-008` | Controls configured evolution/reconciliation, Broken-state continuity, management interface, and protected full-repair corrections |
 
 ## 3. Applied amendment disposition
 
@@ -349,59 +351,108 @@ The configured uniform increment shall be a valid positive logical progress quan
 
 The logical increment does not prescribe an internal numeric encoding or storage scale; numeric representation and boundary safety follow `CAN-MAIN-009`.
 
-### CAN-MAIN-011 — Material and enchantment evolution
+### CAN-MAIN-011 — Configured material and enchantment evolution
 
-Material progression is Wood → Stone → Iron → Diamond at cumulative progress 100, 400, and 1200. After Diamond, the initial increment for enchantment evolution number `n`, beginning at `n=1`, is `800 + 200n + 40n²`.
+A Growth Pickaxe begins with the Wood base material and progresses through the V0.0.2 base-material sequence Wood → Stone → Iron → Diamond as cumulative progress reaches the applicable approved material thresholds. Progress-based automatic material evolution does not extend beyond Diamond unless a later approved requirement adds another material tier.
 
-The repeating cycle is Efficiency, Unbreaking, Efficiency, Unbreaking, Fortune. Effective caps are:
+The initial V0.0.2 supplied/default cumulative material thresholds are:
 
-- Efficiency 10
-- Unbreaking 10
-- Fortune 5
-- Silk Touch 1
+- Stone: `100`
+- Iron: `400`
+- Diamond: `1200`
 
-Conceptual level, progress, and evolution count continue after effective caps. Default branch is `FORTUNE`; authorized administration may select `FORTUNE` or `SILK_TOUCH`.
+After Diamond, enchantment evolution occurs at successive cumulative thresholds formed by adding a configured positive increment for each post-Diamond enchantment evolution number `n`, beginning at `n=1`, to the preceding evolution threshold. The initial V0.0.2 supplied/default increment definition is `800 + 200n + 40n²`.
 
-### CAN-MAIN-012 — Threshold and configuration reconciliation
+Post-Diamond evolution applies conceptual enchantment steps according to the approved V0.0.2 evolution mapping. The initial supplied/default repeating mapping is Efficiency → Unbreaking → Efficiency → Unbreaking → Fortune. The V0.0.2 conceptual enchantment progression set is limited to Efficiency, Unbreaking, and Fortune unless a later approved requirement extends it.
 
-Threshold evaluation is deterministic and supports the full valid progress range. Configuration is applied as an internally consistent revision.
+Effective enchantment application is capped by approved configuration. The initial V0.0.2 supplied/default caps are Efficiency 10, Unbreaking 10, Fortune 5, and Silk Touch 1. Reaching an effective cap does not stop cumulative progress, evolution count, or conceptual enchantment progression.
 
-On configuration reconciliation:
+The initial branch is `FORTUNE`. In the `FORTUNE` branch, the current capped conceptual Fortune level is applied and Silk Touch is not applied. In the `SILK_TOUCH` branch, Silk Touch I is applied and Fortune is not applied to the physical item; Fortune-oriented conceptual progression nevertheless continues. Returning to `FORTUNE` reapplies the then-current conceptual Fortune level subject to its effective cap.
 
-- cumulative progress is unchanged;
-- material, enchantments, and evolution count are recomputed;
-- promotion and demotion are permitted;
-- reconciliation alone does not repair the item;
-- active durability ratio is preserved across material change, with at least one durability point;
-- a broken tool remains broken.
+V0.0.2 permits an authorized administrative operation to select `FORTUNE` or `SILK_TOUCH`. Ordinary player-paid branch switching remains outside V0.0.2 scope.
 
-Only a real progress addition that increases evolution count restores the item to full durability.
+Evolution thresholds, post-Diamond increment parameters/mapping, and effective caps are approved configuration rather than permanent numeric Product constants. Their validation and reconciliation behavior is governed by the applicable configuration/reconciliation requirements.
 
-### CAN-MAIN-019 — Normal durability behavior
+### CAN-MAIN-012 — Deterministic evolution evaluation and configuration reconciliation
 
-An authorized active Growth Pickaxe follows the approved Paper/vanilla nonterminal durability result during ordinary use. Managed-item handling does not suppress normal durability loss merely because the item is authorized. The explicit exceptions are an evolution-triggered full recovery, denied or cancelled use, controlled repair/reissue, and terminal-damage conversion to the Broken state.
+Growth Tool evolution shall be deterministically evaluable for every supported cumulative-progress value, including any supported maximum state, using one internally consistent approved evolution-configuration snapshot. One evaluation or reconciliation shall not combine mutually dependent evolution values from different configuration states.
 
-### CAN-MAIN-013 — Broken state
+When the effective approved evolution configuration changes, cumulative progress remains unchanged. Before a Growth Tool next produces configuration-dependent gameplay behavior or presentation under the new configuration, its derived material tier, conceptual evolution state, effective enchantments, and next-threshold state shall correspond to the new configuration and its current authoritative branch. Derived evolution state may promote or demote as a result of configuration change.
 
-Before vanilla item disappearance at terminal durability, the physical representation becomes `GRAY_DYE` with logical status `BROKEN`.
+Configuration reconciliation does not by itself change logical ownership, logical tool identity, lifecycle state, delivery state, active branch, current physical issuance identity, or authority epoch. This requirement does not require eager reconciliation of every persisted or physically existing Growth Tool or global discovery of physical item instances.
 
-Identity, owner, tool type, epoch, progress, branch, and schema remain associated. A broken tool cannot mine, progress, or use external repair; it remains owner-bound, can open the management GUI, survives restart, and is checkpointed as a critical state.
+Configuration reconciliation alone shall not repair the Growth Tool or change a `BROKEN` tool to `ACTIVE`.
 
-### CAN-MAIN-014 — Management GUI
+When reconciliation changes the material of a current authorized `ACTIVE` physical Growth Pickaxe, its Minecraft-authoritative remaining-durability fraction shall be preserved across the new material's durability capacity subject to unavoidable discrete durability quantization, with at least one remaining durability point. Reconciliation shall not create a separate authoritative durability value when the current physical representation is not available for reconciliation.
 
-With the authorized Growth Tool or Broken Tool in the main hand, an air right-click that does not target a block or entity opens the management GUI. Off-hand use does not open it.
+Within normal Growth Tool progression, an accepted qualifying progress addition that crosses one or more configured material or post-Diamond enchantment evolution thresholds causes one full-durability restoration of the applicable current authorized active physical Growth Pickaxe. A progress addition that crosses no evolution threshold does not cause progression-triggered durability restoration. Explicit authorized repair or reissue behavior remains governed by its owning requirements.
 
-The GUI exposes status, material, evolution, cumulative and next-threshold progress, enchantments, branch, durability, repair preview, and configuration clamp information, and provides Repair and Help/Status actions. Exact language, layout, slot assignment, item name, and lore are not normative acceptance obligations for this scope, but the required information and actions must be clear.
+The exact evaluation algorithm, configuration-snapshot representation, eager/lazy reconciliation strategy, and physical-item discovery mechanism are not prescribed by this clause.
 
-### CAN-MAIN-015 — Full repair and transaction behavior
+### CAN-MAIN-013 — Terminal durability and Broken-state continuity
 
-Only full repair is offered.
+When a current authorized `ACTIVE` Growth Pickaxe reaches terminal durability through an otherwise valid operation, terminal durability shall not cause vanilla destruction of the logical Growth Tool or silent loss of its managed authority. Unless the same qualifying operation produces an applicable progression-triggered full-durability recovery under `CAN-MAIN-012`, Main shall transition the logical tool lifecycle from `ACTIVE` to `BROKEN` and represent the current physical issuance as a Broken Tool.
 
-- Full repair base: `ceil(100 × (1 + evolution_count × 0.08))`
-- Active repair: `ceil(full_repair_cost × max(0.25, missing_durability_ratio))`
-- Broken repair: `full_repair_cost + 100 + evolution_count × 5`
+A progression-triggered full-durability recovery produced by the same qualifying operation is applied before deciding whether terminal Broken conversion remains applicable. If that recovery leaves the tool active above terminal durability, the tool remains `ACTIVE`.
 
-A fully durable active item is not repaired and costs 0 WM. Repair uses the Core transaction boundary, explicit confirmation, transaction identity, idempotency, player/tool serialization, no duplicate debit/refund, compensation for a clear downstream failure, and manual reconciliation for `UNKNOWN`.
+Broken conversion preserves the existing logical tool identity, owner, approved tool type, cumulative progress, delivery state, active branch, current physical issuance identity, and authority epoch. Broken conversion is not a reissue, does not rotate authority, and does not create a new delivery entitlement.
+
+The Broken physical representation shall be distinguishable from an active Growth Pickaxe, shall carry the applicable supported managed-item identity needed to resolve the same current logical authority, and shall not itself become authority through its material or presentation. The initial V0.0.2 supplied/default Broken representation is `GRAY_DYE`; the exact presentation is not a permanent authority or identity contract.
+
+A `BROKEN` representation shall not function as an active Growth Pickaxe or satisfy an operation requiring `ACTIVE` lifecycle state. Progress eligibility and durability/enchantment-modification restrictions continue to follow their applicable Growth Tool requirements. Only an explicitly authorized operation whose own requirements accept `BROKEN` state may restore or otherwise transition the tool.
+
+A current authorized Broken Tool remains eligible for the applicable management interface; the exact management-entry gesture is governed by its owning GUI requirement.
+
+The established Broken state shall remain durably recoverable across supported lifecycle interruption and restart. Restart alone shall not revert the logical tool to `ACTIVE`, rotate its authority, create replacement entitlement, or otherwise erase the Broken transition. This requirement does not prescribe an event priority, temporary `ItemStack` retention, synchronous database write, checkpoint implementation, or another specific terminal-damage mechanism.
+
+### CAN-MAIN-014 — Owner management interface
+
+The current logical owner of a current authorized Growth Tool or Broken Tool shall be able to open the Main management GUI by performing a main-hand air right-click that does not target a block or entity while holding that managed physical representation. The corresponding off-hand interaction shall not open the management GUI. This requirement defines this required player entry route and does not prohibit another later approved management entry route.
+
+Management entry shall resolve the presented physical representation against current logical authority under the applicable Growth Tool identity and ownership requirements. Physical possession by a non-owner, stale physical issuance, stale epoch, malformed identity, or another failed authority condition does not grant access to owner-authorized management behavior.
+
+The management GUI shall present sufficient current state for the owner to understand the Growth Tool, including:
+
+- lifecycle status;
+- Growth Pickaxe material tier;
+- cumulative progress;
+- conceptual evolution state/count;
+- next configured evolution threshold or a defined no-next-threshold state;
+- effective enchantments;
+- active branch;
+- current Minecraft-authoritative physical durability when applicable, or Broken state when physical durability is not applicable;
+- applicable repair availability and preview/quote information; and
+- any material difference between conceptual progression and currently effective enchantment state caused by configured caps or branch projection.
+
+The interface shall provide access to the applicable Repair operation and Help/Status information. Opening the interface or viewing status/repair preview shall not by itself authorize a repair, debit Waymark, or produce another protected state-changing effect. Repair quote, confirmation, transaction, and failure behavior are governed by their owning repair requirements.
+
+Required management information shall remain identifiable and applicable required actions shall remain operable, but exact language, inventory size, slot assignment, decorative item selection, display name, lore, and equivalent presentation details are not fixed as functional Product semantics by this clause.
+
+### CAN-MAIN-015 — Owner-paid full repair and protected transaction
+
+Wayfarer_Main shall provide owner-initiated Waymark repair only as a full repair of the current authorized physical Growth Tool or Broken Tool. Partial repair is not a V0.0.2 player repair option.
+
+An `ACTIVE` Growth Pickaxe is eligible for player-paid repair only when it is below maximum durability. A maximum-durability active tool is not repairable, has a displayed repair charge of `0 WM`, and does not begin a debit operation. A current authorized `BROKEN` tool is eligible for the applicable Broken repair. A missing, stale, revoked, non-owner, unresolved, or otherwise non-current physical representation is not repaired through this operation.
+
+Repair price is determined from the current approved repair-pricing configuration and current authoritative Growth Tool state. The initial V0.0.2 supplied/default pricing schedule is:
+
+- base full-repair cost: `ceil(100 × (1 + evolution_count × 0.08))`;
+- active repair: `ceil(base_full_repair_cost × max(0.25, missing_durability_ratio))`;
+- broken repair: `base_full_repair_cost + 100 + evolution_count × 5`.
+
+These are initial/default balance values and may be adjusted through approved configuration for playtest/balance purposes. Current active durability used in pricing is obtained from Minecraft-authoritative physical state.
+
+Before a player-paid repair begins any protected financial effect, the owner shall receive an explicit repair quote and explicitly confirm that quote. Current authority, lifecycle, physical-item state, applicable evolution state, pricing configuration, and quote validity shall be revalidated before debit. If a change would alter eligibility or the confirmed amount, the stale confirmation shall not silently debit a different amount and a new quote/confirmation is required.
+
+An accepted repair uses the V0.0.2 Core-provided shared Waymark transaction contract and the applicable Common protected-operation identity, replay, `UNKNOWN`, and compensation rules. Repair benefit is attempted only after the debit effect is proven successful.
+
+Successful repair of an `ACTIVE` Growth Pickaxe preserves its logical identity, owner, cumulative progress, delivery state, branch, current physical issuance identity, and authority epoch while restoring the current authorized physical item to maximum durability.
+
+Successful repair of a `BROKEN` tool transitions the same logical tool from `BROKEN` to `ACTIVE`, preserves its owner, cumulative progress, delivery state, branch, current physical issuance identity, and authority epoch, and establishes the current authorized active Growth Pickaxe representation consistent with the current approved evolution configuration at maximum durability. Repair is not reissue, authority rotation, or a new delivery entitlement.
+
+Repair shall not be reported as successful until the required logical and physical repaired state for the same current authority is established. An ambiguous or partially established repair benefit remains subject to `UNKNOWN` and authorized reconciliation under the Common protected-operation rules. Automatic compensation requires the Common proven-debit/proven-no-benefit conditions; an ambiguous repair benefit is not automatically refunded or blindly retried.
+
+This clause does not prescribe a transaction-coordinator implementation, lock mechanism, quote-session representation, database transaction layout, or cross-authority atomicity mechanism.
 
 ### CAN-MAIN-016 — Player-paid reissue
 
@@ -443,6 +494,10 @@ Approved permission groups are:
 - `wayfarer.main.debug`
 
 An optional umbrella node may grant groups, but each command or gameplay handler directly enforces the applicable group. Debug actions are disabled by default and require both configuration enablement and `wayfarer.main.debug`.
+
+### CAN-MAIN-019 — Normal durability behavior
+
+An authorized active Growth Pickaxe follows the approved Paper/vanilla nonterminal durability result during ordinary use. Managed-item handling does not suppress normal durability loss merely because the item is authorized. The explicit exceptions are an evolution-triggered full recovery, denied or cancelled use, controlled repair/reissue, and terminal-damage conversion to the Broken state.
 
 ## 7. Wayfarer_Frontier shared requirements source
 
