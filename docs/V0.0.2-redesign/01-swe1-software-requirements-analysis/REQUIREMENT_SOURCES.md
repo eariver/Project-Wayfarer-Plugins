@@ -1,9 +1,9 @@
 # V0.0.2 Requirement Source Register
 
 Document ID: `SWE1-SRC-001`  
-Revision: F  
+Revision: G  
 State: `DRAFT_FOR_OWNER_REVIEW`  
-Date: 2026-08-15 JST  
+Date: 2026-08-16 JST  
 Author: ChatGPT  
 Reviewer: Project Owner  
 Applicable Product: Plugin V0.0.2 redesign  
@@ -34,7 +34,7 @@ Conflict priority:
 6. prior implementation/test/roadmap evidence;
 7. engineering preference.
 
-Within the current SWE.1 review, `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-005`, `DEC-REQ-006`, and `DEC-REQ-007` are explicit Owner decisions controlling the Common/Core/reviewed-Main corrections integrated into `SWE1-SRC-002` Revision E and affected derived requirements.
+Within the current SWE.1 review, `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-005`, `DEC-REQ-006`, `DEC-REQ-007`, and `DEC-REQ-008` are explicit Owner decisions controlling the Common/Core/reviewed-Main corrections integrated into `SWE1-SRC-002` Revision F and affected derived requirements.
 
 ## 3. Controlling source set for this SWE.1 decomposition and review
 
@@ -43,10 +43,8 @@ Within the current SWE.1 review, `DEC-REQ-002`, `DEC-REQ-004`, `DEC-REQ-005`, `D
 ```text
 Authority class:
   A
-
 Decision record:
   DEC-REQ-001 — Canonical source merge and SWE.1 analysis
-
 Owner instruction date:
   2026-08-05 JST
 ```
@@ -104,17 +102,34 @@ Integration checkpoint:
   2026-08-15 JST
 ```
 
+Controls ordinary death/item-lifecycle neutrality, configured exact progress-world membership, qualifying/provenance-neutral/repeated player-mined progress, representation-independent progress numeric safety, uniform configurable progress increment, withdrawal of material/ore weighting, and associated historical superseded identifiers.
+
+### SRC-OWNER-006 — Joint Owner Main-review corrections 011–015
+
+```text
+Authority class:
+  A
+Decision record:
+  DEC-REQ-008 — CAN-MAIN-011 through CAN-MAIN-015
+Integration checkpoint:
+  2026-08-16 JST
+```
+
 Controls:
 
-- ordinary death/item-lifecycle drop neutrality and removal of respawn-only duplicate requirements;
-- configured exact progress-world membership with V0.0.2 default allowlist;
-- qualifying player-mined exactly-once progress with provenance-neutral and repeated eligible mining permitted;
-- representation-independent cumulative-progress semantics and overflow/max-boundary safety;
-- superseding the concrete `AMD-009` `Long.MAX_VALUE` saturation rule;
-- one uniform configurable positive progress increment, default `1.00`, independent of block material/ore rarity;
-- withdrawal of block/category weights and ore multipliers;
-- superseding historical Main `CON-008`, `CON-009`, and `CAP-006` without identifier reuse;
-- provisional active Product requirement count becoming 176.
+- fixed V0.0.2 material sequence with configurable/default material thresholds;
+- post-Diamond threshold increments and configurable/default enchantment mapping/caps;
+- conceptual/effective branch semantics for `FORTUNE` and `SILK_TOUCH`;
+- internally consistent evolution-configuration evaluation and non-destructive reconciliation;
+- preservation of Minecraft-authoritative durability ratio during reconciliation material changes;
+- progression-triggered full recovery only on actual threshold crossing;
+- same-authority terminal `ACTIVE → BROKEN` transition and default `GRAY_DYE` presentation without material-as-authority;
+- owner management GUI entry/state semantics without fixed presentation layout or premature permission allocation;
+- quote-confirmed configurable full-repair pricing and Core transaction use;
+- same-authority successful ACTIVE/BROKEN full repair and Repair-specific partial-state `UNKNOWN` containment;
+- new active identifiers `SWE1-MAIN-002-CAP-017`, `SWE1-MAIN-002-QLT-007`, and `SWE1-MAIN-003-CAP-010`;
+- superseding duplicate `SWE1-MAIN-003-QLT-002` without identifier reuse;
+- provisional active Product requirement count becoming 178.
 
 ### SRC-MAINLINE-001 — Mainline Main/Frontier requirement source
 
@@ -151,13 +166,13 @@ Implementation/test status, PR/branch/CI state, candidate identity, prior implem
 Document ID:
   SWE1-SRC-002
 Revision:
-  E
+  F
 Path:
   docs/V0.0.2-redesign/01-swe1-software-requirements-analysis/
   SWE1-SRC-002-canonical-mainline-requirements.md
 Revision A SHA-256 retained as historical identity:
   A04C1DBA6FE0D9568C51CE2D2F7FE591F0598C3B92A1EDD4B47AFF779F9A9121
-Revision E controlled content SHA-256:
+Revision F controlled content SHA-256:
   PENDING FINAL SWE.1 CONSOLIDATION / HASH REFRESH BEFORE G1
 Authority class:
   DERIVED
@@ -204,10 +219,10 @@ Machine-readable Frontier locks, `versions.yml`, `plugin-manifest.yml`, and curr
 
 ## 7. Current source-package accounting and actions remaining before G1
 
-Current provisional active Product requirement count after integrated review through `CAN-MAIN-010` is **176**:
+Current provisional active Product requirement count after integrated review through `CAN-MAIN-015` is **178**:
 
 ```text
-CAP: 65
+CAP: 67
 CON: 58
 IFC: 14
 QLT: 39
@@ -215,7 +230,7 @@ QLT: 39
 
 Before G1:
 
-- finish joint Owner review from `CAN-MAIN-011` through remaining Main, Frontier, Worlds Beyond, and Scope clauses;
+- finish joint Owner review from `CAN-MAIN-016` through remaining Main, Frontier, Worlds Beyond, and Scope clauses;
 - resolve or explicitly accept all open issues;
 - complete V0.0.1 public API/documented contract/immutable migration inventory;
 - retrieve/hash applicable machine-readable runtime locks and inspect Project manifests;
